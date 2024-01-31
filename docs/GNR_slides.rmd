@@ -15,11 +15,14 @@ output:
       countIncrementalSlides: false
       ratio: "16:9"
     citation_package: natbib
-# path <- "c:/seiro/data/MinWageMarketPower/"; rmarkdown::render("docs/GNR_slides.Rmd")
+# path <- "c:/data/MinWageMarketPower/"; rmarkdown::render("docs/GNR_slides.Rmd")
 # renderthis::to_pdf("docs/GNR_slides.Rmd")
+# git init
 # git add /docs
 # git commit -am "initial commit"
+# git remote add origin https://github.com/SeiroIto/MinWageMarketPower.git
 # git config --global user.name "SeiroIto"
+# git push origin main
 ---
 class: inverse
 ```{r xaringan setup, include=FALSE, warning=FALSE}
