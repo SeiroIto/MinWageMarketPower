@@ -1,0 +1,960 @@
+---
+title: "A summary on empirical approaches to labour market power"
+author: "Seiro Ito"
+date: "`r format(Sys.time(), '%Y年%m月%d日 %R')`"
+output:
+  tufte::tufte_html:
+    citation_package: natbib
+  pdf_document:
+     latex_engine: xelatex
+     includes:
+      in_header: columns.tex
+     fig_caption: true
+# tufte::tufte_handout: default
+    # tufte_features: ["fonts", "background", "italics"]
+header-includes:
+    - \usepackage{amsmath}
+    - \usepackage{amssymb}
+    - \usepackage{amsfonts}
+    - \usepackage{bookmark} 
+    - \usepackage{xltxtra} 
+    - \usepackage{zxjatype} 
+    - \usepackage[ipa]{zxjafont} 
+bibliography: c:/seiro/settings/Tex/seiro.bib
+link-citations: yes
+# path <- "c:/seiro/docs/IDE/kenkyuukai/2023/MinWageConcentration/MarketPower/"; 
+# rmarkdown::render(paste0(path, "MarketPowerFY2023.Rmd"))
+# rmarkdown::render(paste0(path, "MarketPowerFY2023.Rmd"), output_format = "pdf_document")
+---
+```{css, echo=FALSE}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Noto S	ans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+```
+
+```{r setup, include=FALSE} 
+# include = F <==> echo=F & results = F
+library(tufte)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  # remove leading hashes in html output
+  comment = "", class.source = "SeiroBenign", class.output = "SeiroLightGreen")
+options(htmltools.dir.version = FALSE)
+```
+```{css echo=FALSE}
+/* Define a margin before hX (header level X) element */
+h1  {
+  margin-top: 3ex;
+  margin-bottom: 3ex;
+  /* background: #c2edff; */ /*背景色*/
+  padding: 0.5em;/*文字まわり（上下左右）の余白*/
+}
+h2  {
+  margin-top: 2ex;
+  margin-bottom: 2ex;
+  padding: 0.5em;/*文字周りの余白*/
+  color: #010101;/*文字色*/
+  /* background: #eaf3ff; */ /*背景色*/
+  /* border-bottom: solid 3px #516ab6; */ /*下線*/
+}
+```
+\def\Perp{\mkern2mu\rotatebox[origin=c]{90}{$\models$}\mkern2mu}
+\newcommand{\mpage}[2]{\begin{minipage}[t]{#1}#2\end{minipage}}
+\newcommand{\cnvp}{\stackrel{p}{\longrightarrow}}
+\newcommand{\cnvd}{\stackrel{d}{\longrightarrow}}
+\newcommand{\bfV}{\mathbf{V}}
+\newcommand{\bfX}{\mathbf{X}}
+\newcommand{\bfx}{\mathbf{x}}
+\newcommand{\bfa}{\mathbf{a}}
+\newcommand{\bfb}{\mathbf{b}}
+\newcommand{\bfp}{\mathbf{p}}
+\newcommand{\bfs}{\mathbf{s}}
+\newcommand{\bfz}{\mathbf{z}}
+\newcommand{\E}{{\begingroup\Large\varepsilon\endgroup}}
+\newcommand{\NU}{{\Large\nu}}
+\newcommand{\0}{{\mathbf{0}}}
+\newcommand{\bfalpha}{\boldsymbol{\alpha}}
+\newcommand{\bfbeta}{\boldsymbol{\beta}}
+\newcommand{\bftheta}{\boldsymbol{\theta}}
+\newcommand{\bfeta}{\boldsymbol{\eta}}
+\newcommand{\bfmu}{\boldsymbol{\mu}}
+\newcommand{\bflambda}{\boldsymbol{\lambda}}
+\newcommand{\ind}{\mathrel{\perp\!\!\!\!\perp}}
+
+(労働市場力実証研究に関する要約)  
+
+Seiro Ito
+
+**Abstract**  I summarize the various proposed methods of production approach to markups/markdowns/TFP estimation. I make distinctions between formulae and production parameter estimation. 
+
+The original method of @Hall1988 only uses cost minimization, so do @DeLoeckerWarzynski2012, and derive a formula for markup. @Yeh2022 give a formula of markdown and markup using both cost minimization and monopolist profit maximization FOCs. @Rubens2023 also uses cost minimization and monopolist profit maximization FOCs and shows a markdown/markup formula under nonsubstitutability of materials. 
+
+@GNR2020 proves the nonidentification of gross production function when one inverts a flexible input demand function and in dynamic panel estimator. In their way of identification, they consider the output price markups yet use price-taking profit maximization FOC, which can be their limitation. 
+
+\tableofcontents
+
+# Summary
+
+* Generally speaking, concentration may be a misleading measure of market power.  
+* Monopolistic competition of heterogenous firms can result in a negative relationship between market power and concentration.  
+* A more solid definition of market power is given by output price markups (downstream) or input price markdowns (upstream).  
+* But using concentration can be OK in some markets: Studies on US/online labour markets show concentration is positively related to markdowns/supression of wages.  
+* So one can start with concentration, then proceed to wage markdowns.  
+* Many studies estimate markups/markdowns at the establishment level with financial statement data using the "production approach".  
+* It only assumes cost minimization of firms.  
+* Production approach looked very useful, but the criticism of nonidentification results by @GNR2020.  
+* Literature has not come up with a method that responds to the criticism.  
+* For the time being, one can start with the Rubens' or DJ's method to estimate wage markdowns. 
+<!--* Caliper tests can test correlations between "statistical significance" and various editorial decisions.  -->
+
+
+# Introduction
+
+Following @Hall1988's industry level estimation, @DeLoeckerWarzynski2012 developed the "production approach" to TFPR/markup estimation at the plant/firm level, by using only financial statement of firms.  
+
+Their algorithm follows the tradition of inverting a factor demand function to obtain (to "proxy") productivity $\omega_{jt}$ [@OlleyPakes1996; @LevinsohnPetrin2003; synthesized by @AckerbergCavesFrazer2015]. 
+
+There are debates over ACF-DLW method:
+
+* Invertibility of factor demand, aka scalar unobservable ass. and monotinicity ass. [@Bond2021; but see Appendix O.6.3 of @Yeh2022; while @Demirer2022 allows labour augmenting shocks in addition to Hicks neutral shocks under the homothetic production function]  
+* Nonidentification results when one uses profit maximization FOC on a flexible input (materials, energey) in a gross output production function [@GNR2020].  
+* Nonidentification results when using deflated revenues in place of physcal quantity and profit maximation FOC [@Bond2021; see also a reply by @DeLoecker2021comment of practices of controlling output prices and also input prices].  
+* Endogeneity of inputs [or what the valid IVs are, @DoraszelskiJaumandreu2021]  
+* Hicks neutral (factor non-augmenting) tech assumption [@DoraszelskiJaumandreu2013; @Demirer2022; @Raval2023]
+
+
+# Market power and concentration measures
+
+Originally, below is the problem.
+
+Output market power $:=$ Markup, or the difference between price and marginal cost.  
+
+Input market power $:=$ Markdown, or the difference between factor price and marginal revenue product.  
+
+Problem: We do not observe marginal X.  
+
+## Old method: Structure-conduct-performance literature
+
+Herfindahl-Hirschman index (HHI, a summary measure of market shares) was used as a proxy in the IO literature up to 1980's. The practice is used outside the IO even now.  
+
+Problem: Monopolistically competitive models with heterogenous firms can predict: concentration$\uparrow$ $\sim$ markup$\downarrow$  
+
+```{r diagram2, eval = knitr::is_html_output(), echo = F}
+DiagrammeR::grViz("digraph {
+  graph [layout = dot, rankdir = LR]
+  node [shape = rectangle, width = 1, nodesep = .75, fontsize = 10, style = filled, fillcolor = Linen]
+  rec1 [label = 'concentration &uarr;']
+  rec2 [label = 'markups &uarr;']
+  graph [layout = dot, rankdir = BT, nodesep = 1.0]
+  node [shape = ellipse, style = filled, fillcolor = lightblue]
+  ell1 [label = 'productivity dispersion  &uarr;']
+  edge [style = dashed]
+  rec1 -> rec2 [label = 'Cournot', fontsize = 10];
+  edge [color = blue]
+  ell1 -> rec1
+  rank=same {rec1 rec2}
+  }",
+  width = 500, 
+  height = 250)
+DiagrammeR::grViz("digraph {
+  graph [layout = dot, rankdir = LR]
+  node [shape = rectangle, width = 1, fontsize = 10, style = filled, fillcolor = Linen]
+  rec1 [label = 'concentration &uarr;']
+  rec2 [label = 'markups &darr;']
+  edge [style = dashed]
+  rec1 -> rec2 [label = 'monopolistically \n competitive', fontsize = 10];
+  graph [layout = dot, rankdir = BT]
+  node [shape = ellipse, nodesep = 1.0, style = filled, fillcolor = lightblue]
+  ell1 [label = 'substitutability of goods &uarr; \n = \n price senstivity of consumers &uarr;']
+  ell2 [label = 'range of products \n to compete with &uarr;']
+  ell3 [label = 'firm exits &uarr;']
+  # edge definitions with the node IDs
+  edge [color = blue]
+  ell1 -> ell2 -> ell3; ell3 -> {rec1 rec2}
+  rank=same {rec1 rec2}
+  }",
+  width = 500,
+  height = 425)
+```
+
+
+## Current method
+
+More recently, one uses markups (and markdowns) by obtaining marginal "X" in some way.  
+
+Despite concerns, the old method may be valid in some markets. A positive relationship between market power and concentration:
+
+* Employment share and markdowns (Yeh, Macaluso, and Hershbein 2022)  
+* Employment effects of minimum wages (if small, originally large markdown) and HHI [@Azar2019]   
+* Job application elasticity (if small, large power) and HHI [@Azar2019AEA]  
+* Earnings or wages (low) and HHI [@Azar2020; @Benmelech2022]  
+* Income inequality and HHI [@Rinz2022]  
+* Slower wage growth and HHI (by hospital mergers) [@PragerSchmitt2021] 
+
+# DLW method on markup
+
+Marginal cost can be obtained from a cost minimization problem.  
+
+Conditional factor demand function (of factor price-taking cost minimization) and factor demand function (of price-taking profit maximization) need not to coincide (equality needs markup in cost minimization = inverse demand elasticity plus one in profit maximization).  
+
+
+## Markup formula
+
+Production function with a measurement error $\epsilon$ (subscripts $i, t$ are suppressed)
+\[
+Y=Q^{*}e^{\epsilon}, \quad
+Q^{*}\leqslant F(L, K, M)e^{\omega}.
+\]
+Cost minimization on variable input $V=L, M$:
+\[
+\mathcal L=P^{V}V+rK+\lambda[Q^{*}-F(L, K, M)e^{\omega}].
+\]
+FOC:
+\[
+P^{V}-\lambda F_{V}e^{\omega}=0 \quad \lambda = \frac{P^{V}}{F_{V}e^{\omega}}.
+\]
+Note that $\lambda$ is a measure of marginal cost. Markup $\mu=\frac{P}{MC}$ is^[Following the notation convention of the literature, I use $S^{V}$, not $\alpha^{V}$ as in this paper, for factor revenure share of $V$. ]
+\[
+\begin{aligned}
+\mu&=\frac{P}{\lambda}=\frac{PF_{V}e^{\omega}}{P^{V}},\\
+&=\frac{PF_{V}e^{\omega}YV}{P^{V}VFe^{\epsilon+\omega}},\\
+& =\frac{PY}{P^{V}V}\frac{F_{V}V}{F}e^{-\epsilon},\\
+&=\frac{\theta^{V}}{S^{V}}e^{-\epsilon} ,\quad S^{V} \equiv \frac{P^{V}V}{PY}, \ \theta^{V} \equiv \frac{F_{V}V}{F}=\frac{\partial F}{\partial V}\frac{V}{F}.
+\end{aligned}
+\]
+Once we back out $\epsilon$, we get $\mu$. With subscripts, firm specific markup $\mu_{it}=\frac{\theta^{V}_{it}}{S^{V}_{it}}e^{\epsilon_{it}}$ is affected by $\hat{\epsilon}_{it}$. Need to get rid of it. 
+
+## Factor demand inversion
+
+DLW suggests to invert the log factor demand $m=m(k, l, \bfp, \omega)$ to substitute with $\omega=h(k, l, m, \bfp)$,^[If, for example, $$m=a_{1}k+a_{2}l+a'_{3}\bfp+\omega,$$ then: $$\omega=\underbrace{m-(a_{1}k+a_{2}l+\bfa'_{3}\bfp)}_{\equiv h(k, l, m, \bfp)}.$$] so log production is
+\[
+y=f(k, l, m, \bfp)+h(k, l, m, \bfp)+\epsilon=\phi(k, l, m, \bfp)+\epsilon,
+\]
+where
+\[
+\phi(k, l, m, \bfp)=f(k, l, m, \bfp)+\omega.
+\]
+Then DLW suggests to regress $y$ on polynomials on $k, l, m, \bfp$ to get $\hat{\phi}$, and compute
+\[
+\hat{\epsilon}=y-\hat{\phi}.
+\]
+In inverting the factor demand, one needs:
+
+1. Scalar unobservable assumption: There is only one latent factor $\omega$ in demand equation $m$.  
+1. Monotonicity assumption: The demand function is monotonic in $\omega$.  
+
+Monotonicity ass. is not too strong. But scalar unobservable ass. is. 
+
+Other implicit assumptions:
+
+3. There are no firm fixed effects $\alpha_{i}$ (or $\alpha_{i}=0$).^[But time-variant, partly random heterogenous productivity $\omega_{it}$ is incorporated. Not sure if this is a major drawback...] 
+4. Output demand conditions which affect input demand differently by firms are all controlled by the observables. 
+
+DLW acknowledges the strong imposition of 4. Covariates $\bfz_{it}$ added to control for output market conditions are:  
+
+*  DLW: Export status, lagged inputs in $h(k, l, m, \bfp)$.^[DLW 2012 mention export status (p.2446), lagged variable inputs as IVs for current inputs (Appendix p.5), and is not explicit on what variables are used in $\bfz_{it}$.]  
+* @DeLoeckeretal2016: Location dummies, output prices, product dummies, market shares, input prices, export status, input tariffs, output tariffs (p.466).  
+* @DeLoecker2011: Product information and import quota protection (assumed to be exogenous to individual firms). 
+
+Some can be endogenous to production but no discussions in DLW on IVs on firm state variables $\bfz_{it}$. 
+
+::: {.proposition #Algo1 name="Algorithm DLW 2012"}
+**Algorithm (DLW 2012)**  on $y_{it}=f(\bfx_{it}, \bfbeta)+\epsilon_{it}+\omega_{it}$ with a choice of $f$. 
+
+1. Get $\hat{\phi}_{it}$ by regressing $y_{it}$ on polynomials in $k_{it}, l_{it}, m_{it}, \bfp'_{it}=\bfx'_{it}, \bfp'_{it}$.  
+1. Impute $\hat{\omega}_{it}(\bfbeta)=\hat{\phi}_{it}-f(\bfx_{it}, \bfbeta)$ and $\hat{\omega}_{it-1}(\bfbeta)=\hat{\phi}_{it-1}-f(\bfx_{it-1}, \bfbeta)$.   
+1. Assume $\omega_{it}=g(\omega_{it-1})+\xi_{it}$ where $g$ is a polynomial of choice in $\omega_{it-1}$. Get $\hat{\xi}_{it}(\bfbeta)=\hat{\omega}_{it}(\bfbeta)-g\left\{\hat{\omega}_{it-1}(\bfbeta)\right\}$.  
+1. Estimate $\bfbeta$ with GMM using $\E[\hat{\xi}_{it}(\bfbeta)v_{it}]=0$ where $v_{it}$ is a flexible input chosen by firm $i$ before observing $\xi_{it}$. Use additional moment conditions (e.g., capital as a predetermined input $v_{it}=k_{it}$) to gain efficiency.  
+1. Bootstrap to estimate covariance matrix: Set $B$ as number of bootstrapping. Randomly sample firms with replacement for its entire lifespan. Do 1.-4. for $B$ runs.  
+:::  
+
+Comments on DLW algorithm:  
+
+* It takes at least 2 period panel data (vs. dynamic panel takes 3 periods).  
+* Scalar unobservable (= only 1 latent factor) is crucial.  
+* Materials costs: Cost of Goods and Services (COGS) in US manufacturing data. Some procured goods may be used for fixed investments or non-production purposes, so it is not a perfect measure.  
+* Formula is not new and inversion is done by OP. DLW (p.2444) notes their contribution is being able to recover firm-specific estimates of markup while providing consistent estimates of output elasiticities and allowing some inputs (capital, in some cases labour) to face adjustment costs.  
+* One of OP's motivation for factor demand inversion is "preserving the typically enormous cross-sectional variation for the sake of identification" [@DeLoeckerSyverson2021].  
+
+
+```{r Tab2-margin, echo = F, fig.caption="Table 2 of Rubens (2023)", fig.align = "center", fig.margin=TRUE, out.width = "70%"}
+knitr::include_graphics(paste0(path, "Tab2.jpg"))
+```
+
+Comparision with the dynamic panel (Blundell and Bond) estimator. 
+
+* BB double-differences out the confounds as it poses weaker assumptions on the correlation between unobservables and covariates $\E[\xi_{it}-\xi_{it-1}+(\epsilon_{it}-\rho\epsilon_{it-1})-(\epsilon_{it}-\rho\epsilon_{it-1})|k_{it-1}, l_{it-1}]=0$ (see 2.3.1 of Ackerberg 2023). This eliminates the need to invert a demand to net out $\epsilon_{it}$, or of the scalar unobservable ass.  
+* By not inverting $\omega$, BB cannot separately identify $\omega+\epsilon$.  
+* BB estimates tend to be noisier due to weaker statistical power. See Table 2 from @Rubens2023.  
+* Weaker statistical power leads to the use of additional moment conditions ("system GMM" estimator).^[But the economic validity of additional moment conditions can be ambiguous. ]  
+* BB's double-differencing eliminates the firm fixed effects $\alpha_{i}$ while DLW assumes $\alpha_{i}=0$.  
+* BB assumes AR(1) in $\omega_{it}$, not polynomials (as under first-order Markov).  
+
+
+
+```{r yehfig1, echo = F, fig.cap = "US wage markdown in Yeh et al. (2022)", fig.show='hold', fig.align='center', fig.margin=TRUE, out.width = "48%"}
+knitr::include_graphics(c(paste0(path, "YehFig1.jpg"), paste0(path, "YehFig6.jpg")))
+```
+
+# YMH method on markdown
+
+## Formula
+
+Yeh, Macaluso, and Hershbein (2022) showed markdown can be estimated with a formula similar to DLW.  
+
+* It uses a monopolist profit maximization FOC.  
+
+Monopolist profit maximization (with a single input)
+\[
+\max_{L}\;\;\; R(L)-w(L)L
+\]
+FOC
+\[
+R'(L)=w'(L)L+w(L)=\left(\frac{w'(L)L}{w(L)}+1\right)w(L)=\left(\varepsilon^{-1}_{s}+1\right)w(L)
+\]
+where $\varepsilon^{-1}_{s}$ is an inverse elasticity of input $L$ supply (or input price elasticity of input supply function). This gives the markdown^[How much more revenue is generated with an additional input cost. $>1$ under monopsony/oligoposny.] $\psi^{L}$ for a monopolist: 
+\[
+\psi^{L}\equiv\frac{R'(L)}{w(L)}=\varepsilon^{-1}_{s}+1.
+\]
+(Variable) Cost minimization (with a single input)
+\[
+\mathcal L=w(L)L+\lambda[Q^{*}-F(L; \bfV, \omega)].
+\]
+FOC
+\[
+w'(L)L+w(L)=\lambda F_{L} \quad \Leftrightarrow \quad \underbrace{\frac{w'(L)L}{w(L)}+1}_{=\varepsilon^{-1}_{s}+1}=\frac{\lambda F_{L}}{w(L)}.
+\]
+Then
+\[
+\psi^{L}=\varepsilon^{-1}_{s}+1=\frac{\lambda}{P}\frac{F_{L}L}{Y}\frac{PY}{w(L)L}=\mu^{-1}\frac{\theta^{L}}{S^{L}}.
+\]
+With any other flexible input $V=Energy, M$ and markup $\mu^{V}$ derived from $V$, input price markdown for $L$ is given by:^[This formula has an extra benefit that it cancels out bias terms of using deflated revenues in place of quantity. See Proposition 2 of Appendix.]
+\[
+\psi^{L}=\frac{\left(\frac{\theta^{L}}{S^{L}}\right)}{\left(\frac{\theta^{V}}{S^{V}}\right)}.
+\]
+For implementation, Yeh et al. (2022) use the DLW algorithm.  
+
+Wage markdown is defined as the above. Taking $V=M$, we have $\psi^{L}=\left(\frac{\theta^{L}}{S^{L}}\right)/\left(\frac{\theta^{M}}{S^{M}}\right)$. It is important to note that, for markdown to be unaffected by market power in other factor markets $\frac{\theta^{V}}{S^{V}}$, the labour monopsony firm needs to be a price taker in the factor market for $V$. This is the assumption which must hold when using the above formula.^[Because market for $V=M$ is assumed to be competitive, one cannot consider material input price markdown defined as $\psi^{M}=\frac{\left(\frac{\theta^{M}}{S^{M}}\right)}{\left(\frac{\theta^{L}}{S^{L}}\right)}$ which implies $\psi^{L}=\left(\psi^{M}\right)^{-1}$. ] 
+
+Is this assumption realistic? The answer depends on the context. However, an oligopsonistic market power in materials and energy markets is less likely to hold than oligopsonistic market power in a labour market. Labour market transactions are inherently tied to location which limits the competition among the buyers. In the case of materials, they are more mobile hence there will be more firms that demand the same materials. In the case of energy, its price is often regulated by the government.  
+
+## Data 
+
+::: {.proposition #dataMH1 name="CM"}
+**Census of Manufactures**  
+
+Establishment level data of all manufactures in 1976-2014, collected in years ending with 2 and 7.  
+Revenues and inputs (capital, labor, materials, energy) in monetary units.  
+
+*Census Bureau*   
+:::  
+::: {.proposition #dataMH2 name="price"}
+**NBER-CES Manufacturing Database**  
+
+Annual industry-level data from 1958-2018 on output, employment, payroll and other input costs, investment, capital stocks, TFP, and various industry-specific price indexes.  
+
+*National Bureau of Economic Research*   
+:::  
+::: {.proposition #dataMH3 name="ASM"}
+**Annual Survey of Manufactures**  
+
+Establishment level data of all manufactures in 1976-2014, rotating panel collected in every year.  
+Large plants are sampled with near certainty, small plants are sampled less frequently.  
+
+*Census Bureau*   
+:::  
+
+US all industry aggregate markdown decreased (1977-2002) but rose after 2002. Markdown is increasing in the local concentration measure (HHI).  
+
+
+# Rubens' method on markup and markdown
+
+## Formula under nonsubstitutability of materials
+
+### Prevalence of nonsubstitutability in production processes
+
+In modern manufacturing, there are materials and energy that are difficult to substitute with other inputs. In agriculture, seeds/seedlings and water cannot be substituted with any other inputs. Chemicals (fertilizer, pesticide, fungicide, etc.) and facilities (nets, fences) are more substitutable. Nonsubstitutability of materials implies production with Leontief in (raw) materials (tobacco leaves)^[$\epsilon$ is missing, but it will not be a problem, because, in the end the paper does not invert a factor demand. But for comparability, I add it in below. To be exact with the paper, assume $\epsilon=0$. ] ^[DLW also consider Leontief in materials to which they call the "value added production function" as opposed to "gross output production function" in which they treat materials as substitutable. However, even with their version of "VA production function," they subtract the materials as if it is a preprocess of cost minimization and do not consider how materials affect FOCs.] 
+
+### Effects of nonsubstitutability
+
+Yeh et al. (2022) estimated markups and markdowns simultaneously. Rubens (2023) showed this is no longer possible (without further assumptions) once material is nonsubstitutable. 
+
+Consider a production technology with Leontief in materials:
+\[
+Q^{*}\leqslant \min\left\{\beta^{M}M, H(L, K)e^{\omega}\right\}
+\]
+$M$ is more like a constraint that firm has to keep up with when changing other inputs... Cost minimization of planned production (free of $\epsilon$):
+\[
+\mathcal L=W^{M}(M)M+W^{L}(L)L+\lambda\left[Q^{*}- \min\left\{\beta^{M}M, H(L, K)e^{\omega}\right\}\right].
+\]
+FOC
+\[
+W^{M'}(M)M\frac{dM}{dL}+W^{M}(M)\frac{dM}{dL}
++W^{L'}(L)L+W^{L}(L)=\lambda H_{L}e^{\omega}.
+\]
+Rewriting
+\[
+\underbrace{\left[\frac{W^{M'}(M)}{W^{M}}M+1\right]}_{\equiv\psi^{M}}W^{M}\frac{dM}{dL}+
+\underbrace{\left[\frac{W^{L'}(L)}{W^{L}}L+1\right]}_{\equiv\psi^{L}}W^{L}
+=
+\lambda\underbrace{H_{L}e^{\omega}}_{\frac{\partial Q^{*}}{\partial L}}
+\]
+$\psi^{M}$ is inverse material supply elasticity + 1 and $\psi^{L}$ is inverse labor supply elasticity + 1. So
+\[
+\psi^{M}W^{M}\frac{\frac{dM}{dL}}{\frac{\partial Q^{*}}{\partial L}}
++\psi^{L}W^{L}\frac{1}{\frac{\partial Q^{*}}{\partial L}}=\lambda.
+\]
+In Leontief, any increase in $M$ increases $Q^{*}$ at the same rate, or at $\frac{Q^{*}}{M}$:
+\[
+\frac{\partial Q^{*}}{\partial L}\frac{dL}{dM}=\frac{Q^{*}}{M}=\frac{Ye^{-\epsilon}}{M}.
+\]
+This gives
+\[
+\psi^{M}W^{M}\frac{1}{\frac{Ye^{-\epsilon}}{M}}
++\psi^{L}W^{L}\frac{1}{\frac{\partial Ye^{-\epsilon}}{\partial L}}=\lambda.
+\]
+Usual substitution gives
+\[
+\begin{aligned}
+\lambda
+&=
+P\psi^{M}\frac{W^{M}M}{PYe^{-\epsilon}}+
+P\psi^{L}\frac{W^{L}L}{PY}\frac{1}{\frac{\partial Ye^{-\epsilon}}{\partial L}}\frac{1}{\frac{L}{Y}},\\
+&=
+P\psi^{M}S^{M}e^{\epsilon}+
+P\psi^{L}S^{L}\frac{1}{\theta^{L}}e^{\epsilon},
+\end{aligned}
+\]
+or^[\eqref{4a} nests DLW (substitutable $S^{M}=0$ and input market competition $\psi^{V}=1$), Morlacco (2017, substitutable $S^{M}=0$ and input market non-competition $\psi^{V}>1$), and De Loecker and Scott (2022, nonsubstitutable $S^{M}>0$ and input market competition $\psi^{V}=1$) as special cases. ]
+\begin{equation}
+\mu=\left[S^{M}\psi^{M}+
+S^{L}\psi^{L}\frac{1}{\theta^{L}}\right]^{-1}e^{-\epsilon}.
+\tag{4a}\label{4a}
+\end{equation}
+
+Note: There is $\color{red}{\text{no input demand inversion}}$ involved up to here. 
+
+* To be concrete, DLW's formula does not necessarily imply its implementation (algorithm with inversion). Neither does YMH's or Rubens'.  
+* For markup/markdown estimation, one can either invert a factor demand and/or use a dynamic panel estimator.  
+
+But we need to deal with $\epsilon$.
+
+
+
+## Identification strategy "choices"
+
+
+### Design choice
+
+In \eqref{4a}:  
+
+* 1 equation, 6 variables  
+* 3 unknowns: $\mu, \psi^{L}, \psi^{M}$  
+* 3 knowns (1 estimable: $\theta^{L}$, 2 observables: $S^{L}, S^{M}$)  
+
+Need to come up with a structure that gives values to 2 unknowns.
+
+* $\psi^{L}=1$, $\mu_{i}=\mu=1$ and exogenously set by wholesalers, estimate $\psi^{M}$ (main text).  
+  * Other values of $\mu$ in Appendix.  
+* $\psi^{L}=1$, $\psi^{M}$ is given by a nested logit (over farmer occupations) framework (with many accompanying assumptions) as a function of estimated parameters of occupation share equation, estimate $\mu$ (Appendix A, C.1).  
+  * Noisy estimates.  
+* Others are possible.  
+
+Why are $\psi^{L}=1$, $\mu_{i}=\mu$ plausible?  
+
+* Wage rates did not change before and after consolidation.  
+* Wholesaler (state monopoly) unilaterally sets $P$.  
+
+Once we assume uniform exogenous markup and $\psi^{L}=1$, we have:
+\begin{equation}
+\begin{aligned}
+\mu
+&=
+\frac{\beta^{L}}{S^{L}_{it}+\beta^{L}S^{M}_{it}\psi^{M}_{it}}, \\
+(S^{L}_{it}+\beta^{L}S^{M}_{it}\psi^{M}_{it})\mu
+&=
+\beta^{L},\\
+\psi^{M}_{it}
+&=
+\frac{\beta^{L}-\mu S^{L}_{it}}{\mu\beta^{L}S^{M}_{it}},\\
+&=
+\frac{1}{S^{M}_{it}}\left(\frac{1}{\mu}-\frac{S^{L}_{it}}{\beta^{L}}\right).
+\end{aligned}
+\tag{8}
+\end{equation}
+
+### Moment condition choice
+
+How do we deal with $\epsilon$?  
+
+* Proxy variable approach eliminates $\epsilon$ in the moment condition by inverting a factor demand to substitute for $\omega$.  
+* Dynamic panel estimator leaves $\epsilon$ in the moment condition.  
+
+Rubens chooses the latter (proxy variable approach is placed in Appendix), because:  
+
+* Input demand (and its inversion) must control for (markups and) markdowns. This requires an additional structure or additional restrictions on their distributions. This limits the data from expressing heterogenous markups/markdowns. 
+* With additional parametric restrictions on productivity dynamics in dynamic panel estimator, heterogenous markdowns are obtained. Since markdown estimation is the main objective, this is better suited to the purpose.^[I do not fully understand this argument.]  
+
+
+## Estimation steps
+
+Main results set $\epsilon=0$ and use dynamic panel estimator.  
+
+Robustness check results invert a factor demand to purge $\epsilon$. 
+
+One could have retained $\epsilon$ and estimated dynamic panel, too.  
+
+### Estimation without $\epsilon$
+
+
+1. Assume a production function with quality-unadjusted inputs $\tilde{l}, \tilde{k}$ and quality-unadjusted revenue with a quality adjustment function $a\left(p, w^{L}\right)$:
+\[
+q=\delta\left(\tilde{l}, \tilde{k}, \bfbeta\right)+a\left(p, w^{L}\right)+\omega
+\]
+1. Incorporate a consolidation dummy in productivity dynamics and assume AR(1) in redisdual productivity:
+\[
+\omega_{it}=\bfbeta^{z'}\bfz_{it}+\tilde{\omega}_{it}, \quad \tilde{\omega}_{it}=\rho\tilde{\omega}_{it-1}+\nu_{it}
+\]
+1. By $\rho$-differencing, form moment conditions $\E[\hat{\nu}_{it}(\tilde{l}_{it-1}, \tilde{k}_{it}, \tilde{k}_{it-1})]=0,$ etc. and estimate $\bfbeta$.
+
+
+### Estimation with $\epsilon$
+
+Appendix C.1. deals with $\epsilon\neq 0$. It assumes leaf as flexible but nonsubstitutable inputs and inverts its demand (termed as "control function approach").^[Control function approach, proxy variable approach, production approach...all of them seem to refer to the same thing.]  
+
+* The "CF Approach" uses Leontief: leaf price per case = leaf costs/output in cases. Use leaf price per case $w^{M}$ in the leaf demand inversion to control for differences in input price (input quality). 
+* Input demand is given by $m(p, w^{L}, w^{M}, \tilde{\bfx}, \bfbeta, \mu, \psi^{M}, \omega)$ in Appendix E^[Just derive $Q^{*}(\cdot)$ from cost minimzation FOCs and form $\frac{Q^{*}}{\beta^{M}}$ where $\beta^{M}$ is the quantity per case.] and substitute $\mu=\mu(p, \gamma^{P}, \bfs)$ with $\bfs$ is a vector of various market shares and $\gamma^{P}$ is price elasticity of output demand. $\gamma^{P}$ is assumed to be unique and to be subsumed in the intercept term (a strong ass.). $\psi^{M}$ is derived as $\psi^{M}(w^{M}, \bfs)$. Everything is sort of first-order Taylor approximation.  
+\[
+\begin{aligned}
+q
+&=
+\delta\left(\tilde{\bfx}, \bfbeta\right)+a\left(p, w^{L}\right)+\omega+\epsilon,\\
+&=
+\delta\left(\tilde{\bfx}, \bfbeta\right)+a\left(p, w^{L}\right)+h\left(p, w^{L}, w^{M}, \tilde{\bfx}, \bfbeta, \gamma^{P}, \bfs\right)+\epsilon,\\
+&=
+\phi\left(\tilde{\bfx}, \bfbeta, p, w^{L}, w^{M}, \bfs\right)+\epsilon.
+\end{aligned}
+\]
+* Productivity is backed out with the use of quality adjustment function:
+\[
+\omega=\hat{\phi}-\delta\left(\tilde{\bfx}, \bfbeta\right)-a\left(p, w^{L}\right).
+\]
+* Results do not change much (Table A4).  
+
+> "(T)he production approach to markup measurement does not hinge
+> on a particular approach to estimate the production function.
+> Rather it is an approach that delivers markups (and potentially
+> marginal costs) for each individual producer (and time period),
+> by exploiting standard cost minimization of a variable input in production."
+>
+> `r tufte::quote_footer('--- De Loecker, 2020')`
+
+
+# GNR criticism and the proposed solution
+
+@GNR2020 showed that, for gross production functions, in the absence of material demand variations (say, by input prices which may or maynot be observed), parameters are not indentified when using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+
+There are four points in relationship with DLW:
+
+1. GNR criticism is on gross production function estimation.  
+   * A *gross production function* describes production technology with material inputs.  
+   * A *value added production function* describes production technology only with non-materials, i.e., labour, and various forms of capital.  
+1. DLW formula and implementation (obtaining production function parameters) are separate objects. DLW formula is unrelated to GNR criticism.  
+1. One needs a source of variations across firms in material input demand. If material input prices do not vary through time, material input demand, conditional on lagged inputs, varies across firms only by shocks $\xi_{it}$ to TFP, which are by design orthogonal to IVs, so IVs cannot identify parameters.  
+1. GNR shows the criticism also applies to dynamic panel estimators.  
+
+Is this a fatal blow to the "production approach"? 
+
+
+## Criticism: Nonidentification of elasticity
+
+In the absence of time-series variations in relative prices $\frac{P_{t}}{P^{V}_{t}}$, IV estimation (GMM) using lagged flexible inputs as instruments for current flexible inputs does not give unique values for output elasticity $\theta^{K}, \theta^{L}$ on $k, l$.  
+
+Even with time-series variations in relative prices, IV estimates suffer from weak identification. This is also shown in Monte Carlo by Kasahara and Sugita (2023). 
+
+## Why
+
+\[
+\begin{aligned}
+y_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+\omega_{it}+\epsilon_{it},\\
+&=
+f^{0}\left(\bfx_{it}\right)-f^{0}_{M}\left(\bfx_{it}\right)-\E[\epsilon_{it}]+d_{t}+\epsilon_{it}.
+\end{aligned}
+\]
+where we used price-taking expected profit maximization FOC
+\[
+\max_{M_{it}}
+\;\;\; \E\left[P_{it}F^{0}(K_{it}, L_{it}, M_{it})e^{\omega_{it}+\epsilon_{it}}\right]-\rho_{it}M_{it}
+\]
+\[
+\frac{\partial F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}]}{\partial M_{it}}=\frac{\rho_{it}}{P_{it}}.
+\]
+
+\[
+f^{0}_{M}\left(\bfx_{it}\right)+\omega_{it}+\E[\epsilon_{it}]=\underbrace{\ln\rho_{t}-p_{t}}_{\equiv d_{t}},
+\quad 
+f^{0}_{M}\left(\bfx_{it}\right)=\ln\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}},
+\]
+so one can invert
+\[
+\begin{aligned}
+\omega_{it}
+&=
+\underbrace{-f^{0}_{M}\left(\bfx_{it}\right)-\E[\epsilon_{jt}]}_{\equiv M^{-1}\left(\bfx_{it}\right)}+d_{t},\\
+y_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+\omega_{it}+\epsilon_{it},\\
+&=
+\underbrace{f^{0}\left(\bfx_{it}\right)+M^{-1}\left(\bfx_{it}\right)}_{\equiv \phi_{G}\left(\bfx_{it}\right)}+d_{t}+\epsilon_{it}.\quad (\phi_{G}+d_{t}=\phi \ \mathrm{of\ DLW})
+\end{aligned}
+\]
+Using $\phi_{G}$
+\[
+\begin{aligned}
+\omega_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+M^{-1}\left(\bfx_{it}\right)+d_{t}-f^{0}\left(\bfx_{it}\right),\\
+&=
+\phi_{G}\left(\bfx_{it}\right)+d_{t}-f^{0}\left(\bfx_{it}\right),\\
+\omega_{it-1}
+&=
+\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right).
+\end{aligned}
+\]
+First-order Markov ass. gives
+\[
+\begin{aligned}
+\omega_{it}
+&=
+h^{0}\left(\omega_{it-1}\right)+\xi_{it}, \quad (h^{0}=g \ \mathrm{of\ DLW})\\
+&=
+h^{0}\left\{\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right)\right\}+\xi_{it}.
+\end{aligned}
+\]
+So, with price-taking profit max FOC and FO Markov, we get
+\[
+y_{it}=f^{0}\left(\bfx_{it}\right)+h^{0}\left\{\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right)\right\}+\xi_{it}+\epsilon_{it}.
+\]
+
+The statement: If $d_{t}=d$ for all $t$,  
+
+* Conditional expectation (conditioned on IVs $\Gamma_{it}$) of $y_{it}=f^{0}(\bfx_{it})+h^{0}(z)+\xi_{it}+\epsilon_{it}$ can be expressed as $E\left[f^{0}(\bfx_{it})\left|\right.\Gamma_{it}\right]+E\left[h^{0}(z)\left|\right.\Gamma_{it}\right]$.  
+* But, when we define new functions $\tilde{f}\neq f^{0}, \tilde{h}\neq h^{0}$ by mixing a nuisance function at a constant proportion $a$ for any $a\in(0, 1)$ as in the below, we can show (in Theorem 1) that their conditional (on IVs) expectations are same $E\left[f^{0}(\bfx_{it})\left|\right.\Gamma_{it}\right]+E\left[h^{0}(z)\left|\right.\Gamma_{it}\right]=E\left[\tilde{f}(\bfx_{it})\left|\right.\Gamma_{it}\right]+E\left[\tilde{h}(z)\left|\right.\Gamma_{it}\right]$.  
+
+\[
+\begin{aligned}
+\tilde{f}\left(\bfx_{it}\right)&\equiv (1-a)f^{0}\left(\bfx_{it}\right)+a\phi_{G}\left(\bfx_{it}\right),\\
+\tilde{h}\left(z\right)&\equiv ad+(1-a)h^{0}\left(\frac{z-ad}{1-a}\right).
+\end{aligned}
+\]
+
+* For true functions $f^{0}, h^{0}$, there are infinitely many *wrong* functions $\tilde{f}, \tilde{h}$, or different "parameters", whose conditional expectations (of functional values) are identical (*observationally equivalent*).^[When two different distributions give the same moments/likelihood, the parameters are not uniquely identified. ] Different functions give different parameter values. Conditional expectations using IVs map to multiple (this case infiintely many) different parameter values. So conditional expectations of true functions cannot be identified uniquely by using IVs, or we say, functions $f^{0}, h^{0}$ are *not point identified*.^[When any two different model values $m_{1}, m_{2}\in\mathcal M$ are not observationally equivalent (i.e., parameters $\theta_{1}\neq\theta_{2}$ are different), the parameters $\theta$ of the model are said to be *point identified*. See @Lewbel2019.]  
+* Note: When one regresses $y_{it}$ on $\Gamma_{it}$, [given the same "what can be known from data" [$\phi_{G}$ of @Lewbel2019], which is usually the distributions of data under certain i.i.d. sampling] **the same data/distributions of data/model value $m$ map to different parameter values** $f^{0}_{v}\neq \tilde{f}_{v}=f^{0}_{v}+a\frac{\partial M^{-1}}{\partial v}$ for any $a\in(0, 1)$ if $\frac{\partial M^{-1}}{\partial v}\neq 0$. So (true) parameters are not point identified.  
+* GNR Appendix O1 shows that nonidentification results also applies to dynamic panel estimators.  
+
+## GNR solution: Use price-taking profit maximization FOC to pin down material demand partial derivative
+
+Their Theorem 2 and 3 show that using the *share regression* recovers all parameters of production function nonparametrically:
+\begin{equation}
+s_{it}=\ln D^{\epsilon}\left(\bfx_{it}\right)+u^{\epsilon}_{it}.
+\tag{s}
+\label{sharereg}
+\end{equation}
+
+### Algorithm (in theory)
+
+1. Estimate share regression: log shares on $\bfx_{it}$.  
+1. Get $\hat{\epsilon}_{it}=-\left(s_{it}-\ln \hat{D}^{\epsilon}\left(\bfx_{it}\right)\right)$ and $\hat{\E}$ by the mean of $e^{\hat{\epsilon}_{it}}$, $\hat{f}_{m}=\frac{\hat{D}^{\epsilon}\left(\bfx_{it}\right)}{\hat{\E}}$.  
+1. Integrate $\grave{f}=\int \hat{f}_{m}dm_{it}$ and compute $\hat{\mathcal Y}_{it}=y_{it}-\grave{f}-\hat{\epsilon}_{it}$.  
+1. Regress $\hat{\mathcal Y}_{it}$ on $k_{it}, l_{it}, k_{it-1}, l_{it-1}, \mathcal Y_{it-1}$, possible interactions of these and recover derivatives $\mathcal C_{v}$ of $v=k_{it}, l_{it}$. 
+1. Integrate $\int \hat{\mathcal C}_{v}dv=\hat{\mathcal C}+c$ which gives $\hat{\mathcal C}$ up to a constant.  
+1. Compute $\hat{f}\left(\bfx_{it}\right)+c=\grave{f}\left(\bfx_{it}\right)-\hat{\mathcal C}$, $\hat{\omega}_{it}+c=y_{it}-\grave{f}\left(\bfx_{it}\right)-\hat{\epsilon}_{it}$.  
+
+### Algorithm (for implementation using Siev estimator)
+
+
+
+
+### Deriving the share regression
+
+Price-taking profit maximization gives
+\[
+P_{t}\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}}e^{\omega_{it}}\E[e^{\epsilon_{it}}]=\rho_{t}.
+\]
+Noting
+\[
+\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}=
+\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial F^{0}}
+\frac{\partial F^{0}}{\partial M_{it}}
+\frac{\partial M_{it}}{\partial m_{it}}=\frac{1}{F^{0}}F^{0}_{M}M_{it},
+\]
+where the last derivative is given by:
+\[
+1=\frac{\partial M}{\partial M}=\frac{\partial M}{\partial m}\frac{\partial m}{\partial M}=\frac{\partial M}{\partial m}\frac{1}{M} \quad \Rightarrow \quad \frac{\partial M}{\partial m}=M,
+\]
+so, 
+\[
+F^{0}_{M}=\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}\frac{F^{0}}{M_{it}}=f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}}{M_{it}}, \quad f^{0}_{m}\left(\bfx_{it}\right)\equiv\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}.
+\]
+Plugging this in gives:
+\[
+\begin{aligned}
+P_{t}f^{0}_{m}F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}]&=\rho_{t}M_{it},\\
+P_{t}f^{0}_{m}\underbrace{F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}e^{\epsilon_{it}}}_{\equiv Y_{it}}e^{-\epsilon_{it}}\E[e^{\epsilon_{it}}]=\rho_{t}M_{it},\\
+f^{0}_{m}e^{-\epsilon_{it}}\E[e^{\epsilon_{it}}]=\frac{\rho_{t}M_{it}}{P_{it}Y_{it}}\equiv S_{it}.
+\end{aligned}
+\]
+Taking logs and denoting $\ln E[e^{\epsilon_{it}}]=\ln\E$ gives \eqref{sharereg}:
+\[
+s_{it}=\underbrace{\ln f^{0}_{m}+\ln\varepsilon}_{\equiv \ln D^{\epsilon}\left(\bfx_{it}\right)}-\epsilon_{it}, \quad D^{\epsilon}\left(\bfx_{it}\right)=f^{0}_{m}\left(\bfx_{it}\right)\E[e^{\epsilon_{it}}].
+\]
+
+### Thereom 2 states that one can recover $\hat{f}_{m}$ by using a share regression:
+
+Given $\omega_{it}, \bfx_{it}\in\mathcal I_{it}$ we have $E[\epsilon_{it}|\mathcal I_{it}]=0$, so regressing $s_{it}$ on a flexible function of $\bfx_{it}$ identifies $f^{0}_{m}$ as a set of coefficients on the part of $m_{it}$. 
+\[
+E\left.\left[s_{it}\right|\bfx_{it}\right]=\ln D^{\epsilon}\left(\bfx_{it}\right).
+\]
+This identifies $D^{\epsilon}$. This gives $\epsilon_{it}$ and $\E=E[e^{\epsilon_{it}}]$:
+\[
+\hat{\epsilon}_{it}=\ln \hat{D}^{\epsilon}-s_{jt}, \quad \hat{\E}=E\left[e^{\ln \hat{D}^{\epsilon}-s_{jt}}\right].
+\]
+This gives:
+\[
+\begin{aligned}
+\ln \hat{f}_{m}
+&=\ln \hat{D}^{\epsilon}-\ln\hat{\E},\\
+\hat{f}_{m}
+&=\frac{\hat{D}^{\epsilon}}{\hat{\E}}.
+\end{aligned}
+\]
+
+### Thereom 3 states that one can recover the rest of $f$ up to a constant if $\hat{f}_{m}$ is known:
+
+By the fundamental theorem:
+\begin{equation}
+\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}=f^{0}\left(\bfx_{it}\right)+\mathcal C(k_{it}, l_{it}), \quad \mathrm{or}\quad
+f^{0}\left(\bfx_{it}\right)=\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}-\mathcal C(k_{it}, l_{it}).
+\tag{f}\label{f0identified}
+\end{equation}
+where the constant of integration $\mathcal C$ is allowed to depend on $k_{it}, l_{it}$, or $\mathcal C=c_{0}+c_{1}(k_{it}, l_{it})$ without loss of generality. So if we can compute $\mathcal C$, then we can identify all of $f^{0}\left(\bfx_{it}\right)$. GNR says we can identify $f^{0}\left(\bfx_{it}\right)$ up to a constant, so we can can still discuss partials $f_{v}$ and do analysis on productivity $\omega_{it}$ by taking a ratio to the most/least productive firm $i=0$ with $\hat{\omega}_{it}-\omega^{0t}$.  
+
+Start with the production function in logs:
+\[
+\begin{aligned}
+\omega_{it}
+&=
+y_{it}-f^{0}-\epsilon_{it},\\
+&=
+y_{it}-\left\{\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}-\mathcal C(k_{it}, l_{it})\right\}-\epsilon_{it}.
+\end{aligned}
+\]
+Define
+\[
+\begin{aligned}
+\mathcal Y_{it}
+&\equiv 
+y_{it}-\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}-\epsilon_{it},\\
+&=
+\omega_{it}-\mathcal C(k_{it}, l_{it}).
+\end{aligned}
+\]
+Note that given we have $\hat{\epsilon}_{it}$ and $\hat{f}^{0}_{m}$, we can get $\hat{\mathcal Y}_{it}$. Using first-order Markov on $\omega_{it}$
+\[
+\begin{aligned}
+\mathcal Y_{it}
+&=
+h^{0}\left\{\omega_{it-1}\right\}+\xi_{it}-\mathcal C(k_{it}, l_{it}),\\
+&=
+h^{0}\left\{\mathcal Y_{it-1}+\mathcal C(k_{it-1}, l_{it-1})\right\}+\xi_{it}-\mathcal C(k_{it}, l_{it}).
+\end{aligned}
+\]
+Denote $\Gamma_{y}=(k_{it}, l_{it}, k_{it-1}, l_{it-1}, \mathcal Y_{it-1})$. Then
+\[
+E\left.\left[\mathcal Y_{it}\right|\Gamma_{y}\right]=-\mathcal C(k_{it}, l_{it})+h^{0}\left\{\mathcal Y_{it-1}+\mathcal C(k_{it-1}, l_{it-1})\right\}.
+\]
+Then we get the partial derivatives of $c_{1}(k_{it}, l_{it})$ of integration $\mathcal C$ as (negative) coefficients on $k_{it}, l_{it}$ conditional on $\mathcal Y_{it-1}k_{it-1}, l_{it-1}$. As we cannot identify $c_{0}$ part, the constant of integration $\mathcal C$ is identified up to a constant. Using this in \eqref{f0identified} gives $\hat{f}^{0}$ up to a constant.  
+
+## Limitations of GNR solution
+
+### Under monopoly, share regression does not give $f^{0}_{m}$ nonparametrically
+
+We are trying to estimate markdowns and markups. Why a price taker? 
+
+Monopolist profit maximization gives
+\[
+\begin{aligned}
+\rho_{t}
+&=
+\left(P'_{t}F^{0}\left(\bfx_{it}\right)+P_{t}\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}],\\
+&=
+\left(\frac{\partial P}{\partial Y_{it}}\frac{F^{0}\left(\bfx_{it}\right)}{P_{t}}+f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}}{M_{it}}\right)P_{t}e^{\omega_{it}}\E[e^{\epsilon_{it}}],\\
+&=
+\left(-\eta^{-1}(\bfx_{it}, \omega_{it}, \epsilon_{it})+f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}e^{\omega_{it}}\E[e^{\epsilon_{it}}]}{M_{it}}\right)P_{t},\\
+S_{it}
+&=
+-\eta^{-1}(\bfx_{it}, \omega_{it}, \epsilon_{it})\frac{M_{it}}{Y_{it}}+f^{0}_{m}\left(\bfx_{it}\right),\\
+&=
+-\frac{\eta^{-1}(\bfx_{it}, \omega_{it}, \epsilon_{it})}{\beta^{M}}+f^{0}_{m}\left(\bfx_{it}\right), \quad \beta^{M}\equiv\frac{M_{it}}{Y_{it}}.\\
+\end{aligned}
+\]
+$\bfx_{it}$ appears both in $\eta$ and $f^{0}_{m}$ and the two functions cannot be separately identified. 
+
+### GNR shows share regression gives $f^{0}_{m}$ if output demand is iso-elastic:
+
+Iso-elastic demand function:
+\[
+\frac{P_{it}}{\Pi_{t}}=\left(\frac{Y_{it}}{Y_{t}}\right)^{\frac{1}{\sigma_{t}}}e^{\chi_{it}}.
+\]
+Price elasticity does not depend on the scale of $Y_{it}$ and is a constant $\sigma_{t}$. Of course, this is equivalent to assuming away the problem: If $\eta(\bfx_{it}, \omega_{it}, \epsilon_{it})=\eta$, then, no problem.  
+
+They also show that one can only recover a linear combination of productivity and demand shock $\frac{1+\sigma_{t}}{\sigma_{t}}\omega_{it}+\chi_{it}$.  
+
+GNR Appendix O6-1 shows how one can use share regression (under price taker FOC) and achieve identification in dynamic panel estimators with firm fixed effects under an AR(1) productivity dynamics.  
+
+
+
+# What shall we do?
+
+* Some papers (e.g., Kasahara and Sugita 2023) are working on the solution.  
+* A parametric solution under a Cobb-Douglas production had been proposed [@DoraszelskiJaumandreu2013].  
+* We can first do concentration, then proceed to Rubens' or DJ's method, and wait to see if any nonparametric (non-functional form dependent) alternative comes up.  
+
+# Appendix: Markdown in profit maximization FOC and cost minimization FOC
+
+:::::: {.cols data-latex=""}
+
+::: {.col data-latex="{0.475\textwidth}"}
+A monopsonist cost minimization problem
+\[
+\min_{V} \;\;\; P^{V}V+\lambda[Q^{*}-F(K, L, M)e^{\omega}\E[e^{\epsilon}]]
+\]
+FOC
+\[
+P^{V}+P^{V'}V-\lambda F_{V}e^{\omega}=0.
+\]
+This gives
+\[
+\begin{aligned}
+\underbrace{\left(1+P^{V'}\frac{V}{P^{V}}\right)}_{\equiv \psi^{V}}P^{V}
+&=\lambda F_{V}e^{\omega},\\
+\psi^{V}\frac{P^{V}V}{PFe^{\omega}}
+&=
+\frac{\lambda}{P}F_{V}\frac{V}{Fe^{\omega}}e^{\omega},\\
+\psi^{V}S^{V}
+&=
+\frac{1}{\mu}\theta^{V}e^{\omega},
+\end{aligned}
+\]
+\begin{equation}
+\psi^{V|min}
+=
+\frac{e^{\omega}}{\mu}\frac{\theta^{V}}{S^{V}}.
+\label{costpsi}
+\end{equation}
+:::
+
+::: {.col data-latex="{0.05\textwidth}"}
+\ 
+<!-- an empty Div (with a white space), serving as
+a column separator -->
+:::
+
+::: {.col data-latex="{0.475\textwidth}"}
+A profit maximization problem
+\[
+\max_{V} \;\;\; PF(K, L, M)e^{\omega}\E[e^{\epsilon}]-P^{V}V
+\]
+FOC
+\[
+PF_{V}e^{\omega}+P'Fe^{\omega}\frac{dQ}{dV}-P^{V}-P^{V'}V=0.
+\]
+This gives, noting $\frac{dQ}{dV}=F_{V}e^{\omega}$,
+\[
+\begin{aligned}
+\psi^{V}P^{V}
+&=
+PF_{V}e^{\omega}+P'Fe^{\omega}F_{V}e^{\omega},\\
+&=
+PF_{V}\left(e^{\omega}+\frac{\partial P}{\partial Q}\frac{Fe^{\omega}}{P}e^{\omega}\right),\\
+\psi^{V}\frac{P^{V}V}{PFe^{\omega}}
+&=
+F_{V}\frac{V}{Fe^{\omega}}\left(1-\eta^{-1}\right)e^{\omega},\\
+\psi^{V}S^{V}
+&=
+\theta^{V}\left(1-\eta^{-1}\right)e^{\omega},
+\end{aligned}
+\]
+\begin{equation}
+\psi^{V|max}
+=
+(1-\eta^{-1})e^{\omega}\frac{\theta^{V}}{S^{V}}.
+\label{profitpsi}
+\end{equation}
+:::
+::::::
+
+A monopolist-monopsonist profit maximization problem can be written as an optimal production scale problem with a cost function $C(\cdot)$:
+\[
+\max_{Q} \;\;\; PQe^{\omega}\E[e^{\epsilon}]-C(Qe^{\omega})
+\]
+FOC
+\[
+\begin{aligned}
+Pe^{\omega}+P'Qe^{\omega}-C'(Q)e^{\omega}
+&=0,\\
+C'(Q)
+&=P\left(1+\frac{\partial P}{\partial \left(Qe^{\omega}\right)}\frac{Qe^{\omega}}{P}\right),\\
+\frac{1}{\mu}
+=\frac{C'(Q)}{P}&=1-\eta^{-1}.
+\end{aligned}
+\]
+Plugging this into \eqref{costpsi}, we have \eqref{profitpsi}:
+\[
+\left.\psi^{V|min}\right|_{\mu^{-1}=1-\eta^{-1}}=\left(1-\eta^{-1}\right)e^{\omega}\frac{\theta^{V}}{S^{V}}=\psi^{V|max} .
+\]
+We also note that $\psi^{V|min}$ or $\psi^{V|max}$ is equal to factor input price markdown. This is seen by solving the profit maximization problem formulated as:
+\[
+\max_{V} \;\;\; R(V)\E[e^{\epsilon}]-P^{V}V
+\]
+with FOC
+\[
+R'(V)-P^{V'}V-P^{V}=0,
+\]
+so
+\[
+\mathrm{markdown}\equiv\frac{R'(V)}{P^{V}}=1+\frac{\partial P^{V}}{\partial V}\frac{V}{P^{V}}>1,
+\]
+where $\frac{\partial P^{V}}{\partial V}\frac{V}{P^{V}}$ is an inverse factor supply elasticicty (or a price elasticity of factor supply) which is assumed to be upwardly sloped.  
+
+Given that cost minimization problem does not consider the output price $P$, the appearance of $\mu=\frac{P}{\lambda}$ is superfluous and is a clever accident. So \eqref{costpsi} should read as, given markup $\mu$, markdown $\psi^{V}$ is determined such that \eqref{costpsi} holds. 
+
+In contrast, profit maximization takes the output prices explicitly. So \eqref{profitpsi} reads as, given the demand elasticity of output price $\eta$, markdown $\psi^{V}$ is determined such that \eqref{profitpsi} holds. 
+
+This suggests that there is no reason to expect $\psi^{V|min}$ to be the same as $\psi^{V|max}$ given that only the latter specifies what sort of output price optimization is conducted. This is also seen that only after an explicit output price optimization $\psi^{V|min}$ changes to $\psi^{V|max}$.  
+
+We also note the markup of monopolist-monopsonist is given by
+\[
+\mu=\frac{\eta}{\eta-1}>1.
+\]
+
+**Rererences**  
+
+```{r bib, include=FALSE}
+# create a bib file for the R packages used in this document
+knitr::write_bib(x = "rmarkdown", file = paste0(path, 'seiro.bib'))
+```
+

@@ -1,0 +1,77 @@
+---
+title: "GNR"
+subtitle: ""
+author: "Seiro Ito"
+date: "`r format(Sys.time(), '%Y年%m月%d日 %R')`"
+header_includes:
+    - \usepackage{tikz}
+    - \usepackage{adjustbox}
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, default-fonts, xaringan-themer.css]
+    nature:
+      highlightStyle: github
+      countIncrementalSlides: false
+      ratio: "16:9"
+    citation_package: natbib
+# path <- "c:/seiro/data/MinWageMarketPower/"; rmarkdown::render("docs/GNR_slides.Rmd")
+# renderthis::to_pdf("docs/GNR_slides.Rmd")
+# git add /docs
+# git commit -am "initial commit"
+# git config --global user.name "SeiroIto"
+---
+class: inverse
+```{r xaringan setup, include=FALSE, warning=FALSE}
+xaringanExtra::use_panelset()
+library(xaringanthemer)
+#style_mono_dark(base_color = "#cbf7ed")
+#style_mono_light(base_color = "#23395b")
+style_solarized_light(text_color = "black", title_slide_background_color = "darkblue",
+  link_color = "blue")
+```
+```{css echo=FALSE}
+.highlight-last-item > ul > li,
+.highlight-last-item > ol > li {
+  opacity: 0.5;
+}
+.highlight-last-item > ul > li:last-of-type,
+.highlight-last-item > ol > li:last-of-type {
+  opacity: 1;
+}
+.inverse {
+  background-color: #272822;
+  color: #d6d6d6;
+  text-shadow: 0 0 20px #333;
+}
+```
+## For gross production functions, parameters are not indentified: 
+
+## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+
+## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
+
+@GNR2020 
+
+
+---
+	## What does it mean if we want to estimate wage markdown using financial statement data?
+
+* You need to use only cost minimization FOCs.  
+* But markdown derived from cost minimization FOC generally does not match with markdown derived from profit maximization FOC. 
+
+
+---
+.pull-left[
+See how the right box is going down
+
+so down.
+]
+
+.pull-right[
+```{r}
+y <- data.frame(A = LETTERS[1:5],
+            B = 1:5,
+            C = sqrt(6:10))
+```
+]
