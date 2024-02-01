@@ -6,6 +6,7 @@ date: "`r format(Sys.time(), '%Y年%m月%d日 %R')`"
 header_includes:
     - \usepackage{tikz}
     - \usepackage{adjustbox}
+    - \usepackage{seiro_minimal}
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -14,15 +15,17 @@ output:
       highlightStyle: github
       countIncrementalSlides: false
       ratio: "16:9"
+#    includes:
+#      before_body: mathabbreviation.html
     citation_package: natbib
-# path <- "c:/data/MinWageMarketPower/"; rmarkdown::render("docs/GNR_slides.Rmd")
+# setwd(path <- "c:/data/MinWageMarketPower/"); rmarkdown::render("docs/GNR_slides.Rmd")
 # renderthis::to_pdf("docs/GNR_slides.Rmd")
 # git init
-# git add /docs
+# git add /docs    ## this adds a folder to track
 # git commit -am "initial commit"
-# git remote add origin https://github.com/SeiroIto/MinWageMarketPower.git
 # git config --global user.name "SeiroIto"
-# git push origin main
+# git remote add origin https://github.com/SeiroIto/MinWageMarketPower.git  ## specify remote
+# git push -f origin main  ## push files to remote
 ---
 class: inverse
 ```{r xaringan setup, include=FALSE, warning=FALSE}
@@ -32,6 +35,55 @@ library(xaringanthemer)
 #style_mono_light(base_color = "#23395b")
 style_solarized_light(text_color = "black", title_slide_background_color = "darkblue",
   link_color = "blue")
+# xaringancolor setup
+library(xaringancolor)
+xaringancolor::setup_colors(
+  red ="red",
+  green = "green",
+  blue = "blue"
+)
+```
+```{r xaringan bib, include=FALSE, cache=F}
+# bibliography setup
+library(RefManageR)
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear",
+           cite.style = "alphabetic",
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+myBib <- ReadBib("c:/seiro/settings/TeX/seiro.bib", check = FALSE)
+BibOptions(check.entries = FALSE, style = "markdown", cite.style = "authoryear",
+  bib.style = "numeric")
+```
+<div style = "position:fixed; visibility: hidden">
+$$\require{color}\definecolor{red}{rgb}{1, 0, 0}$$
+$$\require{color}\definecolor{green}{rgb}{0, 1, 0}$$
+$$\require{color}\definecolor{blue}{rgb}{0, 0, 1}$$
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+    Macros: {
+      red: ["{\\color{red}{#1}}", 1],
+      green: ["{\\color{green}{#1}}", 1],
+      blue: ["{\\color{blue}{#1}}", 1]
+    },
+    loader: {load: ['[tex]/color']},
+    tex: {packages: {'[+]': ['color']}}
+  }
+});
+</script>
+<style>
+.red {color: #FF0000;}
+.green {color: #00FF00;}
+.blue {color: #0000FF;}
+</style>
+```{r flair_color, echo=FALSE}
+library(flair)
+red <- "#FF0000"
+green <- "#00FF00"
+blue <- "#0000FF"
 ```
 ```{css echo=FALSE}
 .highlight-last-item > ul > li,
@@ -47,18 +99,45 @@ style_solarized_light(text_color = "black", title_slide_background_color = "dark
   color: #d6d6d6;
   text-shadow: 0 0 20px #333;
 }
+mark.red {
+    color:#ff0000;
+    background: none;
+}
+mark.blue {
+    color:#0000A0;
+    background: none;
+}
+.my-style {
+  font-weight: bold;
+  font-style: italic;
+  font-size: 1.5em;
+  color: red;
+}
 ```
-## For gross production functions, parameters are not indentified: 
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+    Macros: {
+      E: "{\\Large\\varepsilon}",
+      bfx: "{\\mathbf{x}}",
+      bfX: "{\\mathbf{X}}",
+      bfbeta: "{\\boldsymbol{\\beta}}",
+    }
+  }
+});
+</script>
+
+## Gross production function parameters are not indentified. 
 
 ## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
 
 ## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
 
-@GNR2020 
+`r Citet(myBib, "GNR2020")`
 
 
 ---
-	## What does it mean if we want to estimate wage markdown using financial statement data?
+## What does it mean if we want to estimate wage markdown using financial statement data?
 
 * You need to use only cost minimization FOCs.  
 * But markdown derived from cost minimization FOC generally does not match with markdown derived from profit maximization FOC. 
@@ -78,3 +157,343 @@ y <- data.frame(A = LETTERS[1:5],
             C = sqrt(6:10))
 ```
 ]
+
+---
+class: middle, inverse
+
+# Issue: Transmission/endogeneity problem
+---
+class: inverse
+### Estimate production function parameters under unobservable heterogenous productivity $A_{i}$?
+
+\begin{equation*}
+Y_{i}=f(A_{i}, K, L)+e. 
+\end{equation*}
+
+
+### OLS estimates are biased: "Transmission problem".
+
+### Solution: Lagged input decision (lagged input variable) is orthogonal to current shocks. IV.  
+
+* Dynamic panel estimators.  
+* Proxy variable methods.  
+
+### Past literature focused on value-added production functions. 
+
+---
+class: inverse
+### Gross output production function = value-added production function + intermediate inputs
+
+--
+
+### GNR: 1. Lagged input = IV does not nonparametrically identify parameters.  
+
+--
+
+### GNR: 2. Use of price-taker profit max FOC achieves identification.  
+
+--
+
+### (Price-taker profit max is restrictive.)
+---
+class: inverse, middle
+
+# Negative result: Nonparametric nonidentification
+
+---
+class: inverse
+
+### $y_{it}=f(\bfx_{it})+\omega_{it}+\epsilon_{it}$
+
+--
+
+### Eliminate unobservable productivity $\omega_{it}$ with $h(\bfx_{it-1},d_{t-1})$, real factor price $d_{t-1}$.
+
+--
+
+### If $d_{t}$ is constant, conditional (on IV, usually $\bfx_{it-1}$) expectation of $y_{it}$ cannot separately identify parameters of $f, h$.
+--
+
+### This also holds for dynamic panel estimators. 
+
+--
+
+### Monte Carlo: Even when $d_{t}$ varies, identification is weak, not usable.
+---
+class: inverse
+Production function
+
+<!--$$
+Y_{it}=F^{0}(K_{it}, L_{it}, M_{it})e^{\omega_{it}+\epsilon_{it}}.
+$$-->
+
+\begin{aligned}
+Y_{it}
+&=F^{0}(K_{it}, L_{it}, M_{it})e^{\omega_{it}+\epsilon_{it}},\\
+y_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+\omega_{it}+\epsilon_{it},\\
+&=
+f^{0}\left(\bfx_{it}\right)-f^{0}_{M}\left(\bfx_{it}\right)-\E[\epsilon_{it}]+d_{t}+\epsilon_{it}.
+\end{aligned}
+
+where we used price-taking expected profit maximization FOC
+
+\begin{equation*}
+\max_{M_{it}}
+\;\;\; \E\left[P_{it}F^{0}(K_{it}, L_{it}, M_{it})e^{\omega_{it}+\epsilon_{it}}\right]-\rho_{it}M_{it}
+\end{equation*}
+
+\begin{equation*}
+\frac{\partial F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}]}{\partial M_{it}}=\frac{\rho_{it}}{P_{it}}.
+\end{equation*}
+
+\begin{equation*}
+f^{0}_{M}\left(\bfx_{it}\right)+\omega_{it}+\E[\epsilon_{it}]=\underbrace{\ln\rho_{t}-p_{t}}_{\equiv d_{t}},
+\quad 
+f^{0}_{M}\left(\bfx_{it}\right)=\ln\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}},
+\end{equation*}
+so one can invert
+\begin{equation*}
+\omega_{it}
+=
+-f^{0}_{M}\left(\bfx_{it}\right)-\E[\epsilon_{jt}]+d_{t}.
+\end{equation*}
+---
+class: inverse
+\begin{aligned}
+\omega_{it}
+&=
+\underbrace{-f^{0}_{M}\left(\bfx_{it}\right)-\E[\epsilon_{jt}]}_{\equiv M^{-1}\left(\bfx_{it}\right)}+d_{t},\\
+y_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+\omega_{it}+\epsilon_{it},\\
+&=
+\underbrace{f^{0}\left(\bfx_{it}\right)+M^{-1}\left(\bfx_{it}\right)}_{\equiv \phi_{G}\left(\bfx_{it}\right)}+d_{t}+\epsilon_{it}.\quad (\phi_{G}+d_{t}=\phi \ \mathrm{of\ DLW})
+\end{aligned}
+
+Using $\phi_{G}$
+\begin{aligned}
+\omega_{it}
+&=
+f^{0}\left(\bfx_{it}\right)+M^{-1}\left(\bfx_{it}\right)+d_{t}-f^{0}\left(\bfx_{it}\right),\\
+&=
+\phi_{G}\left(\bfx_{it}\right)+d_{t}-f^{0}\left(\bfx_{it}\right),\\
+\omega_{it-1}
+&=
+\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right).
+\end{aligned}
+
+First-order Markov ass. gives
+\begin{aligned}
+\omega_{it}
+&=
+h^{0}\left(\omega_{it-1}\right)+\xi_{it}, \quad (h^{0}=g \ \mathrm{of\ DLW})\\
+&=
+h^{0}\left\{\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right)\right\}+\xi_{it}.
+\end{aligned}
+So, with price-taking profit max FOC and FO Markov, we get
+\begin{equation*}
+y_{it}=f^{0}\left(\bfx_{it}\right)+h^{0}\left\{\phi_{G}\left(\bfx_{it-1}\right)+d_{t-1}-f^{0}\left(\bfx_{it-1}\right)\right\}+\xi_{it}+\epsilon_{it}.
+\end{equation*}
+---
+class: inverse
+Theorem 1: Nonidentification of parameters
+### If real factor price $d_{t}=d$ for all $t$,  model+data $\rightarrow$ non unique parameter sets
+
+* Conditional expectation (conditioned on IVs $\Gamma_{it}$) of $y_{it}=f^{0}(\bfx_{it})+h^{0}(z)+\xi_{it}+\epsilon_{it}$ can be expressed as $\E\left[f^{0}(\bfx_{it})\left|\right.\Gamma_{it}\right]+\E\left[h^{0}(z)\left|\right.\Gamma_{it}\right]$.  
+* But, when we define new functions $\tilde{f}\neq f^{0}, \tilde{h}\neq h^{0}$ by mixing a nuisance function at a constant proportion $a$ for any $a\in(0, 1)$ as in the below, we can show (in Theorem 1) that their conditional (on IVs) expectations are same $\E\left[f^{0}(\bfx_{it})\left|\right.\Gamma_{it}\right]+\E\left[h^{0}(z)\left|\right.\Gamma_{it}\right]=\E\left[\tilde{f}(\bfx_{it})\left|\right.\Gamma_{it}\right]+\E\left[\tilde{h}(z)\left|\right.\Gamma_{it}\right]$.  
+
+\begin{aligned}
+\tilde{f}\left(\bfx_{it}\right)&\equiv (1-a)f^{0}\left(\bfx_{it}\right)+a\phi_{G}\left(\bfx_{it}\right),\\
+\tilde{h}\left(z\right)&\equiv ad+(1-a)h^{0}\left(\frac{z-ad}{1-a}\right).
+\end{aligned}
+
+* For true functions $f^{0}, h^{0}$, there are infinitely many *wrong* functions $\tilde{f}, \tilde{h}$, or different "parameters", whose conditional expectations (of functional values) are identical (*observationally equivalent*). 
+---
+class: inverse, middle
+
+# Semi positive result: Nonparametric identification with profit max FOC
+
+---
+class: inverse
+
+Price-taking profit maximization gives
+\begin{equation*}
+P_{t}\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}}e^{\omega_{it}}\E[e^{\epsilon_{it}}]=\rho_{t}.
+\end{equation*}
+Noting
+\begin{equation*}
+\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}=
+\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial F^{0}}
+\frac{\partial F^{0}}{\partial M_{it}}
+\frac{\partial M_{it}}{\partial m_{it}}=\frac{1}{F^{0}}F^{0}_{M}M_{it},
+\end{equation*}
+where the last derivative is given by:
+\begin{equation*}
+1=\frac{\partial M}{\partial M}=\frac{\partial M}{\partial m}\frac{\partial m}{\partial M}=\frac{\partial M}{\partial m}\frac{1}{M} \quad \Rightarrow \quad \frac{\partial M}{\partial m}=M,
+\end{equation*}
+so, 
+\begin{equation*}
+F^{0}_{M}=\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}\frac{F^{0}}{M_{it}}=f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}}{M_{it}}, \quad f^{0}_{m}\left(\bfx_{it}\right)\equiv\frac{\partial \ln F^{0}\left(\bfx_{it}\right)}{\partial m_{it}}.
+\end{equation*}
+Plugging this in gives:
+\begin{aligned}
+P_{t}f^{0}_{m}F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}]&=\rho_{t}M_{it}.
+\end{aligned}
+---
+class: inverse
+Plugging this in gives:
+\begin{aligned}
+P_{t}f^{0}_{m}F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}]&=\rho_{t}M_{it},\\
+P_{t}f^{0}_{m}\underbrace{F^{0}\left(\bfx_{it}\right)e^{\omega_{it}}e^{\epsilon_{it}}}_{\equiv Y_{it}}e^{-\epsilon_{it}}\E[e^{\epsilon_{it}}]=\rho_{t}M_{it},\\
+f^{0}_{m}e^{-\epsilon_{it}}\E[e^{\epsilon_{it}}]=\frac{\rho_{t}M_{it}}{P_{it}Y_{it}}\equiv S_{it}.
+\end{aligned}
+Taking logs and denoting $\ln E[e^{\epsilon_{it}}]=\ln\E$ gives:
+\begin{equation*}
+s_{it}=\underbrace{\ln f^{0}_{m}+\ln\varepsilon}_{\equiv \ln D^{\epsilon}\left(\bfx_{it}\right)}-\epsilon_{it}, \quad D^{\epsilon}\left(\bfx_{it}\right)=f^{0}_{m}\left(\bfx_{it}\right)\E[e^{\epsilon_{it}}].
+\end{equation*}
+Equivalently, *share regression* is derived:
+\begin{equation*}
+s_{it}=\ln D^{\epsilon}\left(\bfx_{it}\right)+u^{\epsilon}_{it}.
+\tag{s}\label{sharereg}
+\end{equation*}
+
+---
+class: inverse
+### Thereom 2: One can recover $\hat{f}_{m}$ by using the share regression.
+
+Given $\omega_{it}, \bfx_{it}\in\mathcal I_{it}$ we have $\E[\epsilon_{it}|\mathcal I_{it}]=0$, so regressing $s_{it}$ on a flexible function of $\bfx_{it}$ identifies $f^{0}_{m}$ as a set of coefficients on the part of $m_{it}$. 
+\begin{equation*}
+\E\left.\left[s_{it}\right|\bfx_{it}\right]=\ln D^{\epsilon}\left(\bfx_{it}\right).
+\end{equation*}
+This identifies $D^{\epsilon}$. This gives $\epsilon_{it}$ and $\E=\E[e^{\epsilon_{it}}]$:
+\begin{equation*}
+\hat{\epsilon}_{it}=\ln \hat{D}^{\epsilon}-s_{jt}, \quad \hat{\E}=\E\left[e^{\ln \hat{D}^{\epsilon}-s_{jt}}\right].
+\end{equation*}
+This gives:
+\begin{aligned}
+\ln \hat{f}_{m}
+&=\ln \hat{D}^{\epsilon}-\ln\hat{\E},\\
+\hat{f}_{m}
+&=\frac{\hat{D}^{\epsilon}}{\hat{\E}}.
+\end{aligned}
+
+---
+class: inverse
+### Thereom 3: Rest of $f$ is recovered up to a constant if $\hat{f}_{m}$ is known.
+
+By the fundamental theorem of calculus:
+\begin{equation}
+\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}=f^{0}\left(\bfx_{it}\right)+\mathcal C(k_{it}, l_{it}), \quad \mathrm{or}\quad
+f^{0}\left(\bfx_{it}\right)=\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}-\mathcal C(k_{it}, l_{it}).
+\tag{f}\label{f0identified}
+\end{equation}
+where the constant of integration $\mathcal C$ is allowed to depend on $k_{it}, l_{it}$, or $\mathcal C=c_{0}+c_{1}(k_{it}, l_{it})$ without loss of generality. 
+
+### If we can compute $c_{1}(k_{it}, l_{it})$, then we can identify $f^{0}\left(\bfx_{it}\right)$ up to a constant $c_{0}$. 
+
+---
+class: inverse
+Start with the production function in logs:
+\begin{aligned}
+\omega_{it}
+&=
+y_{it}-f^{0}-\epsilon_{it},\\
+&=
+y_{it}-\left\{\int f^{0}_{m}\left(\bfx_{it}\right)dm_{it}-\mathcal C(k_{it}, l_{it})\right\}-\epsilon_{it}.
+\end{aligned}
+Define
+\begin{aligned}
+\green{\mathcal Y_{it}}
+&\equiv 
+y_{it}-\int \red{f^{0}_{m}\left(\bfx_{it}\right)}dm_{it}-\red{\epsilon_{it}},\\
+&=
+\omega_{it}-\mathcal C(k_{it}, l_{it}).
+\end{aligned}
+We already .red[have] $\red{\hat{\epsilon}_{it}}$ and $\red{\hat{f}^{0}_{m}}$, then we can .green[get] $\green{\hat{\mathcal Y}_{it}}$. 
+
+Using first-order Markov on $\omega_{it}$
+\begin{aligned}
+\omega_{it}
+&=
+\mathcal Y_{it}+\mathcal C(k_{it}, l_{it}),\\
+\omega_{it-1}
+&=
+\mathcal Y_{it-1}+\mathcal C(k_{it-1}, l_{it-1}).
+\end{aligned}
+Then
+\begin{aligned}
+\mathcal Y_{it}
+&=
+h^{0}\left\{\omega_{it-1}\right\}+\xi_{it}-\mathcal C(k_{it}, l_{it}),\\
+&=
+h^{0}\left\{\mathcal Y_{it-1}+\mathcal C(k_{it-1}, l_{it-1})\right\}+\xi_{it}-\mathcal C(k_{it}, l_{it}).
+\end{aligned}
+---
+class: inverse
+Denote $\Gamma_{y}=(k_{it}, l_{it}, k_{it-1}, l_{it-1}, \mathcal Y_{it-1})$. Then
+\begin{equation*}
+E\left.\left[\mathcal Y_{it}\right|\Gamma_{y}\right]=-\mathcal C(k_{it}, l_{it})+h^{0}\left\{\mathcal Y_{it-1}+\mathcal C(k_{it-1}, l_{it-1})\right\}.
+\end{equation*}
+
+### Partial derivatives $c_{1}(k_{it}, l_{it})$ of integration $\mathcal C$ are (negative of) coefficients on $k_{it}, l_{it}$ conditional on $\mathcal Y_{it-1}, k_{it-1}, l_{it-1}$.  
+
+* We cannot identify $c_{0}$ part.  
+* Using this in \eqref{f0identified} gives $\hat{f}^{0}$ up to a constant.  
+
+### $\hat{\omega}_{it}-c_{0}=\hat{\mathcal Y}_{it}+\hat{c}_{1}(k_{it}, l_{it})$ is estimable. One can measure productivity differences $\hat{\omega}_{it}-\hat{\omega}_{i't}$ or $\hat{\omega}_{it}-\hat{\omega}_{it'}$. 
+
+---
+class: inverse
+
+Cool but *semi* positive results. 
+
+Monopolist profit maximization
+\begin{aligned}
+\rho_{t}
+&=
+\left(\red{P'_{t}F^{0}\left(\bfx_{it}\right)}+P_{t}\frac{\partial F^{0}\left(\bfx_{it}\right)}{\partial M_{it}}\right)e^{\omega_{it}}\E[e^{\epsilon_{it}}],\\
+&=
+\left(\frac{\partial P}{\partial Y_{it}}\frac{F^{0}\left(\bfx_{it}\right)}{P_{t}}+f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}}{M_{it}}\right)P_{t}e^{\omega_{it}}\E[e^{\epsilon_{it}}],\\
+&=
+\left(-\eta^{-1}(\bfx_{it}, \omega_{it}, \epsilon_{it})+f^{0}_{m}\left(\bfx_{it}\right)\frac{F^{0}e^{\omega_{it}}\E[e^{\epsilon_{it}}]}{M_{it}}\right)P_{t},\\
+S_{it}
+&=
+-\eta^{-1}(\bfx_{it}, \omega_{it}, \epsilon_{it})\frac{M_{it}}{Y_{it}}+f^{0}_{m}\left(\bfx_{it}\right),\\
+&=
+-\frac{\eta^{-1}(\red{\bfx_{it}}, \omega_{it}, \epsilon_{it})}{\beta^{M}}+f^{0}_{m}\left(\red{\bfx_{it}}\right), \quad \beta^{M}\equiv\frac{M_{it}}{Y_{it}}.\\
+\end{aligned}
+
+$\red{\bfx_{it}}$ appears both in $\eta$ and $f^{0}_{m}$ and the two functions cannot be separately nonparametrically identified with the share regression. 
+
+* If we assume an iso-elastic demand function for the output, then elasticity does not depend on $\bfx_{it}$ and can recover production function parameters. GNR does so in the appendix. 
+
+---
+class: inverse, middle
+
+# Extensions and empirical exercises
+
+---
+class: inverse
+
+* 
+`r Citet(myBib, "DoraszelskiJaumandreu2013")` achieves identification of Cobb-Douglas using FOCs. `r Citet(myBib, "DoraszelskiJaumandreu2018")` extends it to non-Hicks neutral, CES production.  
+* GNR can incoporate firm fixed effects but at the cost of loss of efficiency due to differencing.  
+
+### Using Chile and Columbia data, OLS estimates are overestimated than GNR estimates in more flexible inputs (materials).  
+### Less flexible input elasticities are underestimated with OLS. 
+### Productivity is more dispersed under GNR estimates. 
+
+---
+class: inverse
+
+
+
+```{r bib, include=FALSE}
+# create a bib file for the R packages used in this document
+knitr::write_bib(x = "rmarkdown", file = 'GNR_slides/GNR_slides.bib')
+```
+```{r results = "asis", echo = FALSE}
+PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "ynt"))
+```
