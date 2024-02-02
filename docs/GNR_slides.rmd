@@ -129,7 +129,11 @@ MathJax.Hub.Config({
 
 ## Gross production function parameters are not indentified. 
 
+--
+
 ## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+
+--
 
 ## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
 
@@ -137,28 +141,15 @@ MathJax.Hub.Config({
 
 
 ---
-## What does it mean if we want to estimate wage markdown using financial statement data?
+### Why?
 
-* You need to use only cost minimization FOCs.  
-* But markdown derived from cost minimization FOC generally does not match with markdown derived from profit maximization FOC. 
+* Both inversion of material demand (proxy variable approach) and substitution of AR(1) productivity (dynamic panel approach) suffer.  
+* When $f(\bfx_{it})+h(\bfx_{i, t-1}, d_{t-1})$ is on RHS, it is hard to separately identify $f$ and $h$ with $\bfx_{i,t-1}$. 
+
+### What does it mean if we want to estimate wage markdown using financial statement data?
 
 
----
-.pull-left[
-See how the right box is going down
-
-so down.
-]
-
-.pull-right[
-```{r}
-y <- data.frame(A = LETTERS[1:5],
-            B = 1:5,
-            C = sqrt(6:10))
-```
-]
-
----
+---	
 class: middle, inverse
 
 # Issue: Transmission/endogeneity problem
@@ -173,12 +164,18 @@ Y_{i}=f(A_{i}, K, L)+e.
 
 ### OLS estimates are biased: "Transmission problem".
 
+--
+
 ### Solution: Lagged input decision (lagged input variable) is orthogonal to current shocks. IV.  
 
 * Dynamic panel estimators.  
 * Proxy variable methods.  
 
-### Past literature focused on value-added production functions. 
+--
+
+### Past literature used value-added production functions. 
+
+* VA production with material input inversion = gross output production function with Leontief in materials `r Citep(myBib, "AckerbergCavesFrazer2015")`. 
 
 ---
 class: inverse

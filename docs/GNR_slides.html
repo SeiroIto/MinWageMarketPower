@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### Seiro Ito
 ]
 .date[
-### 2024年02月01日 17:17
+### 2024年02月02日 05:33
 ]
 
 ---
@@ -98,7 +98,11 @@ MathJax.Hub.Config({
 
 ## Gross production function parameters are not indentified. 
 
+--
+
 ## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+
+--
 
 ## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
 
@@ -106,29 +110,15 @@ Gandhi, Navarro, and Rivers (2020)
 
 
 ---
-## What does it mean if we want to estimate wage markdown using financial statement data?
+### Why?
 
-* You need to use only cost minimization FOCs.  
-* But markdown derived from cost minimization FOC generally does not match with markdown derived from profit maximization FOC. 
+* Both inversion of material demand (proxy variable approach) and substitution of AR(1) productivity (dynamic panel approach) suffer.  
+* When `\(f(\bfx_{it})+h(\bfx_{i, t-1}, d_{t-1})\)` is on RHS, it is hard to separately identify `\(f\)` and `\(h\)` with `\(\bfx_{i,t-1}\)`. 
+
+### What does it mean if we want to estimate wage markdown using financial statement data?
 
 
----
-.pull-left[
-See how the right box is going down
-
-so down.
-]
-
-.pull-right[
-
-```r
-y &lt;- data.frame(A = LETTERS[1:5],
-            B = 1:5,
-            C = sqrt(6:10))
-```
-]
-
----
+---	
 class: middle, inverse
 
 # Issue: Transmission/endogeneity problem
@@ -143,12 +133,18 @@ Y_{i}=f(A_{i}, K, L)+e.
 
 ### OLS estimates are biased: "Transmission problem".
 
+--
+
 ### Solution: Lagged input decision (lagged input variable) is orthogonal to current shocks. IV.  
 
 * Dynamic panel estimators.  
 * Proxy variable methods.  
 
-### Past literature focused on value-added production functions. 
+--
+
+### Past literature used value-added production functions. 
+
+* VA production with material input inversion = gross out production function with Leontief in material (Ackerberg, Caves, and Frazer, 2015). 
 
 ---
 class: inverse
@@ -467,14 +463,20 @@ _The Review of Economic Studies_ 80.4 (3. 2013), pp. 1338-1383. ISSN: 0034-6527.
 https://academic.oup.com/restud/article-pdf/80/4/1338/18386585/rdt011.pdf. URL:
 [https://doi.org/10.1093/restud/rdt011](https://doi.org/10.1093/restud/rdt011).
 
-[2] U. Doraszelski and J. Jaumandreu. "Measuring the bias of technological change". In: _Journal of
+[2] D. A. Ackerberg, K. Caves, and G. Frazer. "Identification properties of recent production function
+estimators". In: _Econometrica_ 83.6 (2015), pp. 2411-2451. DOI:
+[10.3982/ECTA13408](https://doi.org/10.3982%2FECTA13408). eprint:
+https://onlinelibrary.wiley.com/doi/pdf/10.3982/ECTA13408. URL:
+[https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408).
+
+[3] U. Doraszelski and J. Jaumandreu. "Measuring the bias of technological change". In: _Journal of
 Political Economy_ 126.3 (2018), pp. 1027-1084. DOI:
 [10.1086/697204](https://doi.org/10.1086%2F697204). eprint:
 
 https://doi.org/10.1086/697204 . URL: [ https://doi.org/10.1086/697204 ](
 https://doi.org/10.1086/697204 ).
 
-[3] A. Gandhi, S. Navarro, and D. A. Rivers. "On the identification of gross output production
+[4] A. Gandhi, S. Navarro, and D. A. Rivers. "On the identification of gross output production
 functions". In: _Journal of Political Economy_ 128.8 (2020), pp. 2973-3016. DOI:
 [10.1086/707736](https://doi.org/10.1086%2F707736). eprint: https://doi.org/10.1086/707736 . URL: [
 https://doi.org/10.1086/707736 ]( https://doi.org/10.1086/707736 ).
