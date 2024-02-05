@@ -1,0 +1,157 @@
+---
+title: "Wage markdown"
+subtitle: ""
+author: "Seiro Ito"
+date: "`r format(Sys.time(), '%Y年%m月%d日 %R')`"
+header_includes:
+    - \usepackage{tikz}
+    - \usepackage{adjustbox}
+    - \usepackage{seiro_minimal}
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, default-fonts, xaringan-themer.css]
+    nature:
+      highlightStyle: github
+      countIncrementalSlides: false
+      ratio: "16:9"
+#    includes:
+#      before_body: mathabbreviation.html
+    citation_package: natbib
+bibliography: c:/seiro/settings/Tex/seiro.bib
+self_contained: true
+# setwd(path <- "c:/data/MinWageMarketPower/"); rmarkdown::render("docs/WageMarkdown_slides.Rmd")
+# renderthis::to_pdf("docs/WageMarkdown_slides.Rmd")
+# git init
+# git add /docs    ## this adds a folder to track
+# git commit -am "initial commit"
+# git config --global user.name "SeiroIto"
+# git remote add origin https://github.com/SeiroIto/MinWageMarketPower.git  ## specify remote
+# git push -f origin main  ## push files to remote
+---
+class: inverse
+```{r xaringan setup, include=FALSE, warning=FALSE}
+xaringanExtra::use_panelset()
+library(xaringanthemer)
+#style_mono_dark(base_color = "#cbf7ed")
+#style_mono_light(base_color = "#23395b")
+style_solarized_light(text_color = "black", title_slide_background_color = "darkblue",
+  link_color = "blue")
+# xaringancolor setup
+library(xaringancolor)
+xaringancolor::setup_colors(
+  red ="red",
+  green = "green",
+  blue = "blue"
+)
+library(RefManageR)
+```
+```{r xaringan bib, include=FALSE, cache=T}
+# bibliography setup
+BibOptions(check.entries = FALSE, style = "markdown", cite.style = "authoryear",
+  bib.style = "authoryear", dashed = T, hyperlink = "to.doc")
+## (old) Uncomment below for the 1st run of each R session. 2nd run will get cached results.
+## (new) Delete cache if you add an entry to seiro.bib.
+myBib <- ReadBib("c:/seiro/settings/TeX/seiro.bib")
+```
+<div style = "position:fixed; visibility: hidden">
+$$\require{color}\definecolor{red}{rgb}{1, 0, 0}$$
+$$\require{color}\definecolor{green}{rgb}{0, 1, 0}$$
+$$\require{color}\definecolor{blue}{rgb}{0, 0, 1}$$
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: {
+    Macros: {
+      red: ["{\\color{red}{#1}}", 1],
+      green: ["{\\color{green}{#1}}", 1],
+      blue: ["{\\color{blue}{#1}}", 1]
+      E: "{\\Large\\varepsilon}",
+      bfx: "{\\mathbf{x}}",
+      bfX: "{\\mathbf{X}}",
+      bfbeta: "{\\boldsymbol{\\beta}}",
+      st: "{\\mbox{s.t.}}"
+    },
+    loader: {load: ['[tex]/color']},
+    tex: {packages: {'[+]': ['color']}}
+  }
+});
+</script>
+<style>
+.red {color: #FF0000;}
+.green {color: #00FF00;}
+.blue {color: #0000FF;}
+</style>
+```{r flair_color, echo=FALSE}
+library(flair)
+red <- "#FF0000"
+green <- "#00FF00"
+blue <- "#0000FF"
+```
+```{css echo=FALSE}
+.highlight-last-item > ul > li,
+.highlight-last-item > ol > li {
+  opacity: 0.5;
+}
+.highlight-last-item > ul > li:last-of-type,
+.highlight-last-item > ol > li:last-of-type {
+  opacity: 1;
+}
+.inverse {
+  background-color: #272822;
+  color: #d6d6d6;
+  text-shadow: 0 0 20px #333;
+}
+```
+
+`r Citet(myBib, "HashemiKirovTraina2022")` starts with labor wedge $\tau_{i}\in\mathbb R$ in price-taker cost minimization:
+\begin{aligned}
+\min_{L_{i}, M_{i}}
+&\;\;\; (1+\tau_{i})P^{W}_{i}L_{i}+P^{M}_{i}M_{i}\\
+\st &\;\;\; Q^{*}_{i}\leqslant F_{i}(L_{i}, M_{i})e^{\omega_{i}+\epsilon_{i}}.
+\end{aligned}
+\begin{equation*}
+\mathcal L=(1+\tau_{i})P^{W}_{i}L_{i}+P^{M}_{i}M_{i}+\lambda_{i}\left[Q^{*}_{i}-F_{i}(L_{i}, M_{i})e^{\omega_{i}+\epsilon_{i}}\right].
+\end{equation*}
+FOCs:
+\begin{equation*}
+(1+\tau_{i})P^{W}_{i}
+=
+\lambda_{i}F_{iL}\E\left[e^{\omega_{i}+\epsilon_{i}}\right],\quad
+P^{M}_{i}
+=
+\lambda_{i}F_{iM}\E\left[e^{\omega_{i}+\epsilon_{i}}\right].
+\end{equation*}
+Given $\lambda_{i}=MC_{i}$, we get markup $\mu_{i}\equiv P_{i}/MC_{i}$:
+\begin{aligned}
+\mu_{i}
+&=
+\frac{P_{i}}{\frac{P^{M}_{i}}{F_{iM}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}}
+=
+\frac{P_{i}F_{i}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}{P^{M}_{i}M_{i}}
+\frac{M_{i}F_{iM}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}{F_{i}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}
+=
+\frac{R_{i}}{P^{M}_{i}M_{i}}
+\frac{\partial F_{i}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}{\partial M_{i}}\frac{M_{i}}{{F_{i}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}}
+=
+\frac{\theta^{M}_{i}}{\alpha^{M}_{i}},\\
+\mu_{i}
+&=
+\frac{P_{i}}{(1+\tau_{i})\frac{P^{L}_{i}}{F_{iL}\E\left[e^{\omega_{i}+\epsilon_{i}}\right]}}
+=
+(1+\tau_{i})\frac{\theta^{L}_{i}}{\alpha^{L}_{i}}.
+\end{aligned}
+---
+The given wedge $\tau_{i}$ is passed over to the markup in price-taker cost minimization. 
+
+--
+
+### Why taking the wedge as given? This is OK if there are frictions in market transactions. But not OK if the firms can affect prices. 
+
+--
+
+### Isn't the wedge an outcome of monopsonistic pricing? 
+
+* `r Citet(myBib, "Rubens2023")` derives an estimable markdown formula for a monopsonist. 
+
+---

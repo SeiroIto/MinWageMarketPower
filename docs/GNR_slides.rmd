@@ -44,20 +44,15 @@ xaringancolor::setup_colors(
   green = "green",
   blue = "blue"
 )
+library(RefManageR)
 ```
 ```{r xaringan bib, include=FALSE, cache=T}
 # bibliography setup
-library(RefManageR)
-BibOptions(check.entries = FALSE,
-           bib.style = "authoryear",
-           cite.style = "alphabetic",
-           style = "markdown",
-           hyperlink = FALSE,
-           dashed = FALSE)
-## Uncomment below for the 1st run of each R session. 2nd run will get cached results.
-myBib <- ReadBib("c:/seiro/settings/TeX/seiro.bib", check = FALSE)
 BibOptions(check.entries = FALSE, style = "markdown", cite.style = "authoryear",
-  bib.style = "numeric")
+  bib.style = "authoryear", dashed = T, hyperlink = "to.doc")
+## (old) Uncomment below for the 1st run of each R session. 2nd run will get cached results.
+## (new) Delete cache if you add an entry to seiro.bib.
+myBib <- ReadBib("c:/seiro/settings/TeX/seiro.bib")
 ```
 <div style = "position:fixed; visibility: hidden">
 $$\require{color}\definecolor{red}{rgb}{1, 0, 0}$$
@@ -125,6 +120,7 @@ MathJax.Hub.Config({
       bfx: "{\\mathbf{x}}",
       bfX: "{\\mathbf{X}}",
       bfbeta: "{\\boldsymbol{\\beta}}",
+      st: "{\\mbox{s.t.}}"
     }
   }
 });
@@ -134,11 +130,11 @@ MathJax.Hub.Config({
 
 --
 
-## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+## When using profit maximization FOC in material demand inversion and using lagged inputs as IVs to estimate other parameters.  
 
 --
 
-## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
+## Exogeonous material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
 
 `r Citet(myBib, "GNR2020")`
 
@@ -148,32 +144,29 @@ MathJax.Hub.Config({
 
 * When $f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})$ is on RHS, it is hard to separately identify $f$ and $h$ with $\bfx_{i,t-1}$ as IVs. 
 
---
-
-* Both inversion of material demand (proxy variable approach) and substitution of AR(1) productivity (dynamic panel approach) suffer.  
-
---
-
-### What does it mean if we want to estimate wage markdown using financial statement data?
-
---
-
-* It means we must do it with VA or VA-Leontief-in-materials `r Citep(myBib, "Rubens2023")`. ACJ way.  
-
---
-
-* When are materials substitutable with capital and labour? Energy. But not coffee beans for coffee. 
-
---
-
-* Why do we exclude intermediate inputs from a production function? Because grapes are entirely subsumed in wines and do not provide services as capital and labour do.  
-
---
-
-* A production function is intended to explain the value added, so it is a relationship between service inputs and outputs... (Materials do not provide value added be definition: VA = value - material input value.)
+* Substitution of $\omega_{jt}$ using material demand (proxy variable) or AR(1) (dynamic panel) suffers.  
 
 ---
-class: middle, inverse
+### What does it mean if we want to estimate wage markdown using financial statement data?
+ 
+--
+
+* It means we must do it with VA or VA+Leontief-in-materials `r Citep(myBib, "Rubens2023")`.   
+
+  * `r Citet(myBib, "Rubens2023")` derives an estimable markdown formula for a monopsonist.  
+  * `r Citet(myBib, "GNR2017")` show, in general, with ex-post shocks $\epsilon_{jt}$, VA elasticity $\neq \frac{\textrm{VA}}{\textrm{GO}}$ * gross output elastictiy.  
+  * But if gross output is LIM and material input enters linearly $\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}$, one can estimate VA production function with $Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}$.  
+
+--
+
+* Other cases: When are materials substitutable with capital and labour? Energy. But not coffee beans for coffee. 
+
+--
+
+* VA or VA+LIM can be good enough in measuring wage markdown `r Citep(myBib, "HashemiKirovTraina2022")`.  
+
+---
+class: middle, center, inverse
 
 # Issue: Transmission/endogeneity problem
 
@@ -217,7 +210,7 @@ class: inverse
 
 ### (Price-taker profit max is restrictive.)
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Negative result: Nonparametric nonidentification
 
@@ -381,7 +374,7 @@ This gives the equivalence result.
 \E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt}\right)+d-f^{0}\left(\bfx_{jt}\right)\right\}.
 \end{aligned}
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Semi positive result: Nonparametric identification with profit max FOC
 
@@ -507,7 +500,7 @@ Denote $\Gamma_{y}=(k_{jt}, l_{jt}, k_{jt-1}, l_{jt-1}, \mathcal Y_{jt-1})$. The
 E\left.\left[\mathcal Y_{jt}\right|\Gamma_{y}\right]=-\mathcal C(k_{jt}, l_{jt})+h^{0}\left\{\mathcal Y_{jt-1}+\mathcal C(k_{jt-1}, l_{jt-1})\right\}.
 \end{equation*}
 
-### Partial derivatives $c_{1}(k_{jt}, l_{jt})$ of integration $\mathcal C$ are (negative of) coefficients on $k_{jt}, l_{jt}$ conditional on $\mathcal Y_{jt-1}, k_{jt-1}, l_{jt-1}$.  
+### Partial derivatives $c_{1}(k_{jt}, l_{jt})$ of integration constant $\mathcal C$ are (negative of) coefficients on $k_{jt}, l_{jt}$ conditional on $\mathcal Y_{jt-1}, k_{jt-1}, l_{jt-1}$.  
 
 * We cannot identify $c_{0}$ part.  
 * Using this in \eqref{f0identified} gives $\hat{f}^{0}$ up to a constant.  
@@ -540,7 +533,7 @@ $\red{\bfx_{jt}}$ appears both in $\eta$ and $f^{0}_{m}$ and the two functions c
 * If we assume an iso-elastic demand function for the output, then elasticity does not depend on $\bfx_{jt}$ and can recover production function parameters. GNR does so in the appendix. 
 
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Extensions and empirical exercises
 
@@ -565,5 +558,6 @@ class: inverse
 knitr::write_bib(x = "rmarkdown", file = 'GNR_slides/GNR_slides.bib')
 ```
 ```{r results = "asis", echo = FALSE}
-PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "ynt"))
+PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "ynt",
+  no.print.fields=c("eprint", "URL")))
 ```

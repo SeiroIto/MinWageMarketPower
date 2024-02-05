@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### Seiro Ito
 ]
 .date[
-### 2024年02月02日 12:43
+### 2024年02月05日 16:08
 ]
 
 ---
@@ -91,6 +91,7 @@ MathJax.Hub.Config({
       bfx: "{\\mathbf{x}}",
       bfX: "{\\mathbf{X}}",
       bfbeta: "{\\boldsymbol{\\beta}}",
+      st: "{\\mbox{s.t.}}"
     }
   }
 });
@@ -100,26 +101,43 @@ MathJax.Hub.Config({
 
 --
 
-## When using profit maximization FOC in material demand inversion and using IVs to estimate other parameters.  
+## When using profit maximization FOC in material demand inversion and using lagged inputs as IVs to estimate other parameters.  
 
 --
 
-## Material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
+## Exogeonous material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
 
-Gandhi, Navarro, and Rivers (2020)
+[Gandhi, Navarro, and Rivers (2020)](         https://doi.org/10.1086/707736)
 
 
 ---
 ### Why?
 
 * When `\(f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})\)` is on RHS, it is hard to separately identify `\(f\)` and `\(h\)` with `\(\bfx_{i,t-1}\)` as IVs. 
-* Both inversion of material demand (proxy variable approach) and substitution of AR(1) productivity (dynamic panel approach) suffer.  
 
-### What does it mean if we want to estimate wage markdown using financial statement data?
-
+* Substitution of `\(\omega_{jt}\)` using material demand (proxy variable) or AR(1) (dynamic panel) suffers.  
 
 ---
-class: middle, inverse
+### What does it mean if we want to estimate wage markdown using financial statement data?
+ 
+--
+
+* It means we must do it with VA or VA+Leontief-in-materials ([Rubens, 2023](https://www.aeaweb.org/articles?id=10.1257/aer.20210383)).   
+
+  * [Rubens (2023)](https://www.aeaweb.org/articles?id=10.1257/aer.20210383) derives an estimable markdown formula for a monopsonist.  
+  * [Gandhi, Navarro, and Rivers (2017)](https://publish.uwo.ca/~drivers2/research/comparing_go_va_full.pdf) show, in general, with ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\neq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy.  
+  * But if gross output is LIM and material input enters linearly `\(\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}\)`, one can estimate VA production function with `\(Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}\)`.  
+
+--
+
+* Other cases: When are materials substitutable with capital and labour? Energy. But not coffee beans for coffee. 
+
+--
+
+* VA or VA+LIM can be good enough in measuring wage markdown ([Hashemi, Kirov, and Traina, 2022](https://www.sciencedirect.com/science/article/pii/S0165176522002257)).  
+
+---
+class: middle, center, inverse
 
 # Issue: Transmission/endogeneity problem
 
@@ -145,7 +163,7 @@ Y_{i}=F(A_{i}, K, L)+e=A_{i}F(K, L)+e.
 
 ### Past literature used value-added production functions. 
 
-* VA production with material input inversion = gross output production function with Leontief in materials (Ackerberg, Caves, and Frazer, 2015). 
+* VA production with material input inversion = gross output production function with Leontief in materials ([Ackerberg, Caves, and Frazer, 2015](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408)). 
 
 ---
 class: inverse
@@ -163,7 +181,7 @@ class: inverse
 
 ### (Price-taker profit max is restrictive.)
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Negative result: Nonparametric nonidentification
 
@@ -327,7 +345,7 @@ This gives the equivalence result.
 \E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt}\right)+d-f^{0}\left(\bfx_{jt}\right)\right\}.
 \end{aligned}`
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Semi positive result: Nonparametric identification with profit max FOC
 
@@ -453,7 +471,7 @@ Denote `\(\Gamma_{y}=(k_{jt}, l_{jt}, k_{jt-1}, l_{jt-1}, \mathcal Y_{jt-1})\)`.
 E\left.\left[\mathcal Y_{jt}\right|\Gamma_{y}\right]=-\mathcal C(k_{jt}, l_{jt})+h^{0}\left\{\mathcal Y_{jt-1}+\mathcal C(k_{jt-1}, l_{jt-1})\right\}.
 \end{equation*}`
 
-### Partial derivatives `\(c_{1}(k_{jt}, l_{jt})\)` of integration `\(\mathcal C\)` are (negative of) coefficients on `\(k_{jt}, l_{jt}\)` conditional on `\(\mathcal Y_{jt-1}, k_{jt-1}, l_{jt-1}\)`.  
+### Partial derivatives `\(c_{1}(k_{jt}, l_{jt})\)` of integration constant `\(\mathcal C\)` are (negative of) coefficients on `\(k_{jt}, l_{jt}\)` conditional on `\(\mathcal Y_{jt-1}, k_{jt-1}, l_{jt-1}\)`.  
 
 * We cannot identify `\(c_{0}\)` part.  
 * Using this in \eqref{f0identified} gives `\(\hat{f}^{0}\)` up to a constant.  
@@ -486,7 +504,7 @@ S_{jt}
 * If we assume an iso-elastic demand function for the output, then elasticity does not depend on `\(\bfx_{jt}\)` and can recover production function parameters. GNR does so in the appendix. 
 
 ---
-class: inverse, middle
+class: inverse, center, middle
 
 # Extensions and empirical exercises
 
@@ -494,7 +512,7 @@ class: inverse, middle
 class: inverse
 
 * 
-Doraszelski and Jaumandreu (2013) achieves identification of Cobb-Douglas using FOCs. Doraszelski and Jaumandreu (2018) extends it to non-Hicks neutral, CES production.  
+[Doraszelski and Jaumandreu (2013)](https://doi.org/10.1093/restud/rdt011) achieves identification of Cobb-Douglas using FOCs. [Doraszelski and Jaumandreu (2018)]( https://doi.org/10.1086/697204) extends it to non-Hicks neutral, CES production.  
 * GNR can incoporate firm fixed effects but at the cost of loss of efficiency due to differencing.  
 
 ### Using Chile and Columbia data, OLS estimates are overestimated than GNR estimates in more flexible inputs (materials).  
@@ -507,29 +525,37 @@ class: inverse
 
 
 
-[1] U. Doraszelski and J. Jaumandreu. "R&amp; D and productivity: Estimating endogenous productivity". In:
-_The Review of Economic Studies_ 80.4 (3. 2013), pp. 1338-1383. ISSN: 0034-6527. DOI:
-[10.1093/restud/rdt011](https://doi.org/10.1093%2Frestud%2Frdt011). eprint:
-https://academic.oup.com/restud/article-pdf/80/4/1338/18386585/rdt011.pdf. URL:
-[https://doi.org/10.1093/restud/rdt011](https://doi.org/10.1093/restud/rdt011).
+&lt;a name=bib-DoraszelskiJaumandreu2013&gt;&lt;/a&gt;[Doraszelski, U. and J.
+Jaumandreu](#cite-DoraszelskiJaumandreu2013) (2013). "R&amp; D and productivity: Estimating endogenous
+productivity". In: _The Review of Economic Studies_ 80.4, pp. 1338-1383. ISSN: 0034-6527. DOI:
+[10.1093/restud/rdt011](https://doi.org/10.1093%2Frestud%2Frdt011).
 
-[2] D. A. Ackerberg, K. Caves, and G. Frazer. "Identification properties of recent production function
-estimators". In: _Econometrica_ 83.6 (2015), pp. 2411-2451. DOI:
-[10.3982/ECTA13408](https://doi.org/10.3982%2FECTA13408). eprint:
-https://onlinelibrary.wiley.com/doi/pdf/10.3982/ECTA13408. URL:
-[https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408).
+&lt;a name=bib-AckerbergCavesFrazer2015&gt;&lt;/a&gt;[Ackerberg, D. A., K. Caves, and G.
+Frazer](#cite-AckerbergCavesFrazer2015) (2015). "Identification properties of recent production
+function estimators". In: _Econometrica_ 83.6, pp. 2411-2451. DOI:
+[10.3982/ECTA13408](https://doi.org/10.3982%2FECTA13408).
 
-[3] U. Doraszelski and J. Jaumandreu. "Measuring the bias of technological change". In: _Journal of
-Political Economy_ 126.3 (2018), pp. 1027-1084. DOI:
-[10.1086/697204](https://doi.org/10.1086%2F697204). eprint:
+&lt;a name=bib-GNR2017&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. Rivers](#cite-GNR2017) (2017). _How
+heterogeneous is productivity? A comparison of gross output and value added_. University of Western
+Ontario.
 
-https://doi.org/10.1086/697204 . URL: [ https://doi.org/10.1086/697204 ](
-https://doi.org/10.1086/697204 ).
+&lt;a name=bib-DoraszelskiJaumandreu2018&gt;&lt;/a&gt;[Doraszelski, U. and J.
+Jaumandreu](#cite-DoraszelskiJaumandreu2018) (2018). "Measuring the bias of technological change". In:
+_Journal of Political Economy_ 126.3, pp. 1027-1084. DOI:
+[10.1086/697204](https://doi.org/10.1086%2F697204).
 
-[4] A. Gandhi, S. Navarro, and D. A. Rivers. "On the identification of gross output production
-functions". In: _Journal of Political Economy_ 128.8 (2020), pp. 2973-3016. DOI:
-[10.1086/707736](https://doi.org/10.1086%2F707736). eprint: https://doi.org/10.1086/707736 . URL: [
-https://doi.org/10.1086/707736 ]( https://doi.org/10.1086/707736 ).
+&lt;a name=bib-GNR2020&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. A. Rivers](#cite-GNR2020) (2020). "On the
+identification of gross output production functions". In: _Journal of Political Economy_ 128.8, pp.
+2973-3016. DOI: [10.1086/707736](https://doi.org/10.1086%2F707736).
+
+&lt;a name=bib-HashemiKirovTraina2022&gt;&lt;/a&gt;[Hashemi, A., I. Kirov, and J.
+Traina](#cite-HashemiKirovTraina2022) (2022). "The production approach to markup estimation often
+measures input distortions". In: _Economics Letters_ 217, p. 110673. ISSN: 0165-1765. DOI:
+[10.1016/j.econlet.2022.110673](https://doi.org/10.1016%2Fj.econlet.2022.110673).
+
+&lt;a name=bib-Rubens2023&gt;&lt;/a&gt;[Rubens, M.](#cite-Rubens2023) (2023). "Market structure, oligopsony power,
+and productivity". In: _American Economic Review_ 113.9, pp. 2382-2410. DOI:
+[10.1257/aer.20210383](https://doi.org/10.1257%2Faer.20210383).
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
