@@ -334,7 +334,7 @@ Expectation conditional on IVs $\Gamma_{jt}=\left(k_{jt}, l_{jt}, \bfx_{jt-1}, d
 \begin{equation*}
 \E\left[y_{jt}|\Gamma_{jt}\right]=\E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt-1}\right)+d_{t-1}-f^{0}\left(\bfx_{jt-1}\right)\right\}.
 \end{equation*}
-Note from \eqref{eq9}, we have:
+Note from the definition of $\phi_{G}$, we have:
 \begin{equation*}
 \E\left[y_{jt}|\Gamma_{jt}\right]=\E\left[\phi_{G}\left(\bfx_{jt}\right)+d_{t}|\Gamma_{jt}\right].
 \end{equation*}
