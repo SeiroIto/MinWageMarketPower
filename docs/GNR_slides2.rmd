@@ -1,6 +1,6 @@
 ---
 title: "GNR"
-subtitle: 'A. Gandhi, S. Navarro, and D. A. Rivers. "On the identification of gross output production functions". *Journal of Political Economy*, 128.8 (2020).'
+subtitle: ""
 author: "Seiro Ito"
 date: "`r format(Sys.time(), '%Y年%m月%d日 %R')`"
 header_includes:
@@ -35,10 +35,8 @@ xaringanExtra::use_panelset()
 library(xaringanthemer)
 #style_mono_dark(base_color = "#cbf7ed")
 #style_mono_light(base_color = "#23395b")
-style_solarized_light(
-  text_color = "black", 
-  title_slide_background_color = "darkblue",
-  link_color = "green")
+style_solarized_light(text_color = "black", title_slide_background_color = "darkblue",
+  link_color = "blue")
 # xaringancolor setup
 library(xaringancolor)
 xaringancolor::setup_colors(
@@ -113,15 +111,7 @@ mark.blue {
   font-size: 1.5em;
   color: red;
 }
-blockquote {
-  border-left: .2px solid #275d38;
-  margin: -5px 80px -5px 20px;
-  padding-top: -0.5px;
-  padding-bottom: -0.5px;
-  line-height: 1.35em;
-}
 ```
-
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
   TeX: {
@@ -150,37 +140,7 @@ MathJax.Hub.Config({
 
 
 ---
-class: inverse
-
-### Then, can't we just use a VA production function instead?
-
---
-
-> the conditions which a value added production function can straightforwardly be derived from a more primitive gross output production function are quite restrictive.  
-
-<p style="margin-bottom:2cm;">.pull-left[] .pull-right[`r Citet(myBib, "DeLoeckerSyverson2021", after = ", 5.6.2")`]</p>
-
---
-
-Taking out VA from Y=VA(K, L)+M form 
-
-* Gives a .red[biased estimate] when regressing $VA$ on $K, L$, except  under `r Citep(myBib, "BasuFernald1997", after = ", p.255")`
-  * Zero markup in output markets, or,  
-  * Zero substitution between $(K, L)$ and $M$.  
-* Does not admit contribution of $M$ to TFP growth.  
-
---
-
-### Macro TFP literature uses value-added production functions. 
-
---
-
-### IO literature uses gross output production functions. 
-
-* `r Citet(myBib, "AckerbergCavesFrazer2015")` use VA production with material input inversion = gross output production function with Leontief in materials . 
-
----
-### Why unidentified?
+### Why?
 
 * When $f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})$ is on RHS, it is hard to separately identify $f$ and $h$ with $\bfx_{i,t-1}$ as IVs. 
 
@@ -212,23 +172,14 @@ class: middle, center, inverse
 
 ---
 class: inverse
-### Estimate production function parameters under Hicks-neutral unobservable heterogenous productivity $\omega_{j}$?
+### Estimate production function parameters under Hicks-neutral unobservable heterogenous productivity $A_{i}$?
 
 \begin{equation*}
-y_{j}=f(K_{j}, L_{j}, \omega_{j})+\epsilon_{j}=f(K_{j}, L_{j})+\omega_{j}+\epsilon_{j}. 
+Y_{i}=F(A_{i}, K, L)+e=A_{i}F(K, L)+e. 
 \end{equation*}
 
---
 
 ### OLS estimates are biased: "Transmission problem".
-
---
-
-* There remains a separate bias of omitted prices `r Citep(myBib, "DeLoeckerGoldberg2014")`
-
---
-
-### Use FE. But what if $\omega_{j}=\omega_{jt}$? FE does not solve the problem.
 
 --
 
@@ -236,8 +187,19 @@ y_{j}=f(K_{j}, L_{j}, \omega_{j})+\epsilon_{j}=f(K_{j}, L_{j})+\omega_{j}+\epsil
 
 * Dynamic panel estimators.  
 * Proxy variable methods.  
+
+--
+
+### Past literature used value-added production functions. 
+
+* VA production with material input inversion = gross output production function with Leontief in materials `r Citep(myBib, "AckerbergCavesFrazer2015")`. 
+
 ---
 class: inverse
+### Gross output production function = value-added production function + intermediate inputs (not in Leontief)
+
+--
+
 ### GNR: 1. Lagged input = IV does not nonparametrically identify parameters.  
 
 --
@@ -596,20 +558,6 @@ class: inverse
 knitr::write_bib(x = "rmarkdown", file = 'GNR_slides/GNR_slides.bib')
 ```
 ```{r results = "asis", echo = FALSE}
-PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "nyt",
-  no.print.fields=c("eprint", "URL")),
-  start = 1, end = 8)
-```
----
-class: inverse
-```{css, eval = F, echo = F}
-.remark-slide-content {
-  font-size:          12px;
-  line-height:        1.2em;
-}
-```
-
-```{r results = "asis", echo = FALSE, warning = F}
-PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "nyt",
+PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "ynt",
   no.print.fields=c("eprint", "URL")))
 ```
