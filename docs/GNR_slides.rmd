@@ -470,6 +470,7 @@ m_{jt}
 \ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}.
 \end{aligned}
 ---
+class: inverse
 This gives 
 \begin{aligned}
 y_{jt}
@@ -477,15 +478,15 @@ y_{jt}
 con+\alpha_{K}k_{jt}+\alpha_{L}l_{jt}+\alpha_{M}\left\{\ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}\right\}+\delta\{\cdot\}+\xi_{jt}+\epsilon_{jt},\\
 &=
 \tilde{con}+
-\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}
-+\frac{\alpha_{M}}{1-\alpha_{m}}\ln \alpha_{M}\\
-&\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt}\right\}
-+\frac{1}{1-\alpha_{m}}\left(\xi_{jt}+\epsilon_{jt}\right)-\frac{\alpha_{m}}{1-\alpha_{m}}\epsilon_{jt},\\
+\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{M}}d_{t}
++\frac{\alpha_{M}}{1-\alpha_{M}}\ln \alpha_{M}\\
+&\hspace{2em}+\frac{\delta}{1-\alpha_{M}}\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{M}}\left(\xi_{jt}+\epsilon_{jt}\right)-\frac{\alpha_{M}}{1-\alpha_{M}}\epsilon_{jt},\\
 &=
 \tilde{con}+
-\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}+\frac{\delta}{1-\alpha_{m}}d_{t-1}\\
-&\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)-\bfalpha'\bfx_{jt}\right\}
-+\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
+\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{M}}d_{t}+\frac{\delta}{1-\alpha_{M}}d_{t-1}\\
+&\hspace{2em}+\frac{\delta}{1-\alpha_{M}}\left\{\phi\left(\bfx_{jt-1}\right)-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{M}}\xi_{jt}+\epsilon_{jt}.
 \end{aligned}
 Note
 \begin{equation*}
@@ -500,8 +501,11 @@ y_{jt}
 &\hspace{2em}
 +\delta\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt-1}
 -\delta\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt-1}+\delta m_{jt-1}
-+\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
++\frac{1}{1-\alpha_{M}}\xi_{jt}+\epsilon_{jt}.
 \end{aligned}
+---
+class: inverse
+
 Define
 \begin{equation*}
 \tilde{\alpha}_{K}=(1-a)\alpha_{K},\quad
