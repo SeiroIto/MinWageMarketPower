@@ -144,7 +144,7 @@ MathJax.Hub.Config({
 
 --
 
-## Exogeonous material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
+## Exogeonous material demand variations (say, by input prices which may or maynot be observed) can help identification but weak.
 
 `r Citet(myBib, "GNR2020")`
 
@@ -164,25 +164,48 @@ class: inverse
 
 Taking out VA from Y=VA(K, L)+M form 
 
-* Gives a .red[biased estimate] when regressing $VA$ on $K, L$, except  under `r Citep(myBib, "BasuFernald1997", after = ", p.255")`
+* Gives a .red[biased estimate] when regressing $VA$ on $K, L$, except  under `r Citep(myBib, "BasuFernald1997", after = ", p.255")`  
+
+--
+
   * Zero markup in output markets, or,  
-  * Zero substitution between $(K, L)$ and $M$.  
+  * Zero substitution between $(K, L)$ and $M$ (Leontief-in-materials).  
+
+--
+
 * Does not admit contribution of $M$ to TFP growth.  
 
 --
+
+  * At odds with a growing recognition on the role of imported intermediate goods on TFP.  
+
+---
+class: inverse
 
 ### Macro TFP literature uses value-added production functions. 
 
 --
 
-### IO literature uses gross output production functions. 
+### Macro misallocation, IO, and trade literature use gross output production functions. 
 
-* `r Citet(myBib, "AckerbergCavesFrazer2015")` use VA production with material input inversion = gross output production function with Leontief in materials . 
+* Imported goods on TFP.  
+* Separating demand side heterogeneity (shocks, markups) from TFP.  
+* `r Citet(myBib, "AckerbergCavesFrazer2015")` considers identification of VA production with material input inversion (conditional on $l_{jt}$) = gross output production function with Leontief in materials. Not general gross output production functions.
+
+--
+
+### Dev econ uses VA production as household production functions (ag HH model, etc.) with time-invariant shocks $\omega_{j}$.
+
+* Effectively hid the problem under the rug, using FEs looked fine.  
+* HH data often include input/output $p$ and $q$ separately, rendering IV+FE use.  
+* Could have estimated VA+LIM or GO production functions with $\omega_{jt}$.  
+
 
 ---
 ### Why unidentified?
 
-* When $f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})$ is on RHS, it is hard to separately identify $f$ and $h$ with $\bfx_{i,t-1}$ as IVs. 
+* Given $\omega_{jt-1}, k_{jt}$, $m_{jt-1}(\omega_{jt-1}, \epsilon_{jt-1})$ is uncorrelated with $m_{jt}(\omega_{jt-1}+\xi_{jt}, \epsilon_{jt})$, so cannot be used as an IV.  
+* Oversimplifying, but, when $f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})$ is on RHS, it is hard to separately identify $f$ and $h$ with $\bfx_{i,t-1}$ as IVs. 
 
 * Substitution of $\omega_{jt}$ using material demand (proxy variable) or AR(1) (dynamic panel) suffers.  
 
@@ -191,11 +214,12 @@ Taking out VA from Y=VA(K, L)+M form
  
 --
 
-* It means we must do it with VA or VA+Leontief-in-materials `r Citep(myBib, "Rubens2023")`.   
+* It means we must do it with VA or VA+Leontief-in-materials `r Citep(myBib, c("AckerbergCavesFrazer2015", "Rubens2023"))`.   
 
   * `r Citet(myBib, "Rubens2023")` derives an estimable markdown formula for a monopsonist.  
-  * `r Citet(myBib, "GNR2017")` show, in general, with ex-post shocks $\epsilon_{jt}$, VA elasticity $\neq \frac{\textrm{VA}}{\textrm{GO}}$ * gross output elastictiy.  
-  * But if gross output is LIM and material input enters linearly $\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}$, one can estimate VA production function with $Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}$.  
+  * `r Citet(myBib, c("Bruno1978", "Diewert1978"))`: Without ex-post shocks $\epsilon_{jt}$, VA elasticity $\simeq \frac{\textrm{VA}}{\textrm{GO}}$ * gross output elastictiy.  
+  * `r Citet(myBib, "GNR2017")`: With ex-post shocks $\epsilon_{jt}$, VA elasticity $\neq \frac{\textrm{VA}}{\textrm{GO}}$ * gross output elastictiy, except...  
+    * if gross output is LIM and material input enters linearly $\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}$, one can estimate VA production function with $Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}$.  
 
 --
 
@@ -596,7 +620,7 @@ class: inverse
 knitr::write_bib(x = "rmarkdown", file = 'GNR_slides/GNR_slides.bib')
 ```
 ```{r results = "asis", echo = FALSE}
-PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "nyt",
+PrintBibliography(myBib, .opts = list(check.entries = T, sorting = "nyt",
   no.print.fields=c("eprint", "URL")),
   start = 1, end = 8)
 ```
@@ -611,5 +635,6 @@ class: inverse
 
 ```{r results = "asis", echo = FALSE, warning = F}
 PrintBibliography(myBib, .opts = list(check.entries = FALSE, sorting = "nyt",
-  no.print.fields=c("eprint", "URL")))
+  no.print.fields=c("eprint", "URL")),
+  start = 9, end = 12)
 ```

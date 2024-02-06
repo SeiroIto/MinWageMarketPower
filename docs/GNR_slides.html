@@ -25,7 +25,7 @@ class: center, middle, inverse, title-slide
 ### Seiro Ito
 ]
 .date[
-### 2024年02月06日 06:08
+### 2024年02月06日 11:11
 ]
 
 ---
@@ -116,7 +116,7 @@ MathJax.Hub.Config({
 
 --
 
-## Exogeonous material demand variations (say, by input prices which may or maynot be observed), can help identification but weak.
+## Exogeonous material demand variations (say, by input prices which may or maynot be observed) can help identification but weak.
 
 [Gandhi, Navarro, and Rivers (2020)](         https://doi.org/10.1086/707736)
 
@@ -136,25 +136,48 @@ class: inverse
 
 Taking out VA from Y=VA(K, L)+M form 
 
-* Gives a .red[biased estimate] when regressing `\(VA\)` on `\(K, L\)`, except  under ([Basu and Fernald, 1997](https://doi.org/10.1086/262073), p.255)
+* Gives a .red[biased estimate] when regressing `\(VA\)` on `\(K, L\)`, except  under ([Basu and Fernald, 1997](https://doi.org/10.1086/262073), p.255)  
+
+--
+
   * Zero markup in output markets, or,  
-  * Zero substitution between `\((K, L)\)` and `\(M\)`.  
+  * Zero substitution between `\((K, L)\)` and `\(M\)` (Leontief-in-materials).  
+
+--
+
 * Does not admit contribution of `\(M\)` to TFP growth.  
 
 --
+
+  * At odds with a growing recognition on the role of imported intermediate goods on TFP.  
+
+---
+class: inverse
 
 ### Macro TFP literature uses value-added production functions. 
 
 --
 
-### IO literature uses gross output production functions. 
+### Macro misallocation, IO, and trade literature use gross output production functions. 
 
-* [Ackerberg, Caves, and Frazer (2015)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408) use VA production with material input inversion = gross output production function with Leontief in materials . 
+* Imported goods on TFP.  
+* Separating demand side heterogeneity (shocks, markups) from TFP.  
+* [Ackerberg, Caves, and Frazer (2015)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408) considers identification of VA production with material input inversion (conditional on `\(l_{jt}\)`) = gross output production function with Leontief in materials. Not general gross output production functions.
+
+--
+
+### Dev econ uses VA production as household production functions (ag HH model, etc.) with time-invariant shocks `\(\omega_{j}\)`.
+
+* Effectively hid the problem under the rug, using FEs looked fine.  
+* HH data often include input/output `\(p\)` and `\(q\)` separately, rendering IV+FE use.  
+* Could have estimated VA+LIM or GO production functions with `\(\omega_{jt}\)`.  
+
 
 ---
 ### Why unidentified?
 
-* When `\(f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})\)` is on RHS, it is hard to separately identify `\(f\)` and `\(h\)` with `\(\bfx_{i,t-1}\)` as IVs. 
+* Given `\(\omega_{jt-1}, k_{jt}\)`, `\(m_{jt-1}(\omega_{jt-1}, \epsilon_{jt-1})\)` is uncorrelated with `\(m_{jt}(\omega_{jt-1}+\xi_{jt}, \epsilon_{jt})\)`, so cannot be used as an IV.  
+* Oversimplifying, but, when `\(f(\bfx_{jt})+h(\bfx_{i, t-1}, d_{t-1})\)` is on RHS, it is hard to separately identify `\(f\)` and `\(h\)` with `\(\bfx_{i,t-1}\)` as IVs. 
 
 * Substitution of `\(\omega_{jt}\)` using material demand (proxy variable) or AR(1) (dynamic panel) suffers.  
 
@@ -163,11 +186,12 @@ Taking out VA from Y=VA(K, L)+M form
  
 --
 
-* It means we must do it with VA or VA+Leontief-in-materials ([Rubens, 2023](https://www.aeaweb.org/articles?id=10.1257/aer.20210383)).   
+* It means we must do it with VA or VA+Leontief-in-materials ([Ackerberg, Caves, and Frazer, 2015](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408); [Rubens, 2023](https://www.aeaweb.org/articles?id=10.1257/aer.20210383)).   
 
   * [Rubens (2023)](https://www.aeaweb.org/articles?id=10.1257/aer.20210383) derives an estimable markdown formula for a monopsonist.  
-  * [Gandhi, Navarro, and Rivers (2017)](https://publish.uwo.ca/~drivers2/research/comparing_go_va_full.pdf) show, in general, with ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\neq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy.  
-  * But if gross output is LIM and material input enters linearly `\(\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}\)`, one can estimate VA production function with `\(Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}\)`.  
+  * [Bruno (1978b)](#bib-Bruno1978); [Diewert (1978)](#bib-Diewert1978): Without ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\simeq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy.  
+  * [Gandhi, Navarro, and Rivers (2017)](https://publish.uwo.ca/~drivers2/research/comparing_go_va_full.pdf): With ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\neq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy, except...  
+    * if gross output is LIM and material input enters linearly `\(\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}\)`, one can estimate VA production function with `\(Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}\)`.  
 
 --
 
@@ -196,7 +220,7 @@ y_{j}=f(K_{j}, L_{j}, \omega_{j})+\epsilon_{j}=f(K_{j}, L_{j})+\omega_{j}+\epsil
 
 --
 
-* There remains a separate bias of omitted prices 
+* There remains a separate bias of omitted prices ([De Loecker and Goldberg, 2014](https://doi.org/10.1146/annurev-economics-080113-104741))
 
 --
 
@@ -573,9 +597,21 @@ function estimators". In: _Econometrica_ 83.6, pp. 2411-2451. DOI:
 scale in U.S. production: Estimates and implications". In: _Journal of Political Economy_ 105.2, pp.
 249-283. DOI: [10.1086/262073](https://doi.org/10.1086%2F262073).
 
+&lt;a name=bib-Bruno1978&gt;&lt;/a&gt;[Bruno, M.](#cite-Bruno1978) (1978b). "Duality, intermediate inputs and
+value-added". In: _Applications of the Theory of Production_. Ed. by M. Fuss and D. McFadden. Vol. 2.
+Contributions to Economic Analysis. Elsevier, pp. 3-16.
+
+&lt;a name=bib-DeLoeckerGoldberg2014&gt;&lt;/a&gt;[De Loecker, J. and P. K. Goldberg](#cite-DeLoeckerGoldberg2014)
+(2014). "Firm performance in a global market". In: _Annual Review of Economics_ 6.1, pp. 201-227. DOI:
+[10.1146/annurev-economics-080113-104741](https://doi.org/10.1146%2Fannurev-economics-080113-104741).
+
 &lt;a name=bib-DeLoeckerSyverson2021&gt;&lt;/a&gt;[De Loecker, J. and C. Syverson](#cite-DeLoeckerSyverson2021)
 (2021). "An industrial organization perspective on productivity". In: _Handbook of industrial
 organization_. Vol. 4. 1. Elsevier, pp. 141-223.
+
+&lt;a name=bib-Diewert1978&gt;&lt;/a&gt;[Diewert, W. E.](#cite-Diewert1978) (1978). "Hicks' aggregation theorem and
+the existence of a real value-added function". In: _Applications of the Theory of Production_. Ed. by
+M. Fuss and D. McFadden. Vol. 2. Contributions to Economic Analysis. Elsevier, pp. 17-51.
 
 &lt;a name=bib-DoraszelskiJaumandreu2013&gt;&lt;/a&gt;[Doraszelski, U. and J.
 Jaumandreu](#cite-DoraszelskiJaumandreu2013) (2013). "R&amp; D and productivity: Estimating endogenous
@@ -586,45 +622,9 @@ productivity". In: _The Review of Economic Studies_ 80.4, pp. 1338-1383. ISSN: 0
 Jaumandreu](#cite-DoraszelskiJaumandreu2018) (2018). "Measuring the bias of technological change". In:
 _Journal of Political Economy_ 126.3, pp. 1027-1084. DOI:
 [10.1086/697204](https://doi.org/10.1086%2F697204).
-
-&lt;a name=bib-GNR2017&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. Rivers](#cite-GNR2017) (2017). _How
-heterogeneous is productivity? A comparison of gross output and value added_. University of Western
-Ontario.
-
-&lt;a name=bib-GNR2020&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. A. Rivers](#cite-GNR2020) (2020). "On the
-identification of gross output production functions". In: _Journal of Political Economy_ 128.8, pp.
-2973-3016. DOI: [10.1086/707736](https://doi.org/10.1086%2F707736).
-
-&lt;a name=bib-HashemiKirovTraina2022&gt;&lt;/a&gt;[Hashemi, A., I. Kirov, and J.
-Traina](#cite-HashemiKirovTraina2022) (2022). "The production approach to markup estimation often
-measures input distortions". In: _Economics Letters_ 217, p. 110673. ISSN: 0165-1765. DOI:
-[10.1016/j.econlet.2022.110673](https://doi.org/10.1016%2Fj.econlet.2022.110673).
 ---
 class: inverse
 
-
-&lt;a name=bib-AckerbergCavesFrazer2015&gt;&lt;/a&gt;[Ackerberg, D. A., K. Caves, and G.
-Frazer](#cite-AckerbergCavesFrazer2015) (2015). "Identification properties of recent production
-function estimators". In: _Econometrica_ 83.6, pp. 2411-2451. DOI:
-[10.3982/ECTA13408](https://doi.org/10.3982%2FECTA13408).
-
-&lt;a name=bib-BasuFernald1997&gt;&lt;/a&gt;[Basu, S. and J. G. Fernald](#cite-BasuFernald1997) (1997). "Returns to
-scale in U.S. production: Estimates and implications". In: _Journal of Political Economy_ 105.2, pp.
-249-283. DOI: [10.1086/262073](https://doi.org/10.1086%2F262073).
-
-&lt;a name=bib-DeLoeckerSyverson2021&gt;&lt;/a&gt;[De Loecker, J. and C. Syverson](#cite-DeLoeckerSyverson2021)
-(2021). "An industrial organization perspective on productivity". In: _Handbook of industrial
-organization_. Vol. 4. 1. Elsevier, pp. 141-223.
-
-&lt;a name=bib-DoraszelskiJaumandreu2013&gt;&lt;/a&gt;[Doraszelski, U. and J.
-Jaumandreu](#cite-DoraszelskiJaumandreu2013) (2013). "R&amp; D and productivity: Estimating endogenous
-productivity". In: _The Review of Economic Studies_ 80.4, pp. 1338-1383. ISSN: 0034-6527. DOI:
-[10.1093/restud/rdt011](https://doi.org/10.1093%2Frestud%2Frdt011).
-
-&lt;a name=bib-DoraszelskiJaumandreu2018&gt;&lt;/a&gt;[Doraszelski, U. and J.
-Jaumandreu](#cite-DoraszelskiJaumandreu2018) (2018). "Measuring the bias of technological change". In:
-_Journal of Political Economy_ 126.3, pp. 1027-1084. DOI:
-[10.1086/697204](https://doi.org/10.1086%2F697204).
 
 &lt;a name=bib-GNR2017&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. Rivers](#cite-GNR2017) (2017). _How
 heterogeneous is productivity? A comparison of gross output and value added_. University of Western
