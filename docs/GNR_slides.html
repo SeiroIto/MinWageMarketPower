@@ -25,7 +25,7 @@ class: center, middle, inverse, title-slide
 ### Seiro Ito
 ]
 .date[
-### 2024年02月06日 12:07
+### 2024年02月06日 13:26
 ]
 
 ---
@@ -101,6 +101,7 @@ MathJax.Hub.Config({
       E: "{\\Large\\varepsilon}",
       bfx: "{\\mathbf{x}}",
       bfX: "{\\mathbf{X}}",
+      bfalpha: "{\\boldsymbol{\\alpha}}",
       bfbeta: "{\\boldsymbol{\\beta}}",
       st: "{\\mbox{s.t.}}"
     }
@@ -189,7 +190,7 @@ class: inverse
 * It means we must do it with VA or VA+Leontief-in-materials ([Ackerberg, Caves, and Frazer, 2015](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13408); [Rubens, 2023](https://www.aeaweb.org/articles?id=10.1257/aer.20210383)).   
 
   * [Rubens (2023)](https://www.aeaweb.org/articles?id=10.1257/aer.20210383) derives an estimable markdown formula for a monopsonist.  
-  * [Bruno (1978b)](#bib-Bruno1978); [Diewert (1978)](#bib-Diewert1978): Without ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\simeq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy.  
+  * : Without ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\simeq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy.  
   * [Gandhi, Navarro, and Rivers (2017)](https://publish.uwo.ca/~drivers2/research/comparing_go_va_full.pdf): With ex-post shocks `\(\epsilon_{jt}\)`, VA elasticity `\(\neq \frac{\textrm{VA}}{\textrm{GO}}\)` * gross output elastictiy, except...  
     * if gross output is LIM and material input enters linearly `\(\min\{\mathcal H(K_{jt}, L_{jt}), aM_{jt}\}\)`, one can estimate VA production function with `\(Y_{jt}=\mathcal H(K_{jt}, L_{jt})e^{\omega_{jt}+\epsilon_{jt}}\)`.  
 
@@ -220,7 +221,7 @@ y_{j}=f(K_{j}, L_{j}, \omega_{j})+\epsilon_{j}=f(K_{j}, L_{j})+\omega_{j}+\epsil
 
 --
 
-* There remains a separate bias of omitted prices ([De Loecker and Goldberg, 2014](https://doi.org/10.1146/annurev-economics-080113-104741))
+* There remains a separate bias of omitted prices 
 
 --
 
@@ -407,6 +408,86 @@ This gives the equivalence result.
 &amp;\hspace{1em}=
 \E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt}\right)+d-f^{0}\left(\bfx_{jt}\right)\right\}.
 \end{aligned}`
+---
+class: inverse
+
+Cobb-Douglas + AR(1) `\(\omega_{jt}\)` (dynamic panel) example:
+
+`\begin{aligned}
+y_{jt}
+&amp;=
+\bfalpha'\bfx_{jt}+\omega_{jt}+\epsilon_{jt},\\
+\omega_{jt}
+&amp;=
+\delta_{0}+\delta\omega_{jt-1}+\xi_{jt}.
+\end{aligned}`
+Substituting `\(\omega_{jt}\)`, this becomes:
+`\begin{equation*}
+y_{jt}=con+\bfalpha'\bfx_{jt}+\delta\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt-1}\right\}+\xi_{jt}+\epsilon_{jt}.
+\end{equation*}`
+Expected profit maximisation
+`\begin{equation*}
+\E[\pi]=P_{t}K^{\alpha_{K}}_{jt}L^{\alpha_{L}}_{jt}M^{\alpha_{M}}_{jt}e^{\omega_{jt}+\epsilon_{jt}}-\rho_{t}M_{jt}.
+\end{equation*}`
+FOC
+`\begin{equation*}
+M_{jt}=\frac{\alpha_{M}Y}{\left(\frac{\rho_{t}}{P_{t}}\right)},
+\end{equation*}`
+so
+`\begin{aligned}
+m_{jt}
+&amp;=
+\ln \alpha_{M}+\bfalpha'\bfx_{jt}+\omega_{jt}-\ln\frac{\rho_{t}}{P_{t}}+\E[\epsilon_{jt}],\\
+&amp;=
+\ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}.
+\end{aligned}`
+---
+This gives 
+`\begin{aligned}
+y_{jt}
+&amp;=
+con+\alpha_{K}k_{jt}+\alpha_{L}l_{jt}+\alpha_{M}\left\{\ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}\right\}+\delta\{\cdot\}+\xi_{jt}+\epsilon_{jt},\\
+&amp;=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}
++\frac{\alpha_{M}}{1-\alpha_{m}}\ln \alpha_{M}\\
+&amp;\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{m}}\left(\xi_{jt}+\epsilon_{jt}\right)-\frac{\alpha_{m}}{1-\alpha_{m}}\epsilon_{jt},\\
+&amp;=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}+\frac{\delta}{1-\alpha_{m}}d_{t-1}\\
+&amp;\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
+\end{aligned}`
+Note
+`\begin{equation*}
+\phi\left(\bfx_{jt}\right)\equiv f\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)=\bfalpha'\bfx_{jt}-\ln\alpha_{M}+m_{jt}-\bfalpha'\bfx_{jt}=-\ln\alpha_{M}+m_{jt},
+\end{equation*}`
+we have
+`\begin{aligned}
+y_{jt}
+&amp;=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{M}}d_{t}+\frac{\delta}{1-\alpha_{M}}d_{t-1}\\
+&amp;\hspace{2em}
+\delta\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt-1}
+-\delta\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt-1}+\delta m_{jt-1}
++\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
+\end{aligned}`
+Define
+`\begin{equation*}
+\tilde{\alpha}_{K}=(1-a)\alpha_{K},\quad
+\tilde{\alpha}_{L}=(1-a)\alpha_{L},\quad
+\tilde{\alpha}_{M}=(1-a)\alpha_{M}+a, \quad \tilde{\delta}=\delta.
+\end{equation*}`
+Then for any `\(a\in(0,1)\)`
+`\begin{equation*}
+\frac{\tilde{\alpha}_{K}}{1-\tilde{\alpha}_{M}}=
+\frac{\alpha_{K}}{1-\alpha_{M}}, \quad
+\frac{\tilde{\alpha}_{L}}{1-\tilde{\alpha}_{M}}=
+\frac{\alpha_{L}}{1-\alpha_{M}}.
+\end{equation*}`
+
 ---
 class: inverse, center, middle
 
@@ -597,21 +678,9 @@ function estimators". In: _Econometrica_ 83.6, pp. 2411-2451. DOI:
 scale in U.S. production: Estimates and implications". In: _Journal of Political Economy_ 105.2, pp.
 249-283. DOI: [10.1086/262073](https://doi.org/10.1086%2F262073).
 
-&lt;a name=bib-Bruno1978&gt;&lt;/a&gt;[Bruno, M.](#cite-Bruno1978) (1978b). "Duality, intermediate inputs and
-value-added". In: _Applications of the Theory of Production_. Ed. by M. Fuss and D. McFadden. Vol. 2.
-Contributions to Economic Analysis. Elsevier, pp. 3-16.
-
-&lt;a name=bib-DeLoeckerGoldberg2014&gt;&lt;/a&gt;[De Loecker, J. and P. K. Goldberg](#cite-DeLoeckerGoldberg2014)
-(2014). "Firm performance in a global market". In: _Annual Review of Economics_ 6.1, pp. 201-227. DOI:
-[10.1146/annurev-economics-080113-104741](https://doi.org/10.1146%2Fannurev-economics-080113-104741).
-
 &lt;a name=bib-DeLoeckerSyverson2021&gt;&lt;/a&gt;[De Loecker, J. and C. Syverson](#cite-DeLoeckerSyverson2021)
 (2021). "An industrial organization perspective on productivity". In: _Handbook of industrial
 organization_. Vol. 4. 1. Elsevier, pp. 141-223.
-
-&lt;a name=bib-Diewert1978&gt;&lt;/a&gt;[Diewert, W. E.](#cite-Diewert1978) (1978). "Hicks' aggregation theorem and
-the existence of a real value-added function". In: _Applications of the Theory of Production_. Ed. by
-M. Fuss and D. McFadden. Vol. 2. Contributions to Economic Analysis. Elsevier, pp. 17-51.
 
 &lt;a name=bib-DoraszelskiJaumandreu2013&gt;&lt;/a&gt;[Doraszelski, U. and J.
 Jaumandreu](#cite-DoraszelskiJaumandreu2013) (2013). "R&amp; D and productivity: Estimating endogenous
@@ -622,9 +691,6 @@ productivity". In: _The Review of Economic Studies_ 80.4, pp. 1338-1383. ISSN: 0
 Jaumandreu](#cite-DoraszelskiJaumandreu2018) (2018). "Measuring the bias of technological change". In:
 _Journal of Political Economy_ 126.3, pp. 1027-1084. DOI:
 [10.1086/697204](https://doi.org/10.1086%2F697204).
----
-class: inverse
-
 
 &lt;a name=bib-GNR2017&gt;&lt;/a&gt;[Gandhi, A., S. Navarro, and D. Rivers](#cite-GNR2017) (2017). _How
 heterogeneous is productivity? A comparison of gross output and value added_. University of Western
@@ -638,6 +704,9 @@ identification of gross output production functions". In: _Journal of Political 
 Traina](#cite-HashemiKirovTraina2022) (2022). "The production approach to markup estimation often
 measures input distortions". In: _Economics Letters_ 217, p. 110673. ISSN: 0165-1765. DOI:
 [10.1016/j.econlet.2022.110673](https://doi.org/10.1016%2Fj.econlet.2022.110673).
+---
+class: inverse
+
 
 &lt;a name=bib-Rubens2023&gt;&lt;/a&gt;[Rubens, M.](#cite-Rubens2023) (2023). "Market structure, oligopsony power,
 and productivity". In: _American Economic Review_ 113.9, pp. 2382-2410. DOI:

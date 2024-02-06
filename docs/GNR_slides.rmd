@@ -129,6 +129,7 @@ MathJax.Hub.Config({
       E: "{\\Large\\varepsilon}",
       bfx: "{\\mathbf{x}}",
       bfX: "{\\mathbf{X}}",
+      bfalpha: "{\\boldsymbol{\\alpha}}",
       bfbeta: "{\\boldsymbol{\\beta}}",
       st: "{\\mbox{s.t.}}"
     }
@@ -435,6 +436,86 @@ This gives the equivalence result.
 &\hspace{1em}=
 \E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt}\right)+d-f^{0}\left(\bfx_{jt}\right)\right\}.
 \end{aligned}
+---
+class: inverse
+
+Cobb-Douglas + AR(1) $\omega_{jt}$ (dynamic panel) example:
+
+\begin{aligned}
+y_{jt}
+&=
+\bfalpha'\bfx_{jt}+\omega_{jt}+\epsilon_{jt},\\
+\omega_{jt}
+&=
+\delta_{0}+\delta\omega_{jt-1}+\xi_{jt}.
+\end{aligned}
+Substituting $\omega_{jt}$, this becomes:
+\begin{equation*}
+y_{jt}=con+\bfalpha'\bfx_{jt}+\delta\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt-1}\right\}+\xi_{jt}+\epsilon_{jt}.
+\end{equation*}
+Expected profit maximisation
+\begin{equation*}
+\E[\pi]=P_{t}K^{\alpha_{K}}_{jt}L^{\alpha_{L}}_{jt}M^{\alpha_{M}}_{jt}e^{\omega_{jt}+\epsilon_{jt}}-\rho_{t}M_{jt}.
+\end{equation*}
+FOC
+\begin{equation*}
+M_{jt}=\frac{\alpha_{M}Y}{\left(\frac{\rho_{t}}{P_{t}}\right)},
+\end{equation*}
+so
+\begin{aligned}
+m_{jt}
+&=
+\ln \alpha_{M}+\bfalpha'\bfx_{jt}+\omega_{jt}-\ln\frac{\rho_{t}}{P_{t}}+\E[\epsilon_{jt}],\\
+&=
+\ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}.
+\end{aligned}
+---
+This gives 
+\begin{aligned}
+y_{jt}
+&=
+con+\alpha_{K}k_{jt}+\alpha_{L}l_{jt}+\alpha_{M}\left\{\ln \alpha_{M}+y_{jt}-\epsilon_{jt}-d_{t}\right\}+\delta\{\cdot\}+\xi_{jt}+\epsilon_{jt},\\
+&=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}
++\frac{\alpha_{M}}{1-\alpha_{m}}\ln \alpha_{M}\\
+&\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{m}}\left(\xi_{jt}+\epsilon_{jt}\right)-\frac{\alpha_{m}}{1-\alpha_{m}}\epsilon_{jt},\\
+&=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{m}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{m}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{m}}d_{t}+\frac{\delta}{1-\alpha_{m}}d_{t-1}\\
+&\hspace{2em}+\frac{\delta}{1-\alpha_{m}}\left\{\phi\left(\bfx_{jt-1}\right)-\bfalpha'\bfx_{jt}\right\}
++\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
+\end{aligned}
+Note
+\begin{equation*}
+\phi\left(\bfx_{jt}\right)\equiv f\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)=\bfalpha'\bfx_{jt}-\ln\alpha_{M}+m_{jt}-\bfalpha'\bfx_{jt}=-\ln\alpha_{M}+m_{jt},
+\end{equation*}
+we have
+\begin{aligned}
+y_{jt}
+&=
+\tilde{con}+
+\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt}+\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt}-\frac{\alpha_{M}}{1-\alpha_{M}}d_{t}+\frac{\delta}{1-\alpha_{M}}d_{t-1}\\
+&\hspace{2em}
++\delta\frac{\alpha_{K}}{1-\alpha_{M}}k_{jt-1}
+-\delta\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt-1}+\delta m_{jt-1}
++\frac{1}{1-\alpha_{m}}\xi_{jt}+\epsilon_{jt}.
+\end{aligned}
+Define
+\begin{equation*}
+\tilde{\alpha}_{K}=(1-a)\alpha_{K},\quad
+\tilde{\alpha}_{L}=(1-a)\alpha_{L},\quad
+\tilde{\alpha}_{M}=(1-a)\alpha_{M}+a, \quad \tilde{\delta}=\delta.
+\end{equation*}
+Then for any $a\in(0,1)$
+\begin{equation*}
+\frac{\tilde{\alpha}_{K}}{1-\tilde{\alpha}_{M}}=
+\frac{\alpha_{K}}{1-\alpha_{M}}, \quad
+\frac{\tilde{\alpha}_{L}}{1-\tilde{\alpha}_{M}}=
+\frac{\alpha_{L}}{1-\alpha_{M}}.
+\end{equation*}
+
 ---
 class: inverse, center, middle
 
