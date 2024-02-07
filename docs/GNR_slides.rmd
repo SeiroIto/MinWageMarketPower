@@ -573,7 +573,7 @@ P_{t}f^{0}_{m}F^{0}\left(\bfx_{jt}\right)e^{\omega_{jt}}\E[e^{\epsilon_{jt}}]&=\
 P_{t}f^{0}_{m}\underbrace{F^{0}\left(\bfx_{jt}\right)e^{\omega_{jt}}e^{\epsilon_{jt}}}_{\equiv Y_{jt}}e^{-\epsilon_{jt}}\E[e^{\epsilon_{jt}}]=\rho_{t}M_{jt},\\
 f^{0}_{m}e^{-\epsilon_{jt}}\E[e^{\epsilon_{jt}}]=\frac{\rho_{t}M_{jt}}{P_{jt}Y_{jt}}\equiv S_{jt}.
 \end{aligned}
-Taking logs and denoting $\ln E[e^{\epsilon_{jt}}]=\ln\E$ gives:
+Taking logs and denoting $\ln \E[e^{\epsilon_{jt}}]=\ln E$ gives:
 \begin{aligned}
 s_{jt}
 &=
