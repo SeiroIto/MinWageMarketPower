@@ -338,30 +338,30 @@ so one can solve for $\omega_{jt}$ ("invert")
 \end{equation*}
 ---
 class: inverse
-\begin{aligned}
+\begin{align}
 \omega_{jt}
 &=
-\underbrace{-f^{0}_{M}\left(\bfx_{jt}\right)-\E[\epsilon_{jt}]}_{\equiv M^{-1}\left(\bfx_{jt}\right)}+d_{t},\\
+\underbrace{-f^{0}_{M}\left(\bfx_{jt}\right)-\E[\epsilon_{jt}]}_{\equiv M^{-1}\left(\bfx_{jt}\right)}+d_{t}, \tag{M}\label{eqM}\\
 y_{jt}
 &=
-f^{0}\left(\bfx_{jt}\right)+\omega_{jt}+\epsilon_{jt},\\
+f^{0}\left(\bfx_{jt}\right)+\omega_{jt}+\epsilon_{jt},\nonumber\\
 &=
-\underbrace{f^{0}\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)}_{\equiv \phi_{G}\left(\bfx_{jt}\right)}+d_{t}+\epsilon_{jt}.\quad (\phi_{G}+d_{t}=\phi \ \mathrm{of\ DLW})
-\end{aligned}
+\underbrace{f^{0}\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)}_{\equiv \phi_{G}\left(\bfx_{jt}\right)}+d_{t}+\epsilon_{jt}.\quad (\phi_{G}+d_{t}=\phi \ \mathrm{of\ DLW}) \tag{$\phi$}\label{eqphi}
+\end{align}
 
-Using $\phi_{G}$
-\begin{aligned}
+Add and subtract $f^{0}$ in \eqref{eqM} and using $\phi_{G}$, 
+\begin{align}
 \omega_{jt}
 &=
-f^{0}\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)+d_{t}-f^{0}\left(\bfx_{jt}\right),\\
+f^{0}\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)+d_{t}-f^{0}\left(\bfx_{jt}\right),\nonumber\\
 &=
-\phi_{G}\left(\bfx_{jt}\right)+d_{t}-f^{0}\left(\bfx_{jt}\right),\\
+\phi_{G}\left(\bfx_{jt}\right)+d_{t}-f^{0}\left(\bfx_{jt}\right), \tag{$\omega$}\label{eqomega}\\
 \omega_{jt-1}
 &=
-\phi_{G}\left(\bfx_{jt-1}\right)+d_{t-1}-f^{0}\left(\bfx_{jt-1}\right).
-\end{aligned}
+\phi_{G}\left(\bfx_{jt-1}\right)+d_{t-1}-f^{0}\left(\bfx_{jt-1}\right).\nonumber
+\end{align}
 
-First-order Markov ass. gives
+Adding first-order Markov ass. to \eqref{eqomega} give
 \begin{aligned}
 \omega_{jt}
 &=
@@ -397,7 +397,7 @@ Expectation conditional on IVs $\Gamma_{jt}=\left(k_{jt}, l_{jt}, \bfx_{jt-1}, d
 \begin{equation*}
 \E\left[y_{jt}|\Gamma_{jt}\right]=\E\left[f^{0}\left(\bfx_{jt}\right)|\Gamma_{jt}\right]+h^{0}\left\{\phi_{G}\left(\bfx_{jt-1}\right)+d_{t-1}-f^{0}\left(\bfx_{jt-1}\right)\right\}.
 \end{equation*}
-Note from the definition of $\phi_{G}$, we have:
+From \eqref{eqphi}, we have:
 \begin{equation*}
 \E\left[y_{jt}|\Gamma_{jt}\right]=\E\left[\phi_{G}\left(\bfx_{jt}\right)+d_{t}|\Gamma_{jt}\right].
 \end{equation*}
@@ -449,7 +449,7 @@ y_{jt}
 &=
 \delta_{0}+\delta\omega_{jt-1}+\xi_{jt}.
 \end{aligned}
-Substituting $\omega_{jt}$, this becomes:
+Substituting $\omega_{jt}$ with \eqref{eqomega} derived from profit max FOC, this becomes:
 \begin{equation*}
 y_{jt}=con+\bfalpha'\bfx_{jt}+\delta\left\{\phi\left(\bfx_{jt-1}\right)+d_{t-1}-\bfalpha'\bfx_{jt-1}\right\}+\xi_{jt}+\epsilon_{jt}.
 \end{equation*}
@@ -471,7 +471,7 @@ m_{jt}
 \end{aligned}
 ---
 class: inverse
-This gives 
+Further substituting this FOC from profit max gives 
 \begin{aligned}
 y_{jt}
 &=
@@ -488,7 +488,21 @@ con+\alpha_{K}k_{jt}+\alpha_{L}l_{jt}+\alpha_{M}\left\{\ln \alpha_{M}+y_{jt}-\ep
 &\hspace{2em}+\frac{\delta}{1-\alpha_{M}}\left\{\phi\left(\bfx_{jt-1}\right)-\bfalpha'\bfx_{jt}\right\}
 +\frac{1}{1-\alpha_{M}}\xi_{jt}+\epsilon_{jt}.
 \end{aligned}
-Note
+FOC is:
+\begin{aligned}
+m_{jt}
+&=
+\ln \alpha_{M}+\bfalpha'\bfx_{jt}+\omega_{jt}-\ln\frac{\rho_{t}}{P_{t}}+\E[\epsilon_{jt}],\\
+&=
+\ln \alpha_{M}+\bfalpha'\bfx_{jt}+\omega_{jt}-d_{t}.
+\end{aligned}
+Then, $M^{-1}\left(\bfx_{jt}\right)$ in \eqref{eqM} is the above solved for $\omega_{jt}$:
+\begin{equation*}
+\omega_{jt}=\underbrace{-\ln\alpha_{M}-\bfalpha'\bfx_{jt}+m_{jt}}_{=M^{-1}\left(\bfx_{jt}\right)}+d_{t}.
+\end{equation*}
+---
+class: inverse
+With
 \begin{equation*}
 \phi\left(\bfx_{jt}\right)\equiv f\left(\bfx_{jt}\right)+M^{-1}\left(\bfx_{jt}\right)=\bfalpha'\bfx_{jt}-\ln\alpha_{M}+m_{jt}-\bfalpha'\bfx_{jt}=-\ln\alpha_{M}+m_{jt},
 \end{equation*}
@@ -503,8 +517,6 @@ y_{jt}
 -\delta\frac{\alpha_{L}}{1-\alpha_{M}}l_{jt-1}+\delta m_{jt-1}
 +\frac{1}{1-\alpha_{M}}\xi_{jt}+\epsilon_{jt}.
 \end{aligned}
----
-class: inverse
 
 Define
 \begin{equation*}
@@ -515,6 +527,8 @@ Define
 Then for any $a\in(0,1)$
 \begin{equation*}
 \frac{\tilde{\alpha}_{K}}{1-\tilde{\alpha}_{M}}=
+\frac{(1-a)\alpha_{K}}{1-(1-a)\alpha_{M}-a}=
+\frac{(1-a)\alpha_{K}}{(1-a)(1-\alpha_{M})}=
 \frac{\alpha_{K}}{1-\alpha_{M}}, \quad
 \frac{\tilde{\alpha}_{L}}{1-\tilde{\alpha}_{M}}=
 \frac{\alpha_{L}}{1-\alpha_{M}}.
@@ -560,15 +574,19 @@ P_{t}f^{0}_{m}\underbrace{F^{0}\left(\bfx_{jt}\right)e^{\omega_{jt}}e^{\epsilon_
 f^{0}_{m}e^{-\epsilon_{jt}}\E[e^{\epsilon_{jt}}]=\frac{\rho_{t}M_{jt}}{P_{jt}Y_{jt}}\equiv S_{jt}.
 \end{aligned}
 Taking logs and denoting $\ln E[e^{\epsilon_{jt}}]=\ln\E$ gives:
-\begin{equation*}
-s_{jt}=\underbrace{\ln f^{0}_{m}+\ln\varepsilon}_{\equiv \ln D^{\epsilon}\left(\bfx_{jt}\right)}-\epsilon_{jt}, \quad D^{\epsilon}\left(\bfx_{jt}\right)=f^{0}_{m}\left(\bfx_{jt}\right)\E[e^{\epsilon_{jt}}].
-\end{equation*}
+\begin{aligned}
+s_{jt}
+&=
+\underbrace{\ln E+\ln f^{0}_{m}}_{\equiv \ln D^{\epsilon}\left(\bfx_{jt}\right)}-\epsilon_{jt}, \quad D^{\epsilon}\left(\bfx_{jt}\right)=\E[e^{\epsilon_{jt}}]f^{0}_{m}\left(\bfx_{jt}\right),\\
+&=
+d+\ln f^{0}_{m}\left(\bfx_{jt}\right)+u^{\epsilon}_{jt}, \quad d=\ln E=\ln \E[e^{\epsilon_{jt}}].
+\end{aligned}
 Equivalently, *share regression* is derived:
 \begin{equation*}
 s_{jt}=\ln D^{\epsilon}\left(\bfx_{jt}\right)+u^{\epsilon}_{jt}.
 \tag{s}\label{sharereg}
 \end{equation*}
-
+Share regression has only a constant, $\bfx_{jt}$ and uncorrelated shocks on RHS, so we can use OLS to estimate the parameters of $D^{\epsilon}\left(\bfx_{jt}\right)$. Given $D^{\epsilon}\left(\bfx_{jt}\right)$ is $f_{m}$ and a constant, we get partial derivative of $f$ wrt $m$, i.e., the elasticitiy of $F$ wrt $M$.
 ---
 class: inverse
 ### Thereom 2: One can recover $\hat{f}_{m}$ by using the share regression.
@@ -577,16 +595,16 @@ Given $\omega_{jt}, \bfx_{jt}\in\mathcal I_{jt}$ we have $\E[\epsilon_{jt}|\math
 \begin{equation*}
 \E\left.\left[s_{jt}\right|\bfx_{jt}\right]=\ln D^{\epsilon}\left(\bfx_{jt}\right).
 \end{equation*}
-This identifies $D^{\epsilon}$. This gives $\epsilon_{jt}$ and $\E=\E[e^{\epsilon_{jt}}]$:
+This identifies $D^{\epsilon}$. This gives $\hat{\epsilon}_{jt}$ and $\hat{E}=\E[e^{\hat{\epsilon}_{jt}}]$:
 \begin{equation*}
-\hat{\epsilon}_{jt}=\ln \hat{D}^{\epsilon}-s_{jt}, \quad \hat{\E}=\E\left[e^{\ln \hat{D}^{\epsilon}-s_{jt}}\right].
+\hat{\epsilon}_{jt}=\ln \hat{D}^{\epsilon}-s_{jt}, \quad \hat{E}=\E\left[e^{\ln \hat{D}^{\epsilon}-s_{jt}}\right] \mbox{ or } \hat{E}=\hat{d}.
 \end{equation*}
 With the definition of $\ln D^{\epsilon}\left(\bfx_{jt}\right)=\ln f_{m}+\ln\E$, this gives:
 \begin{aligned}
 \ln \hat{f}_{m}
-&=\ln \hat{D}^{\epsilon}-\ln\hat{\E},\\
+&=\ln \hat{D}^{\epsilon}-\ln\hat{E},\\
 \hat{f}_{m}
-&=\frac{\hat{D}^{\epsilon}}{\hat{\E}}.
+&=\frac{\hat{D}^{\epsilon}}{\hat{E}}.
 \end{aligned}
 
 ---
@@ -621,9 +639,7 @@ y_{jt}-\int \red{f^{0}_{m}\left(\bfx_{jt}\right)}dm_{jt}-\red{\epsilon_{jt}},\\
 &=
 \omega_{jt}-\mathcal C(k_{jt}, l_{jt}).
 \end{aligned}
-We already .red[have] $\red{\hat{\epsilon}_{jt}}$ and $\red{\hat{f}^{0}_{m}}$, then we can .green[get] $\green{\hat{\mathcal Y}_{jt}}$. 
-
-Using first-order Markov on $\omega_{jt}$
+We already .red[have] $\red{\hat{\epsilon}_{jt}}$ and $\red{\hat{f}^{0}_{m}}$, then we can .green[get] $\green{\hat{\mathcal Y}_{jt}}$.  Rearrange:
 \begin{aligned}
 \omega_{jt}
 &=
@@ -632,7 +648,7 @@ Using first-order Markov on $\omega_{jt}$
 &=
 \mathcal Y_{jt-1}+\mathcal C(k_{jt-1}, l_{jt-1}).
 \end{aligned}
-Then
+Then, using first-order Markov on $\omega_{jt}$
 \begin{aligned}
 \mathcal Y_{jt}
 &=
@@ -705,7 +721,7 @@ class: inverse
 knitr::write_bib(x = "rmarkdown", file = 'GNR_slides/GNR_slides.bib')
 ```
 ```{r results = "asis", echo = FALSE}
-PrintBibliography(myBib, .opts = list(check.entries = T, sorting = "nyt",
+PrintBibliography(myBib, .opts = list(check.entries = F, sorting = "nyt",
   no.print.fields=c("eprint", "URL")),
   start = 1, end = 8)
 ```
