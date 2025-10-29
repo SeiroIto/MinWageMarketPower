@@ -1,0 +1,249 @@
+---
+title: "Computing HHI using CIT-IRP5 files"
+date: last-modified
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+    include-in-header:
+      - text: |
+         % Tinytable preamble
+         \usepackage{tabularray}
+         \usepackage{float}
+         \usepackage{graphicx}
+         \usepackage{codehigh}
+         \usepackage[normalem]{ulem}
+         \UseTblrLibrary{booktabs}
+         \UseTblrLibrary{siunitx}
+         %\newcommand{\tinytableTabularrayUnderline}[1]{\underline{#1}}
+         %\newcommand{\tinytableTabularrayStrikeout}[1]{\sout{#1}}
+         %\NewTableCommand{\tinytableDefineColor}[3]{\definecolor{#1}{#2}{#3}}
+         % Spacing Commands
+         \usepackage{setspace}
+         \doublespacing
+         % Fix Spacing in longtblr
+         \usepackage{etoolbox}
+         \AtBeginEnvironment{longtblr}{\begin{singlespacing}}
+         \AtEndEnvironment{longtblr}{\end{singlespacing}}
+#### path <- "Z:/Workbenches/epguest/seiro_ito/outfiles/"; rmarkdown::render(paste0(path, "program/ReadCITIRP5Data.rmd"))
+---
+```{css, echo=F}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+```
+
+# Summary
+
+```{r setup, echo = F, warning = F, message = F}
+library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = T,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+```
+```{r path, echo = F, warning = F, message = F}
+library(qs); library(data.table); library(ggplot2); library(tinytable)
+```
+
+Here are the summary of tasks:
+
+* We have set up an account at the secure lab facility to access CIT-IRP5 merged employee-employer data sets of 2011-2018. 
+* We read all the files in `R`, converted into `data.table` format, and saved using `qs` package.
+* We coutnted the number of employees per firm at the following levels of geographical areas:
+   * Province
+   * District municipality
+   * Local municipality
+* Within each geographical areas, we computed the total number of employees, shares of each firms, and HHI.
+* We also summarised the data.
+* In sum, as specified in the Specification, we have computed:
+   * Number of total employees $E_{mi}$ in the area $m$
+   * Number of employees $E_{mi}$ for each of firm $i$
+   * Employment share $E_{mi}/E_{m}$ of each firm in the area
+   * HHI of the area $h_{m}$
+   * Attached the above statistics to each administrative areas
+   * Descriptive statistics at various administrative levels
+* We have updated the analysis of the previous research team to incorporate more recent years and a wider definition of agricultural firms. We confirmed the results are qualitatively similar with the previous research.
+
+
+
+# Descriptive statistics
+
+Using `LShare` data, we show the descriptive statistics at various aggregation levels. 
+
+```{r destat tables, echo = F}
+library(tinytable)
+options(tinytable_theme_placement_latex_float = "H")
+path <- "c:/data/MinWageMarketPower/analysis/program/"
+x <- fread(paste0(path, "TextFiles/DestatTables.prn"), sep = "\t")
+setnames(x, gsub("\\_", "\\\\_", colnames(x)))
+x1 <- x[1:6, ]
+x2 <- x[8:13, ]
+x3 <- x[15:20, ]
+tt(x1[, 1:5, with = F], caption = "Descriptive statsitics at Province level")
+tt(x1[, 5+1:5, with = F], caption = "Descriptive statsitics at Province level (continued)")
+tt(x1[, 5*2+1:5, with = F], caption = "Descriptive statsitics at Province level (continued)")
+tt(x1[, 5*3+1:2, with = F], caption = "Descriptive statsitics at Province level (end)")
+
+tt(x2[, 1:5, with = F], caption = "Descriptive statsitics at district municipality level")
+tt(x2[, 5+1:5, with = F], caption = "Descriptive statsitics at district municipality level (continued)")
+tt(x2[, 5*2+1:5, with = F], caption = "Descriptive statsitics at district municipality level (continued)")
+tt(x2[, 5*3+1:2, with = F], caption = "Descriptive statsitics at district municipality level (end)")
+
+tt(x3[, 1:5, with = F], caption = "Descriptive statsitics at local municipality level")
+tt(x3[, 5+1:5, with = F], caption = "Descriptive statsitics at local municipality level (continued)")
+tt(x3[, 5*2+1:5, with = F], caption = "Descriptive statsitics at local municipality level (continued)")
+tt(x3[, 5*3+1:2, with = F], caption = "Descriptive statsitics at local municipality level (end)")
+```
+
+
+# Codes
+
+Read IRP5 v5 data.
+```{r read irp5v5beta, eval = F}
+library(qs)
+library(data.table)
+library(readstata13)
+for (yr in 9:22) {
+  if (yr < 10) yr <- paste0("0", yr)
+  ## Below code is run only once: Start
+  irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, "_cleaned.dta"))
+  ipyr <- data.table(irpyr)
+  rm(irpyr)
+  qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = 8)
+  ## Below code is run only once: End
+  ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = 8)
+  ## Keep only nature of person is "an individual"
+  ipyr <- ipyr[grepl("A", natureofperson), ]
+  ## Drop obs with kerr_income == 0
+  ipyr <- ipyr[kerr_income != 0, ]
+  ## Note that there are header lines with taxrefno = "NULL"
+  ## taxrefno = "NULL": no business geo info
+  ## Num: Number of employees in a firm, after dropping taxrefno = "NULL"
+  ipyr[, Num := as.integer(.N), by = .(taxrefno)]
+  ipyr[is.na(Num) | grepl("NULL", taxrefno), Num := 0L]
+  ## Num2: Number of employees in a firm, treat taxrefno = "NULL" as sole proprietor
+  ## To do so, create and assign taxrefno to them
+  ipyr[, Tref := taxrefno]
+  ipyr[grepl("NULL", taxrefno), Tref := 1:.N]
+  ipyr[, Num2 := as.integer(.N), by = .(Tref)]
+  ipyr[is.na(Num) | grepl("NULL", taxrefno), Num := 0L]
+  icount <- unique(ipyr[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+    busmainplc_geo, taxrefno, 
+    #### need to run below if we want payereferenceno
+    #### payereferenceno,
+    TRef, natureofperson, kerr_income, Num, Num2)])
+  qsave(icount, paste0(pathdata, "icount", yr, ".qs"), nthreads = 8)
+}
+```
+
+Aggregate by Local Municipality, Districts. 
+```{r hhi, eval = F}
+library(qs)
+library(data.table)
+#### Read data
+#### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+#### Not sure if we need this. Test how many obs will be dropped.
+nrow(ipyr[kerr_income != 0, ]); (nrow(ipyr[kerr_income != 0, ])/nrow(ipyr))*100
+#### For 2012, no NA in payereferenceno
+#### (n0 <- nrow(ipyr[is.na(payereferenceno) | payereferenceno == "", ])); 
+#### (n0)/nrow(ipyr)*100
+#### 14% are gov employees [is.na(taxrefno) | taxrefno == ""]
+#### So we cannot simply drop entries with NAs in taxrefno
+(n0 <- nrow(ipyr[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); 
+(n0/nrow(ipyr))*100
+#### 1. Use payereferenceno to count the total
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to 
+####      aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+ipyr[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+ip = copy(ipyr)
+#### Drop 2nd GovEntity entries at each geo level
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")[-4]
+for (g in 1:length(GeoLevel)) {
+  ip[, Gov2 := 0L]
+  ip[grepl("Gov", Txrf), Gov2 := as.integer(1:.N), by=
+    eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  ip <- ip[Gov2 != 2, ]
+}
+ip[, Entity := "private"]
+ip[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+ip[, Entity := factor(Entity, levels = c("private", "gov"))]
+#### table(ipry[, Entity], exclude = NULL)
+#### Count shares and HHI for the entire country
+LShare <- NULL
+for (g in 1:length(GeoLevel)) {
+  ipGeo = copy(ip)
+  ipGeo[, EachNum := as.integer(.N), by = 
+    eval(c(c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+  ipGeo[, Total := as.integer(.N), by = 
+    eval(c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  ipGeo[, Share := round(EachNum/Total, 8)]
+  #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+  #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
+  ipGeo[grepl("gov", Entity), GTotal := as.integer(.N), by = 
+    eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  ipGeo[, GTotal := GTotal[!is.na(GTotal)][1], by =
+    eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  #### We define EachNumG by replacing EachNum of GovEntity with 0L
+  ipGeo[, EachNumG := EachNum]
+  ipGeo[grepl("gov", Entity), EachNumG := 0L]
+  ipGeo[, TotalG := Total-GTotal]
+  ipGeo[, ShareG := round(EachNumG/TotalG, 8)]
+  ipGeo[, AreaLevel := GeoLevel[g]]
+  lshare <- unique(ipGeo[, 
+    c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], 
+    "Entity", "Txrf",  #"taxrefno",
+    "AreaLevel", 
+    "EachNum", "Total", "Share", "EachNumG", "TotalG", "ShareG" 
+    ), with = F])
+  lshare[, HHI := sum(Share^(2), na.rm = T), by = 
+    eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  lshare[, nHHI := (HHI-1/Total)/(1-1/Total)]
+  lshare[, HHIG := sum(ShareG^(2), na.rm = T), by = 
+    eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+  lshare[, nHHIG := (HHIG-1/TotalG)/(1-1/TotalG)]
+  print(GeoLevel[g])
+  print(lshare[1:10, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[g], 
+    "Txrf", "Total", "EachNum", "Share", "HHI", "nHHI", "TotalG"), with = F])
+  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+}
+setkey(LShare, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)
+qsave(LShare, paste0(pathdata, "ShareHHI12.qs"), nthreads = 16)
+```
+
+
+

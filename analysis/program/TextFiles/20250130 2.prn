@@ -1,0 +1,65 @@
+[[1]]
+ busprov_geo          taxrefno             Entity         Txrf            AreaLevel            EachNum             Total            Share              EachNumG            TotalG          ShareG               HHI             nHHI      
+ Length:5345        Length:5345        private:5343   Length:5345        Length:5345        Min.   :    1.00   Min.   :125824   Min.   :7.950e-06   Min.   :    0.00   Min.   :99988   Min.   :0.000e+00   Min.   :0.134   Min.   :0.134  
+ Class :character   Class :character   gov    :   2   Class :character   Class :character   1st Qu.:    1.00   1st Qu.:125824   1st Qu.:7.950e-06   1st Qu.:    1.00   1st Qu.:99988   1st Qu.:1.000e-05   1st Qu.:0.134   1st Qu.:0.134  
+ Mode  :character   Mode  :character                  Mode  :character   Mode  :character   Median :    3.00   Median :125824   Median :2.384e-05   Median :    3.00   Median :99988   Median :3.000e-05   Median :0.134   Median :0.134  
+                                                                                            Mean   :   28.37   Mean   :125824   Mean   :2.255e-04   Mean   :   18.71   Mean   :99988   Mean   :1.871e-04   Mean   :0.134   Mean   :0.134  
+                                                                                            3rd Qu.:    8.00   3rd Qu.:125824   3rd Qu.:6.358e-05   3rd Qu.:    8.00   3rd Qu.:99988   3rd Qu.:8.001e-05   3rd Qu.:0.134   3rd Qu.:0.134  
+                                                                                            Max.   :27319.00   Max.   :125824   Max.   :2.171e-01   Max.   :27319.00   Max.   :99988   Max.   :2.732e-01   Max.   :0.134   Max.   :0.134  
+      HHIG            nHHIG         busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :0.0786   Min.   :0.07859   Length:5345        Length:5345        Length:5345       
+ 1st Qu.:0.0786   1st Qu.:0.07859   Class :character   Class :character   Class :character  
+ Median :0.0786   Median :0.07859   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :0.0786   Mean   :0.07859                                                           
+ 3rd Qu.:0.0786   3rd Qu.:0.07859                                                           
+ Max.   :0.0786   Max.   :0.07859                                                           
+
+[[2]]
+ busprov_geo          taxrefno             Entity         Txrf            AreaLevel            EachNum             Total            Share              EachNumG            TotalG          ShareG               HHI        
+ Length:5385        Length:5385        private:5381   Length:5385        Length:5385        Min.   :    1.00   Min.   : 21635   Min.   :9.600e-06   Min.   :    0.00   Min.   :15853   Min.   :0.0000000   Min.   :0.1445  
+ Class :character   Class :character   gov    :   4   Class :character   Class :character   1st Qu.:    1.00   1st Qu.:104189   1st Qu.:9.600e-06   1st Qu.:    1.00   1st Qu.:84135   1st Qu.:0.0000119   1st Qu.:0.1445  
+ Mode  :character   Mode  :character                  Mode  :character   Mode  :character   Median :    3.00   Median :104189   Median :3.839e-05   Median :    3.00   Median :84135   Median :0.0000475   Median :0.1445  
+                                                                                            Mean   :   28.16   Mean   : 93856   Mean   :4.568e-04   Mean   :   18.57   Mean   :75589   Mean   :0.0003714   Mean   :0.1500  
+                                                                                            3rd Qu.:    8.00   3rd Qu.:104189   3rd Qu.:9.244e-05   3rd Qu.:    8.00   3rd Qu.:84135   3rd Qu.:0.0001189   3rd Qu.:0.1445  
+                                                                                            Max.   :27319.00   Max.   :104189   Max.   :2.673e-01   Max.   :27319.00   Max.   :84135   Max.   :0.3247043   Max.   :0.1888  
+      nHHI             HHIG             nHHIG         busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :0.1445   Min.   :0.08552   Min.   :0.08546   Length:5385        Length:5385        Length:5385       
+ 1st Qu.:0.1445   1st Qu.:0.10797   1st Qu.:0.10796   Class :character   Class :character   Class :character  
+ Median :0.1445   Median :0.10797   Median :0.10796   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :0.1500   Mean   :0.10516   Mean   :0.10514                                                           
+ 3rd Qu.:0.1445   3rd Qu.:0.10797   3rd Qu.:0.10796                                                           
+ Max.   :0.1887   Max.   :0.10797   Max.   :0.10796                                                           
+
+[[3]]
+ busprov_geo          taxrefno             Entity         Txrf            AreaLevel            EachNum             Total            Share              EachNumG            TotalG          ShareG               HHI         
+ Length:5412        Length:5412        private:5400   Length:5412        Length:5412        Min.   :    1.00   Min.   :   715   Min.   :0.0000096   Min.   :    0.00   Min.   :  620   Min.   :0.0000000   Min.   :0.04856  
+ Class :character   Class :character   gov    :  12   Class :character   Class :character   1st Qu.:    1.00   1st Qu.:104189   1st Qu.:0.0000096   1st Qu.:    1.00   1st Qu.:84135   1st Qu.:0.0000119   1st Qu.:0.14450  
+ Mode  :character   Mode  :character                  Mode  :character   Mode  :character   Median :    3.00   Median :104189   Median :0.0000384   Median :    3.00   Median :84135   Median :0.0000475   Median :0.14450  
+                                                                                            Mean   :   28.02   Mean   : 91347   Mean   :0.0013751   Mean   :   18.48   Mean   :73704   Mean   :0.0011086   Mean   :0.16655  
+                                                                                            3rd Qu.:    8.00   3rd Qu.:104189   3rd Qu.:0.0001248   3rd Qu.:    8.00   3rd Qu.:84135   3rd Qu.:0.0001664   3rd Qu.:0.14450  
+                                                                                            Max.   :27319.00   Max.   :104189   Max.   :0.6589454   Max.   :27319.00   Max.   :84135   Max.   :0.6182088   Max.   :0.87426  
+      nHHI              HHIG             nHHIG         busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :0.04827   Min.   :0.04733   Min.   :0.04702   Length:5412        Length:5412        Length:5412       
+ 1st Qu.:0.14449   1st Qu.:0.10797   1st Qu.:0.10796   Class :character   Class :character   Class :character  
+ Median :0.14449   Median :0.10797   Median :0.10796   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :0.16651   Mean   :0.11834   Mean   :0.11828                                                           
+ 3rd Qu.:0.14449   3rd Qu.:0.10797   3rd Qu.:0.10796                                                           
+ Max.   :0.87422   Max.   :0.38800   Max.   :0.38789                                                           
+
+[[4]]
+ busprov_geo          taxrefno             Entity         Txrf            AreaLevel            EachNum             Total           Share              EachNumG            TotalG          ShareG             HHI               nHHI        
+ Length:5970        Length:5970        private:5868   Length:5970        Length:5970        Min.   :    1.00   Min.   :    1   Min.   :0.0000153   Min.   :    0.00   Min.   :    0   Min.   :0.00000   Min.   :0.02340   Min.   :0.02252  
+ Class :character   Class :character   gov    : 102   Class :character   Class :character   1st Qu.:    1.00   1st Qu.: 1575   1st Qu.:0.0001111   1st Qu.:    1.00   1st Qu.: 1356   1st Qu.:0.00012   1st Qu.:0.09821   1st Qu.:0.09577  
+ Mode  :character   Mode  :character                  Mode  :character   Mode  :character   Median :    3.00   Median : 5418   Median :0.0006053   Median :    2.00   Median : 4660   Median :0.00063   Median :0.17479   Median :0.17454  
+                                                                                            Mean   :   25.39   Mean   :23496   Mean   :0.0124155   Mean   :   16.75   Mean   :18316   Mean   :0.00978   Mean   :0.20447   Mean   :0.20290  
+                                                                                            3rd Qu.:    7.00   3rd Qu.:65211   3rd Qu.:0.0027927   3rd Qu.:    7.00   3rd Qu.:50179   3rd Qu.:0.00285   3rd Qu.:0.28353   3rd Qu.:0.28352  
+                                                                                            Max.   :27319.00   Max.   :65211   Max.   :1.0000000   Max.   :27319.00   Max.   :50179   Max.   :1.00000   Max.   :1.03119   Max.   :1.03120  
+                                                                                                                                                                      NA's   :35      NA's   :38                          NA's   :4        
+      HHIG             nHHIG         busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :0.00000   Min.   :0.00000   Length:5970        Length:5970        Length:5970       
+ 1st Qu.:0.05573   1st Qu.:0.05427   Class :character   Class :character   Class :character  
+ Median :0.11079   Median :0.11067   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :0.18181   Mean   :0.18120                                                           
+ 3rd Qu.:0.29937   3rd Qu.:0.29935                                                           
+ Max.   :1.00000   Max.   :1.00000                                                           
+                   NA's   :42   

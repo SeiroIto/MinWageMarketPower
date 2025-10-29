@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Rapp.history
+.DS_Store
+docs/Workshop2024Mar26/koshi*.pdf
+docs/Workshop2024Mar26/code/Appendix_DGP/DGP/DGPG*.csv
+docs/libs
+analysis/figure
+analysis/*png
+analysis/*html
+analysis/*_cache
+analysis/site_libs
+source/**/
+program0/

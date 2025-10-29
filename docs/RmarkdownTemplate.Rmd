@@ -1,0 +1,85 @@
+---
+title: "A summary on labour market power literature"
+author: "Noreen"
+date: "`r format(Sys.time(), '%Y-%m-%d- %R')`"
+output:
+  tufte::tufte_html:
+    citation_package: natbib
+  pdf_document:
+     latex_engine: xelatex
+header-includes:
+    - \usepackage{amsmath}
+    - \usepackage{amssymb}
+    - \usepackage{amsfonts}
+    - \usepackage{bookmark} 
+bibliography: bibfile.bib
+link-citations: yes
+#### setwd(path <- "Z:/Workbenches/epguest/seiro_ito/outfiles/"); rmarkdown::render("RmarkdownTemplate.Rmd")
+#### rmarkdown::render("RmarkdownTemplate.Rmd", output_format = "all")
+---
+```{css, echo=FALSE}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+	}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Noto Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+```
+
+```{r setup, include=FALSE} 
+#### include = F <==> echo=F & results = F
+library(tufte)
+library(data.table)
+library(qs)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  echo = T, 
+  #### remove leading hashes in html output
+  comment = "", 
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen")
+options(htmltools.dir.version = FALSE)
+```
+\def\Perp{\mkern2mu\rotatebox[origin=c]{90}{$\models$}\mkern2mu}
+\newcommand{\mpage}[2]{\begin{minipage}[t]{#1}#2\end{minipage}}
+\newcommand{\cnvp}{\stackrel{p}{\longrightarrow}}
+\newcommand{\cnvd}{\stackrel{d}{\longrightarrow}}
+\newcommand{\bfV}{\mathbf{V}}
+\newcommand{\bfX}{\mathbf{X}}
+\newcommand{\bfx}{\mathbf{x}}
+\newcommand{\bfa}{\mathbf{a}}
+\newcommand{\bfb}{\mathbf{b}}
+\newcommand{\bfp}{\mathbf{p}}
+\newcommand{\bfs}{\mathbf{s}}
+\newcommand{\bfz}{\mathbf{z}}
+\newcommand{\E}{{\Large\varepsilon}}
+\newcommand{\NU}{{\Large\nu}}
+\newcommand{\0}{{\mathbf{0}}}
+\newcommand{\bfalpha}{\boldsymbol{\alpha}}
+\newcommand{\bfbeta}{\boldsymbol{\beta}}
+\newcommand{\bftheta}{\boldsymbol{\theta}}
+\newcommand{\bfeta}{\boldsymbol{\eta}}
+\newcommand{\bfmu}{\boldsymbol{\mu}}
+\newcommand{\bflambda}{\boldsymbol{\lambda}}
+\newcommand{\ind}{\mathrel{\perp\!\!\!\!\perp}}
+
+# This is header level 1
+## This is header level 2
+
+```{r data exercise}
+
+```
+
+```{r bib, include=FALSE}
+# create a bib file for the R packages used in this document
+knitr::write_bib(x = "rmarkdown", file = 'RmarkdownTemplate.bib')
+```
+

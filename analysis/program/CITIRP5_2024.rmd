@@ -1,0 +1,61 @@
+---
+title: "Computing HHI using CIT-IRP5 files"
+date: "r format(Sys.time(), "%Y%m%d %R")"
+output: html_document
+output: pdf_document
+#### path <- "Z:/Workbenches/epguest/seiro_ito/outfiles/"; rmarkdown::render(paste0(path, "program/ReadCITIRP5Data.rmd"))
+---
+```{css, echo=F}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+```
+
+# Setup
+
+```{r setup}
+library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = F,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+```
+```{r path, eval = F}
+path <- "Z:/Workbenches/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "Z:/Master Data/CIT-IRP5 Panel/"
+pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
+livbrary(qs); library(data.table); library(ggplot2)
+```
+
+path <- "c:/data/MinWageMarketPower/analysis/program/"
+x <- fread(paste0(path, "TextFiles/DestatTables.prn"), sep = "\t")
+x1 <- x[1:6, ]
+x2 <- x[8:13, ]
+x3 <- x[15:20, ]

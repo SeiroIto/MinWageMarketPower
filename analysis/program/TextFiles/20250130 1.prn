@@ -1,0 +1,53 @@
+[[1]]
+ busprov_geo          taxrefno             Entity          Txrf            kerr_income        AreaLevel            EachNum          Total            Share              EachNumG         TotalG          ShareG             HHI      
+ Length:89803       Length:89803       private:84552   Length:89803       Min.   :       0   Length:89803       Min.   :    1   Min.   :125824   Min.   :7.950e-06   Min.   :    0   Min.   :99988   Min.   :0.00000   Min.   :1347  
+ Class :character   Class :character   gov    : 5251   Class :character   1st Qu.:   10548   Class :character   1st Qu.:   32   1st Qu.:125824   1st Qu.:2.543e-04   1st Qu.:   19   1st Qu.:99988   1st Qu.:0.00019   1st Qu.:1347  
+ Mode  :character   Mode  :character                   Mode  :character   Median :   34955   Mode  :character   Median :  370   Median :125824   Median :2.941e-03   Median :  176   Median :99988   Median :0.00176   Median :1347  
+                                                                          Mean   :   80708                      Mean   : 9053   Mean   :125824   Mean   :7.195e-02   Mean   : 7542   Mean   :99988   Mean   :0.07543   Mean   :1347  
+                                                                          3rd Qu.:   73672                      3rd Qu.:27319   3rd Qu.:125824   3rd Qu.:2.171e-01   3rd Qu.:27319   3rd Qu.:99988   3rd Qu.:0.27322   3rd Qu.:1347  
+                                                                          Max.   :32494855                      Max.   :27319   Max.   :125824   Max.   :2.171e-01   Max.   :27319   Max.   :99988   Max.   :0.27322   Max.   :1347  
+                                                                          NA's   :11                                                                                                                                                 
+      nHHI           HHIG          nHHIG      busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :1347   Min.   :1782   Min.   :1782   Length:89803       Length:89803       Length:89803      
+ 1st Qu.:1347   1st Qu.:1782   1st Qu.:1782   Class :character   Class :character   Class :character  
+ Median :1347   Median :1782   Median :1782   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :1347   Mean   :1782   Mean   :1782                                                           
+ 3rd Qu.:1347   3rd Qu.:1782   3rd Qu.:1782                                                           
+ Max.   :1347   Max.   :1782   Max.   :1782                                                           
+                                                                                                      
+
+[[2]]
+ busprov_geo          taxrefno             Entity          Txrf            kerr_income        AreaLevel            EachNum          Total            Share              EachNumG         TotalG          ShareG               HHI        
+ Length:89935       Length:89935       private:84562   Length:89935       Min.   :       0   Length:89935       Min.   :    1   Min.   : 21635   Min.   :0.0000096   Min.   :    0   Min.   :15853   Min.   :0.0000000   Min.   : 283.6  
+ Class :character   Class :character   gov    : 5373   Class :character   1st Qu.:   10500   Class :character   1st Qu.:   32   1st Qu.:104189   1st Qu.:0.0003743   1st Qu.:   19   1st Qu.:84135   1st Qu.:0.0002615   1st Qu.:1731.5  
+ Mode  :character   Mode  :character                   Mode  :character   Median :   34884   Mode  :character   Median :  370   Median :104189   Median :0.0045974   Median :  176   Median :84135   Median :0.0031497   Median :1731.5  
+                                                                          Mean   :   80612                      Mean   : 8276   Mean   : 90309   Mean   :0.0916993   Mean   : 7531   Mean   :72655   Mean   :0.0972637   Mean   :1488.1  
+                                                                          3rd Qu.:   73600                      3rd Qu.:27319   3rd Qu.:104189   3rd Qu.:0.2622062   3rd Qu.:27319   3rd Qu.:84135   3rd Qu.:0.3247043   3rd Qu.:1731.5  
+                                                                          Max.   :32494855                      Max.   :27319   Max.   :104189   Max.   :0.2672521   Max.   :27319   Max.   :84135   Max.   :0.3247043   Max.   :1731.5  
+                                                                          NA's   :12                                                                                                                                                     
+      nHHI             HHIG            nHHIG        busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   : 283.6   Min.   : 148.6   Min.   : 148.6   Length:89935       Length:89935       Length:89935      
+ 1st Qu.:1731.5   1st Qu.:2512.2   1st Qu.:2512.2   Class :character   Class :character   Class :character  
+ Median :1731.5   Median :2512.2   Median :2512.2   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :1488.1   Mean   :2114.8   Mean   :2114.8                                                           
+ 3rd Qu.:1731.5   3rd Qu.:2512.2   3rd Qu.:2512.2                                                           
+ Max.   :1731.5   Max.   :2512.2   Max.   :2512.2                                                           
+                                                                                                            
+
+[[3]]
+ busprov_geo          taxrefno             Entity          Txrf            kerr_income        AreaLevel            EachNum          Total            Share              EachNumG         TotalG          ShareG               HHI          
+ Length:89967       Length:89967       private:84569   Length:89967       Min.   :       0   Length:89967       Min.   :    1   Min.   :   715   Min.   :0.0000096   Min.   :    0   Min.   :  620   Min.   :0.0000000   Min.   :   8.686  
+ Class :character   Class :character   gov    : 5398   Class :character   1st Qu.:   10479   Class :character   1st Qu.:   31   1st Qu.:104189   1st Qu.:0.0004127   1st Qu.:   19   1st Qu.:84135   1st Qu.:0.0002734   1st Qu.:1731.524  
+ Mode  :character   Mode  :character                   Mode  :character   Median :   34864   Mode  :character   Median :  370   Median :104189   Median :0.0055092   Median :  176   Median :84135   Median :0.0038814   Median :1731.524  
+                                                                          Mean   :   80586                      Mean   : 8184   Mean   : 87660   Mean   :0.1119381   Mean   : 7528   Mean   :70735   Mean   :0.1163061   Mean   :1512.327  
+                                                                          3rd Qu.:   73574                      3rd Qu.:27319   3rd Qu.:104189   3rd Qu.:0.2622062   3rd Qu.:27319   3rd Qu.:84135   3rd Qu.:0.3247043   3rd Qu.:1731.524  
+                                                                          Max.   :32494855                      Max.   :27319   Max.   :104189   Max.   :0.6589454   Max.   :27319   Max.   :84135   Max.   :0.6182088   Max.   :1731.524  
+                                                                          NA's   :13                                                                                                                                                       
+      nHHI               HHIG              nHHIG          busdistmuni_geo    buslocmuni_geo     busmainplc_geo    
+ Min.   :   8.697   Min.   :   3.355   Min.   :   3.357   Length:89967       Length:89967       Length:89967      
+ 1st Qu.:1731.541   1st Qu.:2512.164   1st Qu.:2512.194   Class :character   Class :character   Class :character  
+ Median :1731.541   Median :2512.164   Median :2512.194   Mode  :character   Mode  :character   Mode  :character  
+ Mean   :1512.351   Mean   :2161.475   Mean   :2161.513                                                           
+ 3rd Qu.:1731.541   3rd Qu.:2512.164   3rd Qu.:2512.194                                                           
+ Max.   :1731.541   Max.   :2512.164   Max.   :2512.194                                                           
+                                                                                                                  

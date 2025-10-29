@@ -1,0 +1,54 @@
+> LShare[, TaxRef := as.numeric(as.factor(Txrf))]
+> LShare[, Gov := 0L]
+> LShare[grepl("Gov", Txrf), Gov := 1L]
+> LShare[Gov == 1, TaxRef := "GovEntity"]
+Warning messages:
+1: In `[.data.table`(LShare, Gov == 1, `:=`(TaxRef, "GovEntity")) :
+  Coercing 'character' RHS to 'double' to match the type of the target column (column 19 named 'TaxRef').
+2: In `[.data.table`(LShare, Gov == 1, `:=`(TaxRef, "GovEntity")) :
+  NAs introduced by coercion
+> for (g in 1:length(GeoLevel)) {
++   print(LShare[grepl(GeoLevel[g], AreaLevel) & grepl("Impendle", buslocmuni_geo), 
++     .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
++     AreaLevel, TaxRef, #taxrefno, 
++     Total, EachNum, Share, HHI, nHHI, TotalG)])
++ }
+Empty data.table (0 rows and 11 cols): busdistmuni_geo,buslocmuni_geo,busmainplc_geo,AreaLevel,TaxRef,Total...
+Empty data.table (0 rows and 11 cols): busdistmuni_geo,buslocmuni_geo,busmainplc_geo,AreaLevel,TaxRef,Total...
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel TaxRef Total EachNum      Share       HHI      nHHI TotalG
+ 1:   UMgungundlovu       Impendle           <NA>       Loc     25   261       4 0.01532567 0.3708254 0.3684055    242
+ 2:   UMgungundlovu       Impendle           <NA>       Loc     98   261       1 0.00383142 0.3708254 0.3684055    242
+ 3:   UMgungundlovu       Impendle           <NA>       Loc    160   261      16 0.06130268 0.3708254 0.3684055    242
+ 4:   UMgungundlovu       Impendle           <NA>       Loc    162   261       2 0.00766284 0.3708254 0.3684055    242
+ 5:   UMgungundlovu       Impendle           <NA>       Loc    195   261       1 0.00383142 0.3708254 0.3684055    242
+ 6:   UMgungundlovu       Impendle           <NA>       Loc     NA   261      19 0.07279693 0.3708254 0.3684055    242
+ 7:   UMgungundlovu       Impendle           <NA>       Loc    247   261       6 0.02298851 0.3708254 0.3684055    242
+ 8:   UMgungundlovu       Impendle           <NA>       Loc    252   261     153 0.58620690 0.3708254 0.3684055    242
+ 9:   UMgungundlovu       Impendle           <NA>       Loc    295   261       2 0.00766284 0.3708254 0.3684055    242
+10:   UMgungundlovu       Impendle           <NA>       Loc    313   261      17 0.06513410 0.3708254 0.3684055    242
+11:   UMgungundlovu       Impendle           <NA>       Loc    363   261       6 0.02298851 0.3708254 0.3684055    242
+12:   UMgungundlovu       Impendle           <NA>       Loc    366   261       1 0.00383142 0.3708254 0.3684055    242
+13:   UMgungundlovu       Impendle           <NA>       Loc    457   261       2 0.00766284 0.3708254 0.3684055    242
+14:   UMgungundlovu       Impendle           <NA>       Loc    458   261       1 0.00383142 0.3708254 0.3684055    242
+15:   UMgungundlovu       Impendle           <NA>       Loc    488   261       1 0.00383142 0.3708254 0.3684055    242
+16:   UMgungundlovu       Impendle           <NA>       Loc    546   261      29 0.11111111 0.3708254 0.3684055    242
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel TaxRef Total EachNum      Share       HHI     nHHI TotalG
+ 1:   UMgungundlovu       Impendle     Cibelichle       Mai     25   256       4 0.01562500 0.3833313 0.380913    241
+ 2:   UMgungundlovu       Impendle     Cibelichle       Mai     98   256       1 0.00390625 0.3833313 0.380913    241
+ 3:   UMgungundlovu       Impendle     Cibelichle       Mai    160   256      16 0.06250000 0.3833313 0.380913    241
+ 4:   UMgungundlovu       Impendle     Cibelichle       Mai    162   256       2 0.00781250 0.3833313 0.380913    241
+ 5:   UMgungundlovu       Impendle     Cibelichle       Mai    195   256       1 0.00390625 0.3833313 0.380913    241
+ 6:   UMgungundlovu       Impendle     Cibelichle       Mai     NA   256      15 0.05859375 0.3833313 0.380913    241
+ 7:   UMgungundlovu       Impendle     Cibelichle       Mai    247   256       6 0.02343750 0.3833313 0.380913    241
+ 8:   UMgungundlovu       Impendle     Cibelichle       Mai    252   256     153 0.59765625 0.3833313 0.380913    241
+ 9:   UMgungundlovu       Impendle     Cibelichle       Mai    295   256       1 0.00390625 0.3833313 0.380913    241
+10:   UMgungundlovu       Impendle     Cibelichle       Mai    313   256      17 0.06640625 0.3833313 0.380913    241
+11:   UMgungundlovu       Impendle     Cibelichle       Mai    363   256       6 0.02343750 0.3833313 0.380913    241
+12:   UMgungundlovu       Impendle     Cibelichle       Mai    366   256       1 0.00390625 0.3833313 0.380913    241
+13:   UMgungundlovu       Impendle     Cibelichle       Mai    457   256       2 0.00781250 0.3833313 0.380913    241
+14:   UMgungundlovu       Impendle     Cibelichle       Mai    458   256       1 0.00390625 0.3833313 0.380913    241
+15:   UMgungundlovu       Impendle     Cibelichle       Mai    488   256       1 0.00390625 0.3833313 0.380913    241
+16:   UMgungundlovu       Impendle     Cibelichle       Mai    546   256      29 0.11328125 0.3833313 0.380913    241
+17:   UMgungundlovu       Impendle     Mpofana NU       Mai     NA     5       4 0.80000000 0.6800000 0.600000      1
+18:   UMgungundlovu       Impendle     Mpofana NU       Mai    295     5       1 0.20000000 0.6800000 0.600000      1
+> 

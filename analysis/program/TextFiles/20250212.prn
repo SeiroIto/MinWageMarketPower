@@ -1,0 +1,229 @@
+[1] "Prv"
+    busprov_geo       Txrf   Total EachNum      Share        HHI       nHHI  TotalG
+ 1:             GACJACXJGZ 9159974       7 0.00000076 0.03390339 0.03390329 7977273
+ 2:              GovEntity 9159974 1182701 0.12911620 0.03390339 0.03390329 7977273
+ 3:             KGJXBBXJXC 9159974       2 0.00000022 0.03390339 0.03390329 7977273
+ 4:             XCQCZQGJBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+ 5:             XGBXTCKXTB 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+ 6:             TBKKKBCTQZ 9159974    2530 0.00027620 0.03390339 0.03390329 7977273
+ 7:             KCKGKKZZZZ 9159974      11 0.00000120 0.03390339 0.03390329 7977273
+ 8:             XGXKQABGTZ 9159974      99 0.00001081 0.03390339 0.03390329 7977273
+ 9:             XKBZCJCQBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+10:             XACTBCGTCZ 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+[1] "Dis"
+    busdistmuni_geo       Txrf   Total EachNum      Share        HHI       nHHI  TotalG
+ 1:                 GACJACXJGZ 9159974       7 0.00000076 0.03390339 0.03390329 7977273
+ 2:                  GovEntity 9159974 1182701 0.12911620 0.03390339 0.03390329 7977273
+ 3:                 KGJXBBXJXC 9159974       2 0.00000022 0.03390339 0.03390329 7977273
+ 4:                 XCQCZQGJBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+ 5:                 XGBXTCKXTB 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+ 6:                 TBKKKBCTQZ 9159974    2530 0.00027620 0.03390339 0.03390329 7977273
+ 7:                 KCKGKKZZZZ 9159974      11 0.00000120 0.03390339 0.03390329 7977273
+ 8:                 XGXKQABGTZ 9159974      99 0.00001081 0.03390339 0.03390329 7977273
+ 9:                 XKBZCJCQBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+10:                 XACTBCGTCZ 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+[1] "Loc"
+    buslocmuni_geo       Txrf   Total EachNum      Share        HHI       nHHI  TotalG
+ 1:                GACJACXJGZ 9159974       7 0.00000076 0.03390339 0.03390329 7977273
+ 2:                 GovEntity 9159974 1182701 0.12911620 0.03390339 0.03390329 7977273
+ 3:                KGJXBBXJXC 9159974       2 0.00000022 0.03390339 0.03390329 7977273
+ 4:                XCQCZQGJBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+ 5:                XGBXTCKXTB 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+ 6:                TBKKKBCTQZ 9159974    2530 0.00027620 0.03390339 0.03390329 7977273
+ 7:                KCKGKKZZZZ 9159974      11 0.00000120 0.03390339 0.03390329 7977273
+ 8:                XGXKQABGTZ 9159974      99 0.00001081 0.03390339 0.03390329 7977273
+ 9:                XKBZCJCQBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+10:                XACTBCGTCZ 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+[1] "Mai"
+    busmainplc_geo       Txrf   Total EachNum      Share        HHI       nHHI  TotalG
+ 1:                GACJACXJGZ 9159974       7 0.00000076 0.03390339 0.03390329 7977273
+ 2:                 GovEntity 9159974 1182701 0.12911620 0.03390339 0.03390329 7977273
+ 3:                KGJXBBXJXC 9159974       2 0.00000022 0.03390339 0.03390329 7977273
+ 4:                XCQCZQGJBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+ 5:                XGBXTCKXTB 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+ 6:                TBKKKBCTQZ 9159974    2530 0.00027620 0.03390339 0.03390329 7977273
+ 7:                KCKGKKZZZZ 9159974      11 0.00000120 0.03390339 0.03390329 7977273
+ 8:                XGXKQABGTZ 9159974      99 0.00001081 0.03390339 0.03390329 7977273
+ 9:                XKBZCJCQBZ 9159974       4 0.00000044 0.03390339 0.03390329 7977273
+10:                XACTBCGTCZ 9159974       3 0.00000033 0.03390339 0.03390329 7977273
+> setkey(LShare, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)
+> for (g in 1:length(GeoLevel)) {
++   print(LShare[grepl(GeoLevel[g], AreaLevel) & grepl("gungun", busdistmuni_geo), 
++     .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
++     AreaLevel, #Txrf, 
++     Total, EachNum, Share, HHI, nHHI, TotalG)][1:20, ])
++ }
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum Share HHI nHHI TotalG
+ 1:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 2:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 3:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 4:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 5:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 6:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 7:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 8:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 9:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+10:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+11:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+12:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+13:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+14:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+15:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+16:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+17:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+18:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+19:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+20:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+ 2:   UMgungundlovu           <NA>           <NA>       Dis 14427       9 0.00062383 0.2185745 0.2185203   9890
+ 3:   UMgungundlovu           <NA>           <NA>       Dis 14427       3 0.00020794 0.2185745 0.2185203   9890
+ 4:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+ 5:   UMgungundlovu           <NA>           <NA>       Dis 14427       2 0.00013863 0.2185745 0.2185203   9890
+ 6:   UMgungundlovu           <NA>           <NA>       Dis 14427       2 0.00013863 0.2185745 0.2185203   9890
+ 7:   UMgungundlovu           <NA>           <NA>       Dis 14427      15 0.00103972 0.2185745 0.2185203   9890
+ 8:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+ 9:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+10:   UMgungundlovu           <NA>           <NA>       Dis 14427       5 0.00034657 0.2185745 0.2185203   9890
+11:   UMgungundlovu           <NA>           <NA>       Dis 14427       2 0.00013863 0.2185745 0.2185203   9890
+12:   UMgungundlovu           <NA>           <NA>       Dis 14427       5 0.00034657 0.2185745 0.2185203   9890
+13:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+14:   UMgungundlovu           <NA>           <NA>       Dis 14427       3 0.00020794 0.2185745 0.2185203   9890
+15:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+16:   UMgungundlovu           <NA>           <NA>       Dis 14427       7 0.00048520 0.2185745 0.2185203   9890
+17:   UMgungundlovu           <NA>           <NA>       Dis 14427      29 0.00201012 0.2185745 0.2185203   9890
+18:   UMgungundlovu           <NA>           <NA>       Dis 14427      16 0.00110903 0.2185745 0.2185203   9890
+19:   UMgungundlovu           <NA>           <NA>       Dis 14427       5 0.00034657 0.2185745 0.2185203   9890
+20:   UMgungundlovu           <NA>           <NA>       Dis 14427       1 0.00006931 0.2185745 0.2185203   9890
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:   UMgungundlovu       Impendle           <NA>       Loc   264       4 0.01515152 0.3711547 0.3687637    242
+ 2:   UMgungundlovu       Impendle           <NA>       Loc   264       1 0.00378788 0.3711547 0.3687637    242
+ 3:   UMgungundlovu       Impendle           <NA>       Loc   264      16 0.06060606 0.3711547 0.3687637    242
+ 4:   UMgungundlovu       Impendle           <NA>       Loc   264       2 0.00757576 0.3711547 0.3687637    242
+ 5:   UMgungundlovu       Impendle           <NA>       Loc   264       1 0.00378788 0.3711547 0.3687637    242
+ 6:   UMgungundlovu       Impendle           <NA>       Loc   264      22 0.08333333 0.3711547 0.3687637    242
+ 7:   UMgungundlovu       Impendle           <NA>       Loc   264      22 0.08333333 0.3711547 0.3687637    242
+ 8:   UMgungundlovu       Impendle           <NA>       Loc   264       6 0.02272727 0.3711547 0.3687637    242
+ 9:   UMgungundlovu       Impendle           <NA>       Loc   264     153 0.57954545 0.3711547 0.3687637    242
+10:   UMgungundlovu       Impendle           <NA>       Loc   264       2 0.00757576 0.3711547 0.3687637    242
+11:   UMgungundlovu       Impendle           <NA>       Loc   264      17 0.06439394 0.3711547 0.3687637    242
+12:   UMgungundlovu       Impendle           <NA>       Loc   264       6 0.02272727 0.3711547 0.3687637    242
+13:   UMgungundlovu       Impendle           <NA>       Loc   264       1 0.00378788 0.3711547 0.3687637    242
+14:   UMgungundlovu       Impendle           <NA>       Loc   264       2 0.00757576 0.3711547 0.3687637    242
+15:   UMgungundlovu       Impendle           <NA>       Loc   264       1 0.00378788 0.3711547 0.3687637    242
+16:   UMgungundlovu       Impendle           <NA>       Loc   264       1 0.00378788 0.3711547 0.3687637    242
+17:   UMgungundlovu       Impendle           <NA>       Loc   264      29 0.10984848 0.3711547 0.3687637    242
+18:   UMgungundlovu        Mpofana           <NA>       Loc   408       1 0.00245098 0.1765907 0.1745676    407
+19:   UMgungundlovu        Mpofana           <NA>       Loc   408       5 0.01225490 0.1765907 0.1745676    407
+20:   UMgungundlovu        Mpofana           <NA>       Loc   408      11 0.02696078 0.1765907 0.1745676    407
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:   UMgungundlovu       Impendle     Cibelichle       Mai   258       4 0.01550388 0.3783727 0.3759539    241
+ 2:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+ 3:   UMgungundlovu       Impendle     Cibelichle       Mai   258      16 0.06201550 0.3783727 0.3759539    241
+ 4:   UMgungundlovu       Impendle     Cibelichle       Mai   258       2 0.00775194 0.3783727 0.3759539    241
+ 5:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+ 6:   UMgungundlovu       Impendle     Cibelichle       Mai   258      17 0.06589147 0.3783727 0.3759539    241
+ 7:   UMgungundlovu       Impendle     Cibelichle       Mai   258       6 0.02325581 0.3783727 0.3759539    241
+ 8:   UMgungundlovu       Impendle     Cibelichle       Mai   258     153 0.59302326 0.3783727 0.3759539    241
+ 9:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+10:   UMgungundlovu       Impendle     Cibelichle       Mai   258      17 0.06589147 0.3783727 0.3759539    241
+11:   UMgungundlovu       Impendle     Cibelichle       Mai   258       6 0.02325581 0.3783727 0.3759539    241
+12:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+13:   UMgungundlovu       Impendle     Cibelichle       Mai   258       2 0.00775194 0.3783727 0.3759539    241
+14:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+15:   UMgungundlovu       Impendle     Cibelichle       Mai   258       1 0.00387597 0.3783727 0.3759539    241
+16:   UMgungundlovu       Impendle     Cibelichle       Mai   258      29 0.11240310 0.3783727 0.3759539    241
+17:   UMgungundlovu       Impendle     Mpofana NU       Mai     6       5 0.83333333 0.7222222 0.6666667      1
+18:   UMgungundlovu       Impendle     Mpofana NU       Mai     6       1 0.16666667 0.7222222 0.6666667      1
+19:   UMgungundlovu        Mpofana       Highmoor       Mai   408       1 0.00245098 0.1765907 0.1745676    407
+20:   UMgungundlovu        Mpofana       Highmoor       Mai   408       5 0.01225490 0.1765907 0.1745676    407
+> for (g in 1:length(GeoLevel)) {
++   print(LShare[grepl(GeoLevel[g], AreaLevel) & grepl("Wine", busdistmuni_geo), 
++     .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
++     AreaLevel, #Txrf, 
++     Total, EachNum, Share, HHI, nHHI, TotalG)][1:20, ])
++ }
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum Share HHI nHHI TotalG
+ 1:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 2:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 3:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 4:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 5:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 6:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 7:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 8:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+ 9:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+10:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+11:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+12:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+13:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+14:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+15:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+16:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+17:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+18:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+19:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+20:            <NA>           <NA>           <NA>      <NA>    NA      NA    NA  NA   NA     NA
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 2:  Cape Winelands           <NA>           <NA>       Dis 21635       2 0.00009244 0.1887626 0.1887251  15853
+ 3:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 4:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 5:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 6:  Cape Winelands           <NA>           <NA>       Dis 21635       2 0.00009244 0.1887626 0.1887251  15853
+ 7:  Cape Winelands           <NA>           <NA>       Dis 21635      13 0.00060088 0.1887626 0.1887251  15853
+ 8:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 9:  Cape Winelands           <NA>           <NA>       Dis 21635     164 0.00758031 0.1887626 0.1887251  15853
+10:  Cape Winelands           <NA>           <NA>       Dis 21635      26 0.00120176 0.1887626 0.1887251  15853
+11:  Cape Winelands           <NA>           <NA>       Dis 21635       4 0.00018489 0.1887626 0.1887251  15853
+12:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+13:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+14:  Cape Winelands           <NA>           <NA>       Dis 21635      25 0.00115554 0.1887626 0.1887251  15853
+15:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+16:  Cape Winelands           <NA>           <NA>       Dis 21635       2 0.00009244 0.1887626 0.1887251  15853
+17:  Cape Winelands           <NA>           <NA>       Dis 21635       7 0.00032355 0.1887626 0.1887251  15853
+18:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+19:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+20:  Cape Winelands           <NA>           <NA>       Dis 21635       1 0.00004622 0.1887626 0.1887251  15853
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+ 2:  Cape Winelands  Breede Valley           <NA>       Loc  3281       4 0.00121914 0.8742556 0.8742172   1119
+ 3:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+ 4:  Cape Winelands  Breede Valley           <NA>       Loc  3281       3 0.00091436 0.8742556 0.8742172   1119
+ 5:  Cape Winelands  Breede Valley           <NA>       Loc  3281       2 0.00060957 0.8742556 0.8742172   1119
+ 6:  Cape Winelands  Breede Valley           <NA>       Loc  3281      11 0.00335264 0.8742556 0.8742172   1119
+ 7:  Cape Winelands  Breede Valley           <NA>       Loc  3281      23 0.00701006 0.8742556 0.8742172   1119
+ 8:  Cape Winelands  Breede Valley           <NA>       Loc  3281       5 0.00152393 0.8742556 0.8742172   1119
+ 9:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+10:  Cape Winelands  Breede Valley           <NA>       Loc  3281       3 0.00091436 0.8742556 0.8742172   1119
+11:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+12:  Cape Winelands  Breede Valley           <NA>       Loc  3281      10 0.00304785 0.8742556 0.8742172   1119
+13:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+14:  Cape Winelands  Breede Valley           <NA>       Loc  3281      82 0.02499238 0.8742556 0.8742172   1119
+15:  Cape Winelands  Breede Valley           <NA>       Loc  3281       3 0.00091436 0.8742556 0.8742172   1119
+16:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+17:  Cape Winelands  Breede Valley           <NA>       Loc  3281       4 0.00121914 0.8742556 0.8742172   1119
+18:  Cape Winelands  Breede Valley           <NA>       Loc  3281      17 0.00518135 0.8742556 0.8742172   1119
+19:  Cape Winelands  Breede Valley           <NA>       Loc  3281       2 0.00060957 0.8742556 0.8742172   1119
+20:  Cape Winelands  Breede Valley           <NA>       Loc  3281       1 0.00030479 0.8742556 0.8742172   1119
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands  Breede Valley      De Doorns       Mai   190       2 0.01052632 0.5901662 0.5879978    173
+ 2:  Cape Winelands  Breede Valley      De Doorns       Mai   190      17 0.08947368 0.5901662 0.5879978    173
+ 3:  Cape Winelands  Breede Valley      De Doorns       Mai   190      17 0.08947368 0.5901662 0.5879978    173
+ 4:  Cape Winelands  Breede Valley      De Doorns       Mai   190       1 0.00526316 0.5901662 0.5879978    173
+ 5:  Cape Winelands  Breede Valley      De Doorns       Mai   190      29 0.15263158 0.5901662 0.5879978    173
+ 6:  Cape Winelands  Breede Valley      De Doorns       Mai   190     141 0.74210526 0.5901662 0.5879978    173
+ 7:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       9 0.11392405 0.2937029 0.2846478     70
+ 8:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       5 0.06329114 0.2937029 0.2846478     70
+ 9:  Cape Winelands  Breede Valley    Rawsonville       Mai    79      38 0.48101266 0.2937029 0.2846478     70
+10:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       2 0.02531646 0.2937029 0.2846478     70
+11:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       2 0.02531646 0.2937029 0.2846478     70
+12:  Cape Winelands  Breede Valley    Rawsonville       Mai    79      15 0.18987342 0.2937029 0.2846478     70
+13:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       7 0.08860759 0.2937029 0.2846478     70
+14:  Cape Winelands  Breede Valley    Rawsonville       Mai    79       1 0.01265823 0.2937029 0.2846478     70
+15:  Cape Winelands  Breede Valley    Touwsrivier       Mai    42       1 0.02380952 0.6541950 0.6457607     34
+16:  Cape Winelands  Breede Valley    Touwsrivier       Mai    42       8 0.19047619 0.6541950 0.6457607     34
+17:  Cape Winelands  Breede Valley    Touwsrivier       Mai    42      33 0.78571429 0.6541950 0.6457607     34
+18:  Cape Winelands  Breede Valley      Worcester       Mai  2970       1 0.00033670 1.0311916 1.0312021    842
+19:  Cape Winelands  Breede Valley      Worcester       Mai  2970       4 0.00134680 1.0311916 1.0312021    842
+20:  Cape Winelands  Breede Valley      Worcester       Mai  2970       1 0.00033670 1.0311916 1.0312021    842

@@ -1,0 +1,710 @@
+---
+title: "Rcode for Kasahara-Sugita"
+author: "Chika Asai and Yoichi Sugita"
+date: "`r Sys.Date()`"
+output: html_document
+#  path <- "c:/data/MinWageMarketPower/docs/Workshop2024Mar26/"; rmarkdown::render(paste0(path, "code/EstimationCode/R/RcodeCD_2024Mar25.Rmd"))
+#### git rm --cached docs/Workshop2024Mar26/code/Appendix_DGP/DGP/DGPGameMA1AR1_1000x300_CD_20230426.csv
+---
+
+
+```{r setup, include=FALSE}
+# Environment setting
+
+# library packages
+library(tidyverse)
+library(splines)
+library(splines2)
+library(nloptr)
+library(modopt.matlab)
+library(grpnet)
+```
+
+```{r here setup, eval = F, echo = F}
+library(here)
+library(rprojroot)
+#### Need to set project root
+setwd("c:/data/MinWageMarketPower/")
+getwd()
+here::i_am("docs/Workshop2024Mar26/code/EstimationCode/R/RcodeCD_2024Mar25.Rmd")
+getwd()
+find_root_file("Workshop2024Mar26/code/EstimationCode/R", 
+  "data_simulated_20230426.csv", criterion = has_file(".git/index"))
+(RootFile <- find_root(has_file(".git/index")))
+#### List all files and directories below the root
+dir(find_root(has_file(".git/index")))
+FPath <- function(SubFolder, FileName) 
+  find_root_file(SubFolder, FileName, criterion = has_file(".git/index"))
+FPath("docs/Workshop2024Mar26/code/EstimationCode/R", "data_simulatedCD_20230426.csv")
+data_sim <- fread(FPath("docs/Workshop2024Mar26/code/EstimationCode/R", 
+  "data_simulatedCD_20230426.csv"))
+
+``
+
+# Setting
+
+Cobb-Douglas production function with constant returns to scale 
+Nonparametric demand function 
+No observed demand shifter
+Balanced panel
+4 period data
+
+
+
+
+## data load and parameter settings
+
+```{r parameter settings}
+## Parameter settings
+# N of equal-spaced quantile partitions of [0, 1] in step 1
+L <- 100
+
+# B-spline parameters in step 1
+# "3rd degree is enough" by literature
+degree <- 3
+df <- 5 #  N of knots = df - 1 - degree
+bw_scale <- 1
+
+# B-spline parameters for the IV in step 1
+degreeIV <- 3
+dfIV <- 5
+
+# B-spline parameters for step 2
+degree2 <- 3
+df2 <- 5 #  N of knots = df - 1 - degree
+bw_scale2 <- 1
+
+##  load data set
+#### data_sim <- read_csv("data_simulated_20230426.csv") #wrong file name
+data_sim <- read_csv("data_simulatedCD_20230426.csv")
+
+data <- data_sim  %>%  # data for estimation
+  select(firm_id, m_1,m_2,m_3, m_4,k_1,k_2,k_3,k_4,l_1,l_2,l_3,l_4,r_1,r_2,r_3,r_4, pm_4)
+  #pm_4 is common for all firms and may be a price index for material
+  #Balanced panel
+
+# m_t: t=1, 2, 3, 4 for 5 period model, material expenditure defated by price index
+# mu_t: markup
+# pm_t: price index of materials, don't deflate with this if oligpsonic
+# esp_t: MA demand shock
+# a_t: unobservable aggregate quantity index of HSA demand
+# Phi_t: total expenditure of the market
+# u_t: transformed demand shocks
+# 
+
+```
+
+## function: AllStep
+```{r function def}
+
+
+
+
+AllStep <- function(df, degree, dfIV, degreeIV, data, L, df2, degree2){
+  
+# ----------------------------------------------
+# Common variables creation for both steps
+# ----------------------------------------------
+  cons <- 0
+  # sequence of quantile
+  eps1 <- 1/L         # first quantile
+  eps2 <- 1 - 1/L     # last quantile
+  interval <- 1/L     # interval of quantile
+  
+  tau_seq <- as.matrix(seq(eps1, eps2, by = interval)) 
+  
+
+  
+  # Sigma L Inverse
+  # Inputs for GMM weight matrix
+  ## diagonal elements
+  vdiag <- rep(2, L-1)
+  ## sub/super diagonal elements
+  vsubdiag <- rep(-1, L-2)
+  
+  P <- matrix(0, nrow = L - 1, ncol = L - 1)
+  diag(P) <- vdiag
+  diag(P[-1, ]) <- vsubdiag
+  diag(P[ , -1]) <- vsubdiag
+
+  P[1, 1] <- (eps2 - eps1) / (eps1 * L + eps2 - eps1) + 1
+  P[L - 1, L - 1] <- (eps2 - eps1) / ((1 - eps2) * L + eps2 - eps1) + 1
+
+  sigma_L_inv <- P * L / (eps2 - eps1)
+
+# +++++++++++++++++++++++
+# First Step
+# +++++++++++++++++++++++
+FirstStepHorowitz <- function(df, degree, dfIV, degreeIV, data, L, lag){
+  #### u_t, u_t-1: Need lag
+  #### Kernel of Firpo et al.
+  # Load data
+  if (lag == 0){
+    # use most recent period to do First Step Horowitz
+    m <- data$m_4
+    r <- data$r_4
+    mL <- data$m_2 # IV
+  }else{
+    m <- data$m_3
+    r <- data$r_3
+    mL <- data$m_1
+  }
+  
+  # Define N and L, tau matrices
+  N <- length(m)
+  one_L <- matrix(rep(1, L-1))
+  one_tau <- matrix(1, nrow = N, ncol = 1)
+  # Kronecker product of data
+  m_vec <- kronecker(one_L, m)
+  r_vec <- kronecker(one_L, r)
+
+  # m_{t-1}
+  mL_vec <- mL
+  tau_vec <- kronecker(tau_seq, one_tau)
+  
+
+  # b-spline 
+  bs_m <-  bs(m_vec, 
+              df = df, 
+              degree = degree, intercept = T)
+  # default choice of position of knots
+  knots_m <- attr(bs_m, "knots") 
+  # Bsplines of IV
+  bs_mLag <- bs(mL_vec, 
+                df = dfIV, 
+                degree = degreeIV, intercept = T)
+  knots_mLag <- attr(bs_mLag, "knots")
+  # Bsplines of tau
+  bs_tau <- bs(tau_vec, 
+               df = df, 
+               degree = degree, intercept = T)
+  knots_tau <- attr(bs_tau, "knots")
+  # Boundaries of knots only for tau 
+  Boundary_tau <- attr(bs_tau, "Boundary.knots")
+  
+  # pick each row and do kronecker products
+  B <- row.kronecker(bs_m, bs_tau)
+  # Can incorporate z demand shifters
+  # B <- row.kronecker(row.kronecker(bs_m, bs_tau), bs_z)
+  kron_bs_mLag <- kronecker(diag(one_L[, 1]), bs_mLag)
+  
+  # Sigma M
+  n <- nrow(data)
+  D <- ncol(data)
+  sigma_M <- t(bs_mLag) %*% bs_mLag / n
+  Omega <- kronecker(sigma_L_inv, solve(sigma_M))
+  
+  # bandwidth
+  bn <-  1.06 * sd(r) * n^(-1/5) #rule of thumb
+  
+  # direct calculation 
+  ## objective function
+    objective <- function(alpha) {
+        u <- (B %*% alpha - r_vec) / bn
+        Horowitz <- ifelse((u <= 1) & (u >= -1), 
+                           (1/2 + (105/64) * (u - (5/3) * u^3 + (7/5) * u^5 - (3/7) * u^7)),
+                           (u > 1)) # kernel used by Horowitz and Firpo et al. 
+        p_L <- Horowitz - tau_vec
+        w_L <- (1/N) * t(kron_bs_mLag) %*% p_L
+        obj <- t(w_L) %*% Omega %*% w_L
+    }
+  
+  ## gradient
+    gr <- function(alpha) {
+      　u <- (B %*% alpha - r_vec) / bn
+        Horowitz <- ifelse((u <= 1) & (u >= -1), 
+                           (1/2 + (105/64) * (u - (5/3) * u^3 + (7/5) * u^5 - (3/7) * u^7)),
+                           (u > 1)) # kernel used by Horowitz and Firpo et al. 
+        p_L <- Horowitz - tau_vec
+        w_L <- (1/N) * t(kron_bs_mLag) %*% p_L
+        dHorowitz <- (1 / bn) * (105 / 64) * (1 - 5 * u^2 + 7 * u^4 - 3 * u^6) * (u <= 1) * (u >= -1)
+        dw_L <- (1 / N) * t(kron_bs_mLag) %*% (kronecker(dHorowitz, matrix(1, nrow = 1, ncol = ncol(B))) * B)
+        grad <- 2 * t(dw_L) %*% Omega %*% w_L
+        }
+  
+  
+  # initial alpha
+ a_ols <- solve(t(B) %*% B) %*% t(B) %*% r_vec
+  
+ 
+ 
+ # Shape restriction
+ ## Derivatives
+ dbs_m <- dbs(m_vec, 
+              df = df, knots = knots_m,  # knots_m from bs results
+              degree = degree, intercept = T)
+ dbs_tau <- dbs(tau_vec, 
+                df = df, knots = knots_tau, 
+                degree = degree, intercept = T)
+ # monotonicity constraint coefficients
+ dB_m <- row.kronecker(dbs_m, bs_tau)
+ dB_tau <- row.kronecker(bs_m, dbs_tau)
+ 
+
+ 
+ dB <- rbind(dB_m, dB_tau)
+ K <- nrow(dB)
+ l <- ncol(dB)
+ b <- matrix(1e-9, nrow = K, ncol = 1)
+ 
+ ## Constraint dB*alpha>0 => dB*alpha>=b(small number such as 0.001): b-dB*alpha<=0
+   
+  confun <- function(alpha) {
+   return(-dB %*% alpha +b)   # -dB*alpha+b<=0
+  }
+   
+  confun_jac <- function(alpha) {
+   return(-dB)  # -dB*alpha+b<=0
+  }
+  
+  # optimization with constraint
+  result_1st <- nloptr(x0 = a_ols,
+                   eval_f = objective,
+                   eval_grad_f = gr,
+                   eval_g_ineq =  confun, # ineq constraints
+                   eval_jac_g_ineq =  confun_jac,  # derivative of ineq constraints
+                   opts = list("algorithm" = "NLOPT_LD_SLSQP", # sequential quad programming
+                               "ftol_abs" = 1.0e-6,
+                               "ftol_rel" = 1.0e-6,
+                               "xtol_rel" =1.0e-8,
+                               "xtol_abs" =1.0e-8,
+                               "maxeval" = 10000000))   
+
+
+ beta_1st <- result_1st$solution
+ fval <- result_1st$objective
+ exitflag <- result_1st$status
+ 
+ # Obtain u_hat
+ # page 9 of math note
+ ## grid search for u_i such that min_u abs(r_i - phi(m_i,u))
+ ## L*100 grid points for u in [0,1]
+ 
+ L0 <-  L*100
+ 
+ interval0 <- 1/L0
+ tau_seq0 <- matrix(seq(min(Boundary_tau), max(Boundary_tau), by= interval0))
+ 
+ 
+ one_tau_seq <- matrix(rep(1, length(tau_seq0))) # set length of m,r_vec0 same as tau_vec0
+ 
+ m_vec0 <- kronecker(one_tau_seq, m)
+ r_vec0 <- kronecker(one_tau_seq, r)
+ tau_vec0 <- kronecker(tau_seq0, one_tau)
+ 
+ # need to use same parameters of main B spline functions
+ bs_m0 <- bs(m_vec0,
+             df = df, knots = knots_m,
+             degree = degree, intercept = T)
+ 
+ bs_tau0 <- splines::bs(as.numeric(tau_vec0),
+               df = df, knots = knots_tau,
+               degree = degree, intercept = T,
+               Boundary.knots = Boundary_tau)
+ 
+ B0 = row.kronecker(bs_m0, bs_tau0) 
+ 
+ dr <- abs(r_vec0 - B0%*% beta_1st)
+ dr_mat <- matrix(dr, ncol = length(one_tau_seq))
+ min_dr <- apply(dr_mat, 1, min)
+ argmin_dr <- apply(dr_mat, 1, which.min)
+ u_hat_ind <- argmin_dr
+ u_hat <- tau_seq0[u_hat_ind]
+
+ 
+ # beta_1st is a typo; alpha_1st
+ return(list(beta_1st = beta_1st,  u_hat = u_hat, result_1st=result_1st))
+ 
+
+}
+
+# +++++++++++++++++++
+# Second Step
+# +++++++++++++++++++
+
+# Store values from first step; using the estimated uhat values
+  result <- FirstStepHorowitz(df, degree, dfIV, degreeIV, data,L,  0)
+  result_lag <- FirstStepHorowitz(df, degree, dfIV, degreeIV, data,L, 1)
+  beta_1st<-result$beta_1st
+  data$u_4_hat<-result$u_hat
+  data$u_3_hat<-result_lag$u_hat
+  
+
+  # B-splines and knots vectors; using tau_seq
+  tau_vec <- kronecker(tau_seq, 
+                       matrix(1, nrow = length(data$m_4), 
+                              ncol= 1, byrow = T))
+  ## splines with df=df2 and degree=degree2
+  bs_tau <- bs(tau_vec,                 # to store knots and boudary knots for bs_u1
+              df = df2, 
+              degree = degree2,
+              intercept = T)            
+  knots_u1 <- attr(bs_tau, "knots") 
+  boundary_knots_u1 <- attr(bs_tau, "Boundary.knots")
+  
+  
+  bs_m1 <- bs(data$m_4,
+              df = df2,
+              degree = degree2,
+              intercept = T)           
+  knots_m1 <- attr(bs_m1, "knots")
+  
+  ## B-spline derivatives
+  dbs_m1 <- dbs(data$m_4,
+                df = df2, 
+                degree = degree2,
+                knots = knots_m1,
+                intercept = T)        
+  bs_u1 <- bs(data$u_4_hat, 
+              df = df2,
+              degree = degree2,
+              knots = knots_u1,
+              # As we use knots from different values(tau_vec), we need to set boundary here
+              Boundary.knots = boundary_knots_u1,
+              intercept = T) 
+  dX_m1 <- row.kronecker(dbs_m1, bs_u1) # difference caused by bs_u1
+  # dX_m1 aims to take derivative of the first stage revenue function
+  
+  # B-spline (splines with df=df and degree=degree)
+  ## non-lagged variables
+  bs_m <- bs(data$m_4,
+             df = df,
+             degree = degree,
+             intercept = T)
+  knots_m <- attr(bs_m, "knots")
+  boundary_knots_m <- attr(bs_m, "Boundary.knots")
+  bs_k <- bs(data$k_4,
+             df = df,
+             degree = degree,
+             intercept = T)
+  knots_k <- attr(bs_k, "knots")
+  bs_l <- bs(data$l_4,
+             df = df,
+             degree = degree,
+             intercept = T)
+  knots_l <- attr(bs_l, "knots")
+  bs_u_for_knots <- bs(data$u_4_hat,
+                       df = df2,
+                       degree = degree2,
+                       intercept = T)
+  knots_u <- attr(bs_u_for_knots, "knots")
+  boundary_knots_u <- attr(bs_u_for_knots, "Boundary.knots")
+  bs_u <- bs(data$u_4_hat,
+             df = df,
+             degree = degree,
+             intercept = T,
+             knots = knots_u)
+  
+  ##lagged variables
+  bs_m_lag <- bs(data$m_3, 
+                 df = df,
+                 degree = degree,
+                 intercept = T)
+  knots_m_lag <- attr(bs_m_lag, "knots")
+  bs_k_lag <- bs(data$k_3,
+                 df = df,
+                 degree = degree,
+                 intercept = T)
+  knots_k_lag <- attr(bs_k_lag, "knots")
+  bs_l_lag <- bs(data$l_3,
+                 df = df,
+                 degree = degree+1,
+                 intercept = T)
+  knots_l_lag <- attr(bs_l_lag, "knots")
+  bs_u_lag_for_knots <- bs(data$u_3_hat,
+                           df = df2,
+                           degree = degree2,
+                           intercept = T)
+  knots_u_lag <- attr(bs_u_lag_for_knots, "knots")
+  bs_u_lag <- bs(data$u_3_hat,
+                 df = df,
+                 degree = degree,
+                 intercept = T,
+                 knots = knots_u_lag)
+  
+  
+  X_m <- row.kronecker(bs_m, bs_u)
+  X_m_lag <- row.kronecker(bs_m_lag, bs_u_lag)
+  
+  X_h <- cbind(data$k_4, data$l_4, data$k_3, data$l_3, X_m_lag)
+  
+  # given beta, derivative of eta
+  # B-spline derivatives
+  dbs_m <- dbs(data$m_4,
+               degree = degree,
+               df = df, 
+               knots = knots_m,
+               intercept = T)
+  dX_m <- row.kronecker(dbs_m, bs_u)
+  
+  # material expenditure share
+  m_sh <- as.matrix(exp(data$pm_4 + data$m_4 - data$r_4))
+  # derivative of 1st stage revenue func wrt m
+  dm_phi1 <- dX_m1 %*% beta_1st
+  
+  
+  ## constraints
+  # location m0* and m1*
+  m2575 <- quantile(data$m_4, c(0.25, 0.75)) %>% 
+    as.matrix() 
+  u5050 <- c(0.5, 0.5) %>% as.matrix()
+  bs_u50 <- bs(u5050,
+               df = df, 
+               degree = degree,
+               knots = knots_u,
+               Boundary.knots = boundary_knots_u,
+               intercept = T)
+  bs_m2575 <- bs(m2575,
+                df = df,
+                degree = degree,
+                knots = knots_m,
+                Boundary.knots = boundary_knots_m,
+                intercept = T)
+  # lambda ,.25, = 0, lambda ,.25, = 1
+  Phi_1 <- row.kronecker(bs_m2575, bs_u50)
+  
+  Phi_2 <- dX_m
+  A <- -dX_m
+  
+  c0 <- matrix(-1/10000, nrow = nrow(dm_phi1), ncol = 1)
+  s_phi <- dim(Phi_2)
+  m <- s_phi[2]
+  n <- s_phi[1]
+  beq <- c(0, 1)
+  
+  # finding an initial value satisfying constraints 
+  # this is required by matlab routine; aims to mimic matlab code
+  initial_value_finder <- function(Phi_1, A, c, m, beq, ubn){
+    x <- matrix(1, nrow = 1, ncol = m)
+    lb <- matrix(-ubn, nrow = m, ncol = 1)
+    ub <- matrix(ubn, nrow = m, ncol = 1)
+    
+     lp_result <- linprog(f = x,
+                         A = A,
+                         b = c,
+                         Aeq = Phi_1,
+                         beq = beq,
+                         lb = lb,
+                         ub = ub)
+    initial_alpha <- lp_result$x %>% as.matrix()
+    sum_e <- lp_result$exitflag
+    
+    return(list(initial_alpha = initial_alpha, 
+                sum_e = sum_e))
+  }
+
+  
+  result <- initial_value_finder(Phi_1, A, c0, m, beq, 10)
+  alpha_initial <- result$initial_alpha
+  sum_e <- result$sum_e
+  error <- 0
+    if (sum_e != 0) {
+      result <- initial_value_finder(Phi_1, A, c0, m, beq, 500)
+      alpha_initial <- result$initial_alpha
+      sum_e <- result$sum_e
+      error <- 0.5
+    }
+    if (sum_e != 0) {
+      error <- 0.5
+    }
+
+  
+  exitflag_2nd <- 0
+  
+  # PL estimator
+  M_xh <- X_h %*% solve(t(X_h) %*% X_h) %*% t(X_h)
+  
+  # checking the full rank of X_h
+    matrix_flag <- 0
+    if(dim(X_h)[2] > qr(X_h)$rank) {
+      matrix_flag <- 1
+      M_xh <- X_h %*% t(X_h)
+      error <- 3
+      }
+
+  
+  
+  I <- diag(nrow(M_xh))
+  Psi <- (I - M_xh)%*%X_m
+  
+  Psi_ijs <- array(0, dim = c(n, m, n))
+  for (i in 1:n){
+    Psi_ij <- Psi - matrix(rep(Psi[i,], n), ncol = m, byrow = T)
+     Psi_ijs[,, i] <- Psi_ij
+  }
+  
+  
+  # profile likelihood estimation
+  ## objective function
+     objective <- function(alpha){
+      
+        eta_hat <- Psi%*%alpha
+        s <- sd(eta_hat)*(4/3/length(eta_hat)^(1/5))
+        K <- matrix(0, nrow = n, ncol = n)
+        K_input <- matrix(0, nrow = n, ncol = n)
+        
+        for (i in 1:n) {
+          K_i <- (Psi_ijs[,,i]%*%alpha)/s
+          K_pdf_i <- dnorm(K_i, mean = 0, sd = 1)
+          K_input[i,] <- K_i
+          K[i,] <- K_pdf_i
+        }
+        
+        K_bar <- rowMeans(K)
+        lng_i <- log(K_bar/s)
+        
+        phi_alpha <- Phi_2%*%alpha
+        temp <- log(phi_alpha)
+        
+        return( -sum(lng_i) - sum(temp))
+      
+    }
+   
+  ## gradient 
+    gr <- function(alpha){
+      
+        eta_hat <- Psi%*%alpha
+        # bandwidth
+        s <- sd(eta_hat)*(4/3/length(eta_hat)^(1/5))
+        K <- matrix(0, nrow = n, ncol = n)
+        K_input <- matrix(0, nrow = n, ncol = n)
+        
+        for (i in 1:n) {
+          K_i <- (Psi_ijs[,,i]%*%alpha)/s
+          K_pdf_i <- dnorm(K_i, mean = 0, sd = 1)
+          K_input[i,] <- K_i
+          K[i,] <- K_pdf_i
+        }
+        
+        K_bar <- rowMeans(K)
+    
+        d_den <- -K*K_input/(s*n)
+        dln_kbar <- matrix(0, nrow = m, ncol = n)
+          
+          for (i in 1:n) {
+            denom <- K_bar[i]
+            dkbar <- t(d_den[i, ])%*%Psi_ijs[,,i]
+            dln_kbar[,i] <- dkbar/denom
+          }
+          first_term <- rowSums(dln_kbar)
+          weight_phi <- 1/(Phi_2%*%alpha)
+          second_term <- t(weight_phi)%*%Phi_2
+          
+          g <- -first_term - second_term  %>% 
+            as.matrix() %>% 
+            t()
+      return(g)
+    }
+    
+    x0 = alpha_initial
+    
+    const_ineq <- function(x){
+           return(A%*%x - c0)
+           }
+    const_eq <- function( x){
+           return(Phi_1%*%x - beq)
+    }
+    
+    const_jac_ineq <- function(x){
+           return(A)
+           }
+    const_jac_eq <- function( x){
+           return(Phi_1)
+           }
+  
+
+     result_2nd <- nloptr(x0 = alpha_initial,
+                              eval_f = objective,
+                              eval_grad_f = gr,
+                              eval_g_eq = const_eq ,
+                              eval_g_ineq =  const_ineq,
+                              eval_jac_g_eq =  const_jac_eq, 
+                              eval_jac_g_ineq =  const_jac_ineq,  
+                              opts = list("algorithm" = "NLOPT_LD_SLSQP",
+                                         "ftol_abs" = 1.0e-8,
+                                          "ftol_rel" = 1.0e-8,
+                                          "xtol_rel" =1.0e-8,
+                                          "xtol_abs" =1.0e-8,
+                                           "maxeval" = 10000000))   
+     
+     
+
+     
+     
+    x_PL <-  result_2nd$solution
+    
+  
+  # get theta_k and theta_1
+  lambda <- X_m%*%x_PL
+  gamma <- solve(t(X_h) %*% X_h) %*% t(X_h) %*% lambda
+  
+  # 3rd step
+  th_k0 <- gamma[1, 1]
+  th_l0 <- gamma[2, 1]
+  th_m0 <- median(m_sh * (dX_m %*% x_PL)/(dm_phi1 - m_sh))
+  
+  
+  # normalization
+  b <- th_m0 + th_k0 + th_l0
+  
+  th_m <- th_m0/b
+  th_k <- th_k0/b
+  th_l <- th_l0/b
+  
+  
+  omega_4_hat <- lambda/b - data$l_4*th_l - data$k_4*th_k
+  
+  mu_4_hat <- th_m/m_sh
+  
+
+  # output quantity and price
+  y_4_hat <- th_m * data$m_4 + th_k*data$k_4 + th_l*data$l_4 +   omega_4_hat
+  p_4_hat <- data$r_4 - y_4_hat
+  
+  
+ output <- data.frame(firm_id=data$firm_id,mu_4_hat, omega_4_hat, y_4_hat, p_4_hat, u_4_hat=data$u_4_hat,  u_3_hat=data$u_3_hat)
+  
+    
+
+  return(list("th_m" = th_m, 
+              "th_l" = th_l,
+              "th_k" = th_k, 
+              "beta_1st" = beta_1st, 
+              "beta_2nd" = x_PL,
+              "output" = output,
+              "optim_res_1st"=  result$result_1st,
+              "optim_res_1st_lag"=result_lag$result_1st,
+              "optim_res_2nd"=result_2nd,
+              "error" = error))
+}
+  
+
+```
+
+
+```{r run AllStep}
+result_all <- AllStep(df, degree, dfIV, degreeIV, data, L, df2, degree2)
+```
+```{r plot results}
+output<-result_all$output
+  # estimates
+  # mu_4_hat: markup in period 4
+  # omega_4_hat: log TFP in period 4
+  # p_4_hat: log output price in period 4
+  # y_4_hat: log output quantity in period 4
+  # u_4_hat: demand shock in period 4
+  # u_3_hat: demand shock in period 3
+
+plot(data_sim$mu_4, output$mu_4_hat)
+plot(data_sim$omega_4, output$omega_4_hat)
+plot(data_sim$y_4, output$y_4_hat)
+plot(data_sim$u_4, output$u_4_hat)
+
+cor(data_sim$mu_4, output$mu_4_hat)
+cor(data_sim$omega_4, output$omega_4_hat)
+cor(data_sim$y_4, output$y_4_hat)
+cor(data_sim$u_4, output$u_4_hat)
+
+
+```
+

@@ -1,0 +1,173 @@
+   busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Txrf Total EachNum Share HHI nHHI TotalG
+ 1:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 2:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 3:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 4:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 5:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 6:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 7:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 8:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 9:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+10:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+11:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+12:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+13:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+14:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+15:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+16:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+17:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+18:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+19:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+20:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel       Txrf Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands           <NA>           <NA>       Dis AACCCQGCZQ 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 2:  Cape Winelands           <NA>           <NA>       Dis AACGKCCXCZ 21635       2 0.00009244 0.1887626 0.1887251  15853
+ 3:  Cape Winelands           <NA>           <NA>       Dis AACXXCBXGQ 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 4:  Cape Winelands           <NA>           <NA>       Dis ABKBCCJKJZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 5:  Cape Winelands           <NA>           <NA>       Dis ABKTZCCCZZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 6:  Cape Winelands           <NA>           <NA>       Dis AGBAAAATCZ 21635       2 0.00009244 0.1887626 0.1887251  15853
+ 7:  Cape Winelands           <NA>           <NA>       Dis AGBBGKZGBZ 21635      13 0.00060088 0.1887626 0.1887251  15853
+ 8:  Cape Winelands           <NA>           <NA>       Dis AGBBJBABGZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+ 9:  Cape Winelands           <NA>           <NA>       Dis AGBCACCZKZ 21635     164 0.00758031 0.1887626 0.1887251  15853
+10:  Cape Winelands           <NA>           <NA>       Dis AGBCCBTBCZ 21635      26 0.00120176 0.1887626 0.1887251  15853
+11:  Cape Winelands           <NA>           <NA>       Dis AGBCGBQCCC 21635       4 0.00018489 0.1887626 0.1887251  15853
+12:  Cape Winelands           <NA>           <NA>       Dis AGBCQAXBBZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+13:  Cape Winelands           <NA>           <NA>       Dis AGBGCCZZAZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+14:  Cape Winelands           <NA>           <NA>       Dis AGBGCQXGBZ 21635      25 0.00115554 0.1887626 0.1887251  15853
+15:  Cape Winelands           <NA>           <NA>       Dis AGBGQBGJCZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+16:  Cape Winelands           <NA>           <NA>       Dis AGBGXBQAJA 21635       2 0.00009244 0.1887626 0.1887251  15853
+17:  Cape Winelands           <NA>           <NA>       Dis AGBGZCQKTZ 21635       7 0.00032355 0.1887626 0.1887251  15853
+18:  Cape Winelands           <NA>           <NA>       Dis AGBJQBAXQZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+19:  Cape Winelands           <NA>           <NA>       Dis AGBTJBXBCZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+20:  Cape Winelands           <NA>           <NA>       Dis AGBXBCKGJZ 21635       1 0.00004622 0.1887626 0.1887251  15853
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel       Txrf Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands  Breede Valley           <NA>       Loc AACCCQGCZQ  3281       1 0.00030479 0.8742556 0.8742172   1119
+ 2:  Cape Winelands  Breede Valley           <NA>       Loc AGBCGBQCCC  3281       4 0.00121914 0.8742556 0.8742172   1119
+ 3:  Cape Winelands  Breede Valley           <NA>       Loc AGBGCCZZAZ  3281       1 0.00030479 0.8742556 0.8742172   1119
+ 4:  Cape Winelands  Breede Valley           <NA>       Loc AJBJZBTQBZ  3281       3 0.00091436 0.8742556 0.8742172   1119
+ 5:  Cape Winelands  Breede Valley           <NA>       Loc AQCAKBBBAB  3281       2 0.00060957 0.8742556 0.8742172   1119
+ 6:  Cape Winelands  Breede Valley           <NA>       Loc ATBBCBKAZZ  3281      11 0.00335264 0.8742556 0.8742172   1119
+ 7:  Cape Winelands  Breede Valley           <NA>       Loc AZCBCCTCQZ  3281      23 0.00701006 0.8742556 0.8742172   1119
+ 8:  Cape Winelands  Breede Valley           <NA>       Loc AZCBTCCBCZ  3281       5 0.00152393 0.8742556 0.8742172   1119
+ 9:  Cape Winelands  Breede Valley           <NA>       Loc BGBJZJXTKZ  3281       1 0.00030479 0.8742556 0.8742172   1119
+10:  Cape Winelands  Breede Valley           <NA>       Loc BGBXJCGZGC  3281       3 0.00091436 0.8742556 0.8742172   1119
+11:  Cape Winelands  Breede Valley           <NA>       Loc BQCQGCXZBZ  3281       1 0.00030479 0.8742556 0.8742172   1119
+12:  Cape Winelands  Breede Valley           <NA>       Loc BTBAAAJQAZ  3281      10 0.00304785 0.8742556 0.8742172   1119
+13:  Cape Winelands  Breede Valley           <NA>       Loc BTBGQKGXQZ  3281       1 0.00030479 0.8742556 0.8742172   1119
+14:  Cape Winelands  Breede Valley           <NA>       Loc BXBAGAGBCZ  3281      82 0.02499238 0.8742556 0.8742172   1119
+15:  Cape Winelands  Breede Valley           <NA>       Loc BXBAXBABBZ  3281       3 0.00091436 0.8742556 0.8742172   1119
+16:  Cape Winelands  Breede Valley           <NA>       Loc BZCBQCCBGC  3281       1 0.00030479 0.8742556 0.8742172   1119
+17:  Cape Winelands  Breede Valley           <NA>       Loc BZCKACJTTC  3281       4 0.00121914 0.8742556 0.8742172   1119
+18:  Cape Winelands  Breede Valley           <NA>       Loc CGBBBKQJJB  3281      17 0.00518135 0.8742556 0.8742172   1119
+19:  Cape Winelands  Breede Valley           <NA>       Loc CJBCAGJCCZ  3281       2 0.00060957 0.8742556 0.8742172   1119
+20:  Cape Winelands  Breede Valley           <NA>       Loc CKBAAGCXBZ  3281       1 0.00030479 0.8742556 0.8742172   1119
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel       Txrf Total EachNum      Share       HHI      nHHI TotalG
+ 1:  Cape Winelands  Breede Valley      De Doorns       Mai AQCAKBBBAB   190       2 0.01052632 0.5901662 0.5879978    173
+ 2:  Cape Winelands  Breede Valley      De Doorns       Mai  GovEntity   190      17 0.08947368 0.5901662 0.5879978    173
+ 3:  Cape Winelands  Breede Valley      De Doorns       Mai  GovEntity   190      17 0.08947368 0.5901662 0.5879978    173
+ 4:  Cape Winelands  Breede Valley      De Doorns       Mai JGBTKJKCXZ   190       1 0.00526316 0.5901662 0.5879978    173
+ 5:  Cape Winelands  Breede Valley      De Doorns       Mai ZXBCGXTGCZ   190      29 0.15263158 0.5901662 0.5879978    173
+ 6:  Cape Winelands  Breede Valley      De Doorns       Mai ZZCGGCTQBC   190     141 0.74210526 0.5901662 0.5879978    173
+ 7:  Cape Winelands  Breede Valley    Rawsonville       Mai  GovEntity    79       9 0.11392405 0.2937029 0.2846478     70
+ 8:  Cape Winelands  Breede Valley    Rawsonville       Mai JQCGAQCACZ    79       5 0.06329114 0.2937029 0.2846478     70
+ 9:  Cape Winelands  Breede Valley    Rawsonville       Mai JZCZQCKGZC    79      38 0.48101266 0.2937029 0.2846478     70
+10:  Cape Winelands  Breede Valley    Rawsonville       Mai KZBZQBXJCZ    79       2 0.02531646 0.2937029 0.2846478     70
+11:  Cape Winelands  Breede Valley    Rawsonville       Mai QKBATGGZBZ    79       2 0.02531646 0.2937029 0.2846478     70
+12:  Cape Winelands  Breede Valley    Rawsonville       Mai QTBGAXJXJZ    79      15 0.18987342 0.2937029 0.2846478     70
+13:  Cape Winelands  Breede Valley    Rawsonville       Mai XZCXGCAKGC    79       7 0.08860759 0.2937029 0.2846478     70
+14:  Cape Winelands  Breede Valley    Rawsonville       Mai ZXBATGGZQZ    79       1 0.01265823 0.2937029 0.2846478     70
+15:  Cape Winelands  Breede Valley    Touwsrivier       Mai BGBJZJXTKZ    42       1 0.02380952 0.6541950 0.6457607     34
+16:  Cape Winelands  Breede Valley    Touwsrivier       Mai  GovEntity    42       8 0.19047619 0.6541950 0.6457607     34
+17:  Cape Winelands  Breede Valley    Touwsrivier       Mai JGBJCBGQAZ    42      33 0.78571429 0.6541950 0.6457607     34
+18:  Cape Winelands  Breede Valley      Worcester       Mai AACCCQGCZQ  2970       1 0.00033670 1.0311916 1.0312021    842
+19:  Cape Winelands  Breede Valley      Worcester       Mai AGBCGBQCCC  2970       4 0.00134680 1.0311916 1.0312021    842
+20:  Cape Winelands  Breede Valley      Worcester       Mai AGBGCCZZAZ  2970       1 0.00033670 1.0311916 1.0312021    842
+> for (g in 1:length(GeoLevel)) {
++   print(LShare[grepl(GeoLevel[g], AreaLevel) & grepl("City", busdistmuni_geo), 
++     .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
++     AreaLevel, Txrf, Total, EachNum, Share, HHI, nHHI, TotalG)][1:20, ])
++ }
+    busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel Txrf Total EachNum Share HHI nHHI TotalG
+ 1:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 2:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 3:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 4:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 5:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 6:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 7:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 8:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+ 9:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+10:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+11:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+12:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+13:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+14:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+15:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+16:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+17:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+18:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+19:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+20:            <NA>           <NA>           <NA>      <NA> <NA>    NA      NA    NA  NA   NA     NA
+      busdistmuni_geo buslocmuni_geo busmainplc_geo AreaLevel       Txrf  Total EachNum      Share       HHI      nHHI TotalG
+ 1: City of Cape Town           <NA>           <NA>       Dis AACAABBBXZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 2: City of Cape Town           <NA>           <NA>       Dis AACAACCBBZ 104189       6 0.00005759 0.1444998 0.1444916  84135
+ 3: City of Cape Town           <NA>           <NA>       Dis AACABCAXTZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 4: City of Cape Town           <NA>           <NA>       Dis AACABCQXJZ 104189       7 0.00006719 0.1444998 0.1444916  84135
+ 5: City of Cape Town           <NA>           <NA>       Dis AACACKCATZ 104189       3 0.00002879 0.1444998 0.1444916  84135
+ 6: City of Cape Town           <NA>           <NA>       Dis AACAGAZBQB 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 7: City of Cape Town           <NA>           <NA>       Dis AACAGCCCQZ 104189       2 0.00001920 0.1444998 0.1444916  84135
+ 8: City of Cape Town           <NA>           <NA>       Dis AACAGQCGCZ 104189       3 0.00002879 0.1444998 0.1444916  84135
+ 9: City of Cape Town           <NA>           <NA>       Dis AACAQCBJCZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+10: City of Cape Town           <NA>           <NA>       Dis AACAXACKKZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+11: City of Cape Town           <NA>           <NA>       Dis AACAXZCQTZ 104189       4 0.00003839 0.1444998 0.1444916  84135
+12: City of Cape Town           <NA>           <NA>       Dis AACBBCZKGC 104189       1 0.00000960 0.1444998 0.1444916  84135
+13: City of Cape Town           <NA>           <NA>       Dis AACBCAJZQA 104189      11 0.00010558 0.1444998 0.1444916  84135
+14: City of Cape Town           <NA>           <NA>       Dis AACBCCBJJZ 104189      14 0.00013437 0.1444998 0.1444916  84135
+15: City of Cape Town           <NA>           <NA>       Dis AACBQACZAZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+16: City of Cape Town           <NA>           <NA>       Dis AACBQCKGAZ 104189       2 0.00001920 0.1444998 0.1444916  84135
+17: City of Cape Town           <NA>           <NA>       Dis AACBQZBAKQ 104189      11 0.00010558 0.1444998 0.1444916  84135
+18: City of Cape Town           <NA>           <NA>       Dis AACBTKCBXZ 104189      13 0.00012477 0.1444998 0.1444916  84135
+19: City of Cape Town           <NA>           <NA>       Dis AACBZKJBKC 104189      28 0.00026874 0.1444998 0.1444916  84135
+20: City of Cape Town           <NA>           <NA>       Dis AACCACCZAA 104189       2 0.00001920 0.1444998 0.1444916  84135
+      busdistmuni_geo    buslocmuni_geo busmainplc_geo AreaLevel       Txrf  Total EachNum      Share       HHI      nHHI TotalG
+ 1: City of Cape Town City of Cape Town           <NA>       Loc AACAABBBXZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 2: City of Cape Town City of Cape Town           <NA>       Loc AACAACCBBZ 104189       6 0.00005759 0.1444998 0.1444916  84135
+ 3: City of Cape Town City of Cape Town           <NA>       Loc AACABCAXTZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 4: City of Cape Town City of Cape Town           <NA>       Loc AACABCQXJZ 104189       7 0.00006719 0.1444998 0.1444916  84135
+ 5: City of Cape Town City of Cape Town           <NA>       Loc AACACKCATZ 104189       3 0.00002879 0.1444998 0.1444916  84135
+ 6: City of Cape Town City of Cape Town           <NA>       Loc AACAGAZBQB 104189       1 0.00000960 0.1444998 0.1444916  84135
+ 7: City of Cape Town City of Cape Town           <NA>       Loc AACAGCCCQZ 104189       2 0.00001920 0.1444998 0.1444916  84135
+ 8: City of Cape Town City of Cape Town           <NA>       Loc AACAGQCGCZ 104189       3 0.00002879 0.1444998 0.1444916  84135
+ 9: City of Cape Town City of Cape Town           <NA>       Loc AACAQCBJCZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+10: City of Cape Town City of Cape Town           <NA>       Loc AACAXACKKZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+11: City of Cape Town City of Cape Town           <NA>       Loc AACAXZCQTZ 104189       4 0.00003839 0.1444998 0.1444916  84135
+12: City of Cape Town City of Cape Town           <NA>       Loc AACBBCZKGC 104189       1 0.00000960 0.1444998 0.1444916  84135
+13: City of Cape Town City of Cape Town           <NA>       Loc AACBCAJZQA 104189      11 0.00010558 0.1444998 0.1444916  84135
+14: City of Cape Town City of Cape Town           <NA>       Loc AACBCCBJJZ 104189      14 0.00013437 0.1444998 0.1444916  84135
+15: City of Cape Town City of Cape Town           <NA>       Loc AACBQACZAZ 104189       1 0.00000960 0.1444998 0.1444916  84135
+16: City of Cape Town City of Cape Town           <NA>       Loc AACBQCKGAZ 104189       2 0.00001920 0.1444998 0.1444916  84135
+17: City of Cape Town City of Cape Town           <NA>       Loc AACBQZBAKQ 104189      11 0.00010558 0.1444998 0.1444916  84135
+18: City of Cape Town City of Cape Town           <NA>       Loc AACBTKCBXZ 104189      13 0.00012477 0.1444998 0.1444916  84135
+19: City of Cape Town City of Cape Town           <NA>       Loc AACBZKJBKC 104189      28 0.00026874 0.1444998 0.1444916  84135
+20: City of Cape Town City of Cape Town           <NA>       Loc AACCACCZAA 104189       2 0.00001920 0.1444998 0.1444916  84135
+      busdistmuni_geo    buslocmuni_geo busmainplc_geo AreaLevel       Txrf Total EachNum      Share        HHI       nHHI TotalG
+ 1: City of Cape Town City of Cape Town        Athlone       Mai AACBBCZKGC  2922       1 0.00034223 0.09891411 0.09860563   2769
+ 2: City of Cape Town City of Cape Town        Athlone       Mai AACGCCTBCA  2922       3 0.00102669 0.09891411 0.09860563   2769
+ 3: City of Cape Town City of Cape Town        Athlone       Mai AACGJCCGCZ  2922      21 0.00718686 0.09891411 0.09860563   2769
+ 4: City of Cape Town City of Cape Town        Athlone       Mai AACGQCAKGZ  2922       2 0.00068446 0.09891411 0.09860563   2769
+ 5: City of Cape Town City of Cape Town        Athlone       Mai AACJJCCGTZ  2922       2 0.00068446 0.09891411 0.09860563   2769
+ 6: City of Cape Town City of Cape Town        Athlone       Mai AACKCCCZXZ  2922     108 0.03696099 0.09891411 0.09860563   2769
+ 7: City of Cape Town City of Cape Town        Athlone       Mai AACKGCJCQQ  2922       6 0.00205339 0.09891411 0.09860563   2769
+ 8: City of Cape Town City of Cape Town        Athlone       Mai AACTACJKQQ  2922      30 0.01026694 0.09891411 0.09860563   2769
+ 9: City of Cape Town City of Cape Town        Athlone       Mai AACTGABABB  2922       1 0.00034223 0.09891411 0.09860563   2769
+10: City of Cape Town City of Cape Town        Athlone       Mai AACXCBCAKZ  2922     313 0.10711841 0.09891411 0.09860563   2769
+11: City of Cape Town City of Cape Town        Athlone       Mai AACXGAZCTC  2922       1 0.00034223 0.09891411 0.09860563   2769
+12: City of Cape Town City of Cape Town        Athlone       Mai AGBGBCQCBA  2922       1 0.00034223 0.09891411 0.09860563   2769
+13: City of Cape Town City of Cape Town        Athlone       Mai AGBGQBGACA  2922       2 0.00068446 0.09891411 0.09860563   2769
+14: City of Cape Town City of Cape Town        Athlone       Mai AGBKCCQKKZ  2922       4 0.00136893 0.09891411 0.09860563   2769
+15: City of Cape Town City of Cape Town        Athlone       Mai AGBQQCZQTQ  2922      11 0.00376454 0.09891411 0.09860563   2769
+16: City of Cape Town City of Cape Town        Athlone       Mai AGBQTJZGKB  2922       9 0.00308008 0.09891411 0.09860563   2769
+17: City of Cape Town City of Cape Town        Athlone       Mai AJBCTKAGAZ  2922      29 0.00992471 0.09891411 0.09860563   2769
+18: City of Cape Town City of Cape Town        Athlone       Mai AJBQJZXKQZ  2922      87 0.02977413 0.09891411 0.09860563   2769
+19: City of Cape Town City of Cape Town        Athlone       Mai AKBBGQBTCZ  2922      18 0.00616016 0.09891411 0.09860563   2769
+20: City of Cape Town City of Cape Town        Athlone       Mai ATBJXBTTKZ  2922       4 0.00136893 0.09891411 0.09860563   2769

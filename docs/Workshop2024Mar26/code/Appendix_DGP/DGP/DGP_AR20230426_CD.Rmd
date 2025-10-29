@@ -1,0 +1,419 @@
+---
+title: "Endogenous L Data Creation"
+author: "Yoichi Sugita"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output: html_document
+---
+
+```{r, setup,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(nleqslv)
+
+
+
+```
+# set common parameters 
+
+
+```{r}
+
+# ret_type 0: return results
+#          1: return mean
+#          2: return sd
+#          3: return mean + sd
+        
+# objective fucntion
+
+calc_mu <- function(alpha = 0.5, beta = 1.95, gamma = 0.5, delta = -16,   sd_scale=1, ret_type = 0, seed = 100,n=1000,n_firm=300,Phi=10,f_name="exogenous_L_1050.csv") {
+  
+  
+  # alpha*betaの制約
+  if (alpha * beta > 1) {
+    return(1000000)
+  }
+  # production function
+  theta_m <- 0.4
+  theta_m2<- 0
+  theta_k <- 0.3
+  theta_l <- 0.3
+
+  # n <- 100 # the number of trials
+  # n_firm <- 100 # the number of firms
+  n2 <- n * n_firm
+  n_firm_final <- n_firm
+
+  # TFP draw parameters
+  sd_eta <- 1*sd_scale
+  rho_omega <- 0.8
+  sd_o <- sqrt(sd_eta^2 / (1 - rho_omega^2)) # initial
+
+  # capital draw parameters
+  rho_k <- 0.4
+  rho_k_omega <- 0.1
+  sd_k0 <- 1*sd_scale
+  sd_ke <- 1*sd_scale
+
+  ## labor draw parameters
+  rho_l <- 0.4
+  rho_l_omega <- 0.1
+  sd_l0 <- 1*sd_scale
+  sd_le <- 1*sd_scale
+
+  ## log material price
+  pm_1 <- 1
+  pm_2 <- 0.5
+  pm_3 <- 1
+  pm_4 <- 0.5
+
+# generate randome variables
+  
+  ##demand shocks
+  xi_0 <- runif(n * n_firm)  
+  xi_1 <- runif(n * n_firm)  
+  xi_2 <- runif(n * n_firm)  
+  xi_3 <- runif(n * n_firm)  
+  xi_4 <- runif(n * n_firm)  
+
+  rho_e <- 0.6
+  eps_1 <- xi_1 + rho_e * xi_0
+  eps_2 <- xi_2 + rho_e * xi_1
+  eps_3 <- xi_3 + rho_e * xi_2
+  eps_4 <- xi_4 + rho_e * xi_3
+  
+  # transformed demand shocks
+  
+  F_eps<-function(t){
+    u<-numeric(length(t))
+    u<-ifelse(t>1+rho_e, 1,u)
+    u<-ifelse((t<=(1+rho_e))&(t>1),1-(1+rho_e-t)^2/(2*rho_e),u)
+    u<-ifelse((t<=1)&(t>rho_e), t-rho_e/2,u)
+    u<-ifelse(t<=rho_e&t>0,t^2/(2*rho_e),u)
+    return(u)
+  }
+  
+  
+  
+
+  u_1<- F_eps(eps_1)
+  u_2<- F_eps(eps_2)
+  u_3<- F_eps(eps_3)
+  u_4<- F_eps(eps_4)
+  
+  # TFP shocks
+
+  omega_0 <- rep(rnorm(n_firm, sd = sd_o), n)
+  eta_1 <- rep(rnorm(n_firm, sd = sd_eta), n)
+  eta_2 <- rnorm(n * n_firm, sd = sd_eta)
+  eta_3 <- rnorm(n * n_firm, sd = sd_eta)
+  eta_4 <- rnorm(n * n_firm, sd = sd_eta)
+  omega_1 <- eta_1 + omega_0 * rho_omega
+  omega_2 <- eta_2 + omega_1 * rho_omega
+  omega_3 <- eta_3 + omega_2 * rho_omega
+  omega_4 <- eta_4 + omega_3 * rho_omega
+
+  k_0 <- rep(rnorm(n_firm, sd = sd_k0), n)
+  ek_1 <- rep(rnorm(n_firm, sd = sd_ke), n)
+  ek_2 <- rep(rnorm(n_firm, sd = sd_ke), n)
+  ek_3 <- rep(rnorm(n_firm, sd = sd_ke), n)
+  ek_4 <- rep(rnorm(n_firm, sd = sd_ke), n)
+  
+  
+  k_1 <- rho_k * k_0 + rho_k_omega * omega_0 + ek_1
+  k_2 <- rho_k * k_1 + rho_k_omega * omega_1 + ek_2
+  k_3 <- rho_k * k_2 + rho_k_omega * omega_2 + ek_3
+  k_4 <- rho_k * k_3 + rho_k_omega * omega_3 + ek_4
+
+  l_0 <- rep(rnorm(n_firm, sd = sd_l0), n)
+  el_1 <- rep(rnorm(n_firm, sd = sd_le), n)
+  el_2 <- rep(rnorm(n_firm, sd = sd_le), n)
+  el_3 <- rep(rnorm(n_firm, sd = sd_le), n)
+  el_4 <- rep(rnorm(n_firm, sd = sd_le), n)
+
+  l_1 <- rho_l * l_0 + rho_l_omega * omega_0 + el_1
+  l_2 <- rho_l * l_1 + rho_l_omega * omega_1 + el_2
+  l_3 <- rho_l * l_2 + rho_l_omega * omega_2 + el_3
+  l_4 <- rho_l * l_3 + rho_l_omega * omega_3 + el_4
+
+  x_1 <- alpha * (theta_k * k_1 + theta_l * l_1 + omega_1)
+  x_2 <- alpha * (theta_k * k_2 + theta_l * l_2 + omega_2)
+  x_3 <- alpha * (theta_k * k_3 + theta_l * l_3 + omega_3)
+  x_4 <- alpha * (theta_k * k_4 + theta_l * l_4 + omega_4)
+  
+### solving for m and a
+
+  
+  
+# log of foc for m
+  
+ foc_1 <- function(m,a,i) {
+    (Phi+delta + (beta - 1) * log(exp(alpha * (theta_m*m+theta_m2*m^2) + x_1[i]-alpha*a) + gamma * eps_1[i]) + alpha * (theta_m*m+theta_m2*m^2) + x_1[i] -alpha*a+
+      log(alpha*beta)+log(theta_m+2*theta_m2*m) - pm_1 - m)
+  }
+  foc_2 <- function(m,a,i) {
+    (Phi+delta + (beta - 1) * log(exp(alpha * (theta_m*m+theta_m2*m^2) + x_2[i]-alpha*a) + gamma * eps_2[i]) + alpha * (theta_m*m+theta_m2*m^2) + x_2[i]-alpha*a +
+      log(alpha*beta) +log(theta_m+2*theta_m2*m) - pm_2 - m)
+  }
+  foc_3 <- function(m,a,i) {
+    (Phi+delta + (beta - 1) * log(exp(alpha * (theta_m*m+theta_m2*m^2) + x_3[i]-alpha*a) + gamma * eps_3[i]) + alpha * (theta_m*m+theta_m2*m^2) + x_3[i]-alpha*a +
+      log(alpha*beta) +log(theta_m+2*theta_m2*m)- pm_3 - m)
+  }
+  foc_4 <- function(m,a,i) {
+    (Phi+delta + (beta - 1) * log(exp(alpha * (theta_m*m+theta_m2*m^2) + x_4[i]-alpha*a) + gamma * eps_4[i]) + alpha * (theta_m*m+theta_m2*m^2) + x_4[i]-alpha*a +
+      log(alpha*beta) +log(theta_m+2*theta_m2*m)- pm_4 - m)
+  }
+  
+# function that returns the sum of all firms' market shares for given a   
+  a_1_def <- function(a) {
+    start=(j-1)*n_firm+1  
+    end=j*n_firm  
+    sumexp<-0
+    for(i in c(start:end)){
+        ans <- try(suppressWarnings(nleqslv(1, foc_1,a=a,i=i)),silent=T) # nleqslv solves foc=0 by Broyden
+           m_1[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+        sumexp<-sumexp+exp(delta+beta*log(exp(alpha*(theta_m*m_1[i]+theta_m2*m_1[i]^2)+x_1[i]-alpha*a)+gamma * eps_1[i]))
+    }
+    return ((sumexp-1)^2)
+  }
+  
+  a_2_def <- function(a) {
+    start=(j-1)*n_firm+1  
+    end=j*n_firm  
+    sumexp<-0
+    for(i in c(start:end)){
+        ans <- try(suppressWarnings(nleqslv(1, foc_2,a=a,i=i)), silent = T)
+        m_2[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+        sumexp<-sumexp+exp(delta+beta*log(exp(alpha*(theta_m*m_2[i]+theta_m2*m_2[i]^2)+x_2[i]-alpha*a)+gamma * eps_2[i]))
+    }
+    return ((sumexp-1)^2)
+  }
+  a_3_def <- function(a) {
+    start=(j-1)*n_firm+1
+    end=j*n_firm
+    sumexp<-0
+    for(i in c(start:end)){
+        ans <- try(suppressWarnings(nleqslv(1, foc_3,a=a,i=i)), silent = T)
+        m_3[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+        sumexp<-sumexp+exp(delta+beta*log(exp(alpha*(theta_m*m_3[i]+theta_m2*m_3[i]^2)+x_3[i]-alpha*a)+gamma * eps_3[i]))
+    }
+    return ((sumexp-1)^2)
+  }
+  
+    a_4_def <- function(a) {
+    start=(j-1)*n_firm+1
+    end=j*n_firm
+    sumexp<-0
+    for(i in c(start:end)){
+        ans <- try(suppressWarnings(nleqslv(1, foc_4,a=a,i=i)), silent = T)
+        m_4[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+        sumexp<-sumexp+exp(delta+beta*log(exp(alpha*(theta_m*m_4[i]+theta_m2*m_4[i]^2)+x_4[i]-alpha*a)+gamma * eps_4[i]))
+    }
+    return ((sumexp-1)^2)
+  }
+  
+  
+# matrix to save objectives of focs
+  foc_obj <- matrix(numeric(n2 * 4), nrow = 4)
+  a_obj <- matrix(numeric(n2 * 4), nrow = 4)
+  a_1=numeric(n2)
+  a_2=numeric(n2)
+  a_3=numeric(n2)
+  a_4=numeric(n2)
+  m_1 <- numeric(n2)
+  m_2 <- numeric(n2)
+  m_3 <- numeric(n2)
+  m_4 <- numeric(n2)
+
+# obtain an equilibrium a by solving  a_1_def=0 for a   
+  
+  for(j in c(1:n)){
+    if(j%%5==0){
+      cat(j," ")
+    }
+    start=(j-1)*n_firm+1
+    end=j*n_firm
+    
+    ans <- try(suppressWarnings(optim(1, a_1_def)), silent = F)
+    a_1[start:end]<-ifelse(class(ans) != "try-error", ans$par, NA)
+    a_obj[1, start:end] <- ifelse(class(ans) != "try-error", ans$value, NA)
+    
+    ans <- try(suppressWarnings(optim(1, a_2_def)), silent = F)
+    a_2[start:end]<-ifelse(class(ans) != "try-error", ans$par, NA)
+    a_obj[2, start:end] <- ifelse(class(ans) != "try-error", ans$value, NA)
+    
+    ans <- try(suppressWarnings(optim(1, a_3_def)), silent = F)
+    a_3[start:end]<-ifelse(class(ans) != "try-error", ans$par, NA)
+    a_obj[3, start:end] <- ifelse(class(ans) != "try-error", ans$value, NA)
+    
+    ans <- try(suppressWarnings(optim(1, a_4_def)), silent = F)
+    a_4[start:end]<-ifelse(class(ans) != "try-error", ans$par, NA)
+    a_obj[4, start:end] <- ifelse(class(ans) != "try-error", ans$value, NA)
+  }
+
+# obtain equilibrium m by solving  foc with the equilibrium a    
+    
+  for (i in c(1:n2)) {
+        ans <- try(suppressWarnings(nleqslv(1, foc_1,a=a_1[i],i=i)), silent = T)
+    m_1[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+    foc_obj[1, i] <- ifelse(class(ans) != "try-error", ans$fvec, NA)
+  }
+
+
+  for (i in c(1:n2)) {
+    ans <- try(suppressWarnings(nleqslv(1, foc_2,a=a_2[i],i=i)), silent = T)
+    m_2[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+    foc_obj[2, i] <- ifelse(class(ans) != "try-error", ans$fvec, NA)
+  }
+
+  for (i in c(1:n2)) {
+    ans <- try(suppressWarnings(nleqslv(1, foc_3,a=a_3[i],i=i)), silent = T)
+    m_3[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+    foc_obj[3, i] <- ifelse(class(ans) != "try-error", ans$fvec, NA)
+  }
+
+  for (i in c(1:n2)) {
+    ans <- try(suppressWarnings(nleqslv(1, foc_4,a=a_4[i],i=i)), silent = T)
+    m_4[i] <- ifelse(class(ans) != "try-error", ans$x, NA)
+    foc_obj[4, i] <- ifelse(class(ans) != "try-error", ans$fvec, NA)
+  }
+  
+  
+  
+
+  # calculate missing rate
+  missing_rate <- numeric(3)
+  missing_rate[1] <- length(subset(m_1, is.na(m_1) == T)) / n2
+  missing_rate[2] <- length(subset(m_2, is.na(m_2) == T)) / n2
+  missing_rate[3] <- length(subset(m_3, is.na(m_3) == T)) / n2
+  missing_rate[4] <- length(subset(m_4, is.na(m_4) == T)) / n2
+  cat(missing_rate[1],missing_rate[2],missing_rate[3],missing_rate[4],"\n")
+
+  # output
+  y_1 <- theta_m * m_1 + theta_m2 * m_1^2 + theta_k * k_1 + theta_l * l_1 + omega_1
+  y_2 <- theta_m * m_2 + theta_m2 * m_2^2 + theta_k * k_2 + theta_l * l_2 + omega_2
+  y_3 <- theta_m * m_3 + theta_m2 * m_3^2 + theta_k * k_3 + theta_l * l_3 + omega_3
+  y_4 <- theta_m * m_4 + theta_m2 * m_4^2 + theta_k * k_4 + theta_l * l_4 + omega_4
+
+  # revenue
+  r_1 <- Phi + delta + beta * log(exp(alpha * y_1 - alpha * a_1) + gamma * eps_1)
+  r_2 <- Phi + delta + beta * log(exp(alpha * y_2 - alpha * a_2) + gamma * eps_2)
+  r_3 <- Phi + delta + beta * log(exp(alpha * y_3 - alpha * a_3) + gamma * eps_3)
+  r_4 <- Phi + delta + beta * log(exp(alpha * y_4 - alpha * a_4) + gamma * eps_4)
+
+  # price
+  p_1 <- r_1 - y_1
+  p_2 <- r_2 - y_2
+  p_3 <- r_3 - y_3
+  p_4 <- r_4 - y_4
+
+  # markup
+  mu_1 <- (alpha * beta)^-1 + (gamma * eps_1) / (alpha * beta * exp(x_1 + alpha * (theta_m * m_1 + theta_m2 * m_1^2) - alpha * a_1))
+  mu_2 <- (alpha * beta)^-1 + (gamma * eps_2) / (alpha * beta * exp(x_2 + alpha * (theta_m * m_2 + theta_m2 * m_2^2) - alpha * a_2))
+  mu_3 <- (alpha * beta)^-1 + (gamma * eps_3) / (alpha * beta * exp(x_3 + alpha * (theta_m * m_3 + theta_m2 * m_3^2) - alpha * a_3))
+  mu_4 <- (alpha * beta)^-1 + (gamma * eps_4) / (alpha * beta * exp(x_4 + alpha * (theta_m * m_4 + theta_m2 * m_4^2) - alpha * a_4))
+
+  # remove samples that contain m=NA
+  
+  firm_id <- rep(1:n_firm, n)
+  data <- data.frame(
+     firm_id, m_1, m_2, m_3, m_4, k_1, k_2, k_3,k_4, l_1, l_2, l_3, l_4, y_1, y_2, y_3, y_4, r_1, r_2, r_3, r_4,
+     omega_1, omega_2, omega_3, omega_4, pm_1, pm_2, pm_3, pm_4, mu_1, mu_2, mu_3, mu_4, eps_1, eps_2, eps_3, eps_4, 
+     a_1,a_2,a_3,a_4,Phi,u_1,u_2,u_3, u_4)%>%
+  filter(is.na(m_1) == F & is.na(m_2) == F & is.na(m_3) == F & is.na(m_4) == F)
+
+  df <- data %>%
+     mutate(ctarget = 1)
+
+  trim_target <- df %>%
+     group_by(firm_id) %>%
+     summarise(trials = sum(ctarget)) %>%
+     filter(trials == n) # remove samples that contain m=NA
+
+  data_trimed <- merge(data, trim_target, by = "firm_id")
+  firms <- unique(data_trimed$firm_id)[1:n_firm_final]
+
+  data_output <- NULL
+  count <- 0
+  for (i in firms) {
+     count <- count + 1
+     id_data <- data_trimed %>%
+        filter(firm_id == i) %>%
+        mutate(firm_id = count)
+
+     data_output <- bind_rows(data_output, id_data)
+  }
+
+
+   data_output<-data_output%>%
+      mutate(trial_id=rep(1:n,n_firm_final)) %>%
+      arrange(trial_id)%>%
+      relocate(trial_id)
+
+# save the generated data
+  write_csv(data_output,f_name)
+  
+
+
+  # return value
+  # フラグが立っていないとき
+  ret_val <- list(
+          mu_std = sd(mu_4, na.rm = T),
+          mu_mean = mean(mu_4, na.rm = T),
+          mu_quantile = quantile(mu_4, c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1.0), na.rm = T),
+          params = c(alpha, beta, gamma, delta),
+          missing_rate = missing_rate,
+          foc_obj = quantile(foc_obj, c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1.0), na.rm = T),
+          a_obj = quantile(a_obj, c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1.0), na.rm = T),
+          a_4_quantile = quantile(a_4, c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1.0), na.rm = T),
+          r_4_q=quantile(r_4, na.rm = T),
+          p_4_q=quantile(p_4, na.rm = T),
+          y_4_q=quantile(y_4, na.rm = T),
+          k_4_q=quantile(k_4, na.rm = T),
+          l_4_q=quantile(l_4, na.rm = T),
+          m_4_q=quantile(m_4, na.rm = T)
+      )
+  # 1番目のフラグが立っているとき
+  if (bitwAnd(1, ret_type)) {
+    # mean
+    ret_val <- ifelse(is.numeric(ret_val), ret_val + (mean(mu_3, na.rm = T) - 1.2)^2, (mean(mu_3, na.rm = T) - 1.2)^2)
+  }
+  # 2番目のフラグ
+  if (bitwAnd(2, ret_type)) {
+    # sd
+    ret_val <- ifelse(is.numeric(ret_val), ret_val + (sd(mu_3, na.rm = T) - 1.3)^2, (sd(mu_3, na.rm = T) - 1.3)^2)
+  }
+  # 3番目のフラグ
+  if (bitwAnd(4, ret_type)) {
+    # 95 percentile
+    ret_val <- ifelse(is.numeric(ret_val), ret_val + (quantile(mu_3, 0.95) - 1.7)^2, (quantile(mu_3, 0.95) - 1.7)^2)
+  }
+
+
+  return(ret_val)
+}
+
+```
+
+```{r}
+
+
+s_time=Sys.time()
+res=calc_mu(alpha = 0.12, beta = 8.3, gamma =1, delta = -12,  sd_scale=1,Phi=10,seed=1,n=1000,n_firm=300,ret_type = 0,f_name="DGPGameMA1AR1_1000x300_CD_20230426.csv")
+
+
+res[1:14]
+
+
+```
+
+
+```{r}
+data_sim<-read_csv("DGPGameMA1AR1_1000x300_CD_20230426.csv")%>%
+  filter(trial_id==1)
+write_csv(data_sim, file="data_simulatedCD_20230426.csv")
+write_csv(data_sim, file="../Matlab/data_simulatedCD_20230426.csv")
+write_csv(data_sim, file="../R/data_simulatedCD_20230426.csv")
+
+
+```
