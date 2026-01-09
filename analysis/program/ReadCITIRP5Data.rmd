@@ -757,6 +757,31 @@ Check if anyone is having more than 1 job in a given `taxrefno` using 2020 data.
 ip20[, njob := .N, by = .(taxrefno, taxyear, idno)]
 table(ip20[njob == 1, njob])
 ```
+
+Check how many firms there are with taxrefno == "" in stmfp (firm only) data
+
+stmfp has number of employees per firm `irp5_kerr_iweight_b`
+```{r check number of firms with empty taxrefno in stmfp}
+ipyr <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1.qs"), nthreads = 8)
+(tb <- table(ipyr[taxyear == 2012, .(empty = taxrefno == "")]))
+round((tb/sum(tb))*100, 3)
+(tb2 <- table(ipyr[taxyear == 2012, .(empty = taxrefno == "", irp5_kerr_iweight_b)][, 
+  .(employment=sum(irp5_kerr_iweight_b, na.rm=T)), by = empty]))
+#### employment share of empty taxrefno
+round((1999293/10244729)*100, 2)
+```
+
+Confirm: firm entry = single row (no branch level info)
+```{r check employment by total branch size}
+ipyr[taxyear == 2012, c("BranchNum", "TotalBranch") := 
+    list(
+      1:.N,
+      .N
+    ),
+  by = .(taxrefno)]
+table(ipyr[, .(employment=sum(irp5_kerr_iweight_b, na.rm=T)), by = BranchNum])
+```
+
 ### Copy missing location information in CIT-IRP5 2012 from future datasets
 
 This is possible, because
@@ -778,8 +803,8 @@ pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 #### Read data
 #### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
-#### ipyr <- qread(paste0(pathdata, "irp20.qs"), nthreads = 15)
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+#### ipyr <- qread(paste0(pathdata, "irp20.qs"), nthreads = 13)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 ipyr <- ipyr[grepl("A", natureofperson), ]
 ipyr[, uid := gsub(" +$", "", UID)]
 rm(ipyrs)
@@ -791,7 +816,7 @@ rm(ipyrs)
 #### So I will just merge 2013
 #### for (fyr in 13:15) {
 for (fyr in 13) {
-  ipyr2 <- qread(paste0(pathdata, "irp", fyr, ".qs"), nthreads = 15)
+  ipyr2 <- qread(paste0(pathdata, "irp", fyr, ".qs"), nthreads = 13)
   ipyr2 <- ipyr2[, .(taxrefno, UID, busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo)]
   setnames(ipyr2, c("busprov_geo", "busdistmuni_geo", 
@@ -896,12 +921,39 @@ tb
 
 #### Drop repetitive (anomalous) entries
 ipyrs.clean <- ipyrs[!(uid %in% repetetive), ]
-qsave(ipyrs, paste0(pathdata, "ipyrs.qs"), nthreads = 15)
-qsave(ipyrs.clean, paste0(pathdata, "ipyrsClean.qs"), nthreads = 15)
+qsave(ipyrs, paste0(pathdata, "ipyrs.qs"), nthreads = 13)
+qsave(ipyrs.clean, paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
 ```
 
+`IRP5_2012_cleaned.dta` of T:/IRP5/Job level/v5/beta/ &rarr; `irp12.qs` &rarr; `ipyrsClean.qs` (after dropping anomalous/invalid UID entries such as AAAAAAA, ZZZZZZZ, etc.) &rarr; `BranchWeights2012.qs`
 
-```{r copy location information mock data codes}
+* Individual level cross sectional data with `taxrefno` of employee.
+* Compute branch^[A branch is defined by location up to Main Place level. If there are multiple branches in a same Main Place, they are aggregated as one branch. ] weights using `kerr_income`
+   * Branch weight = $\frac{\mbox{total income of the branch}}{\mbox{total income of the firm}}$
+
+
+`stmfp_2008_2022_e5_v1.dta` &rarr; `stmfp_2008_2022_e5_v1.qs`^[`read.dta13` took 2 hours on the windows-server 2016 with 1.5TB RAM.  ]
+
+* Matched employee-employer panel, aka CIT-IRP5 panel. Employees are linked only to HQ, not actual branch they are hired at
+
+
+`stmfp_2008_2022_e5_v1.qs`+`BranchWeights2012.qs` using Main Place and taxrefno as keys.
+
+* We use branch weights to distribute the number of jobs across branches. 
+
+
+
+`CIT.dta` &rarr; `CIT.qs`
+
+* Firm data. Job entries of all branches are attached to a single row (no branch level info. 
+
+
+
+
+
+
+
+```{r mock copy location information codes}
 #### code "copy location" mock data codes
 library(qs)
 library(data.table)
@@ -930,7 +982,7 @@ for (fyr in 13:15) {
   z[, uid := gsub(" +$", "", UID)]
   setnames(z, "val", paste0("val", fyr))
   setkey(ipyr, taxrefno, uid)
-  assign(paste0("ipyr", fyr), z)
+  assiagn(paste0("ipyr", fyr), z)
 }
 rm(ipyrs)
 for (fyr in 13:15) {
@@ -984,18 +1036,44 @@ pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 #### Read data
 #### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
-#### ipyr <- qread(paste0(pathdata, "irp20.qs"), nthreads = 15)
-#### ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+#### ipyr <- qread(paste0(pathdata, "irp20.qs"), nthreads = 13)
+#### ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 
 #### Using irp5-2012 to compute weights
-#### ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
-ipyrc <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 15)
+#### ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyrc <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
 #### total incomes/wages of each branch (up to main place level) of taxrefno
+#### Below gives an error: Check if is.data.table() = true, ...
+#### wgt12 <- ipyrc[, .(
+####   subtot.kerr := sum(kerr_income, na.rm = T),
+####   nonempty.kerr := sum(kerr_income[
+####       busmainplc_geo != "" | grepl("NULL", busmainplc_geo)
+####     ], na.rm = T)
+####   ), 
+####   by = .(taxrefno, busprov_geo, busdistmuni_geo, 
+####     buslocmuni_geo, busmainplc_geo)]
+#### Above gives an error, so I take an easy way
 wgt12 <- ipyrc[, .(
-  subtot.kerr = sum(kerr_income, na.rm = T),
+  subtot.kerr = sum(kerr_income, na.rm = T)
   ), 
   by = .(taxrefno, busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo)]
+wgt12n <- ipyrc[
+      busmainplc_geo != "" | grepl("NULL", busmainplc_geo), 
+      .(nonempty.kerr = sum(kerr_income, na.rm = T)
+  ), 
+  by = .(taxrefno, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo)]
+wgt12n[, c("Netot.kerr", "NeBranchNum", "NeTotalBranch") := 
+    list(
+      sum(nonempty.kerr, na.rm = T),
+      1:.N,
+      .N
+    ), 
+  by = taxrefno]
+wgt12n[, Newgt.kerr := round((nonempty.kerr/Netot.kerr)*100, 3)]
+print(wgt12n[NeTotalBranch == 4, ], topn = 12, nrows = 30)
+
 wgt12[, c("tot.kerr", "BranchNum", "TotalBranch") := 
     list(
       sum(subtot.kerr, na.rm = T),
@@ -1003,30 +1081,81 @@ wgt12[, c("tot.kerr", "BranchNum", "TotalBranch") :=
       .N
     ), 
   by = taxrefno]
-#### weights of each branch for all taxrefno
 wgt12[, wgt.kerr := round((subtot.kerr/tot.kerr)*100, 3)]
-setkey(wgt12, taxrefno, BranchNum)
-wgt12[1:50, ]
+print(wgt12[TotalBranch == 4, ], topn = 12)
+
+setkey(wgt12, taxrefno, busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo)
+setkey(wgt12n, taxrefno, busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo)
+wg12 <- wgt12n[wgt12]
+dim(wgt12); dim(wgt12n); dim(wg12); 
+qsave(wg12, paste0(pathdata, "BranchWeights2012.qs"), nthreads = 13)
+
+print(wg12[TotalBranch == 4, 
+  .(taxrefno, busprov_geo, busmainplc_geo, wgt.kerr, Newgt.kerr)], 
+  topn = 12)
+print(wg12[taxrefno == "", 
+  .(taxrefno, busprov_geo, busmainplc_geo, wgt.kerr, Newgt.kerr)], 
+  topn = 12)
+table(wg12[, .(NeTotalBranch, emptytxrefno = taxrefno == "")])
+
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+wg12[, Year := 2012L]
+wg12ForL = copy(wg12)
+wg12ForL[, grepout("^non|^subt", colnames(wg12ForL)) := NULL]
+setnames(wg12LForL, 
+  c("tot.kerr", "Netot.kerr", "wgt.kerr", "Newgt.kerr"), 
+  c("kerr.tot", "kerr.Netot", "kerr.wgt", "kerr.Newgt"), 
+)
+wg12L <- reshape(wg12ForL, 
+   direction = "long", 
+       idvar = c("taxrefno", "busprov_geo", 
+         "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"),
+     timevar = "Year",
+     varying = grepout("^kerr", colnames(wg12ForL))
+ )
 library(ggplot2)
-table(wgt12[, .(emptytxrefno = taxrefno == "")])
-ggplot(data = wgt12[taxrefno != "", ], aes(x = wgt.kerr)) +
+ggplot(data = wg12L[taxrefno != "" & grepl("wgt", Year), ], 
+  aes(x = kerr, group = Year, color = Year)) +
+  geom_density(alpha = .1) + xlim(0, 100) + 
+  scale_color_manual(values = c("red", "blue"))
+
+meanwgt <- unique(wg12L[taxrefno != "" &  grepl("^Newgt", time), 
+    .(meanweight = mean(kerr, na.rm = T),
+      medianweight = median(kerr, na.rm = T)), by = .(taxrefno)])
+ggplot(data = meanwgt, 
+  aes(x = meanweight, group = time, color = time)) +
+  geom_density(alpha = .1) + xlim(0, 100) + 
+  scale_color_manual(values = c("red", "blue"))
+ggplot(data = meanwgt, 
+  aes(x = medianweight, group = time, color = time)) +
+  geom_density(alpha = .1) + xlim(0, 100) + 
+  scale_color_manual(values = c("red", "blue"))
+
+
+
+ggplot(data = wg12[taxrefno != "", ], aes(x = Newgt.kerr)) +
   geom_density(colour="blue", alpha = .1) + 
   xlim(0, 100)
-ggplot(data = wgt12[taxrefno != "", ], aes(x = wgt.kerr)) +
+ggplot(data = wg12[taxrefno != "", ], aes(x = wgt.nekerr)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 100)
+ggplot(data = wg12[taxrefno != "", ], aes(x = wgt.kerr)) +
   geom_histogram(colour="red", binwidth = 1)
-ggplot(data = 
-  unique(wgt12[taxrefno != "", 
-    .(meanweight = mean(wgt.kerr, na.rm = T)), by = taxrefno]),
-     aes(x = meanweight)) +
+ggplot(data = wg12[taxrefno != "", ], aes(x = wgt.nekerr)) +
   geom_histogram(colour="red", binwidth = 1)
 
-meanwgt <- unique(wgt12[taxrefno != "", 
-    .(meanweight = mean(wgt.kerr, na.rm = T)), by = taxrefno])
+meanwgt <- unique(wg12[taxrefno != "", 
+    .(meanweight = mean(wgt.kerr, na.rm = T),
+      meanneweight = mean(wgt.nekerr, na.rm = T)), by = taxrefno])
 summary(meanwgt[meanweight < 25, ] )
 meanwgt[meanweight < 25, ][order(meanweight, decreasing = F)]
 View(meanwgt[meanweight < 10, ][order(meanweight, decreasing = F)][1:50, ])
-qsave(wgt12, paste0(pathdata, "BranchWeights2012.qs"), nthreads = 15)
-#### #### Using cit-irp5-2012 to compute weights
+View(meanwgt[meanneweight < 10, ][order(meanneweight, decreasing = F)][1:50, ])
+e#### #### Using cit-irp5-2012 to compute weights
 #### ci5p <- qread(paste0(pathdata, "ci5p.qs")) 
 #### cip12 <- ci5p[taxyear == 2012, ]
 #### #### total incomes/wages of each branch (up to main place level) of taxrefno
@@ -1052,8 +1181,11 @@ qsave(wgt12, paste0(pathdata, "BranchWeights2012.qs"), nthreads = 15)
 ### Merge branch weights and create LShare data: HHI at LocalMunicipality, Districts levels in 2012
 
 
-```{r hhi}
-#### code "hhi"
+* Using this and branch weight file, we allocate jobs over branches
+
+
+```{r merge branch weights with MEE}
+#### code "merge branch weights"
 library(qs)
 library(data.table)
 path <- "W:/epguest/seiro_ito/"
@@ -1065,41 +1197,977 @@ pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 #### ipr2012 ==> ipyrsClean.qs
 ####   142638/11406422 = 1.25% of all rows are useless uid's
 ####   more than half of it is done by taxrefno ZAJJQCTBKC
-#### ipyrs <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 15)
-ci5 <- qread(paste0(pathdata, "ci5_2008-2022_e5v1.qs"), nthreads = 15)
-ipyrs <- ci5[taxyear == 2012, ]
-table(ipyrs[taxrefno != "" | !grepl("^NULL$", taxrefno), 
-  .(NumBranch = .N), by = taxrefno][, NumBranch])
-ipyrs <- ipyrs[grepl("A", natureofperson), ]
-wgt12 <- qread(paste0(pathdata, "BranchWeights2012.qs"), nthreads = 15)
-iprw12 <- merge(ipyrs, wgt12, by = "taxrefno", all = T)
+#### ipyrs <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
+#### ci5 <- readstata13::read.dta13(paste0(pathdataCITIRP, 
+####  "stmfp_2008_2022_e5_v1.dta"))
+#### ci5 <- data.table(ci5)
+#### qsave(ci5, paste0(pathdata, "stmfp_2008_2022_e5_v1.qs"))
+#### stmfp_2008_2022_e5_v1.qs is MEE: CIT-IRP5 panel
+ci5 <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1.qs"), nthreads = 13)
+#### ci5 <- qread(paste0(pathdata, "ci5_2008-2022_e5v1.qs"), nthreads = 13)
+wg12 <- qread(paste0(pathdata, "BranchWeights2012.qs"), nthreads = 13)
+#### keep only nonempty taxrefno
+ipyrs <- ci5[taxrefno != "", ]
+wg12 <- wg12[taxrefno != "", ]
+dim(ipyrs)
+dim(ipyrs[taxrefno %in% wg12[, taxrefno], ])
+dim(wg12[taxrefno %in% ipyrs[, taxrefno], ])
+#### multi (taxrefno-taxyear) - multi (taxrefno-branch) merge
+#### Set allow.cartesian = T
+#### Base = ipyrs and merge whichever matched rows in wg12
+iprw12 <- wg12[ipyrs, on = "taxrefno", allow.cartesian = T]
+#### mock merge example
+set.seed(10)
+x11 <- data.table(id = rep(1:2, each = 3), year = rep(11:13, 2), 
+  val = rpois(6, 20)) 
+x12 <- data.table(id = rep(1:3, each = 3), year = rep(11:13, 3), 
+  val = rpois(9, 20)) 
+x2 <- data.table(id = rep(1:2, each = 3), branch = rep(1:3, 2), 
+  location = letters[1:6]) 
+#### This fails. Use allow.cartesian = T.
+merge(x11, x2, by = "id")
+x122 <- x2[x12, on = "id", allow.cartesian = TRUE]
+x12; x2; x122
+x212 <- x12[x2, on = "id", allow.cartesian = TRUE]
+x12; x2; x212
+print(iprw12[TotalBranch == 5, 
+  .(taxyear, taxrefno, busmainplc_geo, BranchNum, TotalBranch)], 
+  topn = 50)
+rbind(MEE=dim(ipyrs), weights=dim(wg12), merged=dim(iprw12))
 table(
-(NumRows <- iprw12[taxrefno != "" | !grepl("^NULL$", taxrefno), 
+(NumRows <- iprw12[!grepl("^NULL$", taxrefno), 
   .(NumRows=.N), by = taxrefno])[, NumRows]
 )
 NumRows
 NumRows[grepl("NULL|AAAAAAA", taxrefno), ]
+iprw12[, NumRows :=.N, by = taxrefno]
+print(iprw12[NumRows == 15, 
+  .(taxrefno, NumRows, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, tot.kerr, wgt.kerr)],
+  topn = 45)
+print(iprw12[NumRows == 12 & TotalBranch == 3 & !is.na(busmainplc_geo), 
+  .(taxrefno, NumRows, NumBranch, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, tot.kerr, wgt.kerr)],
+  topn = 45)
+iprw12[, imputed.kerr := tot.kerr*wgt.kerr/100]
+iprw12[, Neimputed.kerr := Netot.kerr*Newgt.kerr/100]
+iprw12[, imputed.emp := irp5_kerr_iweight_b*wgt.kerr/100]
+iprw12[, Neimputed.emp := irp5_kerr_iweight_b*Newgt.kerr/100]
+nrow(iprw12[kerr_income != 0, ]); (nrow(iprw12[kerr_income != 0, ])/nrow(iprw12))*100
+nrow(iprw12[Neimputed.kerr != 0, ]); (nrow(iprw12[Neimputed.kerr != 0, ])/nrow(iprw12))*100
+qsave(iprw12, paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"), nthreads = 13)
+```
+
+### Compute HHI
+
+```{r hhi}
+#### code "hhi"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+mee <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"),
+  nthreads = 13)
+mee[taxrefno == "AACBTBBAJZ", ]
+print(mee[,
+  .(taxrefno, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr, Neimputed.emp)], topn = 25)
+summary(mee[,
+  .(taxrefno, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr, Neimputed.emp)])
+#### mee[, NumB := .N, by = taxrefno]
+#### mee[, EmptyLocInfo := sum(busmainplc_geo == ""), by = taxrefno]
+#### table(mee[, .(NumB, EmptyLocInfo)])
 #### Not sure if we need this. Test how many obs will be dropped.
-nrow(ipyrs[kerr_income != 0, ]); (nrow(ipyrs[kerr_income != 0, ])/nrow(ipyrs))*100
+nrow(mee[tot.kerr != 0, ]); (nrow(mee[tot.kerr != 0, ])/nrow(mee))*100
+nrow(mee[Neimputed.kerr != 0, ]); (nrow(mee[Neimputed.kerr != 0, ])/nrow(mee))*100
 #### For 2012, no NA in payereferenceno
-#### (n0 <- nrow(ipyrs[is.na(payereferenceno) | payereferenceno == "", ])); (n0)/nrow(ipyrs)*100
+#### (n0 <- nrow(mee[is.na(payereferenceno) | payereferenceno == "", ])); (n0)/nrow(mee)*100
 #### 14% are gov employees [is.na(taxrefno) | taxrefno == ""]
 #### So we cannot simply drop entries with NAs in taxrefno
-(n0 <- nrow(ipyrs[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); (n0/nrow(ipyrs))*100
+(n0 <- nrow(mee[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); (n0/nrow(mee))*100
 #### 1. Use payereferenceno to count the total
 #### 2. Compute the shares of each firms
 ####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
 ####   b. Compute the shares of each firms including "gov entity" thence HHI
-ipyrs[, Txrf := taxrefno]
+mee[, Txrf := taxrefno]
 #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
-ipyrs[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+mee[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+mee[, Entity := "private"]
+mee[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+mee[, Entity := factor(Entity, levels = c("private", "gov"))]
+for (yr in 12:22) {
+#### for (yr in 12) {
+  ipyr <- mee[taxyear == 2000+yr, ]
+  LShare <- NULL
+  GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+  for (g in 1:length(GeoLevel)) {
+    ipGeo = copy(ipyr)
+    ipGeo[, EachRows := as.integer(.N), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, EachEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, EachNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, TotalRows := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, TotalEmp := sum(EachEmp, na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, TotalNeEmp := sum(EachNeEmp, na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, ShareRows := round(EachRows/TotalRows, 8)]
+    ipGeo[, ShareEmp := round(EachEmp/TotalEmp, 8)]
+    ipGeo[, ShareNeEmp := round(EachNeEmp/TotalNeEmp, 8)]
+    cat(GeoLevel[g], "\n")
+    print(summary(ipGeo[, .(EachEmp, TotalEmp, ShareEmp)]))
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
+    ipGeo[grepl("gov", Entity), 
+      GTotalNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[grepl("gov", Entity), 
+      GTotalEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### copy GTotalEmp to all rows
+    ipGeo[, GTotalEmp := GTotalEmp[!is.na(GTotalEmp)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, GTotalNeEmp := GTotalNeEmp[!is.na(GTotalNeEmp)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### We define EachEmpG by replacing EachEmp of GovEntity with 0L
+    ipGeo[, EachEmpG := EachEmp]
+    ipGeo[grepl("gov", Entity), EachEmpG := 0L]
+    ipGeo[, TotalEmpG := TotalEmp-GTotalEmp]
+    ipGeo[, ShareEmpG := round(EachEmpG/TotalEmpG, 8)]
+    ipGeo[, EachNeEmpG := EachNeEmp]
+    ipGeo[grepl("gov", Entity), EachNeEmpG := 0L]
+    ipGeo[, TotalNeEmpG := TotalNeEmp-GTotalNeEmp]
+    ipGeo[, ShareNeEmpG := round(EachNeEmpG/TotalNeEmpG, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
+      "Entity", "Txrf",  "taxrefno",
+      "AreaLevel", 
+      "irp5_kerr_iweight_b", "Newgt.kerr","wgt.kerr",
+      "EachEmp", "EachNeEmp", "TotalEmp", "TotalNeEmp", 
+      "ShareEmp", "ShareNeEmp", 
+      "EachEmpG", "TotalEmpG", "ShareEmpG", 
+      "EachNeEmpG", "TotalNeEmpG", "ShareNeEmpG"
+      ), with = F])
+    print(summary(lshare))
+    lshare[, HHI := sum(ShareNeEmp^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI := (HHI-1/TotalEmp)/(1-1/TotalEmp)]
+    lshare[, HHIG := sum(ShareEmpG^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHIG := (HHIG-1/TotalEmpG)/(1-1/TotalEmpG)]
+    print(GeoLevel[g])
+    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, HHI)
+    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", 
+      "TotalEmp", "EachEmp", "ShareEmp", 
+      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
+      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
+    print(lshare[1:30, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", 
+      "TotalEmp", "EachEmp", "ShareEmp", 
+      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
+      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
+  }
+  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  setkey(LShare, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = 13)
+}
+#### LShare:  Txrf, EachNum, Share, HHI, ShareG, HHIG, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+#### further checks
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[, Nums := .N, by = Txrf]
+tb <- table(LShare[, Nums])
+numtb <- as.numeric(names(tb))
+numtb <- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareNeEmp, HHI)]
+
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)]
+print(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+summary(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)])
+print(LShare[TotalNeEmp <= 1000 & !is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+print(LShare[!is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+library(ggplot2)
+ggplot(data = LShare[!is.na(Newgt.kerr), ], 
+  aes(x = ShareEmp)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+ggplot(data = LShare[!is.na(Newgt.kerr) & ShareEmp != 0, ], 
+  aes(x = ShareNeEmp)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+summary(LShare[!is.na(Newgt.kerr) & ShareNeEmp != 0, ShareNeEmp])
+ggplot(data = unique(LShare[!is.na(Newgt.kerr), .(busmainplc_geo, HHI)]), 
+  aes(x = HHI)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+```
+
+1. Use IRP5 2012 (`ipyrc`) to count total number of workers, number of affected, FA = affected/total
+1. Merge branch weight data () with FAdata
+    a) Distribute workers and number of affected workers proportionately to branch weights
+    a) Compute FA per branch
+
+
+```{r define fraction affected}
+#### code "compute FA"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+#### ipyrsClean.qs=irp12.qs+dropped anomalous taxrefno
+ipyrc <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
+ipyrc[taxrefno == "AACBTBBAJZ", ]
+#### 1. Use payereferenceno to count the total
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+ipyrc[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+ipyrc[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+ipyrc[, Entity := "private"]
+ipyrc[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+ipyrc[, Entity := factor(Entity, levels = c("private", "gov"))]
+#### Choose only unique uid-income rows
+ipyrc <- ipyrc[!duplicated(
+    ipyrc[, .(busmainplc_geo, taxrefno, uid, a3601_income)]
+  ), ]
+#### Compute job duration and monthly income
+####   (DateEnd-DateStart2012)/30.5
+####   a3601_income/DurationMonth
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+ipyrc[, DateStart := as.IDate(periodemployedfrom)]
+ipyrc[, DateEnd := as.IDate(periodemployedto)]
+ipyrc[, DateStart2012 := DateStart]
+ipyrc[DateStart < as.IDate("2011/03/01"), 
+  DateStart2012 := as.IDate("2011/03/01")]
+ipyrc[, DurationMonth := round((DateEnd-DateStart2012)/30.5, 3)]
+ipyrc[, IncomeMonth := round(a3601_income/DurationMonth, 0)]
+
+setkey(ipyrc, busmainplc_geo, taxrefno, uid, DateStart)
+ipyrc[, DateStart2 := shift(DateStart, n = 1L, type = "lead"), 
+  by = .(Txrf, taxyear, uid)]
+ipyrc[, DateEnd2 := shift(DateEnd, n = 1L, type = "lead"), 
+  by = .(Txrf, taxyear, uid)]
+#### Double work duration: DateEnd - DateStart2
+####  <----job1---->
+####           <----job2---->
+ipyrc[, DJobDurationMonth := round((DateEnd - DateStart2)/30.5, 3)]
+ipyrc[, TDurationMonth := 
+  round((DateEnd2 - DateStart2012)/30.5, 3)]
+#### If job2 ends before job1 ends: DateEnd > DateEnd2
+####  <----------job1---------->
+####           <----job2---->
+####   (DateEnd2 - DateStart2)/30.5 (double work duration)
+####   (DateEnd-DateStart2012)/30.5 (job1+job2 duration)
+ipyrc[DateEnd > DateEnd2, 
+  DJobDurationMonth := round((DateEnd2 - DateStart2)/30.5, 3)]
+ipyrc[DateEnd > DateEnd2, TDurationMonth := 
+  round((DateEnd-DateStart2012)/30.5, 3)]
+ipyrc[, TDurationMonth := TDurationMonth[!is.na(TDurationMonth)][1], 
+  by = .(Txrf, taxyear, uid)]
+ipyrc[, DoubleJobRatio := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+ipyrc[, DoubleJobRatio := DoubleJobRatio[!is.na(DoubleJobRatio)][1],
+  by = .(Txrf, taxyear, uid)]
+ipyrc[, NumJobsPerWorker := .N, by = .(Txrf, taxyear, uid)]
+ipyrc[, TIncomeMonth := sum(IncomeMonth, na.rm = T), 
+  by = .(Txrf, taxyear, uid)]
+#### check data
+ipyrc[busmainplc_geo != "" & Txrf != "" & NumJobsPerWorker > 1, 
+  .(busmainplc_geo, Txrf, uid, NumJobsPerWorker, 
+    DateStart, DateEnd,
+    DateStart2, DateEnd2, DurationMonth, 
+    DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+    a3601_income, IncomeMonth, TIncomeMonth)]
+print(ipyrc[NumJobsPerWorker == 5, 
+  .(busmainplc_geo, Txrf, uid, NumJobsPerWorker, 
+    DateStart, DateEnd,
+    DateStart2, DateEnd2, DurationMonth, 
+    DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+    a3601_income, IncomeMonth, TIncomeMonth)], topn = 30)
+ipyrc[busmainplc_geo != "" & Txrf != "", 
+  .(busmainplc_geo, taxrefno, DateStart, DateEnd, 
+    DurationMonth, a3601_income, IncomeMonth)]
+#### Find sub MW workers and define fraction affected
+#### We can use IncomeMonth or TIncomeMonth
+####  PropToMW: Proportion to MW line
+####  SubMW: PropToMW < 1 & IncomeMonth > 0
+####  NumSubMW: number of entries with SubMW == 1L
+####  Employees: number of entries with IncomeMonth > 0
+####  FA: NumSubMW/Employees
+ipyrc[, PropToMW := round(IncomeMonth/2274, 6)]
+ipyrc[, SubMW := as.integer(PropToMW < 1 & IncomeMonth > 0)]
+ipyrc[, NumSubMW := uniqueN(UID[SubMW==1L]), 
+  by = .(Txrf, taxyear)]
+ipyrc[, Employees := uniqueN(UID[IncomeMonth > 0]), 
+  by = .(Txrf, taxyear)]
+ipyrc[, FA := round(NumSubMW/Employees, 6)]
+ipyrc[grepl("^BCGACCKJZC", Txrf), 
+  .(busmainplc_geo, 
+    Txrf, uid, UID, DateStart, DurationMonth, 
+    IncomeMonth, SubMW, Employees, FA)]
+#### Vary sub MW workers by DoubleJobRatio X >= 50
+####  SubMWX: PropToMW < 1 & TIncomeMonth > 0 & DoubleJobRatio >= X
+####  NumSubMWX: number of entries with SubMW == 1L & DoubleJobRatio >= X
+####  EmployeesX: number of entries with IncomeMonth > 0 & DoubleJobRatio >= X
+####  FA25: NumSubMWX/EmployeesX with X=25
+####  FA50: NumSubMWX/EmployeesX with X=50
+####  FA75: NumSubMWX/EmployeesX with X=75
+ipyrc[, PropToMWX := round(TIncomeMonth/2274, 6)]
+  by = .(Txrf, taxyear)]
+ipyrc[, EmployeesX := uniqueN(uid[TIncomeMonth > 0]), 
+  by = .(Txrf, taxyear)]
+XThreshold <- 50
+for (XThreshold in c(25, 50, 75)) {
+  ipyrc[, SubMWX := as.integer(PropToMWX < 1 & TIncomeMonth > 0)]
+  ##### PropToMWX <= 1L ==> subMW == 1L
+  ####   If DoubleJobRatio  < X & PropToMWX  > 1L ==> subMW == 1L
+  ####   If DoubleJobRatio >= X & PropToMWX  > 1L ==> subMW == 0L
+  #####     PropToMWX <= 1L ==> subMW == 1L
+  #### DoubleJobRatio := round((DJobDurationMonth/TDurationMonth)*100
+  ipyrc[DoubleJobRatio >= XThreshold & PropToMWX > 1L, 
+    SubMWX := 0L]
+  ipyrc[, NumSubMWX := uniqueN(uid[SubMWX==1L]), 
+    by = .(Txrf, taxyear)]
+  ipyrc[, FAx := round(NumSubMWX/EmployeesX, 6)]
+  setnames(ipyrc, c("FAx", "NumSubMWX"), 
+    paste0(c("FA", "NumSubMW"), XThreshold))
+}
+ipyrc[, FinYr2012 := 1L]
+ipyrc[DateStart > as.IDate("2012/02/29") | 
+  DateEnd > as.IDate("2012/02/29"), FinYr2012 := 0L]
+#### Select unique entries for FinYr2012 for each branch
+FAdata <- unique(ipyrc[FinYr2012 == 1L, .(
+    busprov_geo, 
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+    taxrefno, Txrf, payereferenceno, UID,
+    Employees, NumSubMW, PropToMW, SubMW, 
+    FA, FA25, FA50, FA75
+  )])
+setnames(FAdata, c("FA", "FA25", "FA50", "FA75"),
+    paste0("FA.", c("orig", 25, 50, 75))
+)
+summary(FAdata)
+FAdata[, Size := "micro"]
+FAdata[Employees > 1 & Employees <= 10, Size := "small"]
+FAdata[Employees > 10 & Employees <= 50, Size := "medium"]
+FAdata[Employees > 50, Size := "large"]
+FAdata[is.na(Employees) | Employees == 0, Size := "NA"]
+#### Number of affected workers in aggregates (2012)
+ipyrc[, .(
+    TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+  , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
+  , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
+  , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+  )
+  ][, .(
+    TotalEmployees, TotalSubMWWorkers, 
+    AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+    TotalFirmsWithEmployees, TotalAffectedFirms,
+    AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+  )]
+ipyrc[, .(
+    TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+  , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
+  , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
+  , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+  ), 
+  by = .(taxyear, busprov_geo)
+  ][, .(
+    busprov_geo, TotalEmployees, TotalSubMWWorkers, 
+    AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+    TotalFirmsWithEmployees, TotalAffectedFirms,
+    AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+  )]
+#### Number of employees per branch
+(EmpSubMW <- ipyrc[, .(
+    TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+  , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
+  ), 
+  by = .(
+    taxyear, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, taxrefno, payereferenceno)
+  ])
+table(EmpSubMW[, TotalSubMWWorkers])
+library(ggplot2)
+library(cowplot)
+g1 <- ggplot(data = EmpSubMW, 
+    aes(x=TotalSubMWWorkers)) +
+  geom_histogram(binwidth=1)
+g2 <- g1 + geom_histogram(bins=20) +
+  scale_x_continuous(transform = "log10") 
+g1 <- g1 + scale_x_continuous(limits = c(0, 10), breaks = 0:10) +
+  scale_y_continuous(limits = c(0, 100000))
+gs <- plot_grid(
+  g1, g2,
+  labels = c('natural, up to 10 people', 'log10'),
+  align="hv"
+)
+gs
+
+#### For FA=0, do they employ?
+table(EmpSubMW[TotalSubMWWorkers == 0L, TotalEmployees])
+
+qsave(FAdata, paste0(pathdata, "FAdata.qs"), nthreads = 13)
+qsave(ipyrc, paste0(pathdata, "ipyrc.qs"), nthreads = 13)
+```
+```{r plot FAs}
+#### possible duplicates with different local municipality names
+ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
+   & busmainplc_geo != ""]
+ii1 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )])
+ii2 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )], fromLast = T)
+table(data.table(nonNA=ii0, duplicates=ii1))
+FAdata[ii0 & (ii1 | ii2), ]
+table(duplicated(FAdata[ii0 & !ii1, ]))
+#### plot sensitivity to XThreshold (double job months cutoff)
+library(ggplot2)
+library(cowplot)
+g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1) + 
+  xlim(0, 1) +
+  scale_color_manual(values = "blue")
+g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.25)) +
+  geom_density(alpha = .1) + 
+  xlim(0, 1) +
+  scale_color_manual(values = "red")
+g3 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.50)) +
+  geom_density(alpha = .1) + 
+  xlim(0, 1) +
+  scale_color_manual(values = "green")
+g4 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.75)) +
+  geom_density(alpha = .1) + 
+  xlim(0, 1) +
+  scale_color_manual(values = "orange")
+gs <- plot_grid(
+  g1, g3, g2, g4,
+  labels = c('original', '50', '25', '75'),
+  align="hv"
+)
+ggsave(
+  paste0(pathdata, "FAByDoubleJobRatio.jpg"),
+  , gs, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+#### Below gives an error: idvar need to specify unique rows
+#### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
+####   direction = "long", 
+####   idvar = c("busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", 
+####     "Txrf", "payereferenceno"), 
+####   varying = grepout("^FA", colnames(FAdata))
+#### )
+gsz <- ggplot(data = FAdata, 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1) + 
+  xlim(0, 1) +
+  scale_color_manual(values = c("red", "blue"))
+gsz <- gsz + facet_wrap(Size ~ .)
+ggsave(
+   paste0(pathdata, "FAByFirmSize.jpg"),
+  , gsz, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+
+```{r merge branch weight with FAdata and compute FA by branch}
+#### code "merge branch weights, compute FA by branch"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+#### FAdata0 is branch level info
+FAdata0 <- qread(paste0(pathdata, "FAdata.qs"), nthreads = 13)
+#### Branch weight
+#### wg12 <- qread(paste0(pathdata, "BranchWeights2012.qs"), nthreads = 13)
+#### stmfp_2008_2022_e5_v1_Branch=stmfp_2008_2022_e5_v1+BranchWeights2012
+iprw12 <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"), 
+  nthreads = 13)
+FAdata <- FAdata0[taxrefno != "", ]
+#### multi (taxrefno-taxyear) - multi (taxrefno-branch) merge
+#### Set allow.cartesian = T
+#### Base = iprw12 and merge whichever matched rows in FAdata
+meefa <- FAdata[iprw12, .(taxrefno, payereferenceno, Employees, 
+    PropToMW, SubMW, NumSubMW, FA.orig, FA.25, FA.50, FA.75, 
+    taxyear, UID, 
+    busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+    busmainplc_geo, BranchNum, 
+    wgt.kerr, Newgt.kerr, Txrf, TotalBranch), 
+  on = "busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+     "busmainplc_geo", "taxrefno"), 
+  allow.cartesian = T]
+rbind(
+    FAdata = dim(FAdata), 
+    stmfp = dim(iprw12), 
+    meefa = dim(meefa)
+  )
+print(meefa[BranchNum == 5, 
+  .(taxyear, taxrefno, busmainplc_geo, UID, BranchNum)], 
+  topn = 50)
+#### Distributing number of workers, number of subMW workers
+#### Assume that number of workers and subMW workers 
+#### are proportional to branch incomes
+meefa[, NumSubMWBranch := floor(NumSubMW*wgt.kerr/100)]
+meefa[, EmployeesBranch := Employees*wgt.kerr/100]
+meefa[, FABranch := round(NumSubMWBranch/EmployeesBranch, 6)]
+meefa[, NeNumSubMWBranch := floor(NumSubMW*Newgt.kerr/100)]
+meefa[, NeEmployeesBranch := Employees*Newgt.kerr/100]
+meefa[, NeFABranch := round(NeNumSubMWBranch/NeEmployeesBranch, 6)]
+#### Assume that a part of subMW workers are fixed
+#### No good way to model it...
+qsave(meefa, paste0(pathdata, "stmfp2008-2022e5v1_Branch_FAdata.qs"), 
+  nthreads = 13)
+meefa <- qread(paste0(pathdata, "stmfp2008-2022e5v1_Branch_FAdata.qs"), 
+  nthreads = 13)
+
+LShare0 <- qread(paste0(pathdata, "ShareHHI12.qs"), nthreads = 13)
+LShare <- LShare0[, .(busprov_geo, 
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo,
+    taxrefno, Txrf, 
+    EachEmp, ShareEmp, HHI, ShareEmpG, HHIG, 
+    EachNeEmp, ShareNeEmp, nHHI, ShareNeEmpG, nHHIG, 
+    AreaLevel)]
+meefaBranch <- unique(meefa[, .(taxyear, busprov_geo, 
+  busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+  Txrf, taxrefno, BranchNum, TotalBranch, 
+  Employees, PropToMW, SubMW, NumSubMW, 
+  FA.orig, FA.25, FA.50, FA.75, 
+  wgt.kerr, Newgt.kerr)])
+#### check duplicates
+dup <- function(x, indexonly=F) {
+  require(data.table)
+  ii <- data.table(
+    cbind(fromFirst=duplicated(x), fromLast=duplicated(x, fromLast = T))
+    )
+  if (indexonly) 
+    ii else 
+    ii[, as.integer(fromFirst)+as.integer(fromLast) == 1L]
+}
+ii1 <- dup(LShare[, .(busmainplc_geo, taxrefno)])
+if (any(ii1)) LShare[ii1, .(busmainplc_geo, taxrefno)]
+ii2 <- dup(meefaBranch[, .(busmainplc_geo, taxrefno)])
+if (any(ii2)) meefaBranch[ii2, .(busmainplc_geo, taxrefno)]
+LShare[ii1, ][1:10, ]
+meefaBranch[ii2, ][1:10, ]
+
+meehhi <- LShare[meefaBranch, 
+  on = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+     "busmainplc_geo", "taxrefno")]
+
+
+LShareW <- reshape(LShare, direction = "wide", 
+    idvar = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+      "busmainplc_geo", "taxrefno", "Txrf", "EachEmp", "EachNeEmp"),
+    timevar = "AreaLevel",
+    v.names = grepout("Sh|HH", colnames(LShare))
+  )
+
+print(
+  unique(meefa[TotalBranch == 2L & taxyear == 2012 &
+    taxrefno %in% FAdata[FA.orig != 0, taxrefno], 
+    .(Txrf, taxrefno, payereferenceno, 
+      Employees, NumSubMW, EmployeesBranch, NumSubMWBranch, 
+      FA.orig, FABranch, wgt.kerr)][order(Txrf), ])
+  , topn = 30)
+
+
+```
+
+
+
+
+
+```{r count number of UIDs in ipyrc}
+#### obsolete code: "count number of UIDs"
+ipyrc <- qread(paste0(pathdata, "ipyrc.qs"), nthreads = 13)
+#### totalperiodsinyearofassessment
+grepout("[^0-9]| ", unique(ipyrc[, totalperiodsinyearofassessment]))
+ipyrc[, totpy := totalperiodsinyearofassessment]
+ipyrc[, totpy := gsub("\\.| |-", "", totpy)]
+ipyrc[, totpy := as.integer(totpy)]
+ipyrc[is.na(totpy) & !is.na(totalperiodsinyearofassessment), 
+  .(totpy, totalperiodsinyearofassessment)]
+ipyrc[, totN := sum(totpy, na.rm = T), by = Txrf]
+ipyrc[, .(busmainplc_geo, taxrefno, totpy, totN)]
+#### density plot of before and after dropping obs 
+#### with missing Txrf and main place info
+irpBefore = copy(ipyrc[, .(busmainplc_geo, Txrf, totpy, totN)])
+irpBefore[, timing := "before"]
+irpAfter = irpBefore[busmainplc_geo != "" & Txrf != "", 
+  .(busmainplc_geo, Txrf, totpy, totN)]
+irpAfter[, timing := "after"]
+irpBA <- rbindlist(list(irpBefore, irpAfter))
+library(ggplot2)
+g1 <- ggplot(data = irpBA, 
+  aes(x = totpy, group = timing, color = timing)) +
+  geom_density(alpha = .1) + 
+  scale_color_manual(values = c("red", "blue"))
+g1 <- g1 + xlim(0, 300)
+g1 
+
+for (yr in 12:22) {
+#### for (yr in 12) {
+  ipyr <- ipyrc[taxyear == 2000+yr, ]
+  LShare2 <- NULL
+  GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+  for (g in 1:length(GeoLevel)) {
+    ipGeo = copy(ipyr)
+    ipGeo[, EachUID := as.integer(length(unique(UID))), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, TotalUID := as.integer(length(unique(UID))), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, ShareUID := round(EachUID/TotalUID, 8)]
+    cat(GeoLevel[g], "\n")
+    ipGeo[grepl("gov", Entity), 
+      GTotalUID := as.integer(length(unique(UID))), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### copy GTotalUID to all rows
+    ipGeo[, GTotalUID := GTotalUID[!is.na(GTotalUID)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### We define EachEmpG by replacing EachEmp of GovEntity with 0L
+    ipGeo[, EachUIDG := EachUID]
+    ipGeo[grepl("gov", Entity), EachUIDG := 0L]
+    ipGeo[, TotalUIDG := TotalUID-GTotalUID]
+    ipGeo[, ShareUIDG := round(EachUIDG/TotalUIDG, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
+      "Entity", "Txrf",  "taxrefno",
+      "AreaLevel", 
+      "irp5_kerr_iweight_b", "Newgt.kerr","wgt.kerr",
+      "EachUID", "TotalUID", "ShareUID", 
+      "EachUIDG", "TotalUIDG", "ShareUIDG"
+      ), with = F])
+    print(summary(lshare))
+    lshare[, HHI2 := sum(ShareUID^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI2 := (HHI2-1/TotalEmp)/(1-1/TotalEmp)]
+    lshare[, HHI2G := sum(ShareEmpG^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI2G := (HHI2G-1/TotalEmpG)/(1-1/TotalEmpG)]
+    print(GeoLevel[g])
+    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, HHI2)
+    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", 
+      "TotalUID", "EachUID", "ShareUID", 
+      "HHI2", "nHHI2", "TotalUIDG"), with = F])
+  }
+  LShare2 <- rbindlist(list(LShare2, lshare), use.names = T, fill = T)
+  setkey(LShare2, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  qsave(LShare2, paste0(pathdata, "ShareHHI2", yr, ".qs"), nthreads = 13)
+}
+LShare2 <- qread(paste0(pathdata, "ShareHHI212.qs"))
+LShare2[, Nums := .N, by = Txrf]
+tb2 <- table(LShare2[, Nums])
+numtb2 <- as.numeric(names(tb2))
+numtb2 <- numtb2[order(-numtb2)]
+numtb2[1:(length(numtb2)-5)]
+tb2
+LShare2[Nums %in% numtb2[1:10], 
+  .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI)]
+
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare2[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI2)]
+print(LShare2[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI2)], topn = 25)
+summary(LShare2[TotalNeUID <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI2)])
+print(LShare2[TotalNeUID <= 1000 & !is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI2)], topn = 25)
+print(LShare2[!is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachUID, TotalUID, ShareUID, HHI2)], topn = 25)
+library(ggplot2)
+ggplot(data = LShare2[!is.na(Newgt.kerr) & ShareUID != 0, ], 
+  aes(x = ShareUID)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+summary(LShare2[!is.na(Newgt.kerr) & ShareUID != 0, ShareUID])
+ggplot(data = unique(LShare2[!is.na(Newgt.kerr), .(busmainplc_geo, HHI2)]), 
+  aes(x = HHI2)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+```
+
+
+```{r hhi based on kerr income}
+#### code "hhi based on kerr income"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+mee <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"),
+  nthreads = 13)
+mee[taxrefno == "AACBTBBAJZ", ]
+print(mee[,
+  .(taxrefno, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr, Neimputed.emp)], topn = 25)
+summary(mee[,
+  .(taxrefno, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr, Neimputed.emp)])
+#### mee[, NumB := .N, by = taxrefno]
+#### mee[, EmptyLocInfo := sum(busmainplc_geo == ""), by = taxrefno]
+#### table(mee[, .(NumB, EmptyLocInfo)])
+#### Not sure if we need this. Test how many obs will be dropped.
+nrow(mee[tot.kerr != 0, ]); (nrow(mee[tot.kerr != 0, ])/nrow(mee))*100
+nrow(mee[Neimputed.kerr != 0, ]); (nrow(mee[Neimputed.kerr != 0, ])/nrow(mee))*100
+#### For 2012, no NA in payereferenceno
+#### (n0 <- nrow(mee[is.na(payereferenceno) | payereferenceno == "", ])); (n0)/nrow(mee)*100
+#### 14% are gov employees [is.na(taxrefno) | taxrefno == ""]
+#### So we cannot simply drop entries with NAs in taxrefno
+(n0 <- nrow(mee[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); (n0/nrow(mee))*100
+#### 1. Use payereferenceno to count the total
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+mee[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+mee[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+mee[, Entity := "private"]
+mee[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+mee[, Entity := factor(Entity, levels = c("private", "gov"))]
+for (yr in 12:22) {
+#### for (yr in 12) {
+  ipyr <- mee[taxyear == 2000+yr, ]
+  LShare <- NULL
+  GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+  for (g in 1:length(GeoLevel)) {
+    ipGeo = copy(ipyr)
+    ipGeo[, EachRows := as.integer(.N), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, EachEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, EachNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, TotalRows := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, TotalEmp := sum(EachEmp, na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, TotalNeEmp := sum(EachNeEmp, na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, ShareRows := round(EachRows/TotalRows, 8)]
+    ipGeo[, ShareEmp := round(EachEmp/TotalEmp, 8)]
+    ipGeo[, ShareNeEmp := round(EachNeEmp/TotalNeEmp, 8)]
+    cat(GeoLevel[g], "\n")
+    print(summary(ipGeo[, .(EachEmp, TotalEmp, ShareEmp)]))
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
+    ipGeo[grepl("gov", Entity), 
+      GTotalNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[grepl("gov", Entity), 
+      GTotalEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### copy GTotalEmp to all rows
+    ipGeo[, GTotalEmp := GTotalEmp[!is.na(GTotalEmp)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, GTotalNeEmp := GTotalNeEmp[!is.na(GTotalNeEmp)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### We define EachEmpG by replacing EachEmp of GovEntity with 0L
+    ipGeo[, EachEmpG := EachEmp]
+    ipGeo[grepl("gov", Entity), EachEmpG := 0L]
+    ipGeo[, TotalEmpG := TotalEmp-GTotalEmp]
+    ipGeo[, ShareEmpG := round(EachEmpG/TotalEmpG, 8)]
+    ipGeo[, EachNeEmpG := EachNeEmp]
+    ipGeo[grepl("gov", Entity), EachNeEmpG := 0L]
+    ipGeo[, TotalNeEmpG := TotalNeEmp-GTotalNeEmp]
+    ipGeo[, ShareNeEmpG := round(EachNeEmpG/TotalNeEmpG, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
+      "Entity", "Txrf",  "taxrefno",
+      "AreaLevel", 
+      "irp5_kerr_iweight_b", "Newgt.kerr","wgt.kerr",
+      "EachEmp", "EachNeEmp", "TotalEmp", "TotalNeEmp", 
+      "ShareEmp", "ShareNeEmp", 
+      "EachEmpG", "TotalEmpG", "ShareEmpG", 
+      "EachNeEmpG", "TotalNeEmpG", "ShareNeEmpG"
+      ), with = F])
+    print(summary(lshare))
+    lshare[, HHI := sum(ShareNeEmp^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI := (HHI-1/TotalEmp)/(1-1/TotalEmp)]
+    lshare[, HHIG := sum(ShareEmpG^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHIG := (HHIG-1/TotalEmpG)/(1-1/TotalEmpG)]
+    print(GeoLevel[g])
+    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, HHI)
+    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", 
+      "TotalEmp", "EachEmp", "ShareEmp", 
+      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
+      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
+    print(lshare[1:30, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", 
+      "TotalEmp", "EachEmp", "ShareEmp", 
+      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
+      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
+  }
+  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  setkey(LShare, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = 13)
+}
+#### LShare:  Txrf, EachNum, Share, HHI, ShareG, HHIG, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+#### further checks
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[, Nums := .N, by = Txrf]
+tb <- table(LShare[, Nums])
+numtb <- as.numeric(names(tb))
+numtb <- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareNeEmp, HHI)]
+
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)]
+print(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+summary(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)])
+print(LShare[TotalNeEmp <= 1000 & !is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+print(LShare[!is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+library(ggplot2)
+ggplot(data = LShare[!is.na(Newgt.kerr), ], 
+  aes(x = ShareEmp)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+ggplot(data = LShare[!is.na(Newgt.kerr) & ShareEmp != 0, ], 
+  aes(x = ShareNeEmp)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+summary(LShare[!is.na(Newgt.kerr) & ShareNeEmp != 0, ShareNeEmp])
+ggplot(data = unique(LShare[!is.na(Newgt.kerr), .(busmainplc_geo, HHI)]), 
+  aes(x = HHI)) +
+  geom_density(colour="blue", alpha = .1) + 
+  xlim(0, 1)
+```
+
+
+```{r hhi using kerr old}
+#### code "hhi using kerr"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+
+iprw12[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+iprw12[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
 for (yr in 12:22) {
 #### for (yr in 12) {
   if (yr == 12) 
     ipyr <- qread(paste0(pathdata, "ipyrsClean.qs"), 
-      nthreads = 15) else 
+      nthreads = 13) else 
     ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), 
-      nthreads = 15)
+      nthreads = 13)
   #### ipyr = copy(ipyr)[grepl("gungun", busdistmuni_geo) &
   ####    grepl("Richmond", buslocmuni_geo), ]
   ipyr[, Txrf := taxrefno]
@@ -1177,7 +2245,7 @@ LShare[Nums %in% numtb[1:10],
   .(Txrf, busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo, AreaLevel, 
     EachNum, Total, HHI)]
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 ipyr <- ipyr[grepl("A", natureofperson), ]
 ipyr[, Txrf := taxrefno]
 ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
@@ -1187,6 +2255,180 @@ LShare[Txrf %in% c(ipyr[1:5, Txrf],
   .(Txrf, AreaLevel, busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo, EachNum, Total, Share, HHI)]
 ```
+
+```{r hhi this is older}
+#### code "hhi"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+#### Use the "clean" version (anomalous uid's are dropped)
+#### ipr2012 ==> ipyrsClean.qs
+####   142638/11406422 = 1.25% of all rows are useless uid's
+####   more than half of it is done by taxrefno ZAJJQCTBKC
+#### ipyrs <- qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
+ci5 <- qread(paste0(pathdata, "ci5_2008-2022_e5v1.qs"), nthreads = 13)
+wg12 <- qread(paste0(pathdata, "BranchWeights2012.qs"), nthreads = 13)
+#### keep only nonempty taxrefno
+ipyrs <- ci5[taxyear == 2012 & taxrefno != "", ]
+wg12 <- wg12[taxrefno != "", ]
+table(ipyrs[!grepl("^NULL$", taxrefno), 
+  .(NumBranch = .N), by = taxrefno][, NumBranch])
+#### ipyrs <- ipyrs[grepl("A", natureofperson), ]
+iprw12 <- merge(ipyrs, wg12, by = "taxrefno", all = T)
+table(
+(NumRows <- iprw12[!grepl("^NULL$", taxrefno), 
+  .(NumRows=.N), by = taxrefno])[, NumRows]
+)
+NumRows
+NumRows[grepl("NULL|AAAAAAA", taxrefno), ]
+iprw12[, NumRows :=.N, by = taxrefno]
+print(iprw12[NumRows == 5, 
+  .(taxrefno, NumRows, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, tot.kerr, wgt.kerr)][1:50, ],
+  topn = 50)
+iprw12[, imputed.kerr := tot.kerr*wgt.kerr]
+iprw12[, Neimputed.kerr := Netot.kerr*Newgt.kerr]
+iprw12[taxrefno == "AACBTBBAJZ", ]
+#### iprw12[, NumB := .N, by = taxrefno]
+#### iprw12[, EmptyLocInfo := sum(busmainplc_geo == ""), by = taxrefno]
+#### table(iprw12[, .(NumB, EmptyLocInfo)])
+#### Not sure if we need this. Test how many obs will be dropped.
+nrow(ipyrs[kerr_income != 0, ]); (nrow(ipyrs[kerr_income != 0, ])/nrow(ipyrs))*100
+nrow(ipyrs[Neimputed.kerr != 0, ]); (nrow(ipyrs[Neimputed.kerr != 0, ])/nrow(ipyrs))*100
+#### For 2012, no NA in payereferenceno
+#### (n0 <- nrow(ipyrs[is.na(payereferenceno) | payereferenceno == "", ])); (n0)/nrow(ipyrs)*100
+#### 14% are gov employees [is.na(taxrefno) | taxrefno == ""]
+#### So we cannot simply drop entries with NAs in taxrefno
+(n0 <- nrow(ipyrs[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); (n0/nrow(ipyrs))*100
+#### 1. Use payereferenceno to count the total
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+ipyrs[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+ipyrs[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+for (yr in 12:22) {
+#### for (yr in 12) {
+  if (yr == 12) 
+    ipyr <- qread(paste0(pathdata, "ipyrsClean.qs"), 
+      nthreads = 13) else 
+    ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), 
+      nthreads = 13)
+  #### ipyr = copy(ipyr)[grepl("gungun", busdistmuni_geo) &
+  ####    grepl("Richmond", buslocmuni_geo), ]
+  ipyr[, Txrf := taxrefno]
+  #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+  ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+  ipyr[, Entity := "private"]
+  ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+  ipyr[, Entity := factor(Entity, levels = c("private", "gov"))]
+  LShare <- NULL
+  GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+  for (g in 1:length(GeoLevel)) {
+    ipGeo = copy(ipyr)
+    ipGeo[, EachNum := as.integer(.N), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, Total := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, Share := round(EachNum/Total, 8)]
+    cat(GeoLevel[g], "\n")
+    print(summary(ipGeo[, .(EachNum, Total, Share)]))
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
+    ipGeo[grepl("gov", Entity), GTotal := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, GTotal := GTotal[!is.na(GTotal)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### We define EachNumG by replacing EachNum of GovEntity with 0L
+    ipGeo[, EachNumG := EachNum]
+    ipGeo[grepl("gov", Entity), EachNumG := 0L]
+    ipGeo[, TotalG := Total-GTotal]
+    ipGeo[, ShareG := round(EachNumG/TotalG, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
+      "Entity", "Txrf",  "taxrefno",
+      "AreaLevel", 
+      "EachNum", "Total", "Share", "EachNumG", "TotalG", "ShareG" 
+      ), with = F])
+    print(summary(lshare))
+    lshare[, HHI := sum(Share^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI := (HHI-1/Total)/(1-1/Total)]
+    lshare[, HHIG := sum(ShareG^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHIG := (HHIG-1/TotalG)/(1-1/TotalG)]
+    print(GeoLevel[g])
+    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, HHI)
+    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", "Total", "EachNum", "Share", 
+      "HHI", "nHHI", "TotalG"), with = F])
+    print(lshare[1:30, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", "Total", "EachNum", "Share", 
+      "HHI", "nHHI", "TotalG"), with = F])
+  }
+  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  setkey(LShare, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"))
+}
+#### LShare:  Txrf, EachNum, Share, HHI, ShareG, HHIG, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+#### further checks
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[, Nums := .N, by = Txrf]
+tb <- table(LShare[, Nums])
+numtb <- as.numeric(names(tb))
+numtb <- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, AreaLevel, 
+    EachNum, Total, HHI)]
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, EachNum, Total, Share, HHI)]
+```
+
+## Merge MEE and HHI
+
+```{r Merge MEE and HHI}
+#### code "Merge MEE and HHI"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+mee <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"),
+  nthreads = 13)
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"), nthreads = 13)
+meeh <- LShare[mee, on = c("taxrefno", 
+  "busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo"), all = T]
+print(meeh[, .(busmainplc_geo, Txrf, taxyear, 
+  EachNeEmp, TotalNeEmp, ShareNeEmp, HHI)], topn = 40)
+qsave(meeh, paste0(pathdata, "stmfp_2008_2022_e5_v1_hhi.qs"), nthreads = 13)
+```
+
+
 
 ## Checks 
 
@@ -1202,7 +2444,7 @@ pathdata <- paste0(path, "data/")
 pathdataCITIRP <- "Z:/Master Data/CIT-IRP5 Panel/"
 pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
 livbrary(qs); library(data.table); library(ggplot2)
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 LShare <- qread(paste0(pathdata, "ShareHHI12.qs"), nthreads = 16)
 ipyr[, Txrf := taxrefno]
 #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
@@ -1269,7 +2511,7 @@ pathdata <- paste0(path, "data/")
 pathdataCITIRP <- "Z:/Master Data/CIT-IRP5 Panel/"
 pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
 livbrary(qs); library(data.table); library(ggplot2)
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 LShare <- qread(paste0(pathdata, "ShareHHI12.qs"), nthreads = 16)
 ipyr[, Txrf := taxrefno]
 #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
@@ -1346,12 +2588,12 @@ install.package("qs")
 install.package("data.table")
 install.package("ggplot2")
 library(qs); library(data.table); library(ggplot2)
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 ipPTM0 <- ipyr[grepl("gungun", busdistmuni_geo), ]
 ipPTM0 [grepl("Kupholeni", busmainplc_geo) & grepl("Richmond", buslocmuni_geo), 
   .(buslocmuni_geo, taxrefno)]
 
-ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 15)
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 ipPTM0 <- ipyr[grepl("gungun", busdistmuni_geo), ]
 ipPTM0[, Txrf := taxrefno]
 #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
@@ -1606,6 +2848,130 @@ rainfall data ends at 2019, need until 2022
 
 
 ### obsolete 
+
+```{r hhi}
+#### code "hhi"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+mee <- qread(paste0(pathdata, "stmfp_2008_2022_e5_v1_Branch.qs"))
+mee[taxrefno == "AACBTBBAJZ", ]
+#### mee[, NumB := .N, by = taxrefno]
+#### mee[, EmptyLocInfo := sum(busmainplc_geo == ""), by = taxrefno]
+#### table(mee[, .(NumB, EmptyLocInfo)])
+#### Not sure if we need this. Test how many obs will be dropped.
+
+nrow(mee[kerr_income != 0, ]); (nrow(mee[kerr_income != 0, ])/nrow(mee))*100
+nrow(mee[Neimputed.kerr != 0, ]); (nrow(mee[Neimputed.kerr != 0, ])/nrow(mee))*100
+#### For 2012, no NA in payereferenceno
+#### (n0 <- nrow(mee[is.na(payereferenceno) | payereferenceno == "", ])); (n0)/nrow(mee)*100
+#### 14% are gov employees [is.na(taxrefno) | taxrefno == ""]
+#### So we cannot simply drop entries with NAs in taxrefno
+(n0 <- nrow(mee[grepl("NULL", taxrefno) | is.na(taxrefno) | taxrefno == "", ])); (n0/nrow(mee))*100
+#### 1. Use payereferenceno to count the total
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+mee[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+mee[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+#### for (yr in 12:22) {
+for (yr in 12) {
+  if (yr != 12) 
+    ipyr <- mee else 
+    ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), 
+      nthreads = 13)
+  #### ipyr = copy(ipyr)[grepl("gungun", busdistmuni_geo) &
+  ####    grepl("Richmond", buslocmuni_geo), ]
+  ipyr[, Txrf := taxrefno]
+  #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+  ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+  ipyr[, Entity := "private"]
+  ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+  ipyr[, Entity := factor(Entity, levels = c("private", "gov"))]
+  LShare <- NULL
+  GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+  for (g in 1:length(GeoLevel)) {
+    ipGeo = copy(ipyr)
+    ipGeo[, EachNum := as.integer(.N), by = 
+      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
+    ipGeo[, Total := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, Share := round(EachNum/Total, 8)]
+    cat(GeoLevel[g], "\n")
+    print(summary(ipGeo[, .(EachNum, Total, Share)]))
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
+    ipGeo[grepl("gov", Entity), GTotal := as.integer(.N), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    ipGeo[, GTotal := GTotal[!is.na(GTotal)][1], by =
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    #### We define EachNumG by replacing EachNum of GovEntity with 0L
+    ipGeo[, EachNumG := EachNum]
+    ipGeo[grepl("gov", Entity), EachNumG := 0L]
+    ipGeo[, TotalG := Total-GTotal]
+    ipGeo[, ShareG := round(EachNumG/TotalG, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
+      "Entity", "Txrf",  "taxrefno",
+      "AreaLevel", 
+      "EachNum", "Total", "Share", "EachNumG", "TotalG", "ShareG" 
+      ), with = F])
+    print(summary(lshare))
+    lshare[, HHI := sum(Share^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHI := (HHI-1/Total)/(1-1/Total)]
+    lshare[, HHIG := sum(ShareG^(2), na.rm = T), by = 
+      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
+    lshare[, nHHIG := (HHIG-1/TotalG)/(1-1/TotalG)]
+    print(GeoLevel[g])
+    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, HHI)
+    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", "Total", "EachNum", "Share", 
+      "HHI", "nHHI", "TotalG"), with = F])
+    print(lshare[1:30, c("busprov_geo", "busdistmuni_geo", 
+      "buslocmuni_geo", "busmainplc_geo", 
+      "Txrf", "Total", "EachNum", "Share", 
+      "HHI", "nHHI", "TotalG"), with = F])
+  }
+  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  setkey(LShare, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"))
+}
+#### LShare:  Txrf, EachNum, Share, HHI, ShareG, HHIG, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+#### further checks
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[, Nums := .N, by = Txrf]
+tb <- table(LShare[, Nums])
+numtb <- as.numeric(names(tb))
+numtb <- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, AreaLevel, 
+    EachNum, Total, HHI)]
+ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, EachNum, Total, Share, HHI)]
+```
 
 ```{r, eval = F}
 x <- data.table(

@@ -1,0 +1,191 @@
+---
+title: |
+  Labour market concentration and minimum wage impacts
+author: |
+  Dieter von Fintel, Seiro Ito, Noreen Kajugusi, Michael Kilumelume
+date: last-modified
+date-format: "MMMM DD, YYYY, HH:MM ZZ"
+execute:
+  echo: false
+  freeze: auto  # re-render only when source changes
+engine: knitr
+pdf-engine: lualatex
+format:
+  html:
+    standalone: true
+    embed-resources: true
+    toc: true
+    toc-location: left
+    grid:
+      margin-width: 350px
+    linkcolor: "green"
+    urlcolor: "#009900"
+#### https://github.com/quarto-dev/quarto-cli/issues/2275#issuecomment-1399047519
+    include-in-header: ../../../mathjax.html
+####  pdf: default
+####    include-in-header: 
+####      text: |
+####        \renewcommand{\eqref}[1]{Equation~\ref{#1}}  docx: default
+  docx: default
+  epub: default
+lightbox: auto
+theme: sky
+  ####light: [sky, ./sky-add]
+  ####dark: darkly
+backgroundcolor: "#fffcf2"
+title-block-banner: "#f0f3f5"
+title-block-banner-color: "black"
+callout-appearance: simple
+callout-icon: false
+bibliography: ../../../seiro.bib
+#### doi-title: "doi.org/10.1086/734780"
+link-citations: true
+reference-location: margin
+citation-location: margin
+number-sections: true
+---
+```{css CSS setting, echo=FALSE, results = "hide"}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightWreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Noto Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+/* Define a margin before hX (header level X) element */
+h1  {
+  margin-top: 3ex;
+  margin-bottom: 3ex;
+  /* background: #c2edff; */ /*背景色*/
+  padding: 0.5em;/*文字まわり（上下左右）の余白*/
+}
+h2  {
+  margin-top: 2ex;
+  margin-bottom: 2ex;
+  padding: 0.5em;/*文字周りの余白*/
+  ####color: #010101;/*文字色*/
+  color: #87a5f2;
+  /* background: #eaf3ff; */ /*背景色*/
+  /* border-bottom: solid 3px #516ab6; */ /*下線*/
+}
+DBlue {
+  color: dodgerblue;
+}
+Blue {
+  color: blue;
+}
+Red {
+  color: red;
+}
+```
+
+<style type="text/css">
+  body, td{
+  font-size: 16pt;
+}
+</style>
+
+
+# Introduction
+
+# Agricultural minimum wages in South Africa
+
+Timeline:
+
+Minimum wage was introduced in South Africa's the agricultural sector in 2003. In the same year, the share of agriculture in employment was 18.9% which declined steadily to 16.1% in 2012 ([SL.AGR.EMPL.ZS](https://databank.worldbank.org/reports.aspx?source=2&series=SL.AGR.EMPL.ZS&country=ZAF#) of World Bank Development Indicators). It employs over 900,000 workers out of 25 million of labour force, or `r round((920/25062)*100, 2)`%, or `r round((920/17055)*100, 2)`% of formal and informal employment in 2025 ([QLFLS 2025Q3, StastSA](https://www.statssa.gov.za/publications/P0211/P02113rdQuarter2025.pdf#page=6.43)).^[This contrasts with the goal of the National Development Plan of 2012 that aims to employ 1 million workers. ] Formal employment is 401,000 (`r round((401/11032)*100, 2)`% of total formal employment), informal employment is 519,000 (`r round((519/6023)*100, 2)`% of total informal employment).
+
+Initially, there were two minimum wage rates applied to semi-rural and rural areas, which were later unified in 2008. After the unification, it was mandated in the law that the minimum wage will adjust for inflation. Nevertheless, the adjustments were held incomplete in the semi-rural areas due to preparations for minimum wage unification, which was intended to slow down the catch up process in the rural areas to the semi-rural areas. This resulted in reduction in real minimum wage in semi-rural areas. This eventually gave rise to the farm worker's protests in November, 2012. In March 2013, the minimum wage rate was increased by 52% (R69 to R105 a day). 
+
+Compliance: 
+
+It is argued that the compliance to the minimum wage law is incomplete in South Africa [@Bhorat2012; @Uma2013; @Bhorat2015]. Leniency to incompliance can be understood as a combination of: insufficient number of inspectors, peer effects, a high ratio of informal employment, fears of massive unemployment held by regulators, farms, and also a part of labour unions^[Employment Conditions Commission 2006. Report of the Employment Conditions Commission on the Investigation into the Farm Worker Sector with a View to Amend the Sectoral Determination 8 Farm Worker Sector, South Africa and to Respond to the Minister's Request to Investigate the Sector. Republic Of South Africa. ]. Given the incomplete compliance, we interpret the estimated results as an ITT (intention-to-treat) estimates. It has been shown that the compliance rates are rising through time in a five year period window [@Bhorat2015], which requires us to use the similar time horizon in estimating the impacts.
+
+
+# Previous literature
+
+Since the late 1990's, there has been a long debate on the employment impacts of minimum wages. The traditional view under a competitive labour market expected that the employment will be reduced with an increased level of minimum wages. The expectation did not match the empirical results, however. Summaries of evidence suggest that the employment impacts are relatively small, if they exist [@Manning2021; @DubeLindner2024]. 
+
+It has always been argued that the labour markets may not be competitive [@Robinson1933; @Manning2013; @Manning2021ILRreview]. An early work discussed multiple channels that firms can adjust with, and firms can choose not to adjust on labour [@MaCurdy2015]. Even after narrowing the channel to labour market transactions, oligopsonistic firms still have a few options: laying off workers, labour-labour substituion^[Upgrading the skill contents of labour while keeping the level of employment. ] [@Horton2025], or reducing the firm's labour market transaction margins (wage markdowns). However, relatively few studies examine the adjustment channels beyond layoffs. This study aims to examine the plausibility of shrinking labour market margins. @Azaretal2023 are the first to examine this channel and use online labour market data of stock clerks, retail salespersons, and cashiers in the US. They find that HHI softens the possible unemployment impacts of minimum wages. 
+
+Agricultural minimum wage in South Africa has been suggested to have reduced employment. An early study examines the introduction in 2003 and found noisy unemployment impacts [@BhoratKanburStanwix2014].^[Their results show stronger negative impacts on the part-time workers, hinting labour-labour substitution. ] Some studies use the different changes in minimum wages by region in 2008 to estimate the impacts. However, The estimates turned out to be noisy due possibly to a relatively small increase in minimum wages which may have led to low statistical power [@ChrisRulofRankin2015; @ItoSeiro2021e]. In the current study, we use the large increase in minimum wages in 2012 to estimate the impacts of minimum wages on employment and the possible mitigating factor of labour market power.
+
+# Monopsony and unemployent impacts
+
+We test if the labour market concentration, a proxy for labour market power, reduces the unemployment impacts of minimum wages. Under a standard theory, oligopsonistic firms can mitigate unemployment impacts of minimum wages through two channels: Increased labour supply and reduced wage markdowns [@BhaskarManningTo2002] (see @sec-monopsonist). 
+
+The minimum wage for a monopsonist effectively transforms an upward sloping labour supply curve to a horizontal line. When the minimum wage is set lower than the competitive wage at the competitive employment level, it can result in an increased level of employment. In reality, marginal revenue curves differ across firms and there is an additional pressure on firms through competition between firms on the labour demand side, which dilute the positive employment response. Firms with low marginal revenue curves may exit the market. The end result is thus either negative or positive, while the scale of the impact may be muted from the pure competitive case or the pure monopsonist case. 
+
+## Monopsonist responses to a minimum wage {#sec-monopsonist .appendix}
+
+![Monopsonist responses to a minimum wage](Fig1.jpg){#fig-Fig1 .column-margin width=80%}
+
+Let us consider the monoposonist case for simplicity in @fig-Fig1. Prior to minimum wage imposition, profit-maximising employment is chosen at $L^{M}$ while the competitive employment is given at the level where $MR$ and labour supply curve intersect. Monopsonist employment is smaller than competitive employment. The wage markdown is given by $\frac{w^{M}}{\underline{w}}>1$. 
+
+When the minimum wage is imposed at $\bar{w}$, the labour supply curve changes to the horizontal line at $\bar{w}$ for employment levels less than $\bar{L}$, because it is above the original labour supply curve. This means that the monopsonist will face an increased labour supply schedule. This leads to an increased employment which is accompanied by the reduced wage markdown from $\frac{w^{M}}{\underline{w}}$ to $\frac{MR(\bar{L})}{\bar{w}}$. 
+
+# Data
+
+## Sampling frame of CIT-IRP5 data set
+
+
+## HHI
+
+We count the number of employees in establishments and construct HHI in the respetive regional labour markets. SARS contain information at the establishment level. Given that we use IDs of firms that report to SARS, we can identify the firm branches up to the level of granularity in geographical information. The levels, from the most to the least granular, are Main Place, Local Municipality, District Municipality, and Province. We will use the least three granular levels in defining HHI. 
+
+In the CIT-IRP5 data set, all the employee information is linked to the head quarter branch, not the actual establishment they work at. So one needs to allocate the number of workers across establishments in a firm. We use establishment revenues in 2011 as weights. The advantage of this approach is that the sample size is retained. The disadvantage is we lose characteristics of individuals such as age or gender, and we can use such characteristics only at the firm level. An alternative approach we can take is to aggregate establishments and measure impacts at the firm level. The advantage is that we can use the individual characteristics of workers. The disadvantage is we lose establishment level variations and end up in smaller sample size. The former approach has a better chance of detecting the impacts due to stronger statistical power. The latter approach has a better chance of interpreting the impacts due to more detailed information of workers. Therefore, we will use both approaches. 
+
+Distributions of HHIs at various geographical levels are shown in Figure X. 
+
+## Employment trends
+
+The CIT-IRP5 data have information of directly hired workers of firms. They include both permanent and temporary workers. The data do not contain information on self-employed firms or a manager-employer firms, because they do not report employees. These are typically operating at a micro scale and its majority is considered to be subsistent farming.^[Subsistent farming is estimated to employ about 2 million people in SA (Table 8, QLFS2025Q3, StatsSA). Time-related underemployment, defined as employment [less than 35 hours and desired to work more](https://www.statistics.gov.hk/wsc/CPS203-P15-S.pdf#page=2), amounts to 21,000 workers (Table 3.9, QLFS2025Q3, StatsSA). ] The data also do not cover outsourced labour, because the hiring agents may not list themselves as agrictultural firms. According to QLFS, informal employment in agriculture (519,000) is larger than formal employment (401,000). This contrasts with the aggregate employment where 11,032,000 work in the formal sector and 6,023,000 work in the informal sector. Thus the share of agriculture is higher in the informal sector (`r round((519/6023)*100, 2)`%) than the formal sector (`r round((401/11032)*100, 2)`%), with the aggregate share at `r round((519+401)/(6023+11032)*100, 2)`%. Given the tendency of lower wages in the informal sector, the higher ratio of informal activities makes agricultural minimum wage difficult to implement.
+
+There are Y workers listed in 2012. 
+
+
+
+# Estimation strategy
+
+We estimate parameters at the industry subdividion (SIC-7 code at 2 digits) level:
+\begin{equation}
+\begin{aligned}
+y_{ijrt} 
+= a_{0}
+&+a_{1it}FA_{ijr0}+a_{2it}H_{ijr0}+a_{3it}FA_{ijr0}H_{ijr0}\\
+&+c_{i}+c_{j}+c_{r}+c_{t}+e_{ijrt}
+\end{aligned}
+\label{esteqn}
+\end{equation}
+For industry subdivision $i$, firm $j$ in region $r$ in period $t$, $y_{ijrt}$ is an outcome variable, $FA_{ijr0}$ is a fraction of affected workers among all workers or a treatment exposure rate at period zero, $H_{ijr0}$ is Harfindahl-Hirschman Index of employment in region $r$ at period zero, $c_{i}$, $c_{j}, c_{r}$ and $c_{t}$ are four-way fixed effects in industry subdivisions, firms, regions, and periods, and $e_{ijrt}$ is an idiosyncratic error. $a_{1it}$ captures the classical wage increase impacts which we expect to be negative, and $a_{3it}$ gives the estimate of interest, the unemployment reduction impacts of labour market concentration. We follow @HarasztosiLindner2019 in transforming the LHS of \eqref{esteqn} in percentages, so $a_{1it}$ becomes an elasticity of the minimum wage and $a_{3it}$ is the change in the elasticity.
+
+This is basically a DID with continuous treatment. The underlying identification assumption behind \eqref{esteqn} is the common trend in $y_{ijrt}$ at all the levels of $FA_{ijr0}$. A natural justification is that the economy is in the steady state so all the level variables grow at the same rate for all firms. Empirically, it suffices to assume that the firm's outcome growth to follow some probability distribution with the common mean. This intuition turns out to be correct and is formally derived in @Callawayetal2025^[It is summarised as the strong parallel trends assumption. ]. They also caution against using the two-way fixed effect specification, because the dose $FA$ levels around the mean receive high weights regardless of how the dose distribution looks like. They recommend the raw (nonparametric) DID estimation of ATE. We use the raw DID as a part of robustness checks.
+
+We allow the estimated coefficients to be time variant. This gives an event-study like interpretation, or a cumulative impact interpretation, of the estimated impacts. Given the dynamic adjustment process of firms, this flexibility will give us more nuanced interpretation of impacts.
+
+For efficiency, we follow @Azaretal2023 and restrict the coefficients to be the same across industries by using the regional mean HHI $\bar{H}_{jr0}$ of all industries^[@Azaretal2023 used means of $H$ over three occupations at the county level. ]. This is to assume the regional labour markets are integrated at the sic-7's 1 digit (broadly defined agriculture industry) level, estimating the parameters at the broadly defined agriculture industry level by dropping $i$ subscripts in $H$:^[@Azaretal2023 uses both overall (across periods and occupation-markets) county mean and pre-period  (across occupation-markets) county mean as HHI. They show that overall county means are not correlated with minimum wages so endogeneity of mean HHI to outcomes through minimum wages is not a concern. ]
+\begin{equation}
+\begin{aligned}
+y_{ijrt} 
+= a_{0}
+&+a_{1t}FA_{ijr0}+a_{2t}\bar{H}_{jr0}+a_{3t}FA_{ijr0}\bar{H}_{jr0}\\
+&+c_{i}+c_{j}+c_{t}+e_{ijrt}
+\end{aligned}
+\label{esteqn2}
+\end{equation}
+
+
+# Results
+
+
+## Main results
+
+## Robustness checks
+
+# Conclusion
+
