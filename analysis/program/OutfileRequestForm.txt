@@ -1,0 +1,18 @@
+Outfile request
+
+Dear Data Team, 
+I would like to request the following output:
+
+Workbench name: W:/epguest/seiro_ito/
+Folder path and name: W:/epguest/seiro_ito/outfiles/2026 01 16/
+Contents: 
+  1. R script files: Measurement of labour market concentration, estimation of minimum wage impacts
+  2. Image files: Graphical presentation of results
+  3. Table data files: Estimates, standard errors, p values, and other statistics
+Special permissions: NA
+Syntax/do files/script only request: No
+
+Regards,
+
+Seiro
+

@@ -63,6 +63,7 @@ options(htmltools.dir.version = FALSE, width = 100)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
+table0 <- function(x) table(x, useNA = "ifany")
 ```
 ```{r path, eval = T}
 #### path <- "Z:/Workbenches/epguest/seiro_ito/"
@@ -73,7 +74,7 @@ pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
 pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
-livbrary(qs); library(data.table); library(ggplot2)
+library(qs); library(data.table); library(ggplot2)
 ```
 
 
@@ -216,6 +217,7 @@ pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 library(qs); library(data.table); library(ggplot2)
 ```
 
+
 ```{r read irp5 file, eval = F}
 #### irp5.qs is created in IRP5Condense.rmd
 library(qs)
@@ -229,21 +231,212 @@ library(data.table)
 library(ggplot2)
 irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5))
+irp5[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
 irp5ForPlot <- unique(irp5[taxyear >= 2012 & taxyear <= 2015, 
   c(geovars, "taxyear", "taxrefno", "Num"), with = F])
-irp5ForPlot[, GeoInfo := "exist"] 
-irp5ForPlot[busprov_geo != "" | busmainplc_geo != "", GeoInfo := "lack"] 
-irp5ForPlot[, taxyear := as.character(taxyear)] 
-g1 <- ggplot(data = irp5ForPlot, aes(x = Num, group = taxyear, 
+irp5ForPlot[, taxyear := as.character(taxyear)]
+g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], aes(x = Num, group = taxyear, 
   colour = taxyear, fill = taxyear)) +
   geom_density(alpha = .3) + 
   scale_color_viridis_d("Tax year") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(1, 10000), trans = "log10") +
-  facet_wrap(. ~ GeoInfo) +
+  scale_x_continuous(limits = c(1, 100), trans = "log10") +
   theme_bw()
-g1 + facet_wrap(taxyear ~ GeoInfo)
+ g1
+g1 + facet_grid(taxyear ~ .)
 ```
+
+# Location information granularity checks
+
+We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
+```{r location granularity}
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+#### Location granularity indicator
+irp5[, LocGranular := "none"]
+for (yr in 9:22) {
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  != "" & 
+		  busmainplc_geo  != "" & 
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[4]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  != "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[3]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  == "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[2]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo == "" & 
+		  buslocmuni_geo  == "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[1]]
+}
+irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, "none"))]
+setnames(irp5, "LocGranular", "LocGranularFirm")
+irp5[, LocGranularJob := "none"]
+irp5[busprov_geo != "", LocGranularJob := GeoLevel[1]]
+irp5[busdistmuni_geo != "", LocGranularJob := GeoLevel[2]]
+irp5[buslocmuni_geo != "", LocGranularJob := GeoLevel[3]]
+irp5[busmainplc_geo != "", LocGranularJob := GeoLevel[4]]
+
+#### Location granularity due to establishment clustering
+#### When location info is missing in some rows, one can allocate workers
+#### only up to location level where all establishments are clustered
+for (mm in 1:length(GeoLevel)) {
+  irp5[, (GeoLevel[mm]) := get(geovars[mm])]
+  irp5[get(geovars[mm]) == "", (GeoLevel[mm]) := NA]
+}
+#### Number of unique entries at each level 
+#### Subtract 1 because NA is counted as 1 (all NA entries are MainPlNum == 1L)
+irp5[, MainPlNum := as.integer(length(unique(Mai)))-1L, by = .(Txrf, taxyear)]
+irp5[, LocMunNum := as.integer(length(unique(Loc)))-1L, by = .(Txrf, taxyear)]
+irp5[, DisMunNum := as.integer(length(unique(Dis)))-1L, by = .(Txrf, taxyear)]
+irp5[, ProvNum   := as.integer(length(unique(Prv)))-1L, by = .(Txrf, taxyear)]
+irp5[, MainPlNA := as.integer(all(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, LocMunNA := as.integer(all(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, DisMunNA := as.integer(all(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, ProvNA := as.integer(all(is.na(Prv))), by = .(Txrf, taxyear)]
+
+irp5[, CommonLocality := "none"]
+irp5[
+      ProvNum == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum == 1L & 
+    MainPlNum == 1L &
+    MainPlNA  == 0L, 
+  CommonLocality := GeoLevel[4]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum == 1L & 
+    MainPlNum != 1L & 
+    LocMunNA  == 0L, 
+  CommonLocality := GeoLevel[3]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum != 1L & 
+    MainPlNum != 1L &
+    DisMunNA  == 0L, 
+  CommonLocality := GeoLevel[2]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum != 1L & 
+    LocMunNum != 1L & 
+    MainPlNum != 1L & 
+    ProvNA  == 0L, 
+  CommonLocality := GeoLevel[1]]
+irp5[, CommonLocality := factor(CommonLocality, levels = c(GeoLevel, "none"))]
+irp5[, NARowsMai := as.integer(sum(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, NARowsLoc := as.integer(sum(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, NARowsDis := as.integer(sum(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, NARowsPrv := as.integer(sum(is.na(Prv))), by = .(Txrf, taxyear)]
+irp5[, TotalRowsInTxrf := as.integer(.N), by = .(Txrf, taxyear)]
+qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"), nthreads = 13)
+
+unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
+  & taxyear == 2009, 
+  c("Txrf", "UID", geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F])
+
+#### LocGranularFirm: the most granular location info at firm level
+#### LocGranularJob : the most granular location info at each job level
+#### MainPlNum      : the number of unique entries at main place level for firm-taxyear
+#### NARowsMai      : the number of NA entries at main place level for firm-taxyear
+#### CommonLocality : Lowest area level common among all the jobs for firm-taxyear
+####   E.g., if all jobs are in Stellenbosch (main place), it is main place
+####   If there are jobs attached to a branch in Capetown, then it is province
+####   If location info is missing in some rows, then "none"
+
+#### We know that rows with no location info can be allocated to the area level by:
+####   MainPlNum == 1L                    ==> main place
+####   MainPlNum >  1L & LocMunNum == 1L  ==> local muni
+####   LocMunNum >  1L & DisMunNum == 1L  ==> district muni
+####   DisMunNum >  1L & ProvNum == 1L    ==> province 
+
+#### Panel of various levels
+#### Main place panel: 
+####  a. location entries are complete & location is granular down to main place level, or,
+####        NARowsMai == 0L & LocGranularFirm == Mai
+####  b. location == NA for some rows & uniquely common locality level is main place
+####        NARowsMai > 0L  & MainPlNum == 1L
+#### Local municipality panel: (addition to main place panel)
+####  a. location entries are complete down to local municipality & location is granular down to local municipality, or,
+####        NARowsLoc == 0L & LocGranularFirm == Loc
+####  b. location == NA for some rows & uniquely common locality level is local municipality
+####        NARowsLoc > 0L  & LocMunNum == 1L
+#### District municipality panel: (addition to local municipality panel)
+####  a. location entries are complete down to district municipality & location is granular down to district municipality, or,
+####        NARowsDis == 0L & LocGranularFirm == Dis
+####  b. location == NA for some rows & uniquely common locality level is district municipality
+####        NARowsDis > 0L  & DisMunNum == 1L
+#### Province panel: (addition to district municipality panel)
+####  a. location entries are complete down to province & location is granular down to province, or,
+####        NARowsPrv == 0L & LocGranularFirm == Prv
+####  b. location == NA for some rows & uniquely common locality level is province
+####        NARowsPrv > 0L  & ProvNum == 1L
+iiM <- irp5[,
+  NARowsMai == 0L & grepl("^M", LocGranularFirm) | 
+  NARowsMai >  0L & MainPlNum == 1L]
+iiL <- !iiM & irp5[, 
+  NARowsLoc == 0L & grepl("^L", LocGranularFirm) | 
+  NARowsLoc >  0L & LocMunNum == 1L]
+iiD <- !iiM & !iiL & irp5[, 
+  NARowsDis == 0L & grepl("^D", LocGranularFirm) | 
+  NARowsDis >  0L & DisMunNum == 1L]
+iiP <- !iiM & !iiL & !iiD & irp5[, 
+  NARowsPrv == 0L & grepl("^P", LocGranularFirm) | 
+  NARowsPrv >  0L & ProvNum   == 1L] 
+nrow(irp5M <- irp5[iiM, ])
+nrow(irp5L <- irp5[iiL, ])
+nrow(irp5D <- irp5[iiD, ])
+nrow(irp5P <- irp5[iiP, ])
+qsave(irp5M, paste0(pathdata, "irp5M.qs"), nthreads = 13)
+qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = 13)
+qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = 13)
+qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = 13)
+
+irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
+irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
+irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same prov
+
+
+#### Missingness in location information
+#### 1. Maximum sample size data sets
+####   a. Main Place data = firms with information down to Main Place (irp5M) 
+####   b. Loc Muni data   = firms with information down to Loc Muni   (irp5L) + a
+####   c. Dis Muni data   = firms with information up to Dist Muni    (irp5D) + a + b
+####   d. Prov data       = firms with information up to Prov         (irp5P) + a + b + c
+#### 2. Same sample data sets (irp5M) 
+####   a. Main Place data = firms with information up to Main Place
+####   b. Loc Muni data   = a
+####   c. Dis Muni data   = a
+####   d. Prov data       = a
+```
+
 
 ## Compute HHI
 
@@ -254,16 +447,6 @@ library(data.table)
 irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 
-#### 1. Use payereferenceno to count the total
-#### 2. Compute the shares of each firms
-####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
-####   b. Compute the shares of each firms including "gov entity" thence HHI
-irp5[, Txrf := taxrefno]
-#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
-irp5[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
-irp5[, Entity := "private"]
-irp5[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
-irp5[, Entity := factor(Entity, levels = c("private", "gov"))]
 
 for (yr in 12:22) {
 #### for (yr in 12) {
@@ -271,98 +454,93 @@ for (yr in 12:22) {
   LShare <- NULL
   GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
   for (g in 1:length(GeoLevel)) {
+    print(GeoLevel[g])
+    byvar <- 	c("busprov_geo", "busdistmuni_geo", 
+  			           "buslocmuni_geo", "busmainplc_geo")[1:g]
     ipGeo = copy(ipyr)
-    ipGeo[, EachRows := as.integer(.N), by = 
-      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
-
-    ipGeo[, WorkersAtEstab := as.integer(.N), by = 
-      get(
-        c(
-          c("busprov_geo", "busdistmuni_geo", 
-            "buslocmuni_geo", "busmainplc_geo")[1:g], 
-          "Txrf")
-        )]
-
-
-    ipGeo[, EachEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
-      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
-    ipGeo[, EachNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
-      eval(c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g], "Txrf"))]
-    ipGeo[, TotalRows := as.integer(.N), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    ipGeo[, TotalEmp := sum(EachEmp, na.rm = T), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    ipGeo[, TotalNeEmp := sum(EachNeEmp, na.rm = T), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    ipGeo[, ShareRows := round(EachRows/TotalRows, 8)]
-    ipGeo[, ShareEmp := round(EachEmp/TotalEmp, 8)]
-    ipGeo[, ShareNeEmp := round(EachNeEmp/TotalNeEmp, 8)]
-    cat(GeoLevel[g], "\n")
-    print(summary(ipGeo[, .(EachEmp, TotalEmp, ShareEmp)]))
+	ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]
+	#### Some firms have missing location information in some (but not all) rows
+	#### Cannot allocate 8 workers with missing location info between branches
+	if (yr == 12) print(
+	  ipGeo[Txrf %in% unique(Txrf[busmainplc_geo != ""])[2], 
+	    c(geovars, "Txrf", "payereferenceno", "UID",  "dateofbirth", 
+		  "periodemployedfrom", "WorkersAtEstab", "kerr_income"), with = F])
+	ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]
+    ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
+	ipGeo[busmainplc_geo != "", ]
     #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
-    #### We compute "total without GovEntity" by subtracting GTotal (nrow of Entity==gov)
-    ipGeo[grepl("gov", Entity), 
-      GTotalNeEmp := round(sum(Neimputed.emp, na.rm = T), 2), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    ipGeo[grepl("gov", Entity), 
-      GTotalEmp := round(sum(imputed.emp, na.rm = T), 2), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    #### copy GTotalEmp to all rows
-    ipGeo[, GTotalEmp := GTotalEmp[!is.na(GTotalEmp)][1], by =
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    ipGeo[, GTotalNeEmp := GTotalNeEmp[!is.na(GTotalNeEmp)][1], by =
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    #### We define EachEmpG by replacing EachEmp of GovEntity with 0L
-    ipGeo[, EachEmpG := EachEmp]
-    ipGeo[grepl("gov", Entity), EachEmpG := 0L]
-    ipGeo[, TotalEmpG := TotalEmp-GTotalEmp]
-    ipGeo[, ShareEmpG := round(EachEmpG/TotalEmpG, 8)]
-    ipGeo[, EachNeEmpG := EachNeEmp]
-    ipGeo[grepl("gov", Entity), EachNeEmpG := 0L]
-    ipGeo[, TotalNeEmpG := TotalNeEmp-GTotalNeEmp]
-    ipGeo[, ShareNeEmpG := round(EachNeEmpG/TotalNeEmpG, 8)]
+    ipGeo[, WorkersAtEstabNoGov := 0L]
+    ipGeo[!grepl("gov", Entity), WorkersAtEstabNoGov := WorkersAtEstab]
+	#### Below gives private firm totals for rows of private firms
+    ipGeo[, WorkersInMarketNoGov := as.integer(.N), by = c(byvar, "Entity")]
+    ipGeo[, ShareNoGov := round(WorkersAtEstabNoGov/WorkersInMarketNoGov, 8)]
     ipGeo[, AreaLevel := GeoLevel[g]]
-    lshare <- unique(ipGeo[, c(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo"), 
-      "Entity", "Txrf",  "taxrefno",
-      "AreaLevel", 
-      "irp5_kerr_iweight_b", "Newgt.kerr","wgt.kerr",
-      "EachEmp", "EachNeEmp", "TotalEmp", "TotalNeEmp", 
-      "ShareEmp", "ShareNeEmp", 
-      "EachEmpG", "TotalEmpG", "ShareEmpG", 
-      "EachNeEmpG", "TotalNeEmpG", "ShareNeEmpG"
+	#### employment shares
+    lshare <- unique(ipGeo[, c(
+	    byvar, "Entity", "Txrf",  "taxrefno",
+        "AreaLevel", grepout("^Wo|^Sha", colnames(ipGeo))
       ), with = F])
     print(summary(lshare))
-    lshare[, HHI := sum(ShareNeEmp^(2), na.rm = T), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    lshare[, nHHI := (HHI-1/TotalEmp)/(1-1/TotalEmp)]
-    lshare[, HHIG := sum(ShareEmpG^(2), na.rm = T), by = 
-      eval(c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo")[1:g])]
-    lshare[, nHHIG := (HHIG-1/TotalEmpG)/(1-1/TotalEmpG)]
-    print(GeoLevel[g])
-    setkey(lshare, Txrf, busprov_geo, busdistmuni_geo, 
-      buslocmuni_geo, busmainplc_geo, HHI)
-    print(lshare[, c("busprov_geo", "busdistmuni_geo", 
-      "buslocmuni_geo", "busmainplc_geo", 
-      "Txrf", 
-      "TotalEmp", "EachEmp", "ShareEmp", 
-      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
-      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
-    print(lshare[1:30, c("busprov_geo", "busdistmuni_geo", 
-      "buslocmuni_geo", "busmainplc_geo", 
-      "Txrf", 
-      "TotalEmp", "EachEmp", "ShareEmp", 
-      "TotalNeEmp", "EachNeEmp", "ShareNeEmp", 
-      "HHI", "nHHI", "TotalEmpG", "TotalNeEmpG"), with = F])
+    lshare[, HHI := sum(Share^(2), na.rm = T), by = byvar]
+    lshare[, nHHI := (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket)]
+    lshare[, HHIG := sum(ShareNoGov^(2), na.rm = T), by = byvar]
+    lshare[, nHHIG := (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov)]
+    LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
   }
-  LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
-  setkey(LShare, Txrf, busprov_geo, busdistmuni_geo, 
+  LShare[, AreaLevel := factor(AreaLevel, levels = GeoLevel)]
+  LShare[, (geovars) := lapply(.SD, factor), .SDcols = geovars]
+  setkey(LShare, AreaLevel, Txrf, busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo, HHI)
   qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = 13)
 }
-#### LShare:  Txrf, EachNum, Share, HHI, ShareG, HHIG, AreaLevel for all entities 
+#### LShare:  Txrf, Share, ShareNoGov, HHI, HHINoGov, AreaLevel for all entities 
 #### in all area levels (main place/local municipality/district municipality/province)
 #### This will be merged to ipyr data using Txrf
 #### Before the merge, we check integrity of LShare.
+
+library(ggplot2)
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[is.na(busdistmuni_geo) & grepl('D', AreaLevel), ]
+LShare[grepl('M', AreaLevel) & WorkersInMarket < 500, ]
+g12 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep("blue", 4)) +
+  scale_color_manual(values = rep("blue", 4)) +
+  scale_x_continuous(trans = "log10") +
+  theme(legend.position = "none") +
+  facet_grid(AreaLevel ~ .)
+LShare <- qread(paste0(pathdata, "ShareHHI13.qs"))
+g13 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep("blue", 4)) +
+  scale_color_manual(values = rep("blue", 4)) +
+  scale_x_continuous(trans = "log10") +
+  theme(legend.position = "none") +
+  facet_grid(AreaLevel ~ .)
+ggsave(
+  paste0(pathdata, "HHI2012byAreaLevel.jpg")
+  , g12, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+ggsave(
+  paste0(pathdata, "HHI2013byAreaLevel.jpg")
+  , g13, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+#### HHI in 2012 show almost no observations at large HHI levels, in contrast to
+#### 2013 values. We should not use 2012 HHIs.
+```
+
+```{r create LShare panel}
+LS <- NULL
+for (yr in 12:22) {
+  ls <- qread(paste0(pathdata, "ShareHHI", yr, ".qs"))
+  ls[, taxyear := 2000+yr]
+  LS <- rbindlist(list(LS, ls))
+}
+```
+
+```{r }
 
 #### further checks
 LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
@@ -374,8 +552,11 @@ numtb[1:(length(numtb)-5)]
 tb
 LShare[Nums %in% numtb[1:10], 
   .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
-    irp5_kerr_iweight_b, Newgt.kerr,
-    EachNeEmp, TotalNeEmp, ShareNeEmp, HHI)]
+    WorkersAtEstab, WorkersAtEstabNoGov, 
+	WorkersInMarket, WorkersInMarketNoGov, Share, 
+	HHI)]
+
+
 
 ipyr <- qread(paste0(pathdata, "irp12.qs"), nthreads = 13)
 ipyr <- ipyr[grepl("A", natureofperson), ]
@@ -403,21 +584,24 @@ print(LShare[!is.na(Newgt.kerr),
   .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
     irp5_kerr_iweight_b, Newgt.kerr,
     EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
-library(ggplot2)
-ggplot(data = LShare[!is.na(Newgt.kerr), ], 
-  aes(x = ShareEmp)) +
-  geom_density(colour="blue", alpha = .1) + 
-  xlim(0, 1)
-ggplot(data = LShare[!is.na(Newgt.kerr) & ShareEmp != 0, ], 
-  aes(x = ShareNeEmp)) +
-  geom_density(colour="blue", alpha = .1) + 
-  xlim(0, 1)
-summary(LShare[!is.na(Newgt.kerr) & ShareNeEmp != 0, ShareNeEmp])
-ggplot(data = unique(LShare[!is.na(Newgt.kerr), .(busmainplc_geo, HHI)]), 
-  aes(x = HHI)) +
-  geom_density(colour="blue", alpha = .1) + 
-  xlim(0, 1)
+
 ```
+
+Copy 2013 location info &rarr; NA in 2012 location info
+
+* use taxrefno-uid maytch
+* this assumes no transfer between establishments in a firm in 2012-2013
+* in reality, there are transfers &rarr; measurement errors in location
+* but the proportion of transfers must be small 
+* benefits of location info outweigh the costs
+
+If there are workers working for multiple establishments ... no problem 
+
+* taxrefno-uid uniquely identifies matches (even if there is a transfer, it does not show up as an error, we will never know)
+* base of join = 2012 (fix rows of 2012), and find matches from 2013
+* see example shown in codes, 8 entries in 2012, 2013
+
+
 
 
 ```{r copy location information from 2013... to 2012}
@@ -442,31 +626,33 @@ rm(ipyrs)
 ####    ipyrs <- merge(ipyrs, ipyr, by = c("taxrefno", "uid"), 
 ####      all.x = T, allow.cartesian = T)
 #### So I will just merge 2013
+#### (Redundant: ipyrs, an object created by merging 2013, 14, 15)
 #### for (fyr in 13:15) {
 for (fyr in 13) {
   ipyr2 <- qread(paste0(pathdata, "irp", fyr, ".qs"), nthreads = 13)
-  ipyr2 <- ipyr2[, .(taxrefno, UID, busprov_geo, busdistmuni_geo, 
-    buslocmuni_geo, busmainplc_geo)]
+  ipyr2 <- unique(ipyr2[, .(taxrefno, UID, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo)])
+  #### future data location variables: bprov, bdist, bloc, bmain
   setnames(ipyr2, c("busprov_geo", "busdistmuni_geo", 
     "buslocmuni_geo", "busmainplc_geo"),
     c("bprov", "bdist", "bloc", "bmain"))
   ipyr2[, uid := gsub(" +$", "", UID)]
-  if (fyr == 13)
-    setkey(ipyr, taxrefno, uid) else 
-    setkey(ipyrs, taxrefno, uid)
+  if (fyr == 13) ipyr0 = copy(ipyr) else ipyr0 = copy(ipyrs)
+  setkey(ipyr0, taxrefno, uid)
   setkey(ipyr2, taxrefno, uid)
-  #### join data.tables ipyr(s), ipyr2 keeping rows of ipyr(s)
-  #### (keep the rows of ipyr(s), attach the matching rows of ipyr2)
-  #### "Take ipyr2, and subset it using the rows/keys in ipyr(s)"
-  if (fyr == 13)
-    ipyrs <- ipyr2[ipyr] else 
-    ipyrs <- ipyr2[ipyrs]
-  # if (fyr == 13)
-  #  ipyrs <- merge(ipyr, ipyr2, by = c("taxrefno", "uid"), 
-  #    all.x = T, allow.cartesian = T) else 
-  #  ipyrs <- merge(ipyrs, ipyr, by = c("taxrefno", "uid"), 
-  #    all.x = T, allow.cartesian = T)
+  #### join data.tables ipyr0, ipyr2 keeping rows of ipyr0 (2012 or base)
+  #### (keep the rows of ipyr0, attach the matching rows of ipyr2)
+  #### "Take ipyr2, and subset it using the rows/keys in ipyr0"
+  #### Join by taxrefno-uid as pivots
+  ipyrs <- ipyr2[ipyr0]
+  #### and copy bmain (2013) ==> busmainplc_geo (2012)
+  #### Below gives multiple matches because there can be more than one
+  #### establishment per firm and individual can move between them
+  #### # ipyrs <- merge(ipyr0, ipyr2, by = c("taxrefno", "uid"), 
+  #### #   all.x = T, allow.cartesian = T)
   cat(fyr, "\n")
+  #### Empty entries that can be copied from future data
+  #### province, district muni, local muni, main place
   ii.prov <- ipyrs[, 
     (busprov_geo == "" | busprov_geo == "EXCEPTION")
     & (bprov != "" & bprov != "EXCEPTION") ]
@@ -481,6 +667,7 @@ for (fyr in 13) {
     & (bmain != "" & bmain != "EXCEPTION") ]
   cat(fyr, "\n")
   print(table(ii.prov))
+  #### dist muni == NA <==> local muni == NA
   print(table(ii.dist))
   print(table(ii.loc))
   print(table(ii.main))
@@ -490,13 +677,14 @@ for (fyr in 13) {
       buslocmuni_geo, bloc,
       busmainplc_geo, bmain)])
   #### copy from future data
-  if (fyr == 13) ipyrs[, LocInfoCopiedFrom := 0L]
+  if (fyr == 13) ipyrs[, c("LocInfoCopiedFrom", 
+    "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
   ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
     LocInfoCopiedFrom := as.integer(fyr)]
-  ipyrs[ii.prov, busprov_geo := bprov]
-  ipyrs[ii.dist, busdistmuni_geo := bdist]
-  ipyrs[ii.loc, buslocmuni_geo := bloc]
-  ipyrs[ii.main, busmainplc_geo := bmain]
+  ipyrs[ii.prov, c("busprov_geo",     "ProvCopied") := .(bprov, 1L)]
+  ipyrs[ii.dist, c("busdistmuni_geo", "DisCopied" ) := .(bdist, 1L)]
+  ipyrs[ii.loc,  c("buslocmuni_geo",  "LocCopied" ) := .(bloc,  1L)]
+  ipyrs[ii.main, c("busmainplc_geo",  "MaiCopied" ) := .(bmain, 1L)]
   setnames(ipyrs,
       c("bprov", "bdist", "bloc", "bmain"), 
       paste0(c("bprov", "bdist", "bloc", "bmain"), ".", fyr)
@@ -505,21 +693,56 @@ for (fyr in 13) {
 fyr
 ipyrs[, .(taxrefno, uid, busprov_geo, bprov.13, 
   busmainplc_geo, bmain.13)]
-ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
-  .(taxrefno, uid, busprov_geo, bprov.13, 
-  busmainplc_geo, bmain.13)][
-  duplicated(uid) | duplicated(uid, fromLast=T)][
-  order(uid, busmainplc_geo, taxrefno)]
-tb <- table(ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
-  .(taxrefno, uid, busprov_geo, bprov.13, 
-  busmainplc_geo, bmain.13)][
-  duplicated(uid) | duplicated(uid, fromLast=T)][, 
-  uid])
-unique(ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
-  .(taxrefno, uid, busprov_geo, bprov.13, 
-  busmainplc_geo, bmain.13)][
-  duplicated(uid) | duplicated(uid, fromLast=T)][, 
-  (uid=uid)])[grepl("(.)\1{5,}", uid)]
+dupuid <- ipyrs[
+  ii.prov | ii.dist | ii.loc | ii.main, 
+    .(
+      taxrefno, uid, busprov_geo, bprov.13, busmainplc_geo, bmain.13
+    )
+  ][
+    duplicated(uid) | duplicated(uid, fromLast=T), 
+  ][, 
+    .(taxrefno, uid=uid)
+  ]
+dupuid[, n := .N, by = uid]
+dupuid[order(uid), uid]
+print(dupuid[order(uid), uid][1000:1100], quote = F)
+#### duplication is not AAAAAA..., BBBBB.....
+unique(dupuid[grepl("(.)\1{5,}", uid), uid])
+#### Example: 4 entries out of 8 entries are copied
+####   2012: All 8 entries are missing location info
+####   2013: 7 out of 8 entries have location info, 4 out of 7 match with 2012
+####   1 in PE of Eastern Cape, all others are around Capetown in WC
+####     ==> Cannot assume this person worked only around Capetown
+ii <- 10
+ipyrs[uid %in% unique(dupuid[taxrefno != "" & n == 4, uid])[ii], .(taxrefno,
+  busprov_geo, busmainplc_geo, ProvCopied, MaiCopied,
+  uid, dateofbirth, periodemployedfrom, periodemployedto, 
+  kerr_income, ptrs_income, amt3616, source)]
+ipyrs[uid %in% unique(dupuid[taxrefno != "" & n == 4, uid])[ii], 
+  .(taxrefno, busprov_geo, busmainplc_geo, ProvCopied, MaiCopied, uid)]
+ipyr2[uid %in% unique(dupuid[taxrefno != "" & n == 4, uid])[ii], 
+  .(taxrefno, bprov, bmain, uid)]
+
+#### duplicted uid entries have many missing taxrefno...
+table(ipyrs[uid %in% unique(dupuid[, uid]), taxrefno == ""])
+#### Note: many empty taxrefno in irp5 (2012)
+#### table(ipyr[, taxrefno == ""])
+####   FALSE    TRUE 
+#### 8586068 1407896 
+ipyrs[taxrefno != "" & uid %in% unique(dupuid[n == 4, uid]), 
+  .(taxrefno,busprov_geo, busmainplc_geo, uid, 
+    dateofbirth, periodemployedfrom, periodemployedto, 
+    kerr_income, ptrs_income, amt3616, source)][order(taxrefno, uid), ]
+
+
+#### 
+ipyrs[uid %in% dupuid[order(uid)][1100], .(taxrefno,
+  busprov_geo, busmainplc_geo, uid, dateofbirth, periodemployedfrom, periodemployedto, 
+  kerr_income, ptrs_income, amt3616, source)]
+duplicated(ipyrs[uid %in% dupuid[order(uid)][1100], ][1:3, ])
+ipyr[uid %in% dupuid[order(uid)][1100], .(taxrefno,
+  busprov_geo, busmainplc_geo, uid, dateofbirth, periodemployedfrom, periodemployedto, 
+  kerr_income, ptrs_income, amt3616, source)]
 #### uid anomalous entries: AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ
 #### these are 1.25% of total number of rows
 #### one large employer (with 70K+ jobs) contributes 
@@ -535,6 +758,7 @@ ipyrs[ii.prov | ii.dist | ii.loc | ii.main,
   .(taxrefno, uid, busprov_geo, bprov.13, 
   busmainplc_geo, bmain.13)][uid %in% repetetive, ][
   order(uid), ]
+
 tb <- table(ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
   .(taxrefno, uid, busprov_geo, bprov.13, 
   busmainplc_geo, bmain.13)][uid %in% repetetive, taxrefno])

@@ -1,0 +1,81 @@
+
+# Create irp5 panel
+
+* Read IRP5_20yr_cleaned.dta (ver 5 beta) 
+* Read IRP5_20yr_cleaned_best_geodata.dta (location info)
+   * Merge to copy location info
+   * Restrict: 
+      1. nature of person = an individual
+      1. taxrefno != empty
+* Count number of jobs (workers)
+* Define `Txrf`, `Entity`, `Nationality`
+
+```{r path, eval = T}
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+library(qs); library(data.table); library(ggplot2)
+```
+
+```{r create irp5 panel by read irp5v5beta best geo and create irp5yr files, eval = F}
+library(qs)
+library(data.table)
+library(readstata13)
+irp5 <- NULL
+for (yr in 9:23) {
+  if (yr < 10) yr <- paste0("0", yr)
+  ## Below code is run only once: Start ##
+  # irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, "_cleaned.dta"))
+  # ipyr <- data.table(irpyr)
+  # rm(irpyr)
+  # qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  # irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, 
+  #   "_cleaned_best_geodata.dta"))
+  # ipb <- data.table(irpyr)
+  # qsave(ipb, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  # # merge best geocode to irpYR.qs
+  # ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  # ipb <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  # geonames <- grepout("^bus.*geo$", colnames(ipyr))
+  # setnames(ipyr, geonames, paste0("OLD", geonames))
+  # ipbyr <- ipyr[ipb, , on = grepout("irp.*aid", colnames(ipb))]
+  # nrow(ipbyr[OLDbusmainplc_geo == "" & busmainplc_geo != "", ])
+  # qsave(ipbyr, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## Below code is run only once: End ##
+  ipyr <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 8)
+  ## Keep only nature of person is "an individual"
+  ipyr <- ipyr[grepl("A", natureofperson), ]
+  ## Drop obs with missing taxrefno
+  ipyr <- ipyr[taxrefno != "", ]
+  ## Note that there are header lines with taxrefno = "NULL", but they can be dropped later
+  irp5yr <- ipyr[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+    busmainplc_geo, irp5it3aid, taxrefno, UID, Nationality, 
+    payereferenceno, gender, dateofbirth, taxyear, 
+    periodemployedfrom, periodemployedto, kerr_income)]
+  ## Num: Number of employees in a firm
+  irp5yr[, Num := as.integer(.N), by = .(busprov_geo,
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+  irp5yr[, Nationality := "sa"]
+  irp5yr[passportno != "", Nationality := "non-sa"]
+  irp5yr[, Nationality := factor(Nationality, levels = c("sa", "non-sa"))]
+  #### 1. Use payereferenceno to count the total
+  ####    >>> This is a wrong way to go: payereferenceno has many misreporting <<<
+  #### 2. Compute the shares of each firms
+  ####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+  ####   b. Compute the shares of each firms including "gov entity" thence HHI
+  irp5yr[, Txrf := taxrefno]
+  #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+  irp5yr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+  irp5yr[, Entity := "private"]
+  irp5yr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+  irp5yr[, Entity := factor(Entity, levels = c("private", "gov"))]
+  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)
+  irp5 <- rbindlist(list(irp5, irp5yr))
+}
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
+```
+
+

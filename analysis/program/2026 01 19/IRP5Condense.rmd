@@ -1,0 +1,294 @@
+
+#  Read IRP5_20yr_cleaned.dta (ver 5 beta) and save by year
+
+```{r path, eval = T}
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
+pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+library(qs); library(data.table); library(ggplot2)
+```
+Rread irp5 data by year
+
+* read from stata dta
+* dropped if
+    * natureofperson != "A"
+    * taxrefno == ""
+#### Note: many empty taxrefno in irp5 (2012) before dropping
+#### table(ipyr[, taxrefno == ""])
+####   FALSE    TRUE 
+#### 8586068 1407896 
+
+
+```{r read irp5v5beta best geo and create irp5yr files, eval = F}
+library(qs)
+library(data.table)
+library(readstata13)
+for (yr in 9:23) {
+  if (yr < 10) yr <- paste0("0", yr)
+  ## Below code is run only once: Start ##
+  # irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, "_cleaned.dta"))
+  # ipyr <- data.table(irpyr)
+  # rm(irpyr)
+  # qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  # irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, 
+  #   "_cleaned_best_geodata.dta"))
+  # ipb <- data.table(irpyr)
+  # qsave(ipb, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  # # merge best geocode to irpYR.qs
+  # ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  # ipb <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  # geonames <- grepout("^bus.*geo$", colnames(ipyr))
+  # setnames(ipyr, geonames, paste0("OLD", geonames))
+  # ipbyr <- ipyr[ipb, , on = grepout("irp.*aid", colnames(ipb))]
+  # nrow(ipbyr[OLDbusmainplc_geo == "" & busmainplc_geo != "", ])
+  # qsave(ipbyr, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## Below code is run only once: End ##
+  ipyr <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 8)
+  ## Keep only nature of person is "an individual"
+  ipyr <- ipyr[grepl("A", natureofperson), ]
+  ## Drop obs with missing taxrefno
+  ipyr <- ipyr[taxrefno != "", ]
+  ## Note that there are header lines with taxrefno = "NULL", but they can be dropped later
+  ## Num: Number of employees in a firm
+  ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+    busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+  ipyr[, Num := 0L]
+  ipyr[, Nationality := "sa"]
+  ipyr[passportno != "", Nationality := "non-sa"]
+  ipyr[, Nationality := factor(Nationality, levels = c("sa", "non-sa"))]
+  irp5yr <- ipyr[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+    busmainplc_geo, irp5it3aid, taxrefno, UID, Nationality, 
+    payereferenceno, gender, dateofbirth, taxyear, 
+    periodemployedfrom, periodemployedto,
+    #### a3601_income: basic salary
+    Num, kerr_income, ptrs_income, a3601_income)]
+  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)
+}
+```
+
+# Copy 2013 location info &rarr; NA in 2012 location info
+
+* use taxrefno-uid match
+* this assumes no transfer between establishments in a firm in 2012-2013
+* in reality, there are transfers &rarr; measurement errors in location
+* but the proportion of transfers must be small 
+* benefits of location info outweigh the costs
+
+If there are workers working for multiple establishments ... no problem 
+
+* taxrefno-uid uniquely identifies matches (even if there is a transfer, it does not show up as an error, we will never know)
+* base of join = 2012 (fix rows of 2012), and find matches from 2013
+* see example shown in codes, 8 entries in 2012, 2013
+
+Note: Firms with anomalous repetetive uids (AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ) are dropped
+
+
+```{r copy location information from 2013... to 2012}
+#### code "copy location"
+#### Read data
+#### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
+ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
+ipyr[, uid := gsub(" +$", "", UID)]
+rm(ipyrs)
+#### uid anomalous entries: AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ
+#### these are 0.035% of total number of rows
+#### one large employer (with 4632 jobs) contributes 
+#### DO NOT use these uids when copying location from future data
+dupuid <- ipyr[
+    duplicated(uid) | duplicated(uid, fromLast=T), 
+    .(taxrefno, uid=uid)
+  ]
+dupuid[, n := .N, by = .(taxrefno, uid)]
+dupuid <- unique(dupuid[order(n, decreasing = T), ])
+dupuid[n > 10, ]
+print(unique(dupuid[, uid])[1:30], quote = F)
+#### repetitive: [A-Z]*8
+repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]
+tbr <- table(repetetive)
+tbr <- tbr[order(tbr, decreasing=T)]
+repetetive <- unique(repetetive)
+#### ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
+####   .(taxrefno, uid, busprov_geo, bprov.13, 
+####   busmainplc_geo, bmain.13)][uid %in% repetetive, ][
+####   order(uid), ]
+#### firms with repetetive uids and their counts
+tb <- table(ipyr[uid %in% repetetive, taxrefno])
+tb <- tb[order(tb, decreasing=T)]
+tb[1:20]
+#### repetetive entries are concentrated in 3 firms
+dupuid[1:20, ]
+dupuid[taxrefno %in% names(tb)[1:3], ][1:20, ]
+#### firms with 800 same uids: using same uid for all workers
+ipyr[uid %in% dupuid[1, uid],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)]
+#### same repetetive entries (AAAAA...) are found across firms
+ipyr[uid %in% names(tbr)[1:20],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ]
+#### Drop firms with repetetive entries if they are above 10
+ii <- 10
+ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ]
+(dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ])
+table(dropthese[, uid])
+table(dropthese[, .(uid, taxrefno)])
+qsave(ipyr, paste0(pathdata, "ipyrs.qs"), nthreads = 13)
+ipyr <- ipyr[!(taxrefno %in% dropthese[, taxrefno]), ]
+#### Below gives non-uique match error for fyr > 13
+####  ipyrs <- ipyr2[ipyrs]
+#### Below gives memory error for fyr > 13
+####    ipyrs <- merge(ipyrs, ipyr, by = c("taxrefno", "uid"), 
+####      all.x = T, allow.cartesian = T)
+#### So I will just merge 2013
+#### (Redundant: ipyrs, an object created by merging 2013, 14, 15)
+#### for (fyr in 13:15) {
+for (fyr in 13) {
+  ipyr2 <- qread(paste0(pathdata, "irp5", fyr, ".qs"), nthreads = 13)
+  ipyr2 <- unique(ipyr2[, .(taxrefno, UID, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo)])
+  #### future data location variables: bprov, bdist, bloc, bmain
+  setnames(ipyr2, c("busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo"),
+    c("bprov", "bdist", "bloc", "bmain"))
+  ipyr2[, uid := gsub(" +$", "", UID)]
+  if (fyr == 13) ipyr0 = copy(ipyr) else ipyr0 = copy(ipyrs)
+  setkey(ipyr0, taxrefno, uid)
+  setkey(ipyr2, taxrefno, uid)
+  #### join data.tables ipyr0, ipyr2 keeping rows of ipyr0 (2012 or base)
+  #### (keep the rows of ipyr0, attach the matching rows of ipyr2)
+  #### "Take ipyr2, and subset it using the rows/keys in ipyr0"
+  #### Join by taxrefno-uid as pivots
+  ipyrs <- ipyr2[ipyr0]
+  #### and copy bmain (2013) ==> busmainplc_geo (2012)
+  #### Below gives multiple matches because there can be more than one
+  #### establishment per firm and individual can move between them
+  #### # ipyrs <- merge(ipyr0, ipyr2, by = c("taxrefno", "uid"), 
+  #### #   all.x = T, allow.cartesian = T)
+  cat(fyr, "\n")
+  #### Empty entries that can be copied from future data
+  #### province, district muni, local muni, main place
+  ii.prov <- ipyrs[, 
+    (busprov_geo == "" | busprov_geo == "EXCEPTION")
+    & (bprov != "" & bprov != "EXCEPTION") ]
+  ii.dist <- ipyrs[, 
+    (busdistmuni_geo == "" | busdistmuni_geo == "EXCEPTION")
+    & (bdist != "" & bdist != "EXCEPTION") ]
+  ii.loc <- ipyrs[, 
+    (buslocmuni_geo == "" | buslocmuni_geo == "EXCEPTION")
+    & (bloc != "" & bloc != "EXCEPTION") ]
+  ii.main <- ipyrs[, 
+    (busmainplc_geo == "" | busmainplc_geo == "EXCEPTION")
+    & (bmain != "" & bmain != "EXCEPTION") ]
+  cat(fyr, "\n")
+  print(table(ii.prov))
+  #### dist muni == NA <==> local muni == NA
+  print(table(ii.dist))
+  print(table(ii.loc))
+  print(table(ii.main))
+  print(ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
+    .(taxrefno, uid, busprov_geo, bprov, 
+      busdistmuni_geo, bdist,
+      buslocmuni_geo, bloc,
+      busmainplc_geo, bmain)])
+  #### copy from future data
+  if (fyr == 13) ipyrs[, c("LocInfoCopiedFrom", 
+    "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
+  ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
+    LocInfoCopiedFrom := as.integer(fyr)]
+  ipyrs[ii.prov, c("busprov_geo",     "ProvCopied") := .(bprov, 1L)]
+  ipyrs[ii.dist, c("busdistmuni_geo", "DisCopied" ) := .(bdist, 1L)]
+  ipyrs[ii.loc,  c("buslocmuni_geo",  "LocCopied" ) := .(bloc,  1L)]
+  ipyrs[ii.main, c("busmainplc_geo",  "MaiCopied" ) := .(bmain, 1L)]
+  setnames(ipyrs,
+      c("bprov", "bdist", "bloc", "bmain"), 
+      paste0(c("bprov", "bdist", "bloc", "bmain"), ".", fyr)
+    )
+}
+fyr
+ipyrs[, .(taxrefno, uid, busprov_geo, bprov.13, 
+  busmainplc_geo, bmain.13)]
+dupuid2 <- ipyrs[
+  ii.prov | ii.dist | ii.loc | ii.main, 
+    .(
+      taxrefno, uid, busprov_geo, bprov.13, busmainplc_geo, bmain.13
+    )
+  ][
+    duplicated(uid) | duplicated(uid, fromLast=T), 
+  ][, 
+    .(taxrefno, uid=uid)
+  ]
+dupuid2[, n := .N, by = uid]
+dupuid2[order(uid), uid]
+print(dupuid2[order(uid), uid][1000+1:100], quote = F)
+unique(dupuid2[grepl("(.)\1{5,}", uid), uid])
+#### Example: 4 entries out of 8 entries are copied
+####   2012: All 8 entries are missing location info
+####   2013: 7 out of 8 entries have location info, 4 out of 7 match with 2012
+####   1 in PE of Eastern Cape, all others are around Capetown in WC
+####     ==> Cannot assume this person worked only around Capetown
+ii <- 10
+#### J
+#### X
+#### C
+#### X
+#### B
+#### B
+#### T
+#### G
+#### B
+#### K
+#### C
+#### T
+#### K
+ipyrs[uid %in% unique(dupuid2[n == 4, uid])[ii], .(taxrefno,
+  busprov_geo, busmainplc_geo, ProvCopied, MaiCopied,
+  uid, dateofbirth, periodemployedfrom, periodemployedto, 
+  kerr_income #, ptrs_income, amt3616, source
+  )]
+ipyrs[uid %in% unique(dupuid2[n == 4, uid])[ii], 
+  .(taxrefno, busprov_geo, busmainplc_geo, ProvCopied, MaiCopied, uid)]
+ipyr2[uid %in% unique(dupuid2[taxrefno != "" & n == 4, uid])[ii], 
+  .(taxrefno, bprov, bmain, uid)]
+qsave(ipyrs, paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)
+```
+
+
+```{r create long format of irp5, eval = F}
+library(qs)
+library(data.table)
+irp5 <- NULL
+for (yr in 9:22) {
+  if (yr < 10) yr <- paste0("0", yr)
+  if (yr == 12)  
+    irp5 <- rbindlist(list(irp5, 
+      qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)), use.names = T, fill = T) else 
+    irp5 <- rbindlist(list(irp5, 
+      qread(paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)), use.names = T, fill = T)
+}
+irp5[, Num := as.integer(.N), by = .(busprov_geo,
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+    taxrefno, taxyear)]
+#### 1. Use payereferenceno to count the total
+####    >>> This is a wrong way to go: payereferenceno has many misreporting <<<
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+irp5[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+irp5[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+irp5[, Entity := "private"]
+irp5[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+irp5[, Entity := factor(Entity, levels = c("private", "gov"))]
+irp5Clean <- irp5[!(taxrefno %in% dropthese[, taxrefno]), ]
+qsave(irp5, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+qsave(irp5Clean, paste0(pathdata, "irp5.qs"), nthreads = 13)
+
+```
+
+
