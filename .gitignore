@@ -12,5 +12,9 @@ analysis/*png
 analysis/*html
 analysis/*_cache
 analysis/site_libs
+analysis/program/2026*
+analysis/program/other
+analysis/program/IRP5Condense_WithTaxrefno.rmd
+analysis/program/Deliverable*
 source/**/
 program0/

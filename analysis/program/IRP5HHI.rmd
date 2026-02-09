@@ -1,0 +1,943 @@
+---
+title: "Compute HHI and FA"
+date: "`{r} format(Sys.time(), "%Y %m %d %R")`"
+output: html_document
+#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5HHI.rmd"))
+---
+```{css, echo=F}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+```
+
+# What we do in the project
+
+1. Create merged panel using stata: "Data file" 
+   * Use the same definitions as Michael's codes
+   * But include `imp_mic_sic7_3d == 16` industry
+   * Done in other do file
+   * Save Data file in tsv format to read in R
+1. Compute HHI using CIT-IRP5 at various levels: "HHI file"
+   * Use CIT-IRP5_2012 HHI in 2012
+   * Verify if counts are not erroneous 
+1. "Analysis file" = Data file (panel 2009-2022) + HHI file
+   * Merge at various levels 
+   * Need main place level analysis for larger statistical power
+1. Descriptive statistic
+1. Hypothesis testing
+   * % Employment change = a + b1*FA + b2*HHI + b3*(FA*HHI) + FEs + e
+   * Test b3 > 0 labor market power mitigates disemployment impacts
+   * Expect b1<0 or b1 = 0
+   * No prior for the sign of b2 
+
+# Setup
+
+```{r setup}
+library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = F,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+table0 <- function(x) table(x, useNA = "ifany")
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+```
+```{r path, eval = T}
+#### path <- "Z:/Workbenches/epguest/seiro_ito/"
+#### pathdataCITIRP <- "Z:/Master Data/CIT-IRP5 Panel/"
+#### pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+library(qs); library(data.table); library(ggplot2)
+```
+
+
+* FA does not require location info
+   * We use FA data that have jobs and employment as the base
+* HHI requires location info, so we use `irp5M` that have information of Main Place
+   * Whenever location information is updated, we need to compute HHI
+   * To update location information, need to update irp5.qs &rarr; irp5M.qs &rarr; LShareHHI.qs
+
+
+
+# Fraction affected
+
+1. Use IRP5 to count total number of workers, number of affected, FA = affected/total for all years
+1. Need to use unfiltered data like `irp5.qs` (except for NatureOfPer == A and empty taxrefno) 
+   * Entries of irp5 look naturally balanced across years
+   * Many NAs in location info in early years &rArr; loss of sample in early years
+
+```{r read irp5 file, eval = F}
+#### irp5.qs is created in IRP5Condense.rmd
+library(qs)
+library(data.table)
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+```
+
+```{r fraction affected for all years, eval = F}
+#### code "compute FA"
+library(qs)
+library(data.table)
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+#### Takes 20-30 mins: Start  ####
+#### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+#### ipyrc0 <- irp5M[
+#### !duplicated(irp5M[, .(busmainplc_geo, taxrefno, UID, 
+#### DateBirth, DateStart, DateEnd,
+#### kerr_income, ptrs_income, a3601_income)]), 
+#### ]
+#### Takes 20-30 mins: End  ####
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+aggsummary <- NULL
+for (yr in 8:22) { 
+  ipyrc <- irp5[taxyear == 2000+yr, ]#[1:100000, ]
+  #### Compute job duration and monthly income
+  ####   (DateEnd-DateStart2012)/30.5
+  ####   a3601_income/DurationMonth
+  ipyrc[, DateStart20yr := DateStart]
+  #### If DateStart is before start of taxyear, March 1 
+  ####  ==> DateStart20yr = March 1 of taxyear-1
+  ipyrc[DateStart < as.IDate(paste0(2000+yr-1, "/03/01")), 
+          DateStart20yr := as.IDate(paste0(2000+yr-1,"/03/01"))]
+  #### IncomeMonth = monthly income, duration is measured as the same taxyear
+  ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
+  ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
+  #### DurationMonth can be zero if work is only for 1 day
+  ipyrc[DateStart == DateEnd, c("DurationMonth", "DurMonthMarch") := round(1/30.5, 3)]
+  lapply(ipyrc[, .(DurationMonth, DurMonthMarch)], 
+    quantile, c(seq(0, 1, .25)[-5], .985, .995, 1), na.rm = T)
+  #### DateStart too old for some rows (typo for previous year or actual starting dates)  
+  #### DurationMonth == DurMonthMarch for these entries
+  #### Set to 20 because typo for prev Ma 1 will give DurationMonth==24
+  print(ipyrc[DurationMonth > 20, 
+      .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+  ipyrc[DurationMonth > 20, DurationMonth := DurMonthMarch]
+  #### typos 
+  print(ipyrc[DurMonthMarch > 100, 
+    .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+  ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
+  setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+  #### DateStart2, DateEnd2: Dates for 2nd job in the same firm
+  ipyrc[, DateStart2 := shift(DateStart, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
+  ipyrc[,   DateEnd2 := shift(DateEnd, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
+  ipyrc[, c("TDurationMonth", "DJobDurationMonth") := 0]
+  #### If job2 after job1 ends: 
+  #### Double work duration: DateEnd  - DateStart2
+  ####  Total work duration: DateEnd2 - DateStart20yr
+  ####  <----job1---->
+  ####           <----job2---->
+  ####  DateStart20yr < DateStart2
+  ####  DateEnd < DateEnd2
+  ####  DateEnd > DateStart2
+  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+    DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
+    #### Negative TDurationMonth for 35 entries for 2012 
+    #### because their reported DateEnd2 is before 2011/03/01
+  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+    TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
+  #### If job2 ends before job1 ends: 
+  #### Double work duration: DateEnd2 - DateStart2
+  ####  Total work duration: DateEnd  - DateStart20yr
+  ####  <----------job1---------->
+  ####           <----job2---->
+  ####  DateStart20yr < DateStart2
+  ####  DateEnd > DateEnd2
+  ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
+  ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
+  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+         DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
+  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+         TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
+  #### TDurationMonth = Total duration of jobs
+  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+    by = .(Txrf, taxyear, UID)]
+  ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+  ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
+  ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
+  #### TIncomeMonth = sum of monthly income across jobs
+  ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
+  #### check data
+  summary(ipyrc[busmainplc_geo != "" & Txrf != "" & NumJobsPerWorker > 1, 
+    .(busmainplc_geo, Txrf, UID, uid, NumJobsPerWorker, 
+      DateStart, DateEnd,
+      DateStart2, DateEnd2, DurationMonth,DurMonthMarch, 
+      DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+      a3601_income, 
+      kerr_income, IncomeMonth, TIncomeMonth)])
+  print(ipyrc[NumJobsPerWorker > 10, 
+    .(busmainplc_geo, Txrf, UID, uid, NumJobsPerWorker, 
+      DateStart, DateEnd,
+      DateStart2, DateEnd2, DurationMonth, 
+      DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+      a3601_income, IncomeMonth, TIncomeMonth)], topn = 30)
+  ipyrc[busmainplc_geo != "" & Txrf != "", 
+    .(busmainplc_geo, taxrefno, DateStart, DateEnd, 
+      DurationMonth, a3601_income, IncomeMonth)]
+  #### Find sub MW workers and define fraction affected
+  #### We can use IncomeMonth or TIncomeMonth
+  ####   PropToMW: Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
+  ####      SubMW: PropToMW < 1 & IncomeMonth > 0
+  ####  NumSubMW : number of entries with SubMW == 1L
+  ####  NumSubMWe: number of unique UID entries with SubMW == 1L
+  ####       Jobs: number of entries with IncomeMonth > 0
+  ####  Employees: number of unique UID with IncomeMonth > 0
+  ####        FA : NumSubMW/Jobs (FA in jobs)
+  ####        FAe: NumSubMWe/Employees (FA in employment)
+  #### Note: uid is NA in some entries, UID is not 
+  ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
+  ipyrc[, SubMW     := as.integer(PropToMW < 1 & IncomeMonth > 0)]
+  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), by = .(Txrf, taxyear)]
+  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), by = .(Txrf, taxyear)]
+  ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), by = .(Txrf, taxyear)]
+  ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), by = .(Txrf, taxyear)]
+  ipyrc[, FA        := round(NumSubMW/Jobs, 6)]
+  ipyrc[, FAe       := round(NumSubMWe/Employees, 6)]
+  ####ipyrc[grepl("^BCJXBCC", Txrf), 
+  ####  .(busmainplc_geo, taxyear, 
+  ####    Txrf, uid, UID, DateStart, DurationMonth, 
+  ####    IncomeMonth, SubMW, NumSubMW, Jobs, FA,
+  ####    NumSubMWe, Employees, FAe)]
+  #### Fin year 2013 = 2012 Mar 01 - 2013 Feb 29
+  ####  <==> 0L for DateEnd < 2012 Mar 01 or DateStart >= 2013 Mar 01 
+  #### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
+  ipyrc[, FinYr20yr := 1L]
+  ipyrc[
+    DateEnd    < as.IDate(paste0(2000+(yr-1), "/03/01")) |
+    DateStart >= as.IDate(paste0(2000+yr,     "/03/01")), 
+    FinYr20yr := 0L]
+  #### Select variables to keep
+  FAdata <- ipyrc[, .(
+      busprov_geo, 
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+      taxrefno, Txrf, payereferenceno, UID, uid,
+      DurationMonth, DurMonthMarch,
+      a3601_income, IncomeMonth, NumJobsPerWorker,
+      PropToMW, SubMW, Jobs, NumSubMW, 
+      Employees, NumSubMWe,  
+      FA, FAe
+    )]
+  #### summary(FAdata)
+  #### summary(FAdata[is.na(FA), .(FA, Jobs, a3601_income, IncomeMonth, DurationMonth)])
+  FAdata[, Size := "micro"]
+  FAdata[Employees > 1 & Employees <= 10, Size := "small"]
+  FAdata[Employees > 10 & Employees <= 50, Size := "medium"]
+  FAdata[Employees > 50, Size := "large"]
+  FAdata[is.na(Employees) | Employees == 0, Size := NA]
+  FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
+  #### Number of affected workers in aggregates
+  ag1 <- ipyrc[, .(
+      TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
+    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
+    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+    )
+    ][, .(
+      TotalEmployees, TotalSubMWWorkers, 
+      AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+      TotalFirmsWithEmployees, TotalAffectedFirms,
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+    )]
+  ag1[, taxyear := 2000+yr]
+  aggsummary <- rbindlist(list(aggsummary, ag1), use.names = T, fill = T)
+  ag2 <- ipyrc[, .(
+      TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
+    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
+    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+    ), 
+    by = .(taxyear, busprov_geo)
+    ][, .(
+      busprov_geo, TotalEmployees, TotalSubMWWorkers, 
+      AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+      TotalFirmsWithEmployees, TotalAffectedFirms,
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+    )]
+  ag2[, taxyear := 2000+yr]
+  aggsummary <- rbindlist(list(aggsummary, ag2), use.names = T, fill = T)
+  FAdata[, taxyear := 2000+yr]
+  if (yr < 10) yr <- paste0("0", yr)
+  qsave(FAdata, paste0(pathdata, "FA", yr, ".qs"), nthreads = 13)
+} 
+qsave(aggsummary, paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
+aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
+```
+
+```{r create FA panel, eval = F}
+FAD <- NULL
+for (yr in 8:22) {
+  if (yr < 10)  yr <- paste0("0", yr)
+  FAdata <- qread(paste0(pathdata, "FA", yr, ".qs"))
+  FAdata[, taxyear := 2000+as.numeric(yr)]
+  FAD <- rbindlist(list(FAD, FAdata))
+}
+qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = 13)
+
+#### table(FAD[,taxyear])
+#### 2009     2010     2011     2012     2013     2014     2015     2016     2017     2018     2019     2020     2021     2022 
+####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
+```
+
+```{r Fadata is first lines of FAD, eval = F}
+FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
+Fadata <- FAD[, grepout("^bus|^tax[ry]|^Tx|Mon|[nN]um|Jo|Emp|FA", colnames(FAD)), with = F]
+Fadata[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
+table(Fadata[, taxyear])
+####  2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
+#### 23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
+#### Drop date errors (Negative and over duration)
+qsave(Fadata, paste0(pathdata, "FAFirstRow.qs"), nthreads = 13)
+Fadata <- qread(paste0(pathdata, "FAFirstRow.qs"), nthreads = 13)
+fadata <- Fadata[0 <= DurMonthMarch & DurMonthMarch <= 12, ]
+nrow(Fadata); nrow(fadata) # reduced 1.2M rows
+#### Merge industry code, taking fadata as base
+inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+fadata2 <- inda[fadata, on = "taxrefno"]
+fadata3 <- fadata2[busmainplc_geo != "", ]
+faa <- fadata3[Crop == 1L | Animal == 1L | Forest == 1L, ]
+setkey(faa, taxrefno)
+faa[, SubDiv := "Crop"]
+faa[Animal == 1L, SubDiv := "Animal"]
+faa[Forest == 1L, SubDiv := "Forest"]
+faa[, SubDiv := factor(SubDiv, levels = c("Crop", "Animal", "Forest"))]
+faa[, .(TotalJobs = sum(Jobs, na.rm = T)), by = .(taxyear, SubDiv)][order(SubDiv, taxyear)]
+faa[, FApositive := 0L]
+faa[taxyear < 2014, FApositive:= as.integer(FA > 0)]
+faa[, FApositive := FApositive[FApositive == 1L][1], by = taxrefno]
+faa[is.na(FApositive), FApositive := 0L]
+faa[, Sample := "Unexposed"]
+faa[FApositive == 1L, Sample := "Exposed"]
+faa[, Sample := factor(Sample)]
+#### faa is almost unique at establishment level
+table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
+#### FALSE  TRUE 
+#### 59627     5 
+qsave(faa, paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+```
+
+```{r plot FAs by size, eval = F}
+#### possible duplicates with different local municipality names
+ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
+   & busmainplc_geo != ""]
+ii1 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )])
+ii2 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )], fromLast = T)
+table(data.table(nonNA=ii0, duplicates=ii1))
+FAdata[ii0 & (ii1 | ii2), ]
+table(duplicated(FAdata[ii0 & !ii1, ]))
+#### plot sensitivity to XThreshold (double job months cutoff)
+library(ggplot2)
+library(cowplot)
+g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  ggtitle("Fraction of affected jobs")+
+  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
+  scale_color_manual(values = "blue")
+g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FAe.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  ggtitle("Fraction of affected workers")+
+  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
+  scale_color_manual(values = "red")
+gs <- plot_grid(
+  g1, g2,
+  labels = c('a.', 'b.'),
+  align="h"
+)
+gs
+ggsave(
+  paste0(pathdata, "FAInJobsAndEmployment.jpg")
+  , gs, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+#### Below gives an error: idvar need to specify unique rows
+#### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
+####   direction = "long", 
+####   idvar = c("busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", 
+####     "Txrf", "payereferenceno"), 
+####   varying = grepout("^FA", colnames(FAdata))
+#### )
+gsz <- ggplot(data = FAdata[!is.na(Size), ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  xlim(0, 1) +
+  scale_color_manual(values = c("red", "blue"))
+gsz <- gsz + facet_wrap(Size ~ .)
+gsz
+ggsave(
+   paste0(pathdata, "FAByFirmSize.jpg")
+  , gsz, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+
+```
+```{r plot FAs by jobs employment, eval = F}
+#### possible duplicates with different local municipality names
+ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
+   & busmainplc_geo != ""]
+ii1 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )])
+ii2 <- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )], fromLast = T)
+table(data.table(nonNA=ii0, duplicates=ii1))
+FAdata[ii0 & (ii1 | ii2), ]
+table(duplicated(FAdata[ii0 & !ii1, ]))
+#### plot sensitivity to XThreshold (double job months cutoff)
+library(ggplot2)
+library(cowplot)
+g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  ggtitle("Fraction of affected jobs")+
+  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
+  scale_color_manual(values = "blue")
+g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
+  aes(x = FAe.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  ggtitle("Fraction of affected workers")+
+  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
+  scale_color_manual(values = "red")
+gs <- plot_grid(
+  g1, g2,
+  labels = c('a.', 'b.'),
+  align="h"
+)
+gs
+ggsave(
+  paste0(pathdata, "FAInJobsAndEmployment.jpg")
+  , gs, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+#### Below gives an error: idvar need to specify unique rows
+#### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
+####   direction = "long", 
+####   idvar = c("busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", 
+####     "Txrf", "payereferenceno"), 
+####   varying = grepout("^FA", colnames(FAdata))
+#### )
+gsz <- ggplot(data = FAdata[!is.na(Size), ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = "blue") + 
+  xlim(0, 1) +
+  scale_color_manual(values = c("red", "blue"))
+gsz <- gsz + facet_wrap(Size ~ .)
+gsz
+ggsave(
+   paste0(pathdata, "FAByFirmSize.jpg")
+  , gsz, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+
+
+# Plot employment, FA
+
+
+```{r plot number of employees taxyear 2012-2020, eval = F}
+library(qs)
+library(data.table)
+library(ggplot2)
+#### irp5Ma is created in Location information granularity checks
+irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
+
+#### To Michael, 2026 Jan 21, negative duration entries
+FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
+  .(yr, Num, NegRate = round(Neg/Num, 4))]
+
+
+fadata <- unique(FAD[, 
+  grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(FAD)), with = F])
+qsave(fadata, paste0(pathdata, "FADUniqueEntries.qs"), nthreads = 13)
+
+geovars <- grepout("^bus.*geo$", colnames(irp5Ma))
+irp5Ma[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
+irp5ForPlot <- unique(irp5Ma[taxyear >= 2012 & taxyear <= 2020, 
+  c(geovars, "taxyear", "taxrefno", "Num", "FA"), with = F])
+irp5ForPlot[, taxyear := as.character(taxyear)]
+ForPlot <- reshape(irp5ForPlot, direction = "long", 
+  idvar = c(c(geovars, "taxrefno"), timevar = "taxyear",
+  varying = grepout("Num|FA", colnames(irp5ForPlot))))
+g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], aes(x = Num, group = taxyear, 
+  colour = taxyear, fill = taxyear)) +
+  geom_density(alpha = .3) + 
+  scale_color_viridis_d("Tax year") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(1, 100), trans = "log10") +
+  theme_bw()
+ g1
+g1 + facet_grid(taxyear ~ .)
+ggsave(
+  paste0(pathdata, "NumberOfEmployees.jpg")
+  , g1, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+
+
+# Location information granularity checks
+
+We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
+```{r define irp5M by location granularity, eval = T}
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- grepout("^bus.*geo$", colnames(irp5))
+#### Location granularity indicator
+irp5[, LocGranular := "none"]
+for (yr in 8:22) {
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  != "" & 
+		  busmainplc_geo  != "" & 
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[4]]
+
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  != "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[3]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo != "" & 
+		  buslocmuni_geo  == "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[2]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != "" & 
+		  busdistmuni_geo == "" & 
+		  buslocmuni_geo  == "" & 
+		  busmainplc_geo  == "" &
+      taxyear == 2000 + yr
+		] &
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[1]]
+}
+irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, "none"))]
+setnames(irp5, "LocGranular", "LocGranularFirm")
+irp5[, LocGranularJob := "none"]
+irp5[busprov_geo != "", LocGranularJob := GeoLevel[1]]
+irp5[busdistmuni_geo != "", LocGranularJob := GeoLevel[2]]
+irp5[buslocmuni_geo != "", LocGranularJob := GeoLevel[3]]
+irp5[busmainplc_geo != "", LocGranularJob := GeoLevel[4]]
+
+#### Location granularity due to establishment clustering
+#### When location info is missing in some rows, one can allocate workers
+#### only up to location level where all establishments are clustered
+for (mm in 1:length(GeoLevel)) {
+  irp5[, (GeoLevel[mm]) := get(geovars[mm])]
+  irp5[get(geovars[mm]) == "", (GeoLevel[mm]) := NA]
+}
+#### Number of unique entries at each level 
+#### Subtract 1 because NA is counted as 1 (all NA entries are MainPlNum == 1L)
+irp5[, MainPlNum := as.integer(length(unique(Mai)))-1L, by = .(Txrf, taxyear)]
+irp5[, LocMunNum := as.integer(length(unique(Loc)))-1L, by = .(Txrf, taxyear)]
+irp5[, DisMunNum := as.integer(length(unique(Dis)))-1L, by = .(Txrf, taxyear)]
+irp5[, ProvNum   := as.integer(length(unique(Prv)))-1L, by = .(Txrf, taxyear)]
+irp5[, MainPlNA := as.integer(all(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, LocMunNA := as.integer(all(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, DisMunNA := as.integer(all(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, ProvNA := as.integer(all(is.na(Prv))), by = .(Txrf, taxyear)]
+
+irp5[, CommonLocality := "none"]
+irp5[
+      ProvNum == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum == 1L & 
+    MainPlNum == 1L &
+    MainPlNA  == 0L, 
+  CommonLocality := GeoLevel[4]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum == 1L & 
+    MainPlNum != 1L & 
+    LocMunNA  == 0L, 
+  CommonLocality := GeoLevel[3]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum == 1L & 
+    LocMunNum != 1L & 
+    MainPlNum != 1L &
+    DisMunNA  == 0L, 
+  CommonLocality := GeoLevel[2]]
+irp5[
+    ProvNum   == 1L & 
+    DisMunNum != 1L & 
+    LocMunNum != 1L & 
+    MainPlNum != 1L & 
+    ProvNA  == 0L, 
+  CommonLocality := GeoLevel[1]]
+irp5[, CommonLocality := factor(CommonLocality, levels = c(GeoLevel, "none"))]
+irp5[, NARowsMai := as.integer(sum(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, NARowsLoc := as.integer(sum(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, NARowsDis := as.integer(sum(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, NARowsPrv := as.integer(sum(is.na(Prv))), by = .(Txrf, taxyear)]
+irp5[, TotalRowsInTxrf := as.integer(.N), by = .(Txrf, taxyear)]
+qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"), nthreads = 13)
+
+unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
+  & taxyear == 2009, 
+  c("Txrf", "UID", geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F])
+
+#### LocGranularFirm: the most granular location info at firm level
+#### LocGranularJob : the most granular location info at each job level
+#### MainPlNum      : the number of unique entries at main place level for firm-taxyear
+#### NARowsMai      : the number of NA entries at main place level for firm-taxyear
+#### CommonLocality : Lowest area level common among all the jobs for firm-taxyear
+####   E.g., if all jobs are in Stellenbosch (main place), it is main place
+####   If there are jobs attached to a branch in Capetown, then it is province
+####   If location info is missing in some rows, then "none"
+
+#### We know that rows with no location info can be allocated to the area level by:
+####   MainPlNum == 1L                    ==> main place
+####   MainPlNum >  1L & LocMunNum == 1L  ==> local muni
+####   LocMunNum >  1L & DisMunNum == 1L  ==> district muni
+####   DisMunNum >  1L & ProvNum == 1L    ==> province 
+
+#### Panel of various levels
+#### Main place panel: 
+####  a. location entries are complete & location is granular down to main place level, or,
+####        NARowsMai == 0L & LocGranularFirm == Mai
+####  b. location == NA for some rows & uniquely common locality level is main place
+####        NARowsMai > 0L  & MainPlNum == 1L
+#### Local municipality panel: (addition to main place panel)
+####  a. location entries are complete down to local municipality & location is granular down to local municipality, or,
+####        NARowsLoc == 0L & LocGranularFirm == Loc
+####  b. location == NA for some rows & uniquely common locality level is local municipality
+####        NARowsLoc > 0L  & LocMunNum == 1L
+#### District municipality panel: (addition to local municipality panel)
+####  a. location entries are complete down to district municipality & location is granular down to district municipality, or,
+####        NARowsDis == 0L & LocGranularFirm == Dis
+####  b. location == NA for some rows & uniquely common locality level is district municipality
+####        NARowsDis > 0L  & DisMunNum == 1L
+#### Province panel: (addition to district municipality panel)
+####  a. location entries are complete down to province & location is granular down to province, or,
+####        NARowsPrv == 0L & LocGranularFirm == Prv
+####  b. location == NA for some rows & uniquely common locality level is province
+####        NARowsPrv > 0L  & ProvNum == 1L
+iiM <- irp5[,
+  NARowsMai == 0L & grepl("^M", LocGranularFirm) | 
+  NARowsMai >  0L & MainPlNum == 1L]
+iiL <- !iiM & irp5[, 
+  NARowsLoc == 0L & grepl("^L", LocGranularFirm) | 
+  NARowsLoc >  0L & LocMunNum == 1L]
+iiD <- !iiM & !iiL & irp5[, 
+  NARowsDis == 0L & grepl("^D", LocGranularFirm) | 
+  NARowsDis >  0L & DisMunNum == 1L]
+iiP <- !iiM & !iiL & !iiD & irp5[, 
+  NARowsPrv == 0L & grepl("^P", LocGranularFirm) | 
+  NARowsPrv >  0L & ProvNum   == 1L] 
+nrow(irp5M <- irp5[iiM, ])
+nrow(irp5L <- irp5[iiL, ])
+nrow(irp5D <- irp5[iiD, ])
+nrow(irp5P <- irp5[iiP, ])
+qsave(irp5M, paste0(pathdata, "irp5M.qs"), nthreads = 13)
+qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = 13)
+qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = 13)
+qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = 13)
+
+irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
+irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
+irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same prov
+
+#### Missingness in location information
+#### 1. Maximum sample size data sets
+####   a. Main Place data = firms with information down to Main Place (irp5M) 
+####   b. Loc Muni data   = firms with information down to Loc Muni   (irp5L) + a
+####   c. Dis Muni data   = firms with information up to Dist Muni    (irp5D) + a + b
+####   d. Prov data       = firms with information up to Prov         (irp5P) + a + b + c
+#### 2. Same sample data sets (irp5M) 
+####   a. Main Place data = firms with information up to Main Place
+####   b. Loc Muni data   = a
+####   c. Dis Muni data   = a
+####   d. Prov data       = a
+
+#### Agricultural panel
+irp5Ma <- irp5M[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+```
+
+
+# Compute HHI
+
+
+We use main place level sample `irp5M` by following the "same sample data sets"
+
+`irp5M` data only holds entries with location information of Main Place
+
+1. location entries are complete & location is granular down to main place level, or, NARowsMai == 0L & LocGranularFirm == Mai
+1. location == NA for some rows & uniquely common locality level is main place
+
+For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5M`, because I do not have time to run to get `irp5M`
+
+
+```{r hhi, eval = F}
+#### code "hhi"
+library(qs)
+library(data.table)
+irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+geovars <- grepout("^bus.*geo$", colnames(irp5))
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+for (yr in 8:22) {
+####  ipyr <- irp5M[taxyear == 2000+yr, ]
+  ipyr <- irp5[taxyear == 2000+yr, ]
+  LShare <- NULL
+  for (g in 1:length(GeoLevel)) {
+    print(GeoLevel[g])
+    byvar <- 	c("busprov_geo", "busdistmuni_geo", 
+  			           "buslocmuni_geo", "busmainplc_geo")[1:g]
+    ipGeo = copy(ipyr)
+    #### Drop rows with no location info and location is "EXCEPTION"
+    ipGeo <- ipGeo[get(byvar[g]) != "" & !is.na(get(byvar[g])) & get(byvar[g]) != "EXCEPTION", ]
+    #### ipGeo <- ipGeo[!grepl("none", LocGranularJob) & get(byvar[g]) != "EXCEPTION", ]
+    print(summary(ipGeo[, grepout("NARows", colnames(ipGeo)), with = F]))
+  	ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]
+    #### ggplot(ipGeo[Txrf %in% Txrf[WorkersAtEstab > 50000][2], .(Txrf, a3601_income)], aes(x=a3601_income)) +
+    #### geom_density() + scale_x_continuous(trans="log10") ==> # of workers > 50000 at main place seems correct
+    #### E.g., Toyota in Umhlanga, Durban had over 80K workers    
+	  #### Some firms have missing location information in some (but not all) rows
+	  #### Cannot allocate 8 workers with missing location info between branches
+	  if (yr == 12) print(
+	    ipGeo[Txrf %in% unique(Txrf[busmainplc_geo != ""])[2], 
+	      c(geovars, "Txrf", "payereferenceno", "UID",  "dateofbirth", 
+		    "periodemployedfrom", "WorkersAtEstab", "kerr_income"), with = F])
+    ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]
+    ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    ipGeo[, WorkersAtEstabNoGov := 0L]
+    ipGeo[!grepl("gov", Entity), WorkersAtEstabNoGov := WorkersAtEstab]
+	  #### Below gives private firm totals for rows of private firms
+    ipGeo[, WorkersInMarketNoGov := as.integer(.N), by = c(byvar, "Entity")]
+    ipGeo[, ShareNoGov := round(WorkersAtEstabNoGov/WorkersInMarketNoGov, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+	  #### employment shares
+    lshare <- unique(ipGeo[, c(
+	    byvar, "Entity", "Txrf",  "taxrefno",
+        "AreaLevel", grepout("^Wo|^Sha", colnames(ipGeo))
+      ), with = F])
+    print(summary(lshare))
+    lshare[WorkersAtEstab > 50000, ] 
+    #### Shoprite-Checkers has HQ in Brackenfell, 160K employes
+    #### MultiChoice (DSTV, etc.) has HW in Randburg, 8K employees
+    #### PicknPay has HQ in Kinilworth (Main Place = Capetown), 90K employees
+    #### Woolworth has HQ in Capetown, 33K employees
+    lshare[, HHI := sum(Share^(2), na.rm = T), by = byvar]
+    lshare[, nHHI := (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket)]
+    lshare[, HHIG := sum(ShareNoGov^(2), na.rm = T), by = byvar]
+    lshare[, nHHIG := (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov)]
+    LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  }
+  LShare[, AreaLevel := factor(AreaLevel, levels = GeoLevel)]
+  LShare[, (geovars) := lapply(.SD, factor), .SDcols = geovars]
+  setkey(LShare, AreaLevel, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  setcolorder(LShare, c("Txrf", "taxrefno", 
+    "busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo",
+    "Entity", "AreaLevel", 
+    "WorkersAtEstab", "WorkersInMarket", 
+    "WorkersAtEstabNoGov", "WorkersInMarketNoGov"))
+  if (yr < 10) yr <- paste0("0", yr)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = 13)
+}
+#### LShare:  Txrf, Share, ShareNoGov, HHI, HHINoGov, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+library(ggplot2)
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[is.na(busdistmuni_geo) & grepl('D', AreaLevel), ]
+LShare[grepl('M', AreaLevel) & WorkersInMarket < 500, ]
+g12 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep("blue", 4)) +
+  scale_color_manual(values = rep("blue", 4)) +
+  scale_x_continuous(trans = "log10") +
+  theme(legend.position = "none") +
+  facet_grid(AreaLevel ~ .)
+LShare <- qread(paste0(pathdata, "ShareHHI13.qs"))
+g13 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep("blue", 4)) +
+  scale_color_manual(values = rep("blue", 4)) +
+  scale_x_continuous(trans = "log10") +
+  theme(legend.position = "none") +
+  facet_grid(AreaLevel ~ .)
+ggsave(
+  paste0(pathresults, "HHI2012byAreaLevel.jpg")
+  , g12, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+ggsave(
+  paste0(pathresults, "HHI2013byAreaLevel.jpg")
+  , g13, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+#### HHI in 2012 and 2013 are similar 
+#### HHI at Dist muni and Loc muni are similar
+```
+
+```{r create LShare panel, eval = F}
+LS <- NULL
+for (yr in 8:22) {
+  if (yr < 10) yr <- paste0("0", yr)
+  ls <- qread(paste0(pathdata, "ShareHHI", yr, ".qs"))
+  ls[, taxyear := 2000+as.numeric(yr)]
+  LS <- rbindlist(list(LS, ls))
+}
+qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+```
+```{r LSa is LS of agri only}
+inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+LSia <- inda[LS, on = "taxrefno"]
+LSa <- LSia[Crop ++ 1L | Animal == 1L | Forest == 1L, ]
+#### LSa is rows of agri only, but HHI is measured at all industries
+qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+```
+
+
+```{r further checks on shares, eval = F}
+#### further checks
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare[, Nums := .N, by = Txrf]
+tb <- table(LShare[, Nums])
+numtb <- as.numeric(names(tb))
+numtb <- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
+    WorkersAtEstab, WorkersAtEstabNoGov, 
+  	WorkersInMarket, WorkersInMarketNoGov, Share, 
+	  HHI)]
+
+ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
+ipyr <- ipyr[grepl("A", natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)]
+print(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+summary(LShare[TotalNeEmp <= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)])
+print(LShare[TotalNeEmp <= 1000 & !is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+print(LShare[!is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+
+```
+
+# Other
+
+Get observation pattern: ObPattern
+
+```{r create ObPattern, eval = F}
+#### icount data is created in chunk "read irp5v5beta"
+Icount <- qread(paste0(pathdata, "icount08.qs"), nthreads = 8)
+Icount[, Taxyear := 2008]
+for (yr in 9:20) {
+  if (yr < 10) yr <- paste0("0", yr)
+  icount <- qread(paste0(pathdata, "icount", yr, ".qs"), nthreads = 8)
+  icount[, Taxyear := 2000+as.numeric(yr)]
+  Icount <- rbindlist(list(Icount, icount))
+}
+qsave(Icount, paste0(pathdata, "Icount.qs"), nthreads = 8)
+setkey(Icount, taxrefno, Taxyear)
+Icount[, Ob := 1L]
+Icount[is.na(Num), Ob := 2L]
+Icount <- Icount[grepl("A", natureofperson), ]
+Icount <- Icount[busmainplc_geo != "", ]
+IcountW <- reshape(Icount, direction = "wide", 
+  idvar = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", "taxrefno", "natureofperson"),
+  timevar = "Taxyear", v.names= c("Num", "Ob"))
+
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+
+cols <- grepout("Ob", colnames(IcountW))
+IcountW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
+IcountW[, ObPattern := paste(.SD, sep = "", collapse = ""), .SDcols = cols, by = .(taxrefno)]
+IcountW[, ObPattern := factor(ObPattern)]
+```
+
+Postal codes in stata
+
+```{verbatim}
+. use "Z:\Master Data\IRP5\Job level\v5\beta\aux_postal_codes_2008_2023_e6_v2.dta" , replace
+. by AddrPostalCode, sort: gen nvals = _n == 1
+. count if nvals
+  68,140
+```
+
+  
+
+    

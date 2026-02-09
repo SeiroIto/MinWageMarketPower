@@ -1,0 +1,67 @@
+---
+title: "Read me for tasks using R"
+date: "`{r} format(Sys.time(), "%Y-%b-%d %R")`"
+output: html_document
+#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/ReadMe.rmd"))
+---
+
+# Current challenge
+
+
+Too many and too few entries in 2009-2012, if we drop establishments with no location information
+
+Three ways to proceed
+
+1. Use selective sample with location information for whole periods
+1. Add location (Local Municipality) information from new version of firm panel
+1. Use HHI from later years (taxyear 2013, which is immediately before the increase in MW)
+   * By doing this, 10.9M rows are saved from deletion
+
+# Task sequence
+
+
+Process files in the following order
+
+1. IRP5Condense.rmd
+   * Gives irp5.qs, irp5a.qs
+      * a: Agriculture only
+      * Industry selected at 3 digit level (animal prod, crop prod, forest)
+   * Job panel (firm ID, employee ID)
+   * Revised
+      * Location information 2013 ==> 2012, if firm ID and employee ID match
+         * Assumes no transfer between branches in this two-year window, or effects of measurement error are minimal when considering the increase in sample size
+      * Rows of `taxyear` that are submitted as revisin of the previous year
+   * Dropped
+      * Rows revised at a later year
+      * individual IDs that are not of natural person **in all years** (any ID == natural person at least one year, is retained), saving 42M+ rows
+1. IRP5HHI.rmd
+   * Gives irp5M.qs, irp5Ma.qs, LS.qs, FAD.qs, fa
+   * irp5 panel of jobs
+      * M: Main place level
+   * Establishment panel of HHI and FA
+      *   LS: HHI measured at Main Place, Loc Muni, Dist Muni, Prov
+          * We use main place level sample `irp5M` by following the "same sample data sets"
+          * `irp5M` data only holds entries with location information of Main Place
+              1. location entries are complete & location is granular down to main place level, or, NARowsMai == 0L & LocGranularFirm == Mai
+              1. location == NA for some rows & uniquely common locality level is main place
+      * LSMa: Establishment panel of HHI, main place level and agriculture only
+      *   FA: FA panel of establishment-workers
+          * Establishment level; Number of jobs, employees, FA jobs, FA employees
+          * Employee level: Incomes, DofBirth, Job dates, gender
+      *  faa: FA panel of establishments, agriculture only
+1. IRP5MergeData.rmd
+   * Main analysis: faa + LSMa 
+      * faa is the base of merge
+   * Decriptive statistics shows anomaly in number of jobs reported, too many and too few in 2009-2012
+      * This is because we are selecting on firms with location information
+      * Unconditional number of jobs looks good for all years
+         * Many NAs in location info in early years &rArr; loss of sample in early years
+      * Computing FA does not require location information, so FA can serve as the base of estimation data
+   * Three ways to proceed
+      1. Use selective sample with location information for whole periods
+      1. Add location (Local Municipality) information from new version of firm panel
+      1. Use HHI from later years (taxyear 2013, which is immediately before the increase in MW)
+1. IRP5Impacts.rmd
+   * Event study like estimation of job% on FA*HHI*time + FEs
+   * Negative estimates on firms with small HHI 
+   * Noisy/bumpy estimates on firms with large HHI

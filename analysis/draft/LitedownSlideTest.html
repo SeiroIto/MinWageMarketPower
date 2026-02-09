@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.9.2">
+<title>Minimum wages project</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-apd::before { content: "Appendix "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+<style type="text/css">
+:root { --slide-width: 100%; }
+html { scroll-snap-type: y mandatory; }
+th, td { padding: .2em .5em; }
+.slide { padding: 0 1em; background-color: #fff; }
+.slide, :is(.frontmatter, .middle) .main {
+  display: flex;
+  flex-direction: column;
+}
+.slide {
+  & > .main { flex-grow: 1; }
+  & > .header { margin-bottom: 1em; }
+  h2, h3 { margin-top: unset; }
+}
+body {
+  max-width: fit-content;
+  padding: 0;
+}
+a { color: #eb4a47; }
+:not(pre) > code { background: #fdfded; }
+#TOC {
+  columns: 2;
+  &::before {
+    font-size: 1.3em;
+    font-weight: bold;
+    display: block;
+    border-bottom: 1px solid #666;
+  }
+}
+:is(.frontmatter, .middle) .main { justify-content: center; }
+.footer {
+  display: flex;
+  justify-content: space-between;
+  opacity: .5;
+  font: .7em monospace;
+}
+.inverse {
+  background: #eee;
+  filter: invert(1);
+}
+.center { text-align: center; }
+.slide-container h2 .section-number {
+  display: inline-block;
+  background: #666;
+  color: white;
+  padding: 0 .1em;
+  margin-right: .3em;
+}
+.overview {
+  font-size: .8em;
+  .slide-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    .slide {
+      width: var(--slide-width);
+      border: 1px dotted #ccc;
+      margin-bottom: 0.5em;
+    }
+  }
+}
+.mirrored { transform: scale(-1, 1); }
+.timer { opacity: 0; }
+html:fullscreen::-webkit-scrollbar, .spacer { display: none; }
+html:fullscreen {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+@media screen and (min-width: 992px) {
+  :root {
+    --slide-width: 49%;
+    --slide-scale: 1;
+    --slide-ratio: 0.75;
+    --slide-top: auto;
+  }
+  .slide-mode {
+    font-size: 2em;
+    background: #d7d8d2;
+    scale: var(--slide-scale);
+    margin-top: var(--slide-top);
+    .slide {
+      min-height: calc(100vh / var(--slide-scale));
+      width: calc(100vh / var(--slide-ratio) / var(--slide-scale));
+      box-shadow: 0 0 2em #888;
+      clip-path: inset(0 -2em 0 -2em);
+      scroll-snap-align: start;
+    }
+    .spacer { display: block; }
+    .timer { opacity: initial; }
+  }
+  li li { font-size: .9em; }
+}
+@media (min-width: 1400px) {
+  :root { --slide-width: 33%; }
+}
+@media (min-width: 1800px) {
+  :root { --slide-width: 24.67%; }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.28/dist/katex.min.css">
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Minimum wages project</h1></div>
+<div class="author"><h2>Seiro Ito</h2></div>
+<div class="date"><h3>2026-01-28</h3></div>
+</div>
+<div class="body">
+<h3 id="sec:minimum-wages-employment">Minimum wages↑ ⇒ employment↓?</h3>
+<!--# class="slide inverse middle" contenteditable-->
+<ul>
+<li>Only mild ↓, imprecisely (at the moment of analysis)</li>
+</ul>
+<hr />
+<h3 id="sec:data">Data</h3>
+<!--# class="slide inverse middle" contenteditable-->
+<ul>
+<li>
+<p>IRP5 2008-2022, individual income tax returns, establishment level</p>
+</li>
+<li>
+<p>Problem: Too few or too many rows in 2008-2012</p>
+</li>
+<li>
+<p>Reasons</p>
+<ol>
+<li>Probable reporting errors in dates 2008-2012</li>
+<li>Missing location information → dropped</li>
+</ol>
+</li>
+<li>
+<p>More confidence in 2013-2022</p>
+</li>
+<li>
+<p>Tax year 2013: March 01, 2012 - February 28, 2013</p>
+</li>
+</ul>
+<hr />
+<h3 id="sec:ways-out">Ways out</h3>
+<!--# class="slide inverse middle" contenteditable-->
+<ol>
+<li>Only use complete panel portion of data</li>
+<li>Location information 2013 → 2008-2012 (11M obs saved from deletion) ← reporting errors remained the same
+<ul>
+<li>If <span style="color:blue"><code>taxrefno-uid</code></span> matches, copy location info</li>
+</ul>
+</li>
+<li>Revision reporting ← reporting errors remained the same
+<ul>
+<li>If <span style="color:blue"><code>periodemployedfrom</code></span> &lt; <span style="color:blue"><code>taxyear</code></span>, it is revision of <span style="color:blue"><code>periodemployedfrom</code></span> reported in <span style="color:blue"><code>taxyear</code></span></li>
+</ul>
+</li>
+<li>Keep rows with missing location info
+<ul>
+<li>FA does not need location info</li>
+<li>HHI needs location info
+<ul>
+<li>Use only rows with location info, in 2013 or in a more complete year</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr />
+<!--# class="slide inverse middle" contenteditable-->
+<h3 id="sec:done-so-far">Done so far</h3>
+<ul>
+<li>Put everything on litedown <a href="TestLitedown.html">rmd</a> files
+<ol>
+<li><span style="color:blue">IRP5Condense.rmd</span>: Read dta files and create IRP5 panel (all industries, agriculture)</li>
+<li><span style="color:blue">IRP5HHI.rmd</span>: Compute FA, HHI (all industries, establishment level)</li>
+<li><span style="color:blue">IRP5MergeData.rmd</span>: FA (base) + HHI, descriptive statistics</li>
+<li><span style="color:blue">IRP5Impact.rmd</span>: MW → Employment</li>
+</ol>
+</li>
+<li>Estimation using Main Place level HHI</li>
+<li>Task management
+<ol>
+<li>Seiro edits rmd → Noreen edits rmd at the lab, Noreen reports outputs at the lab → Seiro edits rmd …</li>
+<li>Project repository: <a href="https://github.com/SeiroIto/MinWageMarketPower">https://github.com/SeiroIto/MinWageMarketPower</a></li>
+</ol>
+</li>
+</ul>
+<hr />
+<!--# class="slide inverse middle" contenteditable-->
+<h3 id="sec:to-be-done">To be done</h3>
+<ol>
+<li>Improve estimation
+<ul>
+<li>We are using <code>fixest</code> package of R</li>
+<li>We are using subsamples of high/low HHI</li>
+<li>Need triple interaction MW \(\times\) treat \(\times\) HHI</li>
+</ul>
+</li>
+<li>Go back to CIT panel for interpretation
+<ul>
+<li>Why impacts not so negative?</li>
+<li>What are low/high HHI markets?</li>
+</ul>
+</li>
+</ol>
+</div>
+<script>
+(function(d) {
+  let p = d.body;  // container of slides; assume <body> for now
+  const s1 = ':scope > hr:not([class])', s2 = ':scope > h2';
+  // find a container that has at least n "slides"
+  function findContainer(s, n = 1) {
+    if (p.querySelectorAll(s).length >= n) return true;
+    // if body doesn't contain headings or <hr>s, look into children
+    for (let i = 0; i < p.children.length; i++) {
+      if (p.children[i].querySelectorAll(s).length >= n) {
+        p = p.children[i]; break;
+      }
+    }
+    return false;
+  }
+  function newEl(tag, cls) {
+    const el = d.createElement(tag);
+    if (cls) el.className = cls;
+    return el;
+  }
+  if (!findContainer(s1, 3)) {
+    // if not enough <hr>s found in children; look for <h2> instead
+    if (p.tagName === 'BODY') {
+      // not enough h2 found, this page is not appropriate for slides
+      if (!findContainer(s2) && p.tagName === 'BODY') return;
+      p.querySelectorAll(s2).forEach(h2 => h2.before(newEl('hr')));
+    }
+  }
+  p.classList.add('slide-container');
+  // add 'slide' class to the frontmatter/abstract divs and toc
+  ['.frontmatter', '.abstract', '#TOC'].forEach(sel => {
+    const el = d.body.querySelector(sel);
+    if (!el) return;
+    if (sel === '.frontmatter') {
+      el.classList.add('slide');
+    } else {
+      const s = newSlide(); el.before(s); s.append(el);
+    }
+  });
+
+  function newSlide(s) {
+    return (s?.innerHTML === '') ? s : newEl('div', 'slide');
+  }
+  function isSep(el) {
+    return el.tagName === 'HR' && el.attributes.length === 0;
+  }
+  let el = p.firstElementChild; isSep(el) && el.remove();
+  el = p.firstElementChild; if (!el) return;
+  let s = newSlide(); el.before(s);
+  while (true) {
+    let el = s.nextSibling;
+    if (!el) break;
+    // remove slide separators (<hr>) and create new slide
+    if (isSep(el)) {
+      s = newSlide(s);
+      el.before(s); el.remove();
+    } else if (el.classList?.contains('slide')) {
+      s = newSlide(s);
+      el.after(s);
+    } else {
+      s.append(el);
+    }
+  }
+  function setAttr(el, attr) {
+    const m = newEl('div');
+    m.innerHTML = `<div ${attr}><\/div>`;
+    const attrs = m.firstElementChild.attributes;
+    for (const a of attrs) {
+      el.setAttribute(a.name, a.value);
+    }
+    m.remove();
+  }
+  function reveal(el) {
+    setTimeout(() => el?.scrollIntoView(), 100);
+  }
+  const dE = d.documentElement, dC = d.body.classList;
+  const slides = d.querySelectorAll('div.slide'), N = slides.length,
+        tm = d.querySelector('span.timer'), fn = d.querySelector('.footnotes');
+  slides.forEach((s, i) => {
+    // slide header, main body, and footer
+    const header = newEl('div', 'header'), main = newEl('div', 'main'), footer = newEl('div', 'footer');
+    main.append(...s.childNodes);
+    s.append(main);
+    s.insertAdjacentElement('afterbegin', header);
+    s.insertAdjacentElement('beforeend', footer);
+    // append footnotes
+    if (fn) s.querySelectorAll('.footnote-ref > a[href^="#fn"]').forEach(a => {
+      const li = fn.querySelector('li' + a.getAttribute('href'));
+      if (!li) return;
+      let f = s.querySelector('section.footnotes');
+      if (!f || f.contains(li)) {
+        f = newEl('section', 'footnotes'); footer.before(f);
+      }
+      f.append(li);
+      li.firstElementChild?.insertAdjacentHTML('afterbegin', `[${a.innerHTML}] `);
+      li.outerHTML = li.innerHTML;
+    });
+    // add a timer
+    footer.append(tm ? tm.cloneNode() : newEl('span', 'timer'));
+    // add page numbers
+    const n = newEl('span', 'page-number');
+    n.innerText = i + 1 + '/' + N;
+    n.onclick = e => location.hash = i + 1;
+    footer.append(n);
+    // apply slide attributes in <!--# -->
+    for (const node of main.childNodes) {
+      if (node.nodeType !== Node.COMMENT_NODE) continue;
+      let t = node.textContent;
+      if (!/^#/.test(t)) continue;
+      t = t.replace(/^#/, '');
+      const r = /[\s\n]class="([^"]+)"/, m = t.match(r);
+      if (m) {
+        t = t.replace(r, '').trim();
+        s.className += ' ' + m[1];
+      }
+      if (t) setAttr(s, t);
+      break;
+    }
+    s.addEventListener('click', e => {
+      (e.altKey || e.ctrlKey) && (toggleView(e), reveal(e.target));
+    });
+  });
+  [...d.querySelectorAll('a.footnote-backref'), fn, tm].forEach(el => el?.remove());
+  const tms = d.querySelectorAll('span.timer'), t1 = 1000 * tms[0].dataset.total;
+  let t0;
+  function startTimers() {
+    t0 = new Date();
+    setInterval(setTimers, 1000);
+  }
+  function setTimers() {
+    if (!dC.contains('slide-mode')) return;  // set timer only in slide mode
+    let t = (new Date() - t0);
+    if (t1) t = t1 - t;
+    const t2 = new Date(Math.abs(t)).toISOString().substr(11, 8).replace(/^00:/, '');
+    tms.forEach(el => {
+      el.innerText = t2;
+      if (t < 0) el.style.opacity = Math.ceiling(t/1000) % 2;
+    });
+  }
+  function toggleView(e) {
+    (dC.toggle('overview') ? dC.remove('slide-mode') : setScale(e));
+  }
+  // press f for fullscreen mode
+  d.addEventListener('keyup', e => {
+    if (e.target !== d.body) return;
+    e.key === 'f' && dE.requestFullscreen();
+    e.key === 'o' && toggleView(e);
+    e.key === 'm' && dC.toggle('mirrored');
+    sessionStorage.setItem('body-class', d.body.className);
+  });
+  // start timer and set scale on fullscreen
+  d.onfullscreenchange = e => {
+    d.fullscreenElement && (!t0 && startTimers(), setScale(e));
+  }
+  tms.forEach(el => el.addEventListener('click', e => startTimers()));
+  // measure the height of an empty slide
+  let H = -1;
+  function slideHeight() {
+    if (H >= 0) return H;
+    const s = newEl('div', 'slide');
+    p.querySelector('.slide:last-of-type').after(s);
+    H = s.offsetHeight;
+    s.remove()
+    return H;
+  }
+  // scale slides according to window height (baseline: 900px)
+  const sty = newEl('style'); sty.setAttribute('type', 'text/css');
+  d.head.append(sty);
+  // default height/width ratio from screen size
+  sty.innerHTML = `:root{--slide-ratio:${screen.height / screen.width}}`;
+  // read --slide-ratio in case users have set it in their CSS
+  const ratio = +getComputedStyle(dE).getPropertyValue('--slide-ratio');
+  function setScale(e) {
+    // navigate to a slide indicated by the hash if provided
+    e.type === 'load' && reveal(slides[location.hash.replace(/^#/, '') - 1]);
+    if (dC.contains('overview')) return;
+    let h = window.innerHeight, p = h / 900, r2 = h / window.innerWidth, full = d.fullscreenElement;
+    // add slide mode if there's enough window width, and remove it in case of scrollbar
+    dC.toggle('slide-mode', full || r2 <= ratio) &&
+      (!full && (dE.scrollWidth > dE.offsetWidth)) && dC.remove('slide-mode');
+    sty.innerHTML = `:root{--slide-ratio:${ratio};--slide-scale:${p};--slide-top:${(p - 1)/2 * d.body.scrollHeight + 'px'};}`;
+    // add spacers with enough height on load
+    !d.querySelector('.spacer.fade') && dC.contains('slide-mode') && slides.forEach(s => {
+      const sp = newEl('div', 'spacer fade'), h = s.offsetHeight, h2 = slideHeight();
+      s.append(sp);
+      if (h <= h2) return;
+      sp.style.height = (h2 - h % h2) * p + 'px';
+    });
+  }
+  ['load', 'resize'].forEach(evt => window.addEventListener(evt, setScale));
+  // restore previously saved body class
+  const bc = sessionStorage.getItem('body-class');
+  if (bc) d.body.className += ' ' + bc;
+})(document);
+</script>
+<script src="https://cdn.jsdelivr.net/combine/npm/katex@0.16.28/dist/katex.min.js,npm/katex@0.16.28/dist/contrib/auto-render.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/render-katex.min.js" defer></script>
+</body>
+</html>

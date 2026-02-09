@@ -1,0 +1,4010 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
+<title>Compute HHI and FA</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils/css/prism-xcode.min.css">
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Compute HHI and FA</h1></div>
+<div class="date"><h3>2026 01 23 20:52</h3></div>
+</div>
+<div class="body">
+<style type="text/css">
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+</style>
+<h1 id="chp:what-we-do-in-the-project">What we do in the project</h1>
+<ol>
+<li>Create merged panel using stata: “Data file”
+<ul>
+<li>Use the same definitions as Michael’s codes</li>
+<li>But include <code>imp_mic_sic7_3d == 16</code> industry</li>
+<li>Done in other do file</li>
+<li>Save Data file in tsv format to read in R</li>
+</ul>
+</li>
+<li>Compute HHI using CIT-IRP5 at various levels: “HHI file”
+<ul>
+<li>Use CIT-IRP5_2012 HHI in 2012</li>
+<li>Verify if counts are not erroneous</li>
+</ul>
+</li>
+<li>“Analysis file” = Data file (panel 2009-2022) + HHI file
+<ul>
+<li>Merge at various levels</li>
+<li>Need main place level analysis for larger statistical power</li>
+</ul>
+</li>
+<li>Descriptive statistic</li>
+<li>Hypothesis testing
+<ul>
+<li>% Employment change = a + b1<em>FA + b2</em>HHI + b3*(FA*HHI) + FEs + e</li>
+<li>Test b3 &gt; 0 labor market power mitigates disemployment impacts</li>
+<li>Expect b1&lt;0 or b1 = 0</li>
+<li>No prior for the sign of b2</li>
+</ul>
+</li>
+</ol>
+<h1 id="chp:setup">Setup</h1>
+<pre><code class="language-r">library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = &quot;&quot;, 
+  echo = T, cache = F, eval = F,
+  class.source = &quot;SeiroBenign&quot;, class.output = &quot;SeiroLightGreen&quot;
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout &lt;- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+table0 &lt;- function(x) table(x, useNA = &quot;ifany&quot;)
+GeoLevel &lt;- c(&quot;Prv&quot;, &quot;Dis&quot;, &quot;Loc&quot;, &quot;Mai&quot;)
+</code></pre>
+<pre><code class="language-r">#### path &lt;- &quot;Z:/Workbenches/epguest/seiro_ito/&quot;
+#### pathdataCITIRP &lt;- &quot;Z:/Master Data/CIT-IRP5 Panel/&quot;
+#### pathdataIRP &lt;- &quot;Z:/Master Data/IRP5/Job level/v5/beta/&quot;
+path &lt;- &quot;W:/epguest/seiro_ito/&quot;
+pathprogram &lt;- paste0(path, &quot;outfiles/&quot;)
+pathdata &lt;- paste0(path, &quot;data/&quot;)
+pathdataCITIRP &lt;- &quot;U:/CIT-IRP5 Panel/&quot;
+pathdataIRP &lt;- &quot;U:/IRP5/Job level/v5/beta/&quot;
+library(qs); library(data.table); library(ggplot2)
+</code></pre>
+<ul>
+<li>FA does not require location info
+<ul>
+<li>We use FA data that have jobs and employment as the base</li>
+</ul>
+</li>
+<li>HHI requires location info, so we use <code>irp5M</code> that have information of Main Place
+<ul>
+<li>Whenever location information is updated, we need to compute HHI</li>
+<li>To update location information, need to update irp5.qs → irp5M.qs → LShareHHI.qs</li>
+</ul>
+</li>
+</ul>
+<h1 id="chp:fraction-affected">Fraction affected</h1>
+<ol>
+<li>Use IRP5 to count total number of workers, number of affected, FA = affected/total for all years</li>
+<li>Need to use unfiltered data like <code>irp5.qs</code> (except for NatureOfPer == A and empty taxrefno)
+<ul>
+<li>Entries of irp5 look naturally balanced across years</li>
+<li>Many NAs in location info in early years ⇒ loss of sample in early years</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-r">#### irp5.qs is created in IRP5Condense.rmd
+library(qs)
+library(data.table)
+irp5 &lt;- qread(paste0(pathdata, &quot;irp5.qs&quot;), nthreads = 13)
+</code></pre>
+<pre><code class="language-r">#### code &quot;compute FA&quot;
+library(qs)
+library(data.table)
+path &lt;- &quot;W:/epguest/seiro_ito/&quot;
+pathprogram &lt;- paste0(path, &quot;outfiles/&quot;)
+pathdata &lt;- paste0(path, &quot;data/&quot;)
+pathdataCITIRP &lt;- &quot;U:/CIT-IRP5 Panel/&quot;
+pathdataIRP &lt;- &quot;U:/IRP5/Job level/v5/beta/&quot;
+#### Takes 20-30 mins: Start  ####
+#### irp5M &lt;- qread(paste0(pathdata, &quot;irp5M.qs&quot;), nthreads = 13)
+#### ipyrc0 &lt;- irp5M[
+#### !duplicated(irp5M[, .(busmainplc_geo, taxrefno, UID, 
+#### DateBirth, DateStart, DateEnd,
+#### kerr_income, ptrs_income, a3601_income)]), 
+#### ]
+#### Takes 20-30 mins: End  ####
+grepout &lt;- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+aggsummary &lt;- NULL
+for (yr in 8:22) { 
+  ipyrc &lt;- irp5[taxyear == 2000+yr, ]#[1:100000, ]
+  #### Compute job duration and monthly income
+  ####   (DateEnd-DateStart2012)/30.5
+  ####   a3601_income/DurationMonth
+  ipyrc[, DateStart20yr := DateStart]
+  #### If DateStart is before start of taxyear, March 1 
+  ####  ==&gt; DateStart20yr = March 1 of taxyear-1
+  ipyrc[DateStart &lt; as.IDate(paste0(2000+yr-1, &quot;/03/01&quot;)), 
+          DateStart20yr := as.IDate(paste0(2000+yr-1,&quot;/03/01&quot;))]
+  #### IncomeMonth = monthly income, duration is measured as the same taxyear
+  ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
+  ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
+  #### DurationMonth can be zero if work is only for 1 day
+  ipyrc[DateStart == DateEnd, c(&quot;DurationMonth&quot;, &quot;DurMonthMarch&quot;) := round(1/30.5, 3)]
+  lapply(ipyrc[, .(DurationMonth, DurMonthMarch)], 
+    quantile, c(seq(0, 1, .25)[-5], .985, .995, 1), na.rm = T)
+  #### DateStart too old for some rows (typo for previous year or actual starting dates)  
+  #### DurationMonth == DurMonthMarch for these entries
+  #### Set to 20 because typo for prev Ma 1 will give DurationMonth==24
+  print(ipyrc[DurationMonth &gt; 20, 
+      .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+  ipyrc[DurationMonth &gt; 20, DurationMonth := DurMonthMarch]
+  #### typos 
+  print(ipyrc[DurMonthMarch &gt; 100, 
+    .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+  ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
+  setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+  #### DateStart2, DateEnd2: Dates for 2nd job in the same firm
+  ipyrc[, DateStart2 := shift(DateStart, n = 1L, type = &quot;lead&quot;), by = .(Txrf, taxyear, UID)]
+  ipyrc[,   DateEnd2 := shift(DateEnd, n = 1L, type = &quot;lead&quot;), by = .(Txrf, taxyear, UID)]
+  ipyrc[, c(&quot;TDurationMonth&quot;, &quot;DJobDurationMonth&quot;) := 0]
+  #### If job2 after job1 ends: 
+  #### Double work duration: DateEnd  - DateStart2
+  ####  Total work duration: DateEnd2 - DateStart20yr
+  ####  &lt;----job1----&gt;
+  ####           &lt;----job2----&gt;
+  ####  DateStart20yr &lt; DateStart2
+  ####  DateEnd &lt; DateEnd2
+  ####  DateEnd &gt; DateStart2
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &lt; DateEnd2 &amp; DateEnd &gt; DateStart2, 
+    DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
+    #### Negative TDurationMonth for 35 entries for 2012 
+    #### because their reported DateEnd2 is before 2011/03/01
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &lt; DateEnd2 &amp; DateEnd &gt; DateStart2, 
+    TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
+  #### If job2 ends before job1 ends: 
+  #### Double work duration: DateEnd2 - DateStart2
+  ####  Total work duration: DateEnd  - DateStart20yr
+  ####  &lt;----------job1----------&gt;
+  ####           &lt;----job2----&gt;
+  ####  DateStart20yr &lt; DateStart2
+  ####  DateEnd &gt; DateEnd2
+  ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
+  ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &gt; DateEnd2, 
+         DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &gt; DateEnd2, 
+         TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
+  #### TDurationMonth = Total duration of jobs
+  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+    by = .(Txrf, taxyear, UID)]
+  ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+  ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
+  ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
+  #### TIncomeMonth = sum of monthly income across jobs
+  ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
+  #### check data
+  summary(ipyrc[busmainplc_geo != &quot;&quot; &amp; Txrf != &quot;&quot; &amp; NumJobsPerWorker &gt; 1, 
+    .(busmainplc_geo, Txrf, UID, uid, NumJobsPerWorker, 
+      DateStart, DateEnd,
+      DateStart2, DateEnd2, DurationMonth,DurMonthMarch, 
+      DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+      a3601_income, 
+      kerr_income, IncomeMonth, TIncomeMonth)])
+  print(ipyrc[NumJobsPerWorker &gt; 10, 
+    .(busmainplc_geo, Txrf, UID, uid, NumJobsPerWorker, 
+      DateStart, DateEnd,
+      DateStart2, DateEnd2, DurationMonth, 
+      DJobDurationMonth, TDurationMonth, DoubleJobRatio,
+      a3601_income, IncomeMonth, TIncomeMonth)], topn = 30)
+  ipyrc[busmainplc_geo != &quot;&quot; &amp; Txrf != &quot;&quot;, 
+    .(busmainplc_geo, taxrefno, DateStart, DateEnd, 
+      DurationMonth, a3601_income, IncomeMonth)]
+  #### Find sub MW workers and define fraction affected
+  #### We can use IncomeMonth or TIncomeMonth
+  ####   PropToMW: Proportion to MW line = IncomeMonth/2274 ==&gt; SubMW is wage per job
+  ####      SubMW: PropToMW &lt; 1 &amp; IncomeMonth &gt; 0
+  ####  NumSubMW : number of entries with SubMW == 1L
+  ####  NumSubMWe: number of unique UID entries with SubMW == 1L
+  ####       Jobs: number of entries with IncomeMonth &gt; 0
+  ####  Employees: number of unique UID with IncomeMonth &gt; 0
+  ####        FA : NumSubMW/Jobs (FA in jobs)
+  ####        FAe: NumSubMWe/Employees (FA in employment)
+  #### Note: uid is NA in some entries, UID is not 
+  ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
+  ipyrc[, SubMW     := as.integer(PropToMW &lt; 1 &amp; IncomeMonth &gt; 0)]
+  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), by = .(Txrf, taxyear)]
+  ipyrc[, Jobs      := as.integer(sum(IncomeMonth &gt; 0)), by = .(Txrf, taxyear)]
+  ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), by = .(Txrf, taxyear)]
+  ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth &gt; 0])), by = .(Txrf, taxyear)]
+  ipyrc[, FA        := round(NumSubMW/Jobs, 6)]
+  ipyrc[, FAe       := round(NumSubMWe/Employees, 6)]
+  ####ipyrc[grepl(&quot;^BCJXBCC&quot;, Txrf), 
+  ####  .(busmainplc_geo, taxyear, 
+  ####    Txrf, uid, UID, DateStart, DurationMonth, 
+  ####    IncomeMonth, SubMW, NumSubMW, Jobs, FA,
+  ####    NumSubMWe, Employees, FAe)]
+  #### Fin year 2013 = 2012 Mar 01 - 2013 Feb 29
+  ####  &lt;==&gt; 0L for DateEnd &lt; 2012 Mar 01 or DateStart &gt;= 2013 Mar 01 
+  #### FinYr20yr := 1L ==&gt; DateStart &amp; DateEnd are correct for current taxyear
+  ipyrc[, FinYr20yr := 1L]
+  ipyrc[
+    DateEnd    &lt; as.IDate(paste0(2000+(yr-1), &quot;/03/01&quot;)) |
+    DateStart &gt;= as.IDate(paste0(2000+yr,     &quot;/03/01&quot;)), 
+    FinYr20yr := 0L]
+  #### Select variables to keep
+  FAdata &lt;- ipyrc[, .(
+      busprov_geo, 
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+      taxrefno, Txrf, payereferenceno, UID, uid,
+      DurationMonth, DurMonthMarch,
+      a3601_income, IncomeMonth, NumJobsPerWorker,
+      PropToMW, SubMW, Jobs, NumSubMW, 
+      Employees, NumSubMWe,  
+      FA, FAe
+    )]
+  #### summary(FAdata)
+  #### summary(FAdata[is.na(FA), .(FA, Jobs, a3601_income, IncomeMonth, DurationMonth)])
+  FAdata[, Size := &quot;micro&quot;]
+  FAdata[Employees &gt; 1 &amp; Employees &lt;= 10, Size := &quot;small&quot;]
+  FAdata[Employees &gt; 10 &amp; Employees &lt;= 50, Size := &quot;medium&quot;]
+  FAdata[Employees &gt; 50, Size := &quot;large&quot;]
+  FAdata[is.na(Employees) | Employees == 0, Size := NA]
+  FAdata[, Size := factor(Size, levels = c(&quot;micro&quot;, &quot;small&quot;, &quot;medium&quot;, &quot;large&quot;))]
+  #### Number of affected workers in aggregates
+  ag1 &lt;- ipyrc[, .(
+      TotalEmployees = uniqueN(UID[IncomeMonth &gt; 0]) 
+    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth &gt; 0 &amp; SubMW==1L]) 
+    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth &gt; 0]) 
+    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth &gt; 0 &amp; SubMW==1L]) 
+    )
+    ][, .(
+      TotalEmployees, TotalSubMWWorkers, 
+      AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+      TotalFirmsWithEmployees, TotalAffectedFirms,
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+    )]
+  ag1[, taxyear := 2000+yr]
+  aggsummary &lt;- rbindlist(list(aggsummary, ag1), use.names = T, fill = T)
+  ag2 &lt;- ipyrc[, .(
+      TotalEmployees = uniqueN(UID[IncomeMonth &gt; 0]) 
+    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth &gt; 0 &amp; SubMW==1L]) 
+    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth &gt; 0]) 
+    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth &gt; 0 &amp; SubMW==1L]) 
+    ), 
+    by = .(taxyear, busprov_geo)
+    ][, .(
+      busprov_geo, TotalEmployees, TotalSubMWWorkers, 
+      AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+      TotalFirmsWithEmployees, TotalAffectedFirms,
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+    )]
+  ag2[, taxyear := 2000+yr]
+  aggsummary &lt;- rbindlist(list(aggsummary, ag2), use.names = T, fill = T)
+  FAdata[, taxyear := 2000+yr]
+  if (yr &lt; 10) yr &lt;- paste0(&quot;0&quot;, yr)
+  qsave(FAdata, paste0(pathdata, &quot;FA&quot;, yr, &quot;.qs&quot;), nthreads = 13)
+} 
+qsave(aggsummary, paste0(pathdata, &quot;AggregateSummary.qs&quot;), nthreads = 13)
+aggsummary &lt;- qread(paste0(pathdata, &quot;AggregateSummary.qs&quot;), nthreads = 13)
+</code></pre>
+<pre><code class="language-r">FAD &lt;- NULL
+for (yr in 8:22) {
+  if (yr &lt; 10)  yr &lt;- paste0(&quot;0&quot;, yr)
+  FAdata &lt;- qread(paste0(pathdata, &quot;FA&quot;, yr, &quot;.qs&quot;))
+  FAdata[, taxyear := 2000+as.numeric(yr)]
+  FAD &lt;- rbindlist(list(FAD, FAdata))
+}
+qsave(FAD, paste0(pathdata, &quot;FAD.qs&quot;), nthreads = 13)
+
+#### table(FAD[,taxyear])
+#### 2009     2010     2011     2012     2013     2014     2015     2016     2017     2018     2019     2020     2021     2022 
+####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
+</code></pre>
+<pre><code class="language-r">FAD &lt;- qread(paste0(pathdata, &quot;FAD.qs&quot;), nthreads = 13)
+Fadata &lt;- FAD[, grepout(&quot;^bus|^tax[ry]|^Tx|Mon|[nN]um|Jo|Emp|FA&quot;, colnames(FAD)), with = F]
+Fadata[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
+table(Fadata[, taxyear])
+####  2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
+#### 23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
+#### Drop date errors (Negative and over duration)
+qsave(Fadata, paste0(pathdata, &quot;FAFirstRow.qs&quot;), nthreads = 13)
+Fadata &lt;- qread(paste0(pathdata, &quot;FAFirstRow.qs&quot;), nthreads = 13)
+fadata &lt;- Fadata[0 &lt;= DurMonthMarch &amp; DurMonthMarch &lt;= 12, ]
+nrow(Fadata); nrow(fadata) # reduced 1.2M rows
+#### Merge industry code, taking fadata as base
+inda &lt;- qread(paste0(pathdata, &quot;TaxrefnoOfAgri.qs&quot;), nthreads = 13)
+fadata2 &lt;- inda[fadata, on = &quot;taxrefno&quot;]
+fadata3 &lt;- fadata2[busmainplc_geo != &quot;&quot;, ]
+faa &lt;- fadata3[Crop == 1L | Animal == 1L | Forest == 1L, ]
+setkey(faa, taxrefno)
+faa[, SubDiv := &quot;Crop&quot;]
+faa[Animal == 1L, SubDiv := &quot;Animal&quot;]
+faa[Forest == 1L, SubDiv := &quot;Forest&quot;]
+faa[, SubDiv := factor(SubDiv, levels = c(&quot;Crop&quot;, &quot;Animal&quot;, &quot;Forest&quot;))]
+faa[, .(TotalJobs = sum(Jobs, na.rm = T)), by = .(taxyear, SubDiv)][order(SubDiv, taxyear)]
+faa[, FApositive := 0L]
+faa[taxyear &lt; 2014, FApositive:= as.integer(FA &gt; 0)]
+faa[, FApositive := FApositive[FApositive == 1L][1], by = taxrefno]
+faa[is.na(FApositive), FApositive := 0L]
+faa[, Sample := &quot;Unexposed&quot;]
+faa[FApositive == 1L, Sample := &quot;Exposed&quot;]
+faa[, Sample := factor(Sample)]
+#### faa is almost unique at establishment level
+table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
+#### FALSE  TRUE 
+#### 59627     5 
+qsave(faa, paste0(pathdata, &quot;FAOfAgri.qs&quot;), nthreads = 13)
+</code></pre>
+<pre><code class="language-r">#### possible duplicates with different local municipality names
+ii0 &lt;- FAdata[, buslocmuni_geo != &quot;&quot; &amp; busdistmuni_geo != &quot;&quot;
+   &amp; busmainplc_geo != &quot;&quot;]
+ii1 &lt;- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )])
+ii2 &lt;- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )], fromLast = T)
+table(data.table(nonNA=ii0, duplicates=ii1))
+FAdata[ii0 &amp; (ii1 | ii2), ]
+table(duplicated(FAdata[ii0 &amp; !ii1, ]))
+#### plot sensitivity to XThreshold (double job months cutoff)
+library(ggplot2)
+library(cowplot)
+g1 &lt;- ggplot(data = FAdata[ii0 &amp; !ii1, ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  ggtitle(&quot;Fraction of affected jobs&quot;)+
+  scale_x_continuous(name = &quot;fraction per firm&quot;, limits=c(0, 1)) +
+  scale_color_manual(values = &quot;blue&quot;)
+g2 &lt;- ggplot(data = FAdata[ii0 &amp; !ii1, ], 
+  aes(x = FAe.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  ggtitle(&quot;Fraction of affected workers&quot;)+
+  scale_x_continuous(name = &quot;fraction per firm&quot;, limits=c(0, 1)) +
+  scale_color_manual(values = &quot;red&quot;)
+gs &lt;- plot_grid(
+  g1, g2,
+  labels = c('a.', 'b.'),
+  align=&quot;h&quot;
+)
+gs
+ggsave(
+  paste0(pathdata, &quot;FAInJobsAndEmployment.jpg&quot;)
+  , gs, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+#### Below gives an error: idvar need to specify unique rows
+#### FAdataL &lt;- reshape(FAdata[ii0 &amp; !ii1, ], 
+####   direction = &quot;long&quot;, 
+####   idvar = c(&quot;busdistmuni_geo&quot;, &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;, 
+####     &quot;Txrf&quot;, &quot;payereferenceno&quot;), 
+####   varying = grepout(&quot;^FA&quot;, colnames(FAdata))
+#### )
+gsz &lt;- ggplot(data = FAdata[!is.na(Size), ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  xlim(0, 1) +
+  scale_color_manual(values = c(&quot;red&quot;, &quot;blue&quot;))
+gsz &lt;- gsz + facet_wrap(Size ~ .)
+gsz
+ggsave(
+   paste0(pathdata, &quot;FAByFirmSize.jpg&quot;)
+  , gsz, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+</code></pre>
+<pre><code class="language-r">#### possible duplicates with different local municipality names
+ii0 &lt;- FAdata[, buslocmuni_geo != &quot;&quot; &amp; busdistmuni_geo != &quot;&quot;
+   &amp; busmainplc_geo != &quot;&quot;]
+ii1 &lt;- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )])
+ii2 &lt;- duplicated(FAdata[, .(
+   busmainplc_geo, Txrf
+ )], fromLast = T)
+table(data.table(nonNA=ii0, duplicates=ii1))
+FAdata[ii0 &amp; (ii1 | ii2), ]
+table(duplicated(FAdata[ii0 &amp; !ii1, ]))
+#### plot sensitivity to XThreshold (double job months cutoff)
+library(ggplot2)
+library(cowplot)
+g1 &lt;- ggplot(data = FAdata[ii0 &amp; !ii1, ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  ggtitle(&quot;Fraction of affected jobs&quot;)+
+  scale_x_continuous(name = &quot;fraction per firm&quot;, limits=c(0, 1)) +
+  scale_color_manual(values = &quot;blue&quot;)
+g2 &lt;- ggplot(data = FAdata[ii0 &amp; !ii1, ], 
+  aes(x = FAe.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  ggtitle(&quot;Fraction of affected workers&quot;)+
+  scale_x_continuous(name = &quot;fraction per firm&quot;, limits=c(0, 1)) +
+  scale_color_manual(values = &quot;red&quot;)
+gs &lt;- plot_grid(
+  g1, g2,
+  labels = c('a.', 'b.'),
+  align=&quot;h&quot;
+)
+gs
+ggsave(
+  paste0(pathdata, &quot;FAInJobsAndEmployment.jpg&quot;)
+  , gs, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+#### Below gives an error: idvar need to specify unique rows
+#### FAdataL &lt;- reshape(FAdata[ii0 &amp; !ii1, ], 
+####   direction = &quot;long&quot;, 
+####   idvar = c(&quot;busdistmuni_geo&quot;, &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;, 
+####     &quot;Txrf&quot;, &quot;payereferenceno&quot;), 
+####   varying = grepout(&quot;^FA&quot;, colnames(FAdata))
+#### )
+gsz &lt;- ggplot(data = FAdata[!is.na(Size), ], 
+  aes(x = FA.orig)) +
+  geom_density(alpha = .1, fill = &quot;blue&quot;) + 
+  xlim(0, 1) +
+  scale_color_manual(values = c(&quot;red&quot;, &quot;blue&quot;))
+gsz &lt;- gsz + facet_wrap(Size ~ .)
+gsz
+ggsave(
+   paste0(pathdata, &quot;FAByFirmSize.jpg&quot;)
+  , gsz, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+</code></pre>
+<h1 id="chp:plot-employment-fa">Plot employment, FA</h1>
+<pre><code class="language-r">library(qs)
+library(data.table)
+library(ggplot2)
+#### irp5Ma is created in Location information granularity checks
+irp5Ma &lt;- qread(paste0(pathdata, &quot;irp5Ma.qs&quot;), nthreads = 13)
+FAD &lt;- qread(paste0(pathdata, &quot;FAD.qs&quot;), nthreads = 13)
+
+#### To Michael, 2026 Jan 21, negative duration entries
+FAD[, .(Num = .N, Neg = sum(DurMonthMarch&lt;0)), by = (yr)][, 
+  .(yr, Num, NegRate = round(Neg/Num, 4))]
+
+
+fadata &lt;- unique(FAD[, 
+  grepout(&quot;^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA&quot;, colnames(FAD)), with = F])
+qsave(fadata, paste0(pathdata, &quot;FADUniqueEntries.qs&quot;), nthreads = 13)
+
+geovars &lt;- grepout(&quot;^bus.*geo$&quot;, colnames(irp5Ma))
+irp5Ma[, Num := as.integer(.N), by = c(geovars, &quot;taxrefno&quot;, &quot;taxyear&quot;)]
+irp5ForPlot &lt;- unique(irp5Ma[taxyear &gt;= 2012 &amp; taxyear &lt;= 2020, 
+  c(geovars, &quot;taxyear&quot;, &quot;taxrefno&quot;, &quot;Num&quot;, &quot;FA&quot;), with = F])
+irp5ForPlot[, taxyear := as.character(taxyear)]
+ForPlot &lt;- reshape(irp5ForPlot, direction = &quot;long&quot;, 
+  idvar = c(c(geovars, &quot;taxrefno&quot;), timevar = &quot;taxyear&quot;,
+  varying = grepout(&quot;Num|FA&quot;, colnames(irp5ForPlot))))
+g1 &lt;- ggplot(data = irp5ForPlot[busmainplc_geo != &quot;&quot;, ], aes(x = Num, group = taxyear, 
+  colour = taxyear, fill = taxyear)) +
+  geom_density(alpha = .3) + 
+  scale_color_viridis_d(&quot;Tax year&quot;) +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(1, 100), trans = &quot;log10&quot;) +
+  theme_bw()
+ g1
+g1 + facet_grid(taxyear ~ .)
+ggsave(
+  paste0(pathdata, &quot;NumberOfEmployees.jpg&quot;)
+  , g1, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+</code></pre>
+<h1 id="chp:location-information-granularity-checks">Location information granularity checks</h1>
+<p>We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.</p>
+<pre><code class="language-r">irp5 &lt;- qread(paste0(pathdata, &quot;irp5.qs&quot;), nthreads = 13)
+GeoLevel &lt;- c(&quot;Prv&quot;, &quot;Dis&quot;, &quot;Loc&quot;, &quot;Mai&quot;)
+geovars &lt;- grepout(&quot;^bus.*geo$&quot;, colnames(irp5))
+#### Location granularity indicator
+irp5[, LocGranular := &quot;none&quot;]
+for (yr in 8:22) {
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != &quot;&quot; &amp; 
+		  busdistmuni_geo != &quot;&quot; &amp; 
+		  buslocmuni_geo  != &quot;&quot; &amp; 
+		  busmainplc_geo  != &quot;&quot; &amp; 
+      taxyear == 2000 + yr
+		] &amp;
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[4]]
+
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != &quot;&quot; &amp; 
+		  busdistmuni_geo != &quot;&quot; &amp; 
+		  buslocmuni_geo  != &quot;&quot; &amp; 
+		  busmainplc_geo  == &quot;&quot; &amp;
+      taxyear == 2000 + yr
+		] &amp;
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[3]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != &quot;&quot; &amp; 
+		  busdistmuni_geo != &quot;&quot; &amp; 
+		  buslocmuni_geo  == &quot;&quot; &amp; 
+		  busmainplc_geo  == &quot;&quot; &amp;
+      taxyear == 2000 + yr
+		] &amp;
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[2]]
+	irp5[Txrf %in% Txrf
+		[
+		  busprov_geo     != &quot;&quot; &amp; 
+		  busdistmuni_geo == &quot;&quot; &amp; 
+		  buslocmuni_geo  == &quot;&quot; &amp; 
+		  busmainplc_geo  == &quot;&quot; &amp;
+      taxyear == 2000 + yr
+		] &amp;
+    taxyear == 2000 + yr, 
+	  LocGranular := GeoLevel[1]]
+}
+irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, &quot;none&quot;))]
+setnames(irp5, &quot;LocGranular&quot;, &quot;LocGranularFirm&quot;)
+irp5[, LocGranularJob := &quot;none&quot;]
+irp5[busprov_geo != &quot;&quot;, LocGranularJob := GeoLevel[1]]
+irp5[busdistmuni_geo != &quot;&quot;, LocGranularJob := GeoLevel[2]]
+irp5[buslocmuni_geo != &quot;&quot;, LocGranularJob := GeoLevel[3]]
+irp5[busmainplc_geo != &quot;&quot;, LocGranularJob := GeoLevel[4]]
+
+#### Location granularity due to establishment clustering
+#### When location info is missing in some rows, one can allocate workers
+#### only up to location level where all establishments are clustered
+for (mm in 1:length(GeoLevel)) {
+  irp5[, (GeoLevel[mm]) := get(geovars[mm])]
+  irp5[get(geovars[mm]) == &quot;&quot;, (GeoLevel[mm]) := NA]
+}
+#### Number of unique entries at each level 
+#### Subtract 1 because NA is counted as 1 (all NA entries are MainPlNum == 1L)
+irp5[, MainPlNum := as.integer(length(unique(Mai)))-1L, by = .(Txrf, taxyear)]
+irp5[, LocMunNum := as.integer(length(unique(Loc)))-1L, by = .(Txrf, taxyear)]
+irp5[, DisMunNum := as.integer(length(unique(Dis)))-1L, by = .(Txrf, taxyear)]
+irp5[, ProvNum   := as.integer(length(unique(Prv)))-1L, by = .(Txrf, taxyear)]
+irp5[, MainPlNA := as.integer(all(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, LocMunNA := as.integer(all(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, DisMunNA := as.integer(all(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, ProvNA := as.integer(all(is.na(Prv))), by = .(Txrf, taxyear)]
+
+irp5[, CommonLocality := &quot;none&quot;]
+irp5[
+      ProvNum == 1L &amp; 
+    DisMunNum == 1L &amp; 
+    LocMunNum == 1L &amp; 
+    MainPlNum == 1L &amp;
+    MainPlNA  == 0L, 
+  CommonLocality := GeoLevel[4]]
+irp5[
+    ProvNum   == 1L &amp; 
+    DisMunNum == 1L &amp; 
+    LocMunNum == 1L &amp; 
+    MainPlNum != 1L &amp; 
+    LocMunNA  == 0L, 
+  CommonLocality := GeoLevel[3]]
+irp5[
+    ProvNum   == 1L &amp; 
+    DisMunNum == 1L &amp; 
+    LocMunNum != 1L &amp; 
+    MainPlNum != 1L &amp;
+    DisMunNA  == 0L, 
+  CommonLocality := GeoLevel[2]]
+irp5[
+    ProvNum   == 1L &amp; 
+    DisMunNum != 1L &amp; 
+    LocMunNum != 1L &amp; 
+    MainPlNum != 1L &amp; 
+    ProvNA  == 0L, 
+  CommonLocality := GeoLevel[1]]
+irp5[, CommonLocality := factor(CommonLocality, levels = c(GeoLevel, &quot;none&quot;))]
+irp5[, NARowsMai := as.integer(sum(is.na(Mai))), by = .(Txrf, taxyear)]
+irp5[, NARowsLoc := as.integer(sum(is.na(Loc))), by = .(Txrf, taxyear)]
+irp5[, NARowsDis := as.integer(sum(is.na(Dis))), by = .(Txrf, taxyear)]
+irp5[, NARowsPrv := as.integer(sum(is.na(Prv))), by = .(Txrf, taxyear)]
+irp5[, TotalRowsInTxrf := as.integer(.N), by = .(Txrf, taxyear)]
+qsave(irp5, paste0(pathdata, &quot;irp5_LocationGranularity.qs&quot;), nthreads = 13)
+
+unique(irp5[Txrf %in% Txrf[grepl(&quot;^M&quot;, LocGranularFirm) | grepl(&quot;^M&quot;, CommonLocality)][1]
+  &amp; taxyear == 2009, 
+  c(&quot;Txrf&quot;, &quot;UID&quot;, geovars, grepout(&quot;Num|Rows|Gran|Commo&quot;, colnames(irp5))), with = F])
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Txrf</th>
+<th>UID</th>
+<th>busprov_geo</th>
+<th>busdistmuni_geo</th>
+<th>buslocmuni_geo</th>
+<th>busmainplc_geo</th>
+<th align="right">Num</th>
+<th>LocGranularFirm</th>
+<th>LocGranularJob</th>
+<th align="right">MainPlNum</th>
+<th align="right">LocMunNum</th>
+<th align="right">DisMunNum</th>
+<th align="right">ProvNum</th>
+<th>CommonLocality</th>
+<th align="right">NARowsMai</th>
+<th align="right">NARowsLoc</th>
+<th align="right">NARowsDis</th>
+<th align="right">NARowsPrv</th>
+<th align="right">TotalRowsInTxrf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AACAAAXGCC</td>
+<td>BXCCZCTKCKCTK</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Durbanville</td>
+<td align="right">2</td>
+<td>Mai</td>
+<td>Mai</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>AACAAAXGCC</td>
+<td>QXCGACCCACBBG</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Durbanville</td>
+<td align="right">2</td>
+<td>Mai</td>
+<td>Mai</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">#### LocGranularFirm: the most granular location info at firm level
+#### LocGranularJob : the most granular location info at each job level
+#### MainPlNum      : the number of unique entries at main place level for firm-taxyear
+#### NARowsMai      : the number of NA entries at main place level for firm-taxyear
+#### CommonLocality : Lowest area level common among all the jobs for firm-taxyear
+####   E.g., if all jobs are in Stellenbosch (main place), it is main place
+####   If there are jobs attached to a branch in Capetown, then it is province
+####   If location info is missing in some rows, then &quot;none&quot;
+
+#### We know that rows with no location info can be allocated to the area level by:
+####   MainPlNum == 1L                    ==&gt; main place
+####   MainPlNum &gt;  1L &amp; LocMunNum == 1L  ==&gt; local muni
+####   LocMunNum &gt;  1L &amp; DisMunNum == 1L  ==&gt; district muni
+####   DisMunNum &gt;  1L &amp; ProvNum == 1L    ==&gt; province 
+
+#### Panel of various levels
+#### Main place panel: 
+####  a. location entries are complete &amp; location is granular down to main place level, or,
+####        NARowsMai == 0L &amp; LocGranularFirm == Mai
+####  b. location == NA for some rows &amp; uniquely common locality level is main place
+####        NARowsMai &gt; 0L  &amp; MainPlNum == 1L
+#### Local municipality panel: (addition to main place panel)
+####  a. location entries are complete down to local municipality &amp; location is granular down to local municipality, or,
+####        NARowsLoc == 0L &amp; LocGranularFirm == Loc
+####  b. location == NA for some rows &amp; uniquely common locality level is local municipality
+####        NARowsLoc &gt; 0L  &amp; LocMunNum == 1L
+#### District municipality panel: (addition to local municipality panel)
+####  a. location entries are complete down to district municipality &amp; location is granular down to district municipality, or,
+####        NARowsDis == 0L &amp; LocGranularFirm == Dis
+####  b. location == NA for some rows &amp; uniquely common locality level is district municipality
+####        NARowsDis &gt; 0L  &amp; DisMunNum == 1L
+#### Province panel: (addition to district municipality panel)
+####  a. location entries are complete down to province &amp; location is granular down to province, or,
+####        NARowsPrv == 0L &amp; LocGranularFirm == Prv
+####  b. location == NA for some rows &amp; uniquely common locality level is province
+####        NARowsPrv &gt; 0L  &amp; ProvNum == 1L
+iiM &lt;- irp5[,
+  NARowsMai == 0L &amp; grepl(&quot;^M&quot;, LocGranularFirm) | 
+  NARowsMai &gt;  0L &amp; MainPlNum == 1L]
+iiL &lt;- !iiM &amp; irp5[, 
+  NARowsLoc == 0L &amp; grepl(&quot;^L&quot;, LocGranularFirm) | 
+  NARowsLoc &gt;  0L &amp; LocMunNum == 1L]
+iiD &lt;- !iiM &amp; !iiL &amp; irp5[, 
+  NARowsDis == 0L &amp; grepl(&quot;^D&quot;, LocGranularFirm) | 
+  NARowsDis &gt;  0L &amp; DisMunNum == 1L]
+iiP &lt;- !iiM &amp; !iiL &amp; !iiD &amp; irp5[, 
+  NARowsPrv == 0L &amp; grepl(&quot;^P&quot;, LocGranularFirm) | 
+  NARowsPrv &gt;  0L &amp; ProvNum   == 1L] 
+nrow(irp5M &lt;- irp5[iiM, ])
+</code></pre>
+<pre><code>#&gt; [1] 116514034
+</code></pre>
+<pre><code class="language-r">nrow(irp5L &lt;- irp5[iiL, ])
+</code></pre>
+<pre><code>#&gt; [1] 3936672
+</code></pre>
+<pre><code class="language-r">nrow(irp5D &lt;- irp5[iiD, ])
+</code></pre>
+<pre><code>#&gt; [1] 379004
+</code></pre>
+<pre><code class="language-r">nrow(irp5P &lt;- irp5[iiP, ])
+</code></pre>
+<pre><code>#&gt; [1] 4387861
+</code></pre>
+<pre><code class="language-r">qsave(irp5M, paste0(pathdata, &quot;irp5M.qs&quot;), nthreads = 13)
+qsave(irp5L, paste0(pathdata, &quot;irp5L.qs&quot;), nthreads = 13)
+qsave(irp5D, paste0(pathdata, &quot;irp5D.qs&quot;), nthreads = 13)
+qsave(irp5P, paste0(pathdata, &quot;irp5P.qs&quot;), nthreads = 13)
+
+irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>busprov_geo</th>
+<th>busdistmuni_geo</th>
+<th>buslocmuni_geo</th>
+<th>busmainplc_geo</th>
+<th>taxrefno</th>
+<th>Txrf</th>
+<th>uid</th>
+<th>UID</th>
+<th>gender</th>
+<th>DateStart</th>
+<th>DateEnd</th>
+<th>DateBirth</th>
+<th align="right">FirstYearOnSIC7</th>
+<th>imp_mic_sic7_1d</th>
+<th>imp_mic_sic7_2d</th>
+<th>imp_mic_sic7_3d</th>
+<th>imp_mic_sic7_5d</th>
+<th align="right">change1d</th>
+<th align="right">change2d</th>
+<th align="right">change3d</th>
+<th>irp5it3aid</th>
+<th>idno</th>
+<th>Nationality</th>
+<th>natureofperson</th>
+<th>payereferenceno</th>
+<th>dateofbirth</th>
+<th align="right">Old.taxyear</th>
+<th>periodemployedfrom</th>
+<th>periodemployedto</th>
+<th>totalperiodsworked</th>
+<th>totalperiodsinyearofassessment</th>
+<th align="right">Num</th>
+<th align="right">kerr_income</th>
+<th align="right">ptrs_income</th>
+<th align="right">a3601_income</th>
+<th>bprov.13</th>
+<th>bdist.13</th>
+<th>bloc.13</th>
+<th>bmain.13</th>
+<th>i.UID</th>
+<th align="right">LocInfoCopiedFrom</th>
+<th align="right">ProvCopied</th>
+<th align="right">DisCopied</th>
+<th align="right">LocCopied</th>
+<th align="right">MaiCopied</th>
+<th>Entity</th>
+<th>NatureOfPer</th>
+<th>TYStart</th>
+<th>TYEnd</th>
+<th align="right">taxyear</th>
+<th>bprov13</th>
+<th>bdist13</th>
+<th>bmain13</th>
+<th>orig.bprov</th>
+<th>orig.bdist</th>
+<th>orig.bloc</th>
+<th>orig.bmain</th>
+<th>bloc13</th>
+<th>LocGranularFirm</th>
+<th>LocGranularJob</th>
+<th>Prv</th>
+<th>Dis</th>
+<th>Loc</th>
+<th>Mai</th>
+<th align="right">MainPlNum</th>
+<th align="right">LocMunNum</th>
+<th align="right">DisMunNum</th>
+<th align="right">ProvNum</th>
+<th align="right">MainPlNA</th>
+<th align="right">LocMunNA</th>
+<th align="right">DisMunNA</th>
+<th align="right">ProvNA</th>
+<th>CommonLocality</th>
+<th align="right">NARowsMai</th>
+<th align="right">NARowsLoc</th>
+<th align="right">NARowsDis</th>
+<th align="right">NARowsPrv</th>
+<th align="right">TotalRowsInTxrf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>AXCQGBTGCACKJ</td>
+<td>AXCQGBTGCACKJ</td>
+<td>M</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1967-03-04</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908723</td>
+<td>AXCQGBTGCACKJ</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1967/03/04</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">40486</td>
+<td align="right">40486</td>
+<td align="right">38104</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AXCQGBTGCACKJ</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>BXCQGQTAQJCAX</td>
+<td>BXCQGQTAQJCAX</td>
+<td>M</td>
+<td>2012-01-01</td>
+<td>2012-02-29</td>
+<td>1983-06-23</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908730</td>
+<td>BXCQGQTAQJCAX</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1983/06/23</td>
+<td align="right">2012</td>
+<td>2012/01/01</td>
+<td>2012/02/29</td>
+<td>2.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">8000</td>
+<td align="right">8000</td>
+<td align="right">8000</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>BXCQGQTAQJCAX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>BXCXABCJCKCAJ</td>
+<td>BXCXABCJCKCAJ</td>
+<td>F</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1963-07-06</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908725</td>
+<td>BXCXABCJCKCAJ</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1963/07/06</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">86029</td>
+<td align="right">86029</td>
+<td align="right">80968</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>BXCXABCJCKCAJ</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>CXCJCBCBAKCJT</td>
+<td>CXCJCBCBAKCJT</td>
+<td>F</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1956-07-31</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908722</td>
+<td>CXCJCBCBAKCJT</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1956/07/31</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">177542</td>
+<td align="right">177542</td>
+<td align="right">148048</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>CXCJCBCBAKCJT</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>CXCZBKTABBCXK</td>
+<td>CXCZBKTABBCXK</td>
+<td>M</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1978-01-13</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908736</td>
+<td>CXCZBKTABBCXK</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1978/01/13</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>244</td>
+<td>366</td>
+<td align="right">12</td>
+<td align="right">32585</td>
+<td align="right">32585</td>
+<td align="right">28078</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>CXCZBKTABBCXK</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>TXCXGBTBBCBGX</td>
+<td>TXCXGBTBBCBGX</td>
+<td>M</td>
+<td>2011-12-01</td>
+<td>2012-02-29</td>
+<td>1984-10-11</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908729</td>
+<td>TXCXGBTBBCBGX</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1984/10/11</td>
+<td align="right">2012</td>
+<td>2011/12/01</td>
+<td>2012/02/29</td>
+<td>3.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">90000</td>
+<td align="right">90000</td>
+<td align="right">90000</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>TXCXGBTBBCBGX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>XXCZZKTKCGCXK</td>
+<td>XXCZZKTKCGCXK</td>
+<td>M</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1978-04-07</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908735</td>
+<td>XXCZZKTKCGCXK</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1978/04/07</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>244</td>
+<td>366</td>
+<td align="right">12</td>
+<td align="right">35420</td>
+<td align="right">35420</td>
+<td align="right">29110</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>XXCZZKTKCGCXK</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>ZXBKTXCABQBGJ</td>
+<td>ZXBKTXCABQBGJ</td>
+<td>F</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1964-12-13</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908724</td>
+<td>ZXBKTXCABQBGJ</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1964/12/13</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">180341</td>
+<td align="right">180341</td>
+<td align="right">84840</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXBKTXCABQBGJ</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>ZXCACQTABKCTJ</td>
+<td>ZXCACQTABKCTJ</td>
+<td>M</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1965-07-13</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908720</td>
+<td>ZXCACQTABKCTJ</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1965/07/13</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">11</td>
+<td align="right">73177</td>
+<td align="right">73177</td>
+<td align="right">69036</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCACQTABKCTJ</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>AACACBCAXZ</td>
+<td>AACACBCAXZ</td>
+<td>ZXCQXGTGQBBGX</td>
+<td>ZXCQXGTGQBBGX</td>
+<td>M</td>
+<td>2011-11-01</td>
+<td>2012-02-29</td>
+<td>1984-11-24</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Growing of perennial crops</td>
+<td>Growing of grapes</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td>190908742</td>
+<td>ZXCQXGTGQBBGX</td>
+<td>sa</td>
+<td>A</td>
+<td>JXQXKKCJTK</td>
+<td>1984/11/24</td>
+<td align="right">2012</td>
+<td>2011/11/01</td>
+<td>2012/02/29</td>
+<td>121</td>
+<td>366</td>
+<td align="right">12</td>
+<td align="right">16607</td>
+<td align="right">16607</td>
+<td align="right">16157</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>ZXCQXGTGQBBGX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Hout Bay</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Loc</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">24</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>busprov_geo</th>
+<th>busdistmuni_geo</th>
+<th>buslocmuni_geo</th>
+<th>busmainplc_geo</th>
+<th>taxrefno</th>
+<th>Txrf</th>
+<th>uid</th>
+<th>UID</th>
+<th>gender</th>
+<th>DateStart</th>
+<th>DateEnd</th>
+<th>DateBirth</th>
+<th align="right">FirstYearOnSIC7</th>
+<th>imp_mic_sic7_1d</th>
+<th>imp_mic_sic7_2d</th>
+<th>imp_mic_sic7_3d</th>
+<th>imp_mic_sic7_5d</th>
+<th align="right">change1d</th>
+<th align="right">change2d</th>
+<th align="right">change3d</th>
+<th>irp5it3aid</th>
+<th>idno</th>
+<th>Nationality</th>
+<th>natureofperson</th>
+<th>payereferenceno</th>
+<th>dateofbirth</th>
+<th align="right">Old.taxyear</th>
+<th>periodemployedfrom</th>
+<th>periodemployedto</th>
+<th>totalperiodsworked</th>
+<th>totalperiodsinyearofassessment</th>
+<th align="right">Num</th>
+<th align="right">kerr_income</th>
+<th align="right">ptrs_income</th>
+<th align="right">a3601_income</th>
+<th>bprov.13</th>
+<th>bdist.13</th>
+<th>bloc.13</th>
+<th>bmain.13</th>
+<th>i.UID</th>
+<th align="right">LocInfoCopiedFrom</th>
+<th align="right">ProvCopied</th>
+<th align="right">DisCopied</th>
+<th align="right">LocCopied</th>
+<th align="right">MaiCopied</th>
+<th>Entity</th>
+<th>NatureOfPer</th>
+<th>TYStart</th>
+<th>TYEnd</th>
+<th align="right">taxyear</th>
+<th>bprov13</th>
+<th>bdist13</th>
+<th>bmain13</th>
+<th>orig.bprov</th>
+<th>orig.bdist</th>
+<th>orig.bloc</th>
+<th>orig.bmain</th>
+<th>bloc13</th>
+<th>LocGranularFirm</th>
+<th>LocGranularJob</th>
+<th>Prv</th>
+<th>Dis</th>
+<th>Loc</th>
+<th>Mai</th>
+<th align="right">MainPlNum</th>
+<th align="right">LocMunNum</th>
+<th align="right">DisMunNum</th>
+<th align="right">ProvNum</th>
+<th align="right">MainPlNA</th>
+<th align="right">LocMunNA</th>
+<th align="right">DisMunNA</th>
+<th align="right">ProvNA</th>
+<th>CommonLocality</th>
+<th align="right">NARowsMai</th>
+<th align="right">NARowsLoc</th>
+<th align="right">NARowsDis</th>
+<th align="right">NARowsPrv</th>
+<th align="right">TotalRowsInTxrf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>KXBCCCJACBCAT</td>
+<td>KXBCCCJACBCAT</td>
+<td>M</td>
+<td>2017-03-01</td>
+<td>2018-02-28</td>
+<td>1953-01-03</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>ABGAXTZJG</td>
+<td>KXBCCCJACBCAT</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1953/01/03</td>
+<td align="right">2018</td>
+<td>2017/03/01</td>
+<td>2018/02/28</td>
+<td>365</td>
+<td>365</td>
+<td align="right">46</td>
+<td align="right">42960</td>
+<td align="right">42960</td>
+<td align="right">40460</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2017-03-01</td>
+<td>2018-03-01</td>
+<td align="right">2018</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>ZXCQJBJQBQCTJ</td>
+<td>ZXCQJBJQBQCTJ</td>
+<td>M</td>
+<td>2017-03-01</td>
+<td>2018-02-28</td>
+<td>1965-02-12</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>AGAAXTZJG</td>
+<td>ZXCQJBJQBQCTJ</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1965/02/12</td>
+<td align="right">2018</td>
+<td>2017/03/01</td>
+<td>2018/02/28</td>
+<td>365</td>
+<td>365</td>
+<td align="right">46</td>
+<td align="right">42960</td>
+<td align="right">42960</td>
+<td align="right">40460</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2017-03-01</td>
+<td>2018-03-01</td>
+<td align="right">2018</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>XXCJKJTCBBBAK</td>
+<td>XXCJKJTCBBBAK</td>
+<td>M</td>
+<td>2017-03-01</td>
+<td>2018-02-28</td>
+<td>1973-11-10</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>AJAAXTZJG</td>
+<td>XXCJKJTCBBBAK</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1973/11/10</td>
+<td align="right">2018</td>
+<td>2017/03/01</td>
+<td>2018/02/28</td>
+<td>365</td>
+<td>365</td>
+<td align="right">46</td>
+<td align="right">59292</td>
+<td align="right">59292</td>
+<td align="right">56292</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2017-03-01</td>
+<td>2018-03-01</td>
+<td align="right">2018</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>BXCGKZTXBBCKX</td>
+<td>BXCGKZTXBBCKX</td>
+<td>M</td>
+<td>2017-03-01</td>
+<td>2018-02-28</td>
+<td>1987-01-18</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>AQTAXTZJG</td>
+<td>BXCGKZTXBBCKX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1987/01/18</td>
+<td align="right">2018</td>
+<td>2017/03/01</td>
+<td>2018/02/28</td>
+<td>365</td>
+<td>365</td>
+<td align="right">46</td>
+<td align="right">42960</td>
+<td align="right">42960</td>
+<td align="right">40460</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2017-03-01</td>
+<td>2018-03-01</td>
+<td align="right">2018</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>BXCXBQTACBBCJ</td>
+<td>BXCXBQTACBBCJ</td>
+<td>M</td>
+<td>2017-03-01</td>
+<td>2018-02-28</td>
+<td>1960-11-03</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>BCGAXTZJG</td>
+<td>BXCXBQTACBBCJ</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1960/11/03</td>
+<td align="right">2018</td>
+<td>2017/03/01</td>
+<td>2018/02/28</td>
+<td>365</td>
+<td>365</td>
+<td align="right">46</td>
+<td align="right">42960</td>
+<td align="right">42960</td>
+<td align="right">40460</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2017-03-01</td>
+<td>2018-03-01</td>
+<td align="right">2018</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">48</td>
+</tr>
+<tr>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>BXCGKZTXBBCKX</td>
+<td>BXCGKZTXBBCKX</td>
+<td>M</td>
+<td>2019-03-01</td>
+<td>2020-02-29</td>
+<td>1987-01-18</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>XJBCTTCXT</td>
+<td>BXCGKZTXBBCKX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1987/01/18</td>
+<td align="right">2020</td>
+<td>2019/03/01</td>
+<td>2020/02/29</td>
+<td>366</td>
+<td>366</td>
+<td align="right">25</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2019-03-01</td>
+<td>2020-03-01</td>
+<td align="right">2020</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">27</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>JXCCKJTGQBBJJ</td>
+<td>JXCCKJTGQBBJJ</td>
+<td>M</td>
+<td>2019-03-01</td>
+<td>2020-02-29</td>
+<td>1966-11-24</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>XTBCTTCXT</td>
+<td>JXCCKJTGQBBJJ</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1966/11/24</td>
+<td align="right">2020</td>
+<td>2019/03/01</td>
+<td>2020/02/29</td>
+<td>366</td>
+<td>366</td>
+<td align="right">25</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2019-03-01</td>
+<td>2020-03-01</td>
+<td align="right">2020</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">27</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>ZXCKBXTJCQCBK</td>
+<td>ZXCKBXTJCQCBK</td>
+<td>M</td>
+<td>2019-03-01</td>
+<td>2020-02-29</td>
+<td>1971-02-06</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>ZGBCTTCXT</td>
+<td>ZXCKBXTJCQCBK</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1971/02/06</td>
+<td align="right">2020</td>
+<td>2019/03/01</td>
+<td>2020/02/29</td>
+<td>366</td>
+<td>366</td>
+<td align="right">25</td>
+<td align="right">61892</td>
+<td align="right">61892</td>
+<td align="right">61892</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2019-03-01</td>
+<td>2020-03-01</td>
+<td align="right">2020</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">27</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>TXBCZXKJCJCTK</td>
+<td>TXBCZXKJCJCTK</td>
+<td>M</td>
+<td>2019-03-01</td>
+<td>2020-02-29</td>
+<td>1975-06-06</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>ZJBCTTCXT</td>
+<td>TXBCZXKJCJCTK</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1975/06/06</td>
+<td align="right">2020</td>
+<td>2019/03/01</td>
+<td>2020/02/29</td>
+<td>366</td>
+<td>366</td>
+<td align="right">25</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2019-03-01</td>
+<td>2020-03-01</td>
+<td align="right">2020</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Gravelotte</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>Ba-Phalaborwa</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">27</td>
+</tr>
+<tr>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td>AAJQZCCBBZ</td>
+<td>AAJQZCCBBZ</td>
+<td>QXCXGZTTQKCTK</td>
+<td>QXCXGZTTQKCTK</td>
+<td>M</td>
+<td>2019-03-01</td>
+<td>2020-02-29</td>
+<td>1975-07-25</td>
+<td align="right">2008</td>
+<td>Agriculture, forestry and fishing</td>
+<td>Crop and animal production, hunting and related service activities</td>
+<td>Support activities to agriculture and post-harvest crop activities</td>
+<td>Support activities for animal production</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td>ZTBCTTCXT</td>
+<td>QXCXGZTTQKCTK</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZZZAKCAQK</td>
+<td>1975/07/25</td>
+<td align="right">2020</td>
+<td>2019/03/01</td>
+<td>2020/02/29</td>
+<td>366</td>
+<td>366</td>
+<td align="right">25</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td align="right">45980</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2019-03-01</td>
+<td>2020-03-01</td>
+<td align="right">2020</td>
+<td></td>
+<td></td>
+<td></td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td></td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Limpopo</td>
+<td>Mopani</td>
+<td>Ba-Phalaborwa</td>
+<td>Gravelotte</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>none</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">27</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same prov
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>busprov_geo</th>
+<th>busdistmuni_geo</th>
+<th>buslocmuni_geo</th>
+<th>busmainplc_geo</th>
+<th>taxrefno</th>
+<th>Txrf</th>
+<th>uid</th>
+<th>UID</th>
+<th>gender</th>
+<th>DateStart</th>
+<th>DateEnd</th>
+<th>DateBirth</th>
+<th align="right">FirstYearOnSIC7</th>
+<th>imp_mic_sic7_1d</th>
+<th>imp_mic_sic7_2d</th>
+<th>imp_mic_sic7_3d</th>
+<th>imp_mic_sic7_5d</th>
+<th align="right">change1d</th>
+<th align="right">change2d</th>
+<th align="right">change3d</th>
+<th>irp5it3aid</th>
+<th>idno</th>
+<th>Nationality</th>
+<th>natureofperson</th>
+<th>payereferenceno</th>
+<th>dateofbirth</th>
+<th align="right">Old.taxyear</th>
+<th>periodemployedfrom</th>
+<th>periodemployedto</th>
+<th>totalperiodsworked</th>
+<th>totalperiodsinyearofassessment</th>
+<th align="right">Num</th>
+<th align="right">kerr_income</th>
+<th align="right">ptrs_income</th>
+<th align="right">a3601_income</th>
+<th>bprov.13</th>
+<th>bdist.13</th>
+<th>bloc.13</th>
+<th>bmain.13</th>
+<th>i.UID</th>
+<th align="right">LocInfoCopiedFrom</th>
+<th align="right">ProvCopied</th>
+<th align="right">DisCopied</th>
+<th align="right">LocCopied</th>
+<th align="right">MaiCopied</th>
+<th>Entity</th>
+<th>NatureOfPer</th>
+<th>TYStart</th>
+<th>TYEnd</th>
+<th align="right">taxyear</th>
+<th>bprov13</th>
+<th>bdist13</th>
+<th>bmain13</th>
+<th>orig.bprov</th>
+<th>orig.bdist</th>
+<th>orig.bloc</th>
+<th>orig.bmain</th>
+<th>bloc13</th>
+<th>LocGranularFirm</th>
+<th>LocGranularJob</th>
+<th>Prv</th>
+<th>Dis</th>
+<th>Loc</th>
+<th>Mai</th>
+<th align="right">MainPlNum</th>
+<th align="right">LocMunNum</th>
+<th align="right">DisMunNum</th>
+<th align="right">ProvNum</th>
+<th align="right">MainPlNA</th>
+<th align="right">LocMunNA</th>
+<th align="right">DisMunNA</th>
+<th align="right">ProvNA</th>
+<th>CommonLocality</th>
+<th align="right">NARowsMai</th>
+<th align="right">NARowsLoc</th>
+<th align="right">NARowsDis</th>
+<th align="right">NARowsPrv</th>
+<th align="right">TotalRowsInTxrf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>TXCZGCTXBZCKX</td>
+<td>TXCZGCTXBZCKX</td>
+<td>M</td>
+<td></td>
+<td></td>
+<td>1987-09-18</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>19420094</td>
+<td>TXCZGCTXBZCKX</td>
+<td>sa</td>
+<td></td>
+<td>ZZTBAKCGBK</td>
+<td>1987/09/18</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">60</td>
+<td align="right">8500</td>
+<td align="right">8500</td>
+<td align="right">8500</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2007-03-01</td>
+<td>2008-03-01</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Mai</td>
+<td>none</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>KXCXKGTACKCJT</td>
+<td>KXCXKGTACKCJT</td>
+<td>M</td>
+<td></td>
+<td></td>
+<td>1956-07-03</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>19420133</td>
+<td>KXCXKGTACKCJT</td>
+<td>sa</td>
+<td></td>
+<td>ZZTBAKCGBK</td>
+<td>1956/07/03</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">60</td>
+<td align="right">29375</td>
+<td align="right">29375</td>
+<td align="right">29375</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">2013</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>private</td>
+<td>A</td>
+<td>2007-03-01</td>
+<td>2008-03-01</td>
+<td align="right">2008</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>JXCZXKTTQACAT</td>
+<td>JXCZXKTTQACAT</td>
+<td>M</td>
+<td></td>
+<td></td>
+<td>1953-03-25</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>19420136</td>
+<td>JXCZXKTTQACAT</td>
+<td>sa</td>
+<td></td>
+<td>ZZTBAKCGBK</td>
+<td>1953/03/25</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">60</td>
+<td align="right">27000</td>
+<td align="right">27000</td>
+<td align="right">27000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2007-03-01</td>
+<td>2008-03-01</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Mai</td>
+<td>none</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>BXCAQCCKBZCTX</td>
+<td>BXCAQCCKBZCTX</td>
+<td>F</td>
+<td></td>
+<td></td>
+<td>1985-09-17</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>19420138</td>
+<td>BXCAQCCKBZCTX</td>
+<td>sa</td>
+<td></td>
+<td>ZZTBAKCGBK</td>
+<td>1985/09/17</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">60</td>
+<td align="right">17000</td>
+<td align="right">17000</td>
+<td align="right">17000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2007-03-01</td>
+<td>2008-03-01</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Mai</td>
+<td>none</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>GXCXCXCACXCKK</td>
+<td>GXCXCXCACXCKK</td>
+<td>F</td>
+<td></td>
+<td></td>
+<td>1977-08-03</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>19420643</td>
+<td>GXCXCXCACXCKK</td>
+<td>sa</td>
+<td></td>
+<td>ZZTBAKCGBK</td>
+<td>1977/08/03</td>
+<td align="right">2008</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">60</td>
+<td align="right">31000</td>
+<td align="right">31000</td>
+<td align="right">31000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td align="right">2013</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>private</td>
+<td>A</td>
+<td>2007-03-01</td>
+<td>2008-03-01</td>
+<td align="right">2008</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">28</td>
+<td align="right">46</td>
+</tr>
+<tr>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td>⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>ZXCKQXCXBJCQT</td>
+<td>ZXCKQXCXBJCQT</td>
+<td>F</td>
+<td>2011-03-01</td>
+<td>2012-02-29</td>
+<td>1952-06-18</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>201365813</td>
+<td>ZXCKQXCXBJCQT</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZTBAKCGBK</td>
+<td>1952/06/18</td>
+<td align="right">2012</td>
+<td>2011/03/01</td>
+<td>2012/02/29</td>
+<td>12.</td>
+<td>12.</td>
+<td align="right">82</td>
+<td align="right">18912</td>
+<td align="right">18912</td>
+<td align="right">18912</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCKQXCXBJCQT</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">96</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>ZXCQQQCBQBBZX</td>
+<td>ZXCQQQCBQBBZX</td>
+<td>F</td>
+<td>2011-03-01</td>
+<td>2012-02-29</td>
+<td>1989-11-21</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>201365763</td>
+<td>ZXCQQQCBQBBZX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZTBAKCGBK</td>
+<td>1989/11/21</td>
+<td align="right">2012</td>
+<td>2011/03/01</td>
+<td>2012/02/29</td>
+<td>12.</td>
+<td>12.</td>
+<td align="right">82</td>
+<td align="right">44000</td>
+<td align="right">44000</td>
+<td align="right">44000</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCQQQCBQBBZX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">96</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>ZXCTJATTCACTX</td>
+<td>ZXCTJATTCACTX</td>
+<td>M</td>
+<td>2011-07-15</td>
+<td>2012-02-29</td>
+<td>1985-03-05</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>201364027</td>
+<td>ZXCTJATTCACTX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZTBAKCGBK</td>
+<td>1985/03/05</td>
+<td align="right">2012</td>
+<td>2011/07/15</td>
+<td>2012/02/29</td>
+<td>7.5</td>
+<td>12.</td>
+<td align="right">82</td>
+<td align="right">154000</td>
+<td align="right">154000</td>
+<td align="right">154000</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCTJATTCACTX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">96</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>ZXCZBQJXBZCZX</td>
+<td>ZXCZBQJXBZCZX</td>
+<td>M</td>
+<td>2011-07-01</td>
+<td>2012-02-29</td>
+<td>1989-09-18</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>201365636</td>
+<td>ZXCZBQJXBZCZX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZTBAKCGBK</td>
+<td>1989/09/18</td>
+<td align="right">2012</td>
+<td>2011/07/01</td>
+<td>2012/02/29</td>
+<td>8.0</td>
+<td>12.</td>
+<td align="right">82</td>
+<td align="right">40000</td>
+<td align="right">40000</td>
+<td align="right">40000</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCZBQJXBZCZX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">96</td>
+</tr>
+<tr>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>AACBZCCQKZ</td>
+<td>AACBZCCQKZ</td>
+<td>ZXCZZBTZCGCQX</td>
+<td>ZXCZZBTZCGCQX</td>
+<td>M</td>
+<td>2012-01-01</td>
+<td>2012-02-29</td>
+<td>1982-04-09</td>
+<td align="right">2008</td>
+<td>Arts, entertainment and recreation</td>
+<td>Sports activities and amusement and recreation activities</td>
+<td>Sports activities</td>
+<td>Activities of sports clubs</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td>201365894</td>
+<td>ZXCZZBTZCGCQX</td>
+<td>sa</td>
+<td>A</td>
+<td>ZZTBAKCGBK</td>
+<td>1982/04/09</td>
+<td align="right">2012</td>
+<td>2012/01/01</td>
+<td>2012/02/29</td>
+<td>2.0</td>
+<td>12.</td>
+<td align="right">82</td>
+<td align="right">72500</td>
+<td align="right">72500</td>
+<td align="right">72500</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>ZXCZZBTZCGCQX</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>private</td>
+<td>A</td>
+<td>2011-03-01</td>
+<td>2012-03-01</td>
+<td align="right">2012</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td>City of Cape Town</td>
+<td>Mai</td>
+<td>Mai</td>
+<td>Western Cape</td>
+<td>City of Cape Town</td>
+<td>City of Cape Town</td>
+<td>Cape Town</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>Prv</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">12</td>
+<td align="right">96</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">#### Missingness in location information
+#### 1. Maximum sample size data sets
+####   a. Main Place data = firms with information down to Main Place (irp5M) 
+####   b. Loc Muni data   = firms with information down to Loc Muni   (irp5L) + a
+####   c. Dis Muni data   = firms with information up to Dist Muni    (irp5D) + a + b
+####   d. Prov data       = firms with information up to Prov         (irp5P) + a + b + c
+#### 2. Same sample data sets (irp5M) 
+####   a. Main Place data = firms with information up to Main Place
+####   b. Loc Muni data   = a
+####   c. Dis Muni data   = a
+####   d. Prov data       = a
+
+#### Agricultural panel
+irp5Ma &lt;- irp5M[grepl(&quot;^Anim|^Plant pro|crops|Logging|forest&quot;, imp_mic_sic7_3d), ]
+qsave(irp5Ma, paste0(pathdata, &quot;irp5Ma.qs&quot;), nthreads = 13)
+</code></pre>
+<h1 id="chp:compute-hhi">Compute HHI</h1>
+<p>We use main place level sample <code>irp5M</code> by following the “same sample data sets”</p>
+<p><code>irp5M</code> data only holds entries with location information of Main Place</p>
+<ol>
+<li>location entries are complete &amp; location is granular down to main place level, or, NARowsMai == 0L &amp; LocGranularFirm == Mai</li>
+<li>location == NA for some rows &amp; uniquely common locality level is main place</li>
+</ol>
+<p>For Jan 23, 2026, we use <code>irp5[busmainplc_geo != &quot;&quot;, ]</code>, which is close to <code>irp5M</code>, because I do not have time to run to get <code>irp5M</code></p>
+<pre><code class="language-r">#### code &quot;hhi&quot;
+library(qs)
+library(data.table)
+irp5M &lt;- qread(paste0(pathdata, &quot;irp5M.qs&quot;), nthreads = 13)
+geovars &lt;- grepout(&quot;^bus.*geo$&quot;, colnames(irp5))
+GeoLevel &lt;- c(&quot;Prv&quot;, &quot;Dis&quot;, &quot;Loc&quot;, &quot;Mai&quot;)
+for (yr in 8:22) {
+####  ipyr &lt;- irp5M[taxyear == 2000+yr, ]
+  ipyr &lt;- irp5[taxyear == 2000+yr, ]
+  LShare &lt;- NULL
+  for (g in 1:length(GeoLevel)) {
+    print(GeoLevel[g])
+    byvar &lt;- 	c(&quot;busprov_geo&quot;, &quot;busdistmuni_geo&quot;, 
+  			           &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;)[1:g]
+    ipGeo = copy(ipyr)
+    #### Drop rows with no location info and location is &quot;EXCEPTION&quot;
+    ipGeo &lt;- ipGeo[get(byvar[g]) != &quot;&quot; &amp; !is.na(get(byvar[g])) &amp; get(byvar[g]) != &quot;EXCEPTION&quot;, ]
+    #### ipGeo &lt;- ipGeo[!grepl(&quot;none&quot;, LocGranularJob) &amp; get(byvar[g]) != &quot;EXCEPTION&quot;, ]
+    print(summary(ipGeo[, grepout(&quot;NARows&quot;, colnames(ipGeo)), with = F]))
+  	ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, &quot;Txrf&quot;)]
+    #### ggplot(ipGeo[Txrf %in% Txrf[WorkersAtEstab &gt; 50000][2], .(Txrf, a3601_income)], aes(x=a3601_income)) +
+    #### geom_density() + scale_x_continuous(trans=&quot;log10&quot;) ==&gt; # of workers &gt; 50000 at main place seems correct
+    #### E.g., Toyota in Umhlanga, Durban had over 80K workers    
+	  #### Some firms have missing location information in some (but not all) rows
+	  #### Cannot allocate 8 workers with missing location info between branches
+	  if (yr == 12) print(
+	    ipGeo[Txrf %in% unique(Txrf[busmainplc_geo != &quot;&quot;])[2], 
+	      c(geovars, &quot;Txrf&quot;, &quot;payereferenceno&quot;, &quot;UID&quot;,  &quot;dateofbirth&quot;, 
+		    &quot;periodemployedfrom&quot;, &quot;WorkersAtEstab&quot;, &quot;kerr_income&quot;), with = F])
+    ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]
+    ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
+    #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
+    ipGeo[, WorkersAtEstabNoGov := 0L]
+    ipGeo[!grepl(&quot;gov&quot;, Entity), WorkersAtEstabNoGov := WorkersAtEstab]
+	  #### Below gives private firm totals for rows of private firms
+    ipGeo[, WorkersInMarketNoGov := as.integer(.N), by = c(byvar, &quot;Entity&quot;)]
+    ipGeo[, ShareNoGov := round(WorkersAtEstabNoGov/WorkersInMarketNoGov, 8)]
+    ipGeo[, AreaLevel := GeoLevel[g]]
+	  #### employment shares
+    lshare &lt;- unique(ipGeo[, c(
+	    byvar, &quot;Entity&quot;, &quot;Txrf&quot;,  &quot;taxrefno&quot;,
+        &quot;AreaLevel&quot;, grepout(&quot;^Wo|^Sha&quot;, colnames(ipGeo))
+      ), with = F])
+    print(summary(lshare))
+    lshare[WorkersAtEstab &gt; 50000, ] 
+    #### Shoprite-Checkers has HQ in Brackenfell, 160K employes
+    #### MultiChoice (DSTV, etc.) has HW in Randburg, 8K employees
+    #### PicknPay has HQ in Kinilworth (Main Place = Capetown), 90K employees
+    #### Woolworth has HQ in Capetown, 33K employees
+    lshare[, HHI := sum(Share^(2), na.rm = T), by = byvar]
+    lshare[, nHHI := (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket)]
+    lshare[, HHIG := sum(ShareNoGov^(2), na.rm = T), by = byvar]
+    lshare[, nHHIG := (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov)]
+    LShare &lt;- rbindlist(list(LShare, lshare), use.names = T, fill = T)
+  }
+  LShare[, AreaLevel := factor(AreaLevel, levels = GeoLevel)]
+  LShare[, (geovars) := lapply(.SD, factor), .SDcols = geovars]
+  setkey(LShare, AreaLevel, Txrf, busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, HHI)
+  setcolorder(LShare, c(&quot;Txrf&quot;, &quot;taxrefno&quot;, 
+    &quot;busprov_geo&quot;, &quot;busdistmuni_geo&quot;, &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;,
+    &quot;Entity&quot;, &quot;AreaLevel&quot;, 
+    &quot;WorkersAtEstab&quot;, &quot;WorkersInMarket&quot;, 
+    &quot;WorkersAtEstabNoGov&quot;, &quot;WorkersInMarketNoGov&quot;))
+  if (yr &lt; 10) yr &lt;- paste0(&quot;0&quot;, yr)
+  qsave(LShare, paste0(pathdata, &quot;ShareHHI&quot;, yr, &quot;.qs&quot;), nthreads = 13)
+}
+#### LShare:  Txrf, Share, ShareNoGov, HHI, HHINoGov, AreaLevel for all entities 
+#### in all area levels (main place/local municipality/district municipality/province)
+#### This will be merged to ipyr data using Txrf
+#### Before the merge, we check integrity of LShare.
+
+library(ggplot2)
+LShare &lt;- qread(paste0(pathdata, &quot;ShareHHI12.qs&quot;))
+LShare[is.na(busdistmuni_geo) &amp; grepl('D', AreaLevel), ]
+LShare[grepl('M', AreaLevel) &amp; WorkersInMarket &lt; 500, ]
+g12 &lt;- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep(&quot;blue&quot;, 4)) +
+  scale_color_manual(values = rep(&quot;blue&quot;, 4)) +
+  scale_x_continuous(trans = &quot;log10&quot;) +
+  theme(legend.position = &quot;none&quot;) +
+  facet_grid(AreaLevel ~ .)
+LShare &lt;- qread(paste0(pathdata, &quot;ShareHHI13.qs&quot;))
+g13 &lt;- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = rep(&quot;blue&quot;, 4)) +
+  scale_color_manual(values = rep(&quot;blue&quot;, 4)) +
+  scale_x_continuous(trans = &quot;log10&quot;) +
+  theme(legend.position = &quot;none&quot;) +
+  facet_grid(AreaLevel ~ .)
+ggsave(
+  paste0(pathresults, &quot;HHI2012byAreaLevel.jpg&quot;)
+  , g12, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+ggsave(
+  paste0(pathresults, &quot;HHI2013byAreaLevel.jpg&quot;)
+  , g13, width = 8*2, height = 4*2, units = &quot;cm&quot;,
+  dpi = 300
+ )
+#### HHI in 2012 and 2013 are similar 
+#### HHI at Dist muni and Loc muni are similar
+</code></pre>
+<pre><code class="language-r">LS &lt;- NULL
+for (yr in 8:22) {
+  if (yr &lt; 10) yr &lt;- paste0(&quot;0&quot;, yr)
+  ls &lt;- qread(paste0(pathdata, &quot;ShareHHI&quot;, yr, &quot;.qs&quot;))
+  ls[, taxyear := 2000+as.numeric(yr)]
+  LS &lt;- rbindlist(list(LS, ls))
+}
+qsave(LS, paste0(pathdata, &quot;LShareHHI.qs&quot;), nthreads = 13)
+</code></pre>
+<pre><code class="language-r">inda &lt;- qread(paste0(pathdata, &quot;TaxrefnoOfAgri.qs&quot;), nthreads = 13)
+LS &lt;- qread(paste0(pathdata, &quot;LShareHHI.qs&quot;), nthreads = 13)
+LSia &lt;- inda[LS, on = &quot;taxrefno&quot;]
+LSa &lt;- LSia[Crop ++ 1L | Animal == 1L | Forest == 1L, ]
+#### LSa is rows of agri only, but HHI is measured at all industries
+qsave(LSa, paste0(pathdata, &quot;HHIAgriRows.qs&quot;), nthreads = 13)
+</code></pre>
+<pre><code class="language-r">#### further checks
+LShare &lt;- qread(paste0(pathdata, &quot;ShareHHI12.qs&quot;))
+LShare[, Nums := .N, by = Txrf]
+tb &lt;- table(LShare[, Nums])
+numtb &lt;- as.numeric(names(tb))
+numtb &lt;- numtb[order(-numtb)]
+numtb[1:(length(numtb)-5)]
+tb
+LShare[Nums %in% numtb[1:10], 
+  .(Txrf, busprov_geo, busmainplc_geo, AreaLevel, 
+    WorkersAtEstab, WorkersAtEstabNoGov, 
+  	WorkersInMarket, WorkersInMarketNoGov, Share, 
+	  HHI)]
+
+ipyr &lt;- qread(paste0(pathdata, &quot;irp512.qs&quot;), nthreads = 13)
+ipyr &lt;- ipyr[grepl(&quot;A&quot;, natureofperson), ]
+ipyr[, Txrf := taxrefno]
+ipyr[grepl(&quot;NULL&quot;, taxrefno) | taxrefno == &quot;&quot; | is.na(taxrefno), Txrf := &quot;GovEntity&quot;]
+LShare[Txrf %in% c(ipyr[1:5, Txrf], 
+  &quot;AACAACCBBZ&quot;, &quot;AACAACGZCZ&quot;, &quot;AACAACZZTZ&quot;, &quot;AACAAKCAQZ&quot;, 
+  &quot;AACABACJJZ&quot;, &quot;AACABCAXTZ&quot;, &quot;AACABCBCGZ&quot;, &quot;AACABCQTQZ&quot;)
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)]
+print(LShare[TotalNeEmp &lt;= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+summary(LShare[TotalNeEmp &lt;= 1000,
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)])
+print(LShare[TotalNeEmp &lt;= 1000 &amp; !is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+print(LShare[!is.na(Newgt.kerr),
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+    irp5_kerr_iweight_b, Newgt.kerr,
+    EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
+</code></pre>
+<h1 id="chp:other">Other</h1>
+<p>Get observation pattern: ObPattern</p>
+<pre><code class="language-r">#### icount data is created in chunk &quot;read irp5v5beta&quot;
+Icount &lt;- qread(paste0(pathdata, &quot;icount08.qs&quot;), nthreads = 8)
+Icount[, Taxyear := 2008]
+for (yr in 9:20) {
+  if (yr &lt; 10) yr &lt;- paste0(&quot;0&quot;, yr)
+  icount &lt;- qread(paste0(pathdata, &quot;icount&quot;, yr, &quot;.qs&quot;), nthreads = 8)
+  icount[, Taxyear := 2000+as.numeric(yr)]
+  Icount &lt;- rbindlist(list(Icount, icount))
+}
+qsave(Icount, paste0(pathdata, &quot;Icount.qs&quot;), nthreads = 8)
+setkey(Icount, taxrefno, Taxyear)
+Icount[, Ob := 1L]
+Icount[is.na(Num), Ob := 2L]
+Icount &lt;- Icount[grepl(&quot;A&quot;, natureofperson), ]
+Icount &lt;- Icount[busmainplc_geo != &quot;&quot;, ]
+IcountW &lt;- reshape(Icount, direction = &quot;wide&quot;, 
+  idvar = c(&quot;busprov_geo&quot;, &quot;busdistmuni_geo&quot;, &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;, &quot;taxrefno&quot;, &quot;natureofperson&quot;),
+  timevar = &quot;Taxyear&quot;, v.names= c(&quot;Num&quot;, &quot;Ob&quot;))
+
+grepout &lt;- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+
+cols &lt;- grepout(&quot;Ob&quot;, colnames(IcountW))
+IcountW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] &lt;- 0L; x}), .SDcols = cols]
+IcountW[, ObPattern := paste(.SD, sep = &quot;&quot;, collapse = &quot;&quot;), .SDcols = cols, by = .(taxrefno)]
+IcountW[, ObPattern := factor(ObPattern)]
+</code></pre>
+<p>Postal codes in stata</p>
+<pre><code class="language-verbatim">. use &quot;Z:\Master Data\IRP5\Job level\v5\beta\aux_postal_codes_2008_2023_e6_v2.dta&quot; , replace
+. by AddrPostalCode, sort: gen nvals = _n == 1
+. count if nvals
+  68,140
+</code></pre>
+<pre><code class="language-plain warning">#&gt; The engine 'verbatim' is not supported.
+</code></pre>
+</div>
+</body>
+</html>

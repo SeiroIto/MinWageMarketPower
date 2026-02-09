@@ -1,0 +1,138 @@
+---
+title: |
+  Merge postal code
+author: |
+  Seiro Ito
+date: last-modified
+date-format: "MMMM DD, YYYY, HH:MM ZZ"
+execute:
+  echo: false
+  freeze: auto  # re-render only when source changes
+engine: knitr
+pdf-engine: lualatex
+format:
+  html:
+    standalone: true
+    embed-resources: true
+    toc: true
+    toc-location: left
+    grid:
+      margin-width: 350px
+    linkcolor: "green"
+    urlcolor: "#009900"
+#### https://github.com/quarto-dev/quarto-cli/issues/2275#issuecomment-1399047519
+    include-in-header:
+      ../../../mathjax.html
+####  pdf: default
+####    include-in-header: 
+####      text: |
+####        \renewcommand{\eqref}[1]{Equation~\ref{#1}}  docx: default
+  docx: default
+  epub: default
+lightbox: auto
+theme: sky
+  ####light: [sky, ./sky-add]
+  ####dark: darkly
+backgroundcolor: "#fffcf2"
+title-block-banner: "#f0f3f5"
+title-block-banner-color: "black"
+callout-appearance: simple
+callout-icon: false
+bibliography: ../../../seiro.bib
+#### doi-title: "doi.org/10.1086/734780"
+link-citations: true
+reference-location: margin
+citation-location: margin
+number-sections: true
+---
+```{css CSS setting, echo=FALSE, results = "hide"}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightWreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Noto Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+/* Define a margin before hX (header level X) element */
+h1  {
+  margin-top: 3ex;
+  margin-bottom: 3ex;
+  /* background: #c2edff; */ /*背景色*/
+  padding: 0.5em;/*文字まわり（上下左右）の余白*/
+}
+h2  {
+  margin-top: 2ex;
+  margin-bottom: 2ex;
+  padding: 0.5em;/*文字周りの余白*/
+  ####color: #010101;/*文字色*/
+  color: #87a5f2;
+  /* background: #eaf3ff; */ /*背景色*/
+  /* border-bottom: solid 3px #516ab6; */ /*下線*/
+}
+DBlue {
+  color: dodgerblue;
+}
+Blue {
+  color: blue;
+}
+Red {
+  color: red;
+}
+```
+
+<style type="text/css">
+  body, td{
+  font-size: 16pt;
+}
+</style>
+
+
+# SARS taxation
+
+## Tax-resident
+
+* Tax on world wide incomes (earned incomes, capital gains income)
+
+Becoming a tax-nonresident (tax emmigration) takes
+
+* Ordinarily residency test
+* Physical residency test
+
+As a tax-resident, you can avoid double taxation with foreign income tax exemption
+
+* Tax only on local incomes (earned incomes, capital gains income)
+* Is employed by a company (X self-employed, individual contractor)
+* Must spend more than 183 full days (at least 60 days continuously) outside SA within 12 months
+* Income is earned from employment services performed outside SA
+* Income is less than R1.25 million^[S10(1)(o)(ii) exemption allows you to exempt the first R1,250,000 of your foreign employment income from South African tax.  ] 
+
+
+## Tax-nonresident
+
+Tax non-resident if you pass
+
+
+1. Ordinarily residency test (established as case law basis)
+   * A place where a person normally resides
+   * A place with some level of continuity, broken only by accidentl or temporary absence
+   * A particular place to live in ordinary regular life
+   * A place of permanent address, where belongings are stored
+   * A residence that is settled, not temporary or casual
+      * It is likely to be considered a tax resident if the children are staying in SA and if you stay with them for 5 months
+      * But my visa is only temporary for the contract periods, so I can claim a non-ordinarily resident
+      * Purpose of my stay is to build a bilateral working relationship between Japanese and South African researchers 
+1. Physical residency test
+    A tax resident if staying for more than:
+   * 91 days in the tax year (Mar - Feb) 2031 
+   * 91 days for each of TY 2026-2030
+   * 915 days in total for TY 2026-2030
+    If I stay in SA
+      * Only 90 days in TY 2030, I am a tax nonresident in TY 2031, and for TY 2031-2035 
+      * Only 90 days in TY 2035, I am a tax nonresident in TY 2035, and for TY 2036-2040
+

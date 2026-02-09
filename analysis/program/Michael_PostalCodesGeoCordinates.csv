@@ -1,0 +1,1358 @@
+place_type,place_code,code_type,eng,street_code,latitude,longitude
+local_municipality,KZN263,municipal_code,Abaqulusi,,-27.8471729,30.8059392
+town,,,Abbotsdale,7300,-33.4924125,18.6687469
+town,,,Aberdeen,6270,-32.4731045,24.0199311
+town,,,Acornhoek,1360,-24.6088566,31.0580914
+town,,,Adams Mission,4110,-30.0310189,30.8095154
+town,,,Addo,6105,-33.5364815,25.6894928
+town,,,Adelaide,5760,-32.6896269,26.2841355
+local_municipality,LIM352,municipal_code,Aganang,,-23.6739209,29.128872
+town,,,Aggeneys,,-29.2297459,18.8458324
+town,,,Agisanang,2760,-26.5613947,25.8175337
+town,,,Akasia,601,-25.6478121,28.0814965
+local_municipality,MP301,municipal_code,Albert Luthuli,,-26.0969422,30.1747849
+town,,,Alberton,1449,-26.3265419,28.0787148
+town,,,Alexander Bay,,-28.6059016,16.4790338
+town,,,Alexandra,2090,-26.1056836,28.0935571
+town,,,Alexandria,6185,-33.6553521,26.4033723
+district_municipality,DC44,municipal_code,Alfred Nzo,,-30.5363342,28.5680413
+town,,,Alice,5700,-32.7891031,26.8072426
+town,,,Alicedale,6135,-33.3228295,26.0749035
+town,,,Aliwal North,9750,-30.7002903,26.6971434
+town,,,Alldays,909,-22.6823872,29.1009678
+local_municipality,EC124,municipal_code,Amahlathi,,-32.444572,27.0868375
+district_municipality,DC25,municipal_code,Amajuba,,-27.7945509,29.8830249
+town,,,Amalia,2786,-27.2434993,25.0335223
+town,,,Amandelbult,362,-24.8209406,27.2776131
+town,,,Amanzimtoti,4126,-30.032394,30.8761746
+district_municipality,DC12,municipal_code,Amathole,,-32.7211885,26.7584955
+town,,,Amatikulu,3801,-29.0484255,31.5267446
+town,,,Amersfoort,2490,-27.0150236,29.8333898
+town,,,Amsterdam,2375,-26.6365111,30.6506353
+town,,,Anerley,,-30.6715707,30.4966244
+town,,,Arlington,9602,-28.02716,27.8466304
+town,,,Arniston,,-34.6791805,20.226238
+town,,,Ashdown,3201,-29.6388121,30.3272321
+town,,,Ashton,6715,-33.8326279,20.0468465
+town,,,Askham,8814,-26.9817428,20.7805049
+town,,,Aston Bay,6332,-34.0815898,24.9016753
+town,,,Atamelang,2732,-26.5032448,25.3634796
+town,,,Atlantis,7349,-33.5451085,18.4414329
+town,,,Atteridgeville,8,-25.7836312,28.0471225
+town,,,Augrabies,,-28.5926259,20.3358642
+suburb,,,Avondale,7500,-33.8939362,18.5955251
+town,,,Baardskeerdersbos,,-34.5869627,19.5664215
+town,,,Babanango,,-28.3793493,31.0790037
+town,,,Badplaas,1190,-25.9509394,30.5184395
+town,,,Bafokeng,,-25.597527,27.1456317
+town,,,Bakenberg,611,-23.8639637,28.7513173
+town,,,Bakolobeng,,-26.4718877,25.5389184
+town,,,Ballito,4399,-29.4823222,31.1971626
+town,,,Banksdrif,,-27.7461423,24.8007872
+local_municipality,LIM334,municipal_code,Ba-Phalaborwa,,-23.9380908,30.7047001
+town,,,Bapo 2,337,,
+town,,,Bapsfontein,1510,-25.9986644,28.4215488
+town,,,Barberton,1300,-25.7762332,31.0305193
+town,,,Barkly East,9786,-30.9728609,27.58415
+town,,,Barkly West,8375,-28.5310774,24.4961791
+town,,,Barrydale,6750,-33.9062789,20.7085576
+town,,,Bathurst,6166,-33.4816186,26.7596863
+local_municipality,EC107,municipal_code,Baviaans,,-33.4379755,23.7146829
+town,,,Baviaanspoort,186,-25.6696204,28.3635038
+town,,,Baziya,,-31.6170968,28.4215743
+town,,,Beachview,6070,-34.002011,25.323676
+suburb,,,Beaconvale,7500,-33.9157622,18.5860637
+local_municipality,WC053,municipal_code,Beaufort West,,-32.3082008,21.7322175
+town,,,Bedford,5780,-32.6849735,26.0956598
+town,,,Bedfordview,2007,-26.1801948,28.1248467
+town,,,Beeshoek,8423,-28.227727,22.9649349
+town,,,Bekkersdal,1779,-26.2800292,27.6969278
+local_municipality,LIM366,municipal_code,Bela-Bela,,-24.9622964,28.0975126
+town,,,Belfast,1100,-25.6814507,30.0221337
+city,,,Bellville,7530,-33.8854322,18.5926356
+town,,,Benoni,1501,-26.1436078,28.3344391
+local_municipality,WC013,municipal_code,Bergrivier,,-32.7921913,18.4649816
+town,,,Berlin,5660,-32.8825223,27.5763903
+town,,,Bethal,2309,-26.466607,29.4335408
+town,,,Bethelsdorp,6059,-33.8828656,25.4916865
+town,,,Bethlehem,9701,-28.2373171,28.2916651
+town,,,Bethulie,9992,-30.5039338,25.9585806
+town,,,Betty's Bay,,-34.3503875,18.8926561
+town,,,Bhekuzulu,3100,-27.7819902,30.8157396
+town,,,Bhongweni,,-30.5453296,29.4346934
+local_municipality,KZN273,municipal_code,Big Five Hlabisa,,-28.0330301,32.2394925
+local_municipality,WC047,municipal_code,Bitou,,-33.9463384,23.2928426
+town,,,Bitterfontein,,-31.0422834,18.2529953
+town,,,Bizana,4800,-30.8502967,29.8302924
+town,,,Blair Atholl,,-25.9079311,27.9071822
+town,,,Blinkwater,,-27.4182068,30.9294717
+city,,,Bloemfontein,9301,-29.1152581,26.1350075
+town,,,Bloemsmond,,-28.6332393,21.0742036
+local_municipality,LIM351,municipal_code,Blouberg,,-23.0272816,28.4104152
+local_municipality,EC102,municipal_code,Blue Crane Route,,-32.7834574,25.2353268
+town,,,Blue Downs,7100,-33.9911761,18.6777123
+town,,,Blue Horizon Bay,6070,-33.9722182,25.2492317
+town,,,Blybank,2499,-26.3304201,27.4770782
+town,,,Blythedale Beach,4449,-29.3713438,31.3481554
+town,,,Bochum,790,-23.2763714,29.1172237
+town,,,Boegoeberg,8943,-28.9512783,22.15898
+town,,,Bohlokong,9701,-28.1931982,28.3201352
+town,,,Boikhutso,2740,-26.1815883,26.127048
+town,,,Boipatong,1911,-26.6703427,27.847701
+town,,,Boitekong,309,-25.6394614,27.2666443
+town,,,Boitumelong,,-27.6405605,25.5662737
+district_municipality,DC37,municipal_code,Bojanala Platinum,,-25.4226208,26.8881894
+town,,,Boknesstrand,,-33.7319645,26.5701554
+town,,,Boksburg,1459,-26.2578556,28.2056783
+town,,,Bolata,,-28.5693767,28.7845569
+town,,,Bolokanang,9932,-29.1293324,25.4190961
+town,,,Bon Accord,,-25.6191042,28.1934768
+town,,,Bontrug,,-33.3993789,25.4811778
+town,,,Bophelong,1911,-26.6964468,27.7720481
+town,,,Borolelo,2835,-25.6303628,26.6764321
+town,,,Boshof,8340,-28.5423042,25.208597
+town,,,Boskop,,-26.5608011,27.111747
+town,,,Bothas Hill,3610,-29.7570247,30.739321
+town,,,Bothaville,9660,-27.379724,26.6159783
+town,,,Botleng,2210,-26.1033243,28.6844837
+town,,,Botrivier,7185,-34.2267437,19.1970002
+town,,,Brackenfell,7560,-33.8789916,18.6848833
+town,,,Brakpan,1541,-26.3065487,28.3253881
+town,,,Brandfort,9400,-28.6860393,26.4458272
+town,,,Brandwacht,6506,-34.0499679,22.0542856
+town,,,Bredasdorp,7280,-34.5339485,20.0271272
+local_municipality,WC025,municipal_code,Breede Valley,,-33.6518995,19.3741908
+town,,,Breidbach,5601,-32.8900072,27.4439237
+town,,,Breipaal,8730,-29.0415778,23.7593415
+town,,,Breyten,2330,-26.3055535,29.9706737
+town,,,Brits,250,-25.617029,27.7958412
+town,,,Britstown,8782,-30.5921205,23.4850329
+town,,,Bronkhorstspruit,1020,-25.8013229,28.6487271
+metro_municipality,BUF,municipal_code,Buffalo City,,-32.9496002,27.4365689
+town,,,Buffeljagsrivier,,-34.0478985,20.5212047
+town,,,Bulletrap,,-29.4638073,17.7634898
+town,,,Bulwer,,-29.7992471,29.7522144
+town,,,Burgersfort,1150,-24.6798397,30.3189469
+town,,,Bushbuckridge,1280,-24.8473873,31.0502101
+local_municipality,MP325,municipal_code,Bushbuckridge,,-24.7525118,31.0242717
+town,,,Butterworth,4960,-32.3215455,28.1560394
+district_municipality,DC10,municipal_code,Cacadu,,-33.0748843,23.940897
+town,,,Caledon,7230,-34.2359625,19.4129437
+town,,,Calitzdorp,6660,-33.5318796,21.6717589
+town,,,Calvinia,8190,-31.4704704,19.7727484
+town,,,Cambridge,5247,-32.9766446,27.8814914
+local_municipality,EC101,municipal_code,Camdeboo,,-32.1678032,24.1826158
+town,,,Camden,2355,-26.6012279,30.081148
+town,,,Campbell,8306,-28.7940464,23.6997876
+town,,,Camperdown,3720,-29.7335419,30.5114083
+local_municipality,WC033,municipal_code,Cape Agulhas,,-34.5054154,19.8094767
+town,,,Cape St Francis,6312,-34.2023162,24.8299104
+city,,,Cape Town,8001,-33.9253131,18.4161278
+district_municipality,DC2,municipal_code,Cape Winelands,,-33.2602376,19.31357
+district_municipality,DC35,municipal_code,Capricorn,,-23.5398262,28.877691
+town,,,Carletonville,2499,-26.38107,27.3475643
+town,,,Carnarvon,8925,-30.9554864,22.1177711
+town,,,Carolina,1185,-26.0736978,30.1004632
+town,,,Carolusberg,,-29.6347019,17.9492336
+town,,,Cathcart,5310,-32.2975144,27.1413499
+town,,,Cato Ridge,3680,-29.7178261,30.6001468
+town,,,Cedarville,4720,-30.385347,29.0295339
+local_municipality,WC012,municipal_code,Cederberg,,-32.3679989,18.5624963
+suburb,,,Centerton,,-33.8305946,24.8696382
+district_municipality,DC5,municipal_code,Central Karoo,,-32.7288566,21.490364
+town,,,Centurion,157,-25.8759656,27.9788006
+town,,,Ceres,6835,-33.3998524,19.2837284
+town,,,Cerutiville,1491,-26.4421873,28.509421
+town,,,Charl Cilliers,,-26.6618811,29.1843604
+town,,,Chartwell,2191,-25.982192,27.9635481
+district_municipality,DC13,municipal_code,Chris Hani,,-31.8806495,25.6691473
+town,,,Christiana,2680,-27.884508,25.1187765
+suburb,,,Churchill Estate,7500,-33.8984972,18.5740243
+town,,,Cintsa East,5275,-32.8241371,28.1093894
+town,,,Citrusdal,7340,-32.58667,19.008502
+metro_municipality,CPT,municipal_code,City of Cape Town,,-33.8370431,18.5403069
+metro_municipality,JHB,municipal_code,City of Johannesburg,,-26.2053479,27.8907996
+local_municipality,NW403,municipal_code,City of Matlosana,,-26.8652662,26.6079859
+metro_municipality,TSH,municipal_code,City of Tshwane,,-25.6168782,28.2633292
+town,,,Clansthal,,-30.238709,30.7805535
+town,,,Clanwilliam,8135,-32.1954239,18.8871787
+town,,,Clarens,9707,-28.5134758,28.4069376
+town,,,Clermont,3610,-29.7932108,30.8984096
+town,,,Clewer,,-25.9066454,29.1282874
+town,,,Clocolan,9735,-28.9064664,27.5366175
+town,,,Coalville,,-26.0315419,29.157232
+town,,,Coffee Bay,,-31.9836706,29.1466842
+town,,,Colchester,6001,-33.695042,25.8006006
+town,,,Coldstream,,-33.9617358,23.7045434
+town,,,Colenso,3360,-28.7487028,29.821562
+town,,,Colesberg,9795,-30.7199754,25.0389372
+town,,,Coligny,2725,-26.3320695,26.3037064
+town,,,Concordia,,-29.3633004,17.9392197
+town,,,Cookhouse,5820,-32.7407784,25.8008495
+town,,,Cool Air,,-29.360821,30.6292095
+town,,,Cornelia,9850,-27.2418886,28.8487075
+town,,,Coronation,,-25.8502939,29.2099752
+town,,,Cradock,5880,-32.16847,25.6172884
+town,,,Creighton,,-30.0280962,29.8392922
+town,,,Cullinan,1000,-25.6796501,28.5206053
+town,,,Culunca,,-31.1606669,28.7249832
+town,,,Cumakala,,-32.5616813,27.4431815
+town,,,Dainfern,2191,-25.9855745,27.9955768
+town,,,Dalton,,-29.3407036,30.6299843
+town,,,Danielskuil,8405,-28.1824189,23.5195966
+local_municipality,KZN254,municipal_code,Dannhauser,,-27.9900758,29.8358689
+town,,,Darling,7345,-33.3708542,18.3760284
+town,,,Darnall,4480,-29.2688834,31.3625433
+town,,,Davel,,-26.4513758,29.661927
+town,,,Daveyton,1520,-26.1449755,28.4069643
+town,,,De Aar,7000,-30.6586198,23.9971864
+town,,,Dealesville,9348,-28.6728576,25.7498428
+town,,,De Doorns,6875,-33.4741243,19.6623333
+suburb,,,De Duin,7500,-33.8851427,18.5683293
+town,,,Deelkraal,2499,-32.59563,26.67229
+town,,,Delareyville,2770,-26.6847366,25.4494031
+town,,,Delmas,2210,-26.1752654,28.5902264
+town,,,Delportshoop,8377,-28.4151441,24.3003069
+town,,,Dendron,715,-23.3668697,29.318162
+town,,,Deneysville,1932,-26.9013534,28.068379
+town,,,Derby,,-25.9385854,27.0107194
+town,,,Despatch,6220,-33.8044185,25.4600348
+town,,,Devon,2260,-26.3564044,28.7801463
+town,,,Dewetsdorp,9940,-29.5808725,26.6624519
+town,,,Die Eiland,6525,-34.0528249,22.2364524
+local_municipality,FS192,municipal_code,Dihlabeng,,-28.3707329,28.0158359
+town,,,Dikgale,721,-23.5029282,29.3560353
+local_municipality,NC092,municipal_code,Dikgatlong,,-28.4037988,24.2469288
+town,,,Dilopye,,-25.3838256,28.190388
+town,,,Dimbaza,5671,-32.8353997,27.2108009
+town,,,Dingleton,8445,-27.7833707,22.9773592
+local_municipality,MP306,municipal_code,Dipaleseng,,-26.7654893,28.4848369
+town,,,Dirkiesdorp,,-27.1733189,30.4014296
+suburb,,,Ditlhake,,-29.3919508,24.9934451
+local_municipality,NW384,municipal_code,Ditsobotla,,-26.11375,25.9322417
+town,,,Dlamini,1818,-26.2648383,27.8545776
+town,,,Dohne,,-32.5190907,27.4485194
+town,,,Dominionville,,-26.8998785,26.390016
+town,,,Donnybrook,,-29.9283909,29.8741326
+town,,,Doringbaai,8151,-31.8200063,18.2362666
+town,,,Douglas,8730,-29.052925,23.7441135
+local_municipality,WC023,municipal_code,Drakenstein,,-33.5019079,18.7542388
+local_municipality,MP316,municipal_code,Dr JS Moroka,,-25.1052935,28.6270616
+district_municipality,DC40,municipal_code,Dr Kenneth Kaunda,,-26.7455105,26.0687054
+district_municipality,DC39,municipal_code,Dr Ruth Segomotsi Mompati,,-26.5467876,23.3521703
+town,,,Drummond,,-29.7568473,30.6809107
+town,,,Dube,1801,-28.8586487,31.923887
+town,,,Duduza,1496,-26.3705945,28.4017432
+town,,,Dukuduku,3936,-28.0992729,32.3347066
+town,,,Dullstroom,,-25.4183692,30.088814
+town,,,Dumbe,3180,-28.5567041,30.3109767
+town,,,Duncan Village,5209,-33.0062665,27.8752282
+town,,,Dundee,3000,-28.1643937,30.2088186
+city,,,Durban,4001,-29.8514719,30.9537741
+town,,,Durbanville,7550,-33.8327304,18.6460631
+town,,,Durnacol,,-28.0448495,30.0203084
+town,,,Dysselsdorp,6628,-33.5902541,22.4033355
+town,,,Dzanani,955,-22.8780826,30.1454338
+province,ZA-EC,iso_3166,Eastern Cape,,-32.4025758,24.8706044
+city,,,East London,5201,-32.9917758,27.8114527
+town,,,Ebenhaeser,,-31.654613,18.2266594
+town,,,Ebony Park,1632,-26.0031509,28.1721424
+district_municipality,DC4,municipal_code,Eden,,-33.8742206,21.1989569
+town,,,Edenvale,1609,-26.1357848,28.1392088
+town,,,Edenville,9535,-27.5600539,27.66065
+local_municipality,KZN261,municipal_code,eDumbe,,-27.4774876,30.6589153
+town,,,Eendekuil,,-32.6871883,18.8796861
+town,,,Eendrag,2266,-26.3778293,28.8788313
+town,,,Eerste River,7100,-34.0054517,18.7317755
+district_municipality,DC32,municipal_code,Ehlanzeni,,-25.0532159,30.7068628
+town,,,Ekangala,1021,-25.678749,28.7329743
+town,,,Eksteenfontein,,-28.8242636,17.2555672
+metro_municipality,EKU,municipal_code,Ekurhuleni,,-26.1937101,28.1819101
+town,,,Elands Bay,,-32.3185887,18.3325867
+town,,,Elandskraal,,-28.4809514,30.5287665
+local_municipality,LIM472,municipal_code,Elias Motsoaledi,,-25.2251818,29.2846616
+town,,,Elliot,5460,-31.3150618,27.8247912
+town,,,Elliotdale,5070,-31.9669434,28.6772723
+town,,,Eloff,,-26.168186,28.6017702
+town,,,Elsie's River,7490,-33.9227694,18.5655438
+local_municipality,EC141,municipal_code,Elundini,,-30.936547,28.0991066
+town,,,Elysium,,-30.4767598,30.6285865
+local_municipality,KZN253,municipal_code,eMadlangeni,,-27.6245824,30.1279764
+local_municipality,MP314,municipal_code,Emakhazeni,,-25.6125036,29.8384457
+local_municipality,EC136,municipal_code,Emalahleni,,-26.0270007,29.0026107
+local_municipality,MP312,municipal_code,Emalahleni,,-26.0180351,28.9100024
+town,,,Emalangeni,,-29.6400464,30.6950254
+town,,,Embalenhle,2285,-26.5498292,29.0701813
+local_municipality,GT421,municipal_code,Emfuleni,,-26.6106729,27.699765
+town,,,eMgwenya,1195,-25.6466623,30.327248
+town,,,eMjindini,,-25.7636936,31.0116659
+local_municipality,KZN232,municipal_code,Emnambithi-Ladysmith,,-28.4289517,29.5772437
+town,,,Emona,4399,-29.5496444,31.0885877
+town,,,eMondlo,,-27.9809238,30.7228412
+town,,,Empangeni,3880,-28.7700067,31.8431562
+local_municipality,NC073,municipal_code,Emthanjeni,,-30.8150345,23.5017877
+town,,,eMzinoni,2309,-26.4985989,29.4237141
+local_municipality,KZN241,municipal_code,Endumeni,,-28.1852045,30.1529728
+local_municipality,EC137,municipal_code,Engcobo,,-31.6698955,27.977499
+town,,,Enhlalakahle,3500,-29.0759437,30.6028906
+town,,,Ennerdale,1830,-26.4168818,27.8261275
+town,,,Enon,6125,-33.4071143,25.5363841
+local_municipality,LIM471,municipal_code,Ephraim Mogale,,-24.9070218,29.1293582
+town,,,Ermelo,2351,-26.5123338,29.9541873
+town,,,Eshowe,3815,-28.8915795,31.4508743
+town,,,eSibongile,3000,-28.1847214,30.2263126
+town,,,Esikhawini,3887,-28.8703001,31.9062664
+town,,,eSizameleni,,-27.3511887,30.1572159
+town,,,Estcourt,3310,-29.0224047,29.8564972
+metro_municipality,ETH,municipal_code,eThekwini,,-29.8513422,30.951492
+town,,,Evander,2280,-26.4729738,29.088043
+town,,,Evaton,1984,-26.5271577,27.8256213
+town,,,Excelsior,9760,-28.9339005,27.051511
+town,,,Ezakheni,3381,-28.601724,29.9216392
+town,,,eZamokuhle,,-26.9998953,29.8454856
+town,,,Ezibeleni,5326,-31.8960836,26.967434
+local_municipality,KZN215,municipal_code,Ezingoleni,,-30.7798679,30.1028566
+suburb,,,Fairfield Estate,7500,-33.899882,18.5888074
+town,,,Fauresmith,9978,-29.7528518,25.3198222
+local_municipality,LIM474,municipal_code,Fetakgomo,,-24.4271618,29.768069
+district_municipality,DC20,municipal_code,Fezile Dabi,,-27.4793575,27.1809934
+town,,,Ficksburg,9730,-28.868513,27.8379944
+town,,,Fisantekraal,7550,-33.7841202,18.714422
+town,,,Fisherhaven,7200,-34.3633207,19.1258079
+town,,,Fish Hoek,7975,-34.1325865,18.4115072
+town,,,Flagstaff,4810,-31.0801973,29.4755571
+town,,,Fochville,2515,-26.4722945,27.4659986
+town,,,Folweni,,-29.9968947,30.8175989
+town,,,Fort Beaufort,5720,-32.7749161,26.5879885
+town,,,Fouriesburg,9725,-28.6186343,28.1875098
+district_municipality,DC9,municipal_code,Frances Baard,,-28.3732894,24.0173219
+town,,,Frankfort,9830,-27.2787241,28.5035125
+town,,,Franschhoek,7690,-33.9069839,19.1318796
+town,,,Franskraalstrand,7220,-34.6053239,19.3965563
+town,,,Fraserburg,6960,-31.9029061,21.5293067
+province,ZA-FS,iso_3166,Free State,,-28.7147949,25.7861003
+town,,,Friemersheim,6525,-33.9568505,22.1346798
+town,,,Galeshewe,8345,-28.7247233,24.7119844
+local_municipality,NC453,municipal_code,Gamagara,,-27.6883779,22.8799094
+town,,,Gamalakhe,4249,-30.8063758,30.3288443
+town,,,Ga-Mashashane,,-23.9410649,29.1140242
+town,,,Gansbaai,7220,-34.5852902,19.3491004
+town,,,Ganspan,,-27.9720244,24.7621687
+town,,,Ga-Rankuwa,208,-25.5866027,27.9958343
+local_municipality,EC144,municipal_code,Gariep,,-30.6641812,25.6357918
+town,,,Garies,8220,-30.5755018,17.9901157
+local_municipality,NC452,municipal_code,Ga-Segonyana,,-27.590919,23.4255815
+province,ZA-GP,iso_3166,Gauteng,,-26.0242778,27.6960219
+town,,,Geluksburg,,-28.5190503,29.3533412
+town,,,Genadendal,7234,-34.0412318,19.5575588
+local_municipality,WC044,municipal_code,George,,-33.9287105,22.3981351
+town,,,Germiston,1401,-26.2330387,28.1490165
+district_municipality,DC30,municipal_code,Gert Sibande,,-26.6486819,28.8850614
+town,,,Gingindlovu,3800,-29.024158,31.5814283
+town,,,Giyani,826,-23.3102584,30.6899579
+town,,,Glencoe,2930,-28.1750818,30.1319473
+suburb,,,Glenlily,7500,-33.9031129,18.5747558
+suburb,,,Goedgedacht,9499,-27.6751784,27.2273243
+town,,,Goedverwacht,7323,-32.8623177,18.6825321
+town,,,Gonubie,5257,-32.9433764,28.0040498
+town,,,Goodwood,7460,-33.9102243,18.5248092
+town,,,Gouda,,-33.2972862,19.0351864
+local_municipality,MP307,municipal_code,Govan Mbeki,,-26.4565323,29.0781972
+city,,,Gqeberha (Port Elizabeth),6001,-33.8197758,25.388985
+town,,,Graaff-Reinet,6280,-32.2593377,24.509932
+town,,,Graafwater,8120,-32.1553455,18.6028389
+town,,,Grabouw,7160,-34.1566479,18.9973274
+town,,,Grahamstown,6139,-33.3176215,26.5200536
+town,,,Graskop,1270,-24.937749,30.8369377
+town,,,Gravelotte,895,-23.9513095,30.6121491
+town,,,Great Brak River,6525,-34.0455627,22.2101406
+local_municipality,LIM331,municipal_code,Greater Giyani,,-23.3772106,30.6711606
+local_municipality,KZN433,municipal_code,Greater Kokstad,,-30.273594,29.3366258
+local_municipality,LIM332,municipal_code,Greater Letaba,,-23.53101,30.1999273
+local_municipality,NW394,municipal_code,Greater Taung,,-27.5572549,24.2030131
+local_municipality,LIM475,municipal_code,Greater Tubatse,,-24.6760765,30.1612168
+local_municipality,LIM333,municipal_code,Greater Tzaneen,,-23.8727995,30.1309171
+local_municipality,EC123,municipal_code,Great Kei,,-32.664514,27.92076
+town,,,Greylingstad,2415,-26.7482803,28.7565032
+town,,,Greyton,7233,-34.0590536,19.6091102
+town,,,Greytown,3250,-29.055798,30.5873597
+town,,,Griekwastad,8365,-28.8487569,23.2209125
+town,,,Groblersdal,470,-25.1683677,29.3958059
+town,,,Groblershoop,8850,-28.8957422,21.9864824
+town,,,Grootdrink,,-28.5619834,21.7525543
+town,,,Gutshwa,1247,-25.2663642,31.2007609
+town,,,Haarlem,,-33.7359151,23.3310119
+town,,,Haenertsburg,,-23.9448928,29.9408879
+town,,,Haga Haga,,-32.7622274,28.2528681
+town,,,Hamburg,5641,-33.2911535,27.4541385
+town,,,Hammanskraal,407,-25.4119145,28.2507877
+town,,,Hankey,6350,-33.8321278,24.8572145
+town,,,Hanover,7005,-31.0679791,24.4436939
+local_municipality,NC065,municipal_code,Hantam,,-31.1671537,19.4973454
+town,,,Harding,4680,-30.5765751,29.8871934
+town,,,Harrismith,9880,-28.2746523,29.1187771
+town,,,Harry Gwala Park,4730,-30.3242171,28.7832816
+town,,,Hartebeesfontein,250,-26.7669944,26.4214077
+town,,,Hartenbos,6520,-34.1247836,22.0969348
+town,,,Hartswater,8570,-27.7522169,24.7935414
+town,,,Hattingspruit,,-28.0794001,30.1272262
+town,,,Hawston,7202,-34.3846754,19.131566
+town,,,Hazyview,1242,-25.0421592,31.1334133
+town,,,Hectorspruit,,-25.4405857,31.6786656
+town,,,Heilbron,9650,-27.2732241,27.972992
+town,,,Hendrina,1095,-26.147012,29.72365
+town,,,Hennenman,9445,-27.9765122,27.0220399
+town,,,Herbertsdale,,-34.0170594,21.7639193
+town,,,Hermanus,7200,-34.4140339,19.2473521
+town,,,Herschel,9756,-30.6147518,27.1594005
+town,,,Hertzogville,9482,-28.1252124,25.496967
+local_municipality,WC042,municipal_code,Hessequa,,-34.1014992,20.9496227
+town,,,Hibberdene,4220,-30.5720553,30.5642656
+local_municipality,KZN216,municipal_code,Hibiscus Coast,,-30.8162838,30.2871894
+town,,,Hilton,3201,-29.5571966,30.2844631
+town,,,Himeville,,-29.7485896,29.5095267
+town,,,Hlalanikahle,1039,-25.8420135,29.1150618
+town,,,Hlanganani,,-23.1938738,30.2312517
+town,,,Hlobane,,-27.709952,30.9909325
+town,,,Hlohlolwane,9735,-28.9065819,27.5553349
+town,,,Hluhluwe,,-28.0241823,32.2815091
+town,,,Hobhouse,9740,-29.527577,27.1414789
+town,,,Hoedspruit,1380,-24.3506241,30.9595081
+town,,,Hogsback,,-32.5949218,26.9279203
+town,,,Holly Country,1946,-26.9322924,27.9185096
+town,,,Holpan,,-28.3594048,24.6408114
+town,,,Hondeklip Bay,,-30.3277601,17.291672
+town,,,Hoopstad,9479,-27.8387104,25.9211284
+town,,,Hopefield,7355,-33.0439604,18.3211071
+town,,,Hopetown,8750,-29.6204045,24.0870253
+town,,,Hotazel,8490,-27.1963487,22.8330228
+town,,,Hout Bay,7806,-34.0402043,18.3480819
+town,,,Howick,3290,-29.4961792,30.2166233
+town,,,Hoyi,,-25.8155547,31.8475736
+town,,,Huhudi,8601,-26.9771081,24.7412616
+town,,,Humansdorp,6300,-34.015779,24.7528193
+town,,,Ibisi,,-30.4118548,29.8895392
+town,,,Idutywa,5000,-32.0972538,28.3106476
+town,,,Ifafa Beach,,-30.4631761,30.6534541
+town,,,Ikgomotseng,9358,-28.7356488,26.1121044
+local_municipality,EC103,municipal_code,Ikwezi,,-33.0185841,24.6689463
+district_municipality,DC29,municipal_code,iLembe,,-29.2775484,31.1767699
+town,,,Ilitha,5606,-32.8949383,27.5343679
+local_municipality,KZN236,municipal_code,Imbabazane,,-29.0522558,29.6450174
+town,,,Imizamo Yethu,7806,-34.02823,18.3583182
+local_municipality,KZN224,municipal_code,Impendle,,-29.5973132,29.8645312
+town,,,Inchanga,3670,-29.7411461,30.6780784
+local_municipality,KZN233,municipal_code,Indaka,,-28.318267,30.0904845
+local_municipality,EC153,municipal_code,Ingquza Hill,,-31.2516936,29.4898836
+town,,,Ingwavuma,,-27.1350592,31.993722
+local_municipality,KZN431,municipal_code,Ingwe,,-29.8718528,29.6811449
+local_municipality,EC133,municipal_code,Inkwanca,,-31.4859196,26.1843243
+town,,,Intabazwe,9880,-28.2397943,29.1007418
+local_municipality,EC135,municipal_code,Intsika Yethu,,-31.9513379,27.48716
+local_municipality,EC131,municipal_code,Inxuba Yethemba,,-31.8717138,25.0789669
+town,,,Itekeng,,-26.3625163,25.9046582
+town,,,Ivory Park,1693,-25.999609,28.1872296
+town,,,Ixopo,3276,-30.1518407,30.0610179
+town,,,Jacobsdal,8710,-29.1334058,24.7658986
+town,,,Jagersfontein,9974,-29.761409,25.4302338
+town,,,Jagersrust,,-28.5989142,29.1182692
+town,,,Jan Kempdorp,8550,-27.9165682,24.8033631
+town,,,Jansenville,6265,-32.9436236,24.6574086
+town,,,Jeffreys Bay,6330,-34.0395741,24.9038625
+district_municipality,Joe Gqabi,municipal_code,Joe Gqabi,,-30.9573855,26.4773648
+local_municipality,NC451,municipal_code,Joe Morolong,,-26.7892222,23.1015035
+city,,,Johannesburg,2001,-26.1808222,28.0232219
+district_municipality,DC45,municipal_code,John Taolo Gaetsewe,,-27.0594327,22.5352162
+town,,,Joubertina,6410,-33.8328974,23.8676762
+town,,,Jouberton,2574,-26.8929698,26.5836543
+local_municipality,KZN275,municipal_code,Jozini,,-27.3159722,31.8629835
+town,,,Kaalfontein,1632,-25.9887503,28.1681245
+town,,,Kabah,6229,-33.7604646,25.3918231
+town,,,KaBokweni,1245,-25.3416474,31.1244817
+local_municipality,NW397,municipal_code,Kagisano-Molopo,,-26.5430718,23.768021
+local_municipality,NC082,municipal_code,Kai !Garib,,-28.8207695,20.5963181
+town,,,Kakamas,8870,-28.7690263,20.5497907
+town,,,Kalbaskraal,7302,-33.5748166,18.6450952
+town,,,Kambi,,-31.485509,28.6596348
+local_municipality,NC064,municipal_code,Kamiesberg,,-30.5262318,17.7703809
+town,,,Kamieskroon,,-30.2168879,17.9231137
+local_municipality,WC041,municipal_code,Kannaland,,-33.6707531,20.9748533
+town,,,Kanoneiland,,-28.6595351,21.0807314
+town,,,Kanyamazane,1214,-25.4686062,31.1785013
+town,,,Karatara,6580,-33.912893,22.8378709
+local_municipality,NC074,municipal_code,Kareeberg,,-30.5396272,21.7578376
+town,,,Kareedouw,6400,-33.9553745,24.2910921
+local_municipality,NC066,municipal_code,Karoo Hoogland,,-31.7403044,20.4596278
+town,,,Karos,,-28.4239741,21.6081059
+town,,,Kathu,8446,-27.7729163,22.9862287
+town,,,Katlehong,1431,-26.3649337,28.1451018
+town,,,Keimoes,8860,-28.6966289,20.9662153
+town,,,Kei Mouth,5260,-32.6778845,28.360901
+town,,,Keiskammahoek,5670,-32.6825951,27.1332572
+town,,,Kelso,,-30.3607015,30.7074114
+town,,,Kempton Park,1619,-26.0957849,28.2216328
+town,,,Kendal,2225,-26.0667627,28.944936
+town,,,Kenhardt,8900,-29.3597982,21.1538338
+town,,,Kentani,4980,-32.5076004,28.3139661
+town,,,Kestell,9860,-28.3106796,28.6863951
+town,,,Kgakala,2640,-27.2175916,26.2655371
+local_municipality,NC086,municipal_code,Kgatelopele,,-28.2355139,23.5145536
+local_municipality,NW374,municipal_code,Kgetlengrivier,,-25.7441907,26.631958
+town,,,Kgotsong,9660,-27.3766542,26.6429834
+local_municipality,NC067,municipal_code,Khâi-Ma,,-29.235228,19.0129348
+town,,,Khakhu,,-22.8389711,30.2376031
+town,,,Khambi,,27.9666437,77.4118502
+local_municipality,NC083,municipal_code,//Khara Hais,,-28.446115,21.0633289
+local_municipality,NC084,municipal_code,!Kheis,,-28.9437682,21.4716463
+town,,,Khomanani,933,-23.2626558,30.3804722
+town,,,Khuma,2551,-26.8558279,26.8489886
+town,,,Kidd's Beach,5264,-33.1514738,27.6874333
+town,,,Kimberley,8301,-28.7433042,24.7390246
+local_municipality,EC157,municipal_code,King Sabata Dalindyebo,,-31.7849914,28.5762031
+town,,,Kingsburgh,4126,-30.0963849,30.8378062
+town,,,King Williams Town,5601,-32.8792549,27.3930573
+town,,,Kinross,2270,-26.4198108,29.0925378
+town,,,Kirkwood,6120,-33.4042207,25.4670118
+town,,,Klaarstroom,,-33.332766,22.5324548
+town,,,Klaarwater,3609,-29.9021115,30.8415728
+town,,,Klapmuts,,-33.8116721,18.8630126
+town,,,Klarinet,,-25.8429724,29.1978902
+town,,,Klawer,8145,-31.7776133,18.6227044
+town,,,Klein Brak River,,-34.0846565,22.1408217
+town,,,Kleinemonde,,-33.5366516,27.037319
+town,,,Kleinmond,7195,-34.3372255,19.0033738
+town,,,Klein Nourivier,,-30.2152591,18.1372403
+town,,,Kleinzee,,-29.6805552,17.0654818
+town,,,Klerksdorp,2571,-26.866835,26.6044586
+town,,,Klipplaat,6255,-33.0187012,24.3368137
+town,,,Kliprand,,-30.5963864,18.6874578
+town,,,Kloof,3610,-29.7919595,30.8196116
+local_municipality,WC048,municipal_code,Knysna,,-33.937924,22.879395
+town,,,Koekenaap,,-31.5266559,18.285805
+town,,,Koelenhof,,-33.8735492,18.8208664
+town,,,Koffiefontein,9986,-29.4017673,24.9909511
+town,,,Koingnaas,,-30.1962938,17.2826883
+town,,,Kokosi,2515,-26.5030627,27.4637634
+town,,,Kokstad,4700,-30.5406688,29.4121525
+town,,,Komaggas,,-29.7994272,17.4765817
+town,,,Komga,4950,-32.5839075,27.8825642
+local_municipality,FS162,municipal_code,Kopanong,,-29.931907,25.3155652
+town,,,Koppies,9540,-27.232145,27.5757746
+town,,,Koringberg,,-33.0173198,18.672627
+town,,,Koster,348,-25.8556678,26.8871356
+local_municipality,EC108,municipal_code,Kouga,,-33.9040685,24.6830003
+local_municipality,EC109,municipal_code,Kou-Kamma,,-33.8488873,23.7955048
+town,,,Kraaifontein,7570,-33.8534095,18.7050337
+town,,,Kranskop,,-28.9681633,30.8615889
+town,,,Kriel,2271,-26.2573943,29.2538116
+town,,,Kroonstad,9499,-27.6502396,27.2123339
+town,,,Krugersdorp,1739,-26.1011732,27.7686133
+town,,,Kuboes,,-28.4488749,16.9906565
+town,,,Kurland,6600,-33.9470416,23.490553
+town,,,Kuruman,8460,-27.44486,23.4232403
+town,,,Kutama,940,-23.0676397,29.6388441
+town,,,Kutlwano,,-28.3215169,24.6960726
+town,,,Kwadabeka,3610,-29.7716091,30.9048495
+local_municipality,KZN292,municipal_code,KwaDukuza,,-29.3633697,31.2625695
+town,,,KwaDukuza,4449,-29.3580202,31.2506468
+town,,,Kwadwesi,6201,-33.8419554,25.501982
+town,,,Kwakwatsi,9540,-27.2286876,27.5872951
+town,,,KwaMbonambi,,-28.6007677,32.0821877
+town,,,KwaMhlanga,1022,-25.4298383,28.70286
+town,,,KwaNdengezi,3607,-29.8581296,30.7610915
+town,,,Kwanobuhle,6242,-33.8122213,25.3658194
+town,,,Kwanomzamo,6300,-34.0387753,24.7750875
+town,,,KwaNonzame,5900,-31.5125337,25.0037762
+town,,,KwaSandanezwe,,-29.8818337,29.9971779
+local_municipality,KZN432,municipal_code,Kwa Sani,,-29.7593247,29.3745258
+town,,,KwaThema,1575,-26.297655,28.3853516
+town,,,KwaZamokuhle,1098,-26.1342916,29.7246585
+town,,,Kwazamuxolo,5950,-31.193885,24.954263
+town,,,KwaZanele,,-26.3135084,29.9796907
+town,,,KwaZenzele,6130,-28.8670918,30.4844567
+province,ZA-ZN,iso_3166,KwaZulu-Natal,,-28.9357727,29.5837844
+town,,,Kwelera,,-32.8053846,27.954384
+town,,,Kylemore,7600,-33.9196159,18.9482668
+town,,,Ladismith,6655,-33.4959169,21.2724772
+town,,,Ladybrand,9745,-29.1843137,27.4504474
+town,,,Lady Frere,5410,-31.7017793,27.2255782
+town,,,Lady Grey,9755,-30.7144621,27.2029993
+town,,,Ladysmith,3370,-28.5652385,29.7657638
+town,,,L'Agulhas,,-34.8207735,20.0048858
+local_municipality,WC051,municipal_code,Laingsburg,,-33.0400468,20.5503184
+town,,,Lambert's Bay,8130,-32.0997222,18.3024251
+town,,,La Mercy,4399,-29.6350241,31.0891853
+town,,,Lammermoor,1739,-25.9591218,27.8740249
+town,,,Lamontville,4027,-29.9428953,30.9335091
+town,,,Langebaan,7357,-33.0720383,18.0384263
+town,,,Langebaanweg,,-32.9735692,18.1466234
+local_municipality,WC026,municipal_code,Langeberg,,-33.8271721,19.8040179
+town,,,Lanseria,1739,-25.9384114,27.9164965
+town,,,Laudium,37,-25.7877886,28.083409
+town,,,Lawley,1830,-26.3818089,27.8033145
+town,,,Leandra,2265,-26.3800226,28.8975034
+town,,,Lebaleng,2650,-27.3261825,25.9702144
+town,,,Lebogang,2610,-24.9029965,28.3752017
+town,,,Lebowakgomo,737,-24.3043566,29.4830567
+town,,,Leerkrans,,-28.4069731,21.5222749
+town,,,Leeudoringstad,2640,-27.2267281,26.2409686
+town,,,Leeufontein,449,-25.6538005,28.3772867
+town,,,Leeu-Gamka,,-32.7672191,21.9666541
+town,,,Leeupoort,,-24.9224868,27.6376123
+town,,,Lehae,1829,-26.3488517,27.8810813
+town,,,Leipoldtville,,-32.2220204,18.4806169
+district_municipality,DC18,municipal_code,Lejweleputswa,,-28.2378378,25.4444687
+town,,,Lekkersing,8283,-29.0027648,17.0958627
+local_municipality,MP305,municipal_code,Lekwa,,-26.8800279,29.1100561
+local_municipality,NW396,municipal_code,Lekwa-Teemane,,-27.6388895,25.1777624
+town,,,Lenasia South,1829,-26.3965456,27.852993
+local_municipality,LIM355,municipal_code,Lepelle-Nkumpi,,-24.2674265,29.4248263
+town,,,Lepelsfontein,,-31.045137,17.8433146
+local_municipality,LIM362,municipal_code,Lephalale,,-23.6774718,27.5926504
+town,,,Lephoi,9992,-30.5016333,25.9755848
+town,,,Leratswana,9602,-28.0221486,27.8428833
+local_municipality,GT423,municipal_code,Lesedi,,-26.4492363,28.4041826
+town,,,Leslie,2265,-26.3681122,28.9181848
+town,,,Letaba,870,-23.9765289,31.7973699
+town,,,Letsatsing,2503,-26.3737604,27.4576523
+local_municipality,FS161,municipal_code,Letsemeng,,-29.5055383,24.8938876
+town,,,Letsitele,885,-23.8866439,30.3873777
+town,,,Libode,5160,-31.5338428,29.0113253
+town,,,Lichtenburg,2740,-26.1191289,26.1654352
+town,,,Lidgetton,,-29.4424578,30.0991756
+town,,,Lime Acres,8410,-28.3451159,23.4884027
+province,ZA-LP,iso_3166,Limpopo,,-24.0420855,28.2454354
+town,,,Lindley,9630,-27.9074679,27.9096901
+town,,,Lingelethu,,-32.6946581,26.3030507
+town,,,Lingelihle,5880,-32.1864257,25.6360964
+town,,,Loerie,6370,-33.874092,25.0242269
+town,,,Loeriesfontein,8185,-30.9349373,19.4022464
+town,,,Longlands,,-31.6357617,27.3726695
+town,,,Lothair,2370,-26.3974022,30.4222833
+town,,,Loubos,8811,-26.7097817,20.1110754
+town,,,Louis Trichardt,920,-23.0433379,29.8978702
+town,,,Louisvale,8801,-28.5739812,21.1964533
+town,,,Louterwater,,-33.7912923,23.6236117
+town,,,Louwna,,-26.902122,24.1457622
+town,,,Louwsburg,,-27.5752102,31.273871
+town,,,Loxton,,-31.4779437,22.3455213
+town,,,Luckhoff,9982,-29.7475989,24.7798651
+town,,,Luganda,3609,-29.8868066,30.7963984
+town,,,Luhewini,,-31.7105845,28.1286447
+local_municipality,EC134,municipal_code,Lukhanji,,-31.9957661,26.7803903
+town,,,Lukhanyisweni,,-30.7658038,29.5569185
+town,,,Lupindo,5100,-30.4957607,28.6647385
+town,,,Lushaba,,-28.5401161,30.9682444
+town,,,Lusikisiki,4820,-31.3631666,29.5660027
+town,,,Lutzville,8165,-31.55429,18.3435234
+town,,,Lwandle,7140,-34.1205963,18.861693
+town,,,Lydenburg,1120,-25.0957526,30.4334977
+town,,,Lynedoch,,-33.9824672,18.7685744
+town,,,Mabolela,,-28.5185376,28.823498
+town,,,Mabopane,190,-25.5118326,28.0397767
+town,,,Machadodorp,1170,-25.6760809,30.2430036
+town,,,Macleantown,,-32.7891112,27.7441213
+town,,,Maclear,5480,-31.0737839,28.3498653
+town,,,Madadeni,2951,-27.7514484,30.0685775
+local_municipality,NW372,municipal_code,Madibeng,,-25.4280722,27.7104433
+town,,,Madikgetla,9913,-30.0265625,25.7758235
+town,,,Madikwe,2840,-25.355599,26.5298662
+town,,,Madlala,,-30.5976625,30.505264
+town,,,Mafahlaneng,,-27.5476388,28.5110875
+local_municipality,NW383,municipal_code,Mafikeng,,-25.9344038,25.4892017
+local_municipality,FS205,municipal_code,Mafube,,-27.2782408,28.4504149
+town,,,Magaliesburg,1739,-25.9924396,27.5349179
+local_municipality,NC093,municipal_code,Magareng,,-28.1853318,24.6726589
+town,,,Mahikeng,2745,-25.9220389,25.61619
+town,,,Mahlabatini,,-28.2279156,31.4571984
+town,,,Mahlayizeni,,,
+town,,,Mahwelereng,626,-24.1351424,28.9907082
+town,,,Maja,,-24.167723,29.5343931
+town,,,Majaneng,402,-26.4733665,25.2960301
+local_municipality,EC104,municipal_code,Makana,,-33.287988,26.2781054
+town,,,Makeleketla,9420,-28.5311854,26.9945699
+local_municipality,LIM344,municipal_code,Makhado,,-22.9928935,29.5953897
+town,,,Makhasa,,-23.2141856,30.4114168
+local_municipality,LIM473,municipal_code,Makhuduthamaga,,-24.7365935,29.6582015
+town,,,Makuleke,,-22.8642227,30.9150498
+town,,,Makwassie,2650,-27.3122431,25.9816876
+town,,,Malebogo,9482,-28.1202654,25.4902236
+town,,,Malelane,1320,-25.4807097,31.5232054
+town,,,Malenge,,-30.1879776,29.5828754
+local_municipality,EC143,municipal_code,Maletswai,,-31.0246057,26.5785715
+town,,,Malmesbury,7300,-33.4630446,18.711203
+town,,,Maluti,4740,-30.2605478,28.788876
+local_municipality,FS194,municipal_code,Maluti-a-Phofung,,-28.3357961,28.8142944
+town,,,Mamafubedu,9640,-27.6644507,28.1265241
+town,,,Mamelodi,122,-25.7157385,28.4107432
+town,,,Mamre,7349,-33.5132752,18.468988
+local_municipality,NW393,municipal_code,Mamusa,,-27.2327631,25.1170235
+town,,,Mandela Section,1779,-26.2762945,27.6938947
+local_municipality,KZN291,municipal_code,Mandeni,,-29.1246572,31.4227017
+town,,,Manenzhe,967,-22.4689159,30.6817559
+metro_municipality,MAN,municipal_code,Mangaung,,-29.172931,26.2182796
+town,,,Mankweng,727,-23.8900474,29.7038867
+local_municipality,FS196,municipal_code,Mantsopa,,-29.1739965,27.0096208
+town,,,Manyeleti,,-24.6061335,31.4633691
+town,,,Maphodi,9917,-30.2611923,25.7154191
+local_municipality,KZN294,municipal_code,Maphumulo,,-29.1078283,30.9828376
+town,,,Mapumulo,,-29.103054,30.9703691
+local_municipality,NW404,municipal_code,Maquassi Hills,,-27.2612366,25.8678115
+town,,,Marapong,556,-23.6552543,27.6213275
+town,,,Marble Hall,450,-24.9726847,29.2816061
+town,,,Marburg,4252,-30.7302723,30.4183609
+town,,,Marchand,,-28.7311941,20.5006059
+town,,,Margate,4275,-30.8510791,30.3506137
+town,,,Marina Beach,,-30.9346157,30.2990476
+town,,,Marloth Park,,-25.3657132,31.7685543
+town,,,Marokolong,400,-25.3772895,28.2858259
+town,,,Marquard,9610,-28.6716987,27.4158881
+local_municipality,LIM335,municipal_code,Maruleng,,-24.2796948,30.5524031
+town,,,Masakona,941,-23.2761502,30.2435063
+town,,,Masemola,,-24.5504954,29.6081527
+town,,,Mashamba,942,-23.2170402,30.2627161
+town,,,Mashau,943,-23.1472871,30.1909232
+town,,,Mashishing,1123,-25.0895124,30.4155379
+town,,,Masia,944,-23.217235,30.3289102
+town,,,Masilo,9410,-28.4169717,26.6937945
+local_municipality,FS181,municipal_code,Masilonyana,,-28.6446693,26.3241515
+town,,,Masiphumelele,7975,-34.1300684,18.3740379
+town,,,Mataffin,,-25.4545011,30.9393423
+town,,,Matatiele,4730,-30.3319855,28.7920119
+local_municipality,EC441,municipal_code,Matatiele,,-30.3852783,28.5290513
+town,,,Mathabatha,,-24.2208842,29.8218651
+local_municipality,FS184,municipal_code,Matjhabeng,,-28.0010014,26.6868626
+town,,,Matjiesfontein,,-33.2303354,20.5763046
+town,,,Matlakeng,,-30.2925934,27.0971242
+town,,,Matsulu,1203,-25.5120234,31.338675
+town,,,Matwabeng,9600,-28.341417,27.6309408
+local_municipality,WC011,municipal_code,Matzikama,,-31.6034389,18.4138654
+town,,,Mautse,9720,-28.5104134,27.9199997
+town,,,Mavambe,,-23.0034697,30.632184
+town,,,Mayibuye,1685,-26.03343,28.1806195
+town,,,Mazeppa Bay,,-32.4735951,28.6410286
+town,,,Mbalisweni,,-31.2292124,28.4730578
+town,,,Mbekweni,7655,-33.6815946,18.9867164
+local_municipality,EC121,municipal_code,Mbhashe,,-32.1107005,28.4310743
+local_municipality,EC443,municipal_code,Mbizana,,-30.8524944,29.8300567
+local_municipality,MP322,municipal_code,Mbombela,,-25.4784581,30.9611282
+local_municipality,KZN281,municipal_code,Mbonambi,,-28.5934023,32.2523985
+town,,,McGregor,,-33.9477901,19.8234656
+town,,,Mdantsane,5219,-32.954403,27.6977093
+town,,,Melkbosstrand,7441,-33.7175913,18.4457326
+town,,,Melmoth,3835,-28.5784164,31.3882194
+town,,,Memel,2970,-27.6791587,29.5563706
+town,,,Meqheleng,9730,-28.8988211,27.8683815
+local_municipality,GT484,municipal_code,Merafong City,,-26.3923602,27.2942758
+town,,,Merweville,,-32.6693516,21.5070992
+local_municipality,FS204,municipal_code,Metsimaholo,,-26.9259128,27.905343
+town,,,Meyerton,1961,-26.574892,28.0031812
+town,,,Mfuleni,7100,-34.0130485,18.6698342
+town,,,Mhinga,976,-22.7768593,30.8946542
+local_municipality,EC156,municipal_code,Mhlontlo,,-31.1871755,28.5847706
+town,,,Mhluzi,1055,-25.7541888,29.4155441
+town,,,Middledrift,5685,-32.8036537,26.9729198
+town,,,Midrand,1682,-25.9792897,28.0529469
+local_municipality,GT422,municipal_code,Midvaal,,-26.6003151,27.9977937
+local_municipality,NC081,municipal_code,Mier,,-26.727516,19.9672378
+town,,,Milnerton,7441,-33.8725862,18.5111599
+town,,,Mkambati,,-31.2843253,29.9529176
+local_municipality,KZN226,municipal_code,Mkhambathini,,-29.846029,30.4796851
+local_municipality,MP303,municipal_code,Mkhondo,,-26.958707,30.5539007
+town,,,Mkuze,,-27.6195763,32.0322849
+town,,,Mlungisi,5321,-31.9168253,26.8512618
+town,,,Mmabatho,2790,-25.8386974,25.5850572
+local_municipality,EC122,municipal_code,Mnquma,,-32.36971,28.0012703
+town,,,Modderfontein,1609,-26.1022244,28.1376971
+local_municipality,LIM365,municipal_code,Modimolle,,-24.704681,28.3928315
+town,,,Modimolle (Nylstroom),510,-24.7036122,28.3877949
+town,,,Modjadji,837,-23.6186789,30.3370722
+town,,,Modjadjiskloof,835,-23.6649907,30.1621306
+town,,,Moemaneng,9610,-28.6785421,27.4131074
+local_municipality,LIM367,municipal_code,Mogalakwena,,-23.8300344,28.4675777
+local_municipality,GT481,municipal_code,Mogale City,,-26.0067744,27.6148877
+town,,,Mogogelo,422,-25.3505895,28.1352552
+town,,,Mogwase,314,-25.2744868,27.2393958
+town,,,Mohadin,2531,-26.7169648,27.0281621
+town,,,Mohlakeng,1759,-26.2359059,27.682984
+local_municipality,FS163,municipal_code,Mohokare,,-30.127405,26.4597614
+town,,,Mokwallo,9595,-27.0036013,27.3809308
+local_municipality,LIM353,municipal_code,Molemole,,-23.5008594,29.461284
+town,,,Molteno,5500,-31.3911717,26.3530058
+town,,,Molweni,3610,-29.730365,30.868927
+town,,,Mombeni,,-30.7779714,29.3429155
+town,,,Monakato,331,-25.3526931,27.2699039
+town,,,Monontsha,,-28.5616644,28.723962
+town,,,Montagu,6720,-33.7725223,20.1162077
+town,,,Monyakeng,9682,-27.8262922,26.3682572
+town,,,Mooinooi,325,-25.7517396,27.5552282
+town,,,Mooi River,,-29.2111973,29.99667
+local_municipality,LIM364,municipal_code,Mookgophong,,-24.500063,28.6424627
+town,,,Mookgophong (Naboomspruit),560,-24.5175095,28.7049014
+town,,,Moorreesburg,7310,-33.1466212,18.6620888
+district_municipality,DC33,municipal_code,Mopani,,-23.5240381,30.731335
+local_municipality,FS201,municipal_code,Moqhaka,,-27.6441918,27.2054554
+local_municipality,NW371,municipal_code,Moretele,,-25.1853214,27.9389754
+town,,,Morgans Bay,5290,-32.7044205,28.3348452
+town,,,Morgenzon,2315,-26.7367668,29.6068249
+town,,,Morojaneng,9940,-29.5861962,26.6773715
+town,,,Morokweng,8614,-26.1277815,23.7691306
+local_municipality,NW375,municipal_code,Moses Kotane,,-25.1287022,26.6603717
+local_municipality,WC043,municipal_code,Mossel Bay,,-34.073353,21.8919901
+district_municipality,DC17,municipal_code,Motheo,,-29.2426312,26.3579402
+town,,,Motherwell,6211,-33.8100336,25.5683217
+town,,,Motswedimosa,,-29.0251475,24.5859789
+town,,,Motsweding,,-27.6858907,24.656119
+town,,,Mount Ayliff,4735,-30.8145442,29.3593451
+town,,,Mount Frere,5090,-30.8966637,28.9668403
+town,,,Mount Moreland,4339,-29.6359499,31.0678317
+town,,,Mpeko,,-33.3775183,27.0809849
+town,,,Mpembeni,,-28.1169278,31.9152178
+town,,,Mphambo,,-23.089698,30.6689082
+local_municipality,KZN223,municipal_code,Mpofana,,-29.1927641,29.8418897
+town,,,Mpolweni,,-29.4304642,30.4677462
+town,,,Mpophomeni,3290,-29.5679739,30.1783688
+town,,,Mpuluzi,2335,-26.3470113,30.7759902
+province,ZA-MP,iso_3166,Mpumalanga,,-25.8899596,29.3839516
+town,,,Mpumuza,,-29.6074286,30.277055
+town,,,Mpushini Park,,-28.8981264,31.4391624
+town,,,Mqanduli,5080,-31.8160377,28.7597144
+town,,,Mqekezweni,,-31.741405,28.4654996
+local_municipality,KZN244,municipal_code,Msinga,,-28.5934688,30.3896155
+town,,,Msogwaba,,-25.4284656,31.1561578
+local_municipality,MP302,municipal_code,Msukaligwa,,-26.5356871,29.9159459
+local_municipality,KZN225,municipal_code,Msunduzi,,-29.6636581,30.2226288
+town,,,Mtebele,,-31.7130043,27.9458666
+local_municipality,KZN285,municipal_code,Mthonjaneni,,-28.5839415,31.2781331
+town,,,Mtshanyana,,-31.8151643,27.6641416
+local_municipality,KZN275,municipal_code,Mtubatuba,,-28.3126455,32.243903
+town,,,Mtunzini,3867,-28.9511533,31.748477
+town,,,Mtwalume,,-30.4923342,30.6208147
+town,,,Mudabula,,-23.1109191,30.5501983
+town,,,Mudimeli,991,-22.8033472,29.9515108
+town,,,Mulenzhe,947,-22.9980684,30.5558985
+town,,,Mulima,817,-23.3066894,30.0412164
+town,,,Munsieville,1739,-26.073152,27.7521583
+town,,,Munster,,-31.0033726,30.2535662
+town,,,Murchison,,-23.9013762,30.6891502
+town,,,Murraysburg,6995,-31.9645989,23.7592948
+town,,,Musina,900,-22.3521135,29.9967831
+local_municipality,LIM341,municipal_code,Musina,,-22.4355007,29.2910593
+local_municipality,LIM342,municipal_code,Mutale,,-22.6136549,30.4291929
+town,,,Mziwabantu,,-30.5802851,23.4935039
+town,,,Mzongwana,,-30.5210622,28.8308959
+town,,,Nababeep,8265,-29.5945883,17.7776289
+local_municipality,FS185,municipal_code,Nala,,-27.6272922,26.160106
+local_municipality,NW392,municipal_code,Naledi,,-26.8258562,24.5804291
+suburb,FS164,municipal_code,Naledi,1861,-26.2574067,27.8186227
+local_municipality,NC062,municipal_code,Nama Khoi,,-29.4249814,17.3710074
+district_municipality,DC6,municipal_code,Namakwa,,-30.5952339,18.6449061
+town,,,Nancefield,1811,-26.3062803,27.8961042
+town,,,Napier,7270,-34.4734767,19.8892061
+town,,,Ncora,,-31.7891456,27.7265565
+town,,,Ncwadi,,-29.7782027,29.970236
+town,,,Ndikwe,,-28.5867935,30.8825147
+town,,,Ndindini,,-31.3342504,29.7865186
+local_municipality,EC105,municipal_code,Ndlambe,,-33.5336445,26.6009151
+town,,,Ndlangubo,,-28.7684449,31.6843888
+local_municipality,KZN293,municipal_code,Ndwedwe,,-29.433548,30.8706352
+town,,,Nebo,,-24.8990846,29.7600795
+town,,,Needs Camp,,-32.997074,27.6417898
+town,,,Nellmapius,122,-25.7371358,28.3591228
+metro_municipality,NMA,municipal_code,Nelson Mandela Bay,,-33.7969212,25.4003618
+town,,,Nelspoort,6973,-32.0943241,23.0116752
+town,,,Nelspruit,1201,-25.4832181,30.9773815
+local_municipality,KZN252,municipal_code,Newcastle,,-27.7004787,29.6848232
+town,,,New Eersterus,429,-25.4177309,28.1333552
+town,,,New Germany,3610,-29.7977392,30.8746959
+town,,,New Hanover,,-29.3570565,30.5200494
+town,,,Newlands East,4037,-29.7746107,30.9846998
+town,,,Newlands West,4037,-29.783321,30.9512093
+district_municipality,DC38,municipal_code,Ngaka Modiri Molema,,-25.8682821,25.5843467
+town,,,Ngodwana,1209,-25.5696284,30.675321
+town,,,Ngome,,-27.8398141,31.4001582
+town,,,Ngqeleni,5140,-31.6703731,29.0124456
+town,,,Ngqubusini,,-31.8311598,28.2021429
+local_municipality,EC126,municipal_code,Ngqushwa,,-33.2070872,26.9382544
+local_municipality,FS203,municipal_code,Ngwathe,,-27.2633443,27.2204705
+town,,,Nieu-Bethesda,,-31.8688224,24.5525223
+town,,,Nieuwoudtville,8180,-31.3805323,19.099227
+town,,,Nigel,1491,-26.4266651,28.4618752
+local_municipality,KZN286,municipal_code,Nkandla,,-28.6589079,30.7264052
+district_municipality,DC31,municipal_code,Nkangala,,-25.7376926,28.9148445
+local_municipality,FS193,municipal_code,Nketoana,,-27.8658109,27.9878417
+local_municipality,MP324,municipal_code,Nkomazi,,-25.6399487,31.5473469
+town,,,Nkomo,,-23.4089435,30.7779995
+local_municipality,EC127,municipal_code,Nkonkobe,,-32.7066375,26.5994485
+town,,,Nkuri,,-23.2560024,30.53711
+town,,,Nompumelelo,,-32.9555853,27.9216806
+town,,,Nondweni,,-28.1863296,30.8015377
+local_municipality,KZN265,municipal_code,Nongoma,,-27.89444,31.613515
+town,,,Northam,360,-24.9614298,27.2589085
+province,ZA-NC,iso_3166,Northern Cape,,-29.2245287,19.5654145
+province,ZA-NW,iso_3166,North West,,-26.3680397,24.4357572
+town,,,Norvalspont,9797,-30.6295989,25.4527802
+town,,,Noupoort,5950,-31.1848263,24.9452896
+town,,,Nqadu,,-32.2289704,28.4059298
+town,,,Nqamakwe,4990,-32.1998251,27.9355002
+local_municipality,KZN242,municipal_code,Nquthu,,-28.2950094,30.4824124
+town,,,Nqutu,,-28.2212116,30.6678517
+town,,,Nseleni,,-28.6659502,32.020335
+town,,,Nsikazi,1240,-25.2788761,31.2324682
+local_municipality,EC444,municipal_code,Ntabankulu,,-30.9738521,29.3097768
+local_municipality,KZN283,municipal_code,Ntambanana,,-28.5943582,31.7312494
+town,,,Ntha,9630,-27.8838939,27.9018334
+town,,,Ntsweletsoku,2891,-25.4326,25.9433
+town,,,Nxamalala,,-28.8417462,30.440139
+local_municipality,EC128,municipal_code,Nxuba,,-32.6956236,26.1506673
+local_municipality,EC155,municipal_code,Nyandeni,,-31.6067061,28.9459752
+town,,,Nyanga,7750,-33.9934114,18.5781537
+town,,,Nyuswa,,-30.7061141,29.4522228
+town,,,Oberholzer,2499,-26.3464553,27.3792859
+town,,,Odendaalsrus,9480,-27.8645527,26.6840736
+town,,,Ogies,2230,-26.0498108,29.0489166
+town,,,Ohrigstad,,-24.7472131,30.5642396
+local_municipality,KZN235,municipal_code,Okhahlamba,,-28.7059206,29.2110598
+town,,,Okiep,,-29.5917561,17.8664549
+town,,,Olifantshoek,8450,-27.9418934,22.7359921
+town,,,Onrusrivier,7201,-34.4106766,19.1743617
+town,,,Onseepkans,,-28.7559321,19.2791554
+town,,,Onverwacht,557,-23.6855322,27.6746515
+suburb,,,Oostersee,7500,-33.8989439,18.6015793
+town,,,Opkoms,9301,-29.1472782,26.2537642
+town,,,Oppermansdorp,,-29.4117729,24.7396368
+town,,,Orange Farm,1841,-26.4672516,27.8550621
+town,,,Orania,,-29.8224104,24.4010264
+town,,,Oranjeville,1995,-26.9838986,28.19773
+town,,,Orient Hills,4133,-29.9982796,30.9179406
+town,,,Orkney,2619,-26.96361,26.6172838
+district_municipality,DC15,municipal_code,OR Tambo,,-31.3357546,28.7387385
+town,,,Osizweni,2952,-27.779393,30.1583765
+town,,,Oskraal,,-25.5035267,27.870758
+town,,,Oslo Beach,4240,-30.7632703,30.4351712
+town,,,Othame,,-28.7369401,30.5579499
+town,,,Ottosdal,2610,-26.8154206,25.9857357
+town,,,Oudtshoorn,6625,-33.5871616,22.1987742
+local_municipality,WC045,municipal_code,Oudtshoorn,,-33.6275225,22.0895266
+town,,,Oukasie,250,-25.6044508,27.7904106
+district_municipality,DC3,municipal_code,Overberg,,-34.3074411,19.4547236
+local_municipality,WC032,municipal_code,Overstrand,,-34.4852541,19.0433561
+town,,,Oviston,9798,-30.6964408,25.7649817
+town,,,Oyster Bay,6331,-34.1677146,24.6460037
+town,,,Paarl,7646,-33.7327818,18.9452199
+town,,,Pampierstad,8566,-27.7829381,24.6864153
+suburb,,,Panorama,7500,-33.8799133,18.5716819
+town,,,Paradise Beach,,-34.1045338,24.8826883
+suburb,,,Park Ridge,5209,-33.0165737,27.8772648
+town,,,Park Rynie,,-30.3181204,30.7310633
+town,,,Parow,7500,-33.8995078,18.5775949
+suburb,,,Parow East,7500,-33.9042762,18.5954381
+suburb,,,Parow North,7500,-33.8887406,18.5748276
+suburb,,,Parow Valley,7500,-33.9131587,18.5892064
+town,,,Parys,9585,-26.9102945,27.4563278
+town,,,Patensie,6335,-33.7571255,24.809047
+town,,,Paternoster,,-32.8117313,17.8923885
+town,,,Paterson,6130,-33.4384351,25.9673961
+town,,,Paulpietersburg,3180,-27.4242118,30.8119498
+town,,,Paul Roux,9800,-28.2965553,27.9536667
+town,,,Paulshoek,,-30.3674721,18.2535202
+town,,,Pearly Beach,7220,-34.6616807,19.4912244
+town,,,Pearston,5860,-32.5810928,25.1374756
+town,,,Peddie,5640,-33.196451,27.108799
+town,,,Pefferville,5209,-33.0101782,27.8805106
+town,,,Pella,8891,-29.0336907,19.1526976
+town,,,Pellsrus,6330,-34.0613658,24.9167847
+town,,,Penge,,-24.3759081,30.2892909
+town,,,Pennington,,-30.3727411,30.6953167
+town,,,Perdekop,2465,-27.1642943,29.6239622
+town,,,Petrusburg,9932,-29.119896,25.4156225
+town,,,Petrus Steyn,9640,-27.6545064,28.1236873
+town,,,Petrusville,8770,-27.6545064,28.1236873
+town,,,Petsana,9810,-27.8031108,28.4483166
+town,,,Phalaborwa,1389,-23.9646149,31.0832996
+town,,,Philandersbron,8811,-26.8083438,20.0912929
+town,,,Philippolis,9970,-30.2648928,25.2689914
+town,,,Phiritona,9651,-27.2653446,27.9711928
+local_municipality,NC094,municipal_code,Phokwane,,-27.805733,24.7067362
+local_municipality,FS195,municipal_code,Phumelela,,-27.6538746,28.9682242
+town,,,Phuthaditjhaba,9869,-28.5463996,28.8119577
+town,,,Pienaarsrivier,,-25.2135965,28.2942317
+city,,,Pietermaritzburg,3201,-29.6205137,30.3174453
+town,,,Piet Plessis,,-26.1627724,24.4060805
+town,,,Piet Retief,2380,-27.0170997,30.799772
+town,,,Piketberg,7320,-32.9026859,18.7557503
+town,,,Pilgrim's Rest,,-24.8990404,30.7504603
+town,,,Pine Ridge,,-25.8179676,29.1983338
+town,,,Pinetown,3610,-29.8389533,30.8370193
+town,,,Pirie,,-32.7925478,27.2458361
+local_municipality,MP304,municipal_code,Pixley ka Seme,,-27.076944,29.8157228
+district_municipality,DC7,municipal_code,Pixley ka Seme,,-30.1064757,22.3996177
+suburb,,,Plattekloof,7500,-33.8721941,18.5841428
+town,,,Plettenberg Bay,6600,-34.0610798,23.3645104
+town,,,Pniel,7681,-33.8911298,18.9572379
+town,,,Pofadder,8890,-29.1242313,19.3915203
+city,,,Polokwane,699,-23.9014052,29.4104527
+local_municipality,LIM354,municipal_code,Polokwane,,-23.9260008,29.3163262
+town,,,Pomeroy,,-28.5578582,30.427378
+town,,,Pomfret,,-25.8243869,23.5231254
+town,,,Pongola,3170,-27.3848372,31.6175223
+town,,,Port Alfred,6170,-33.590499,26.8770872
+town,,,Port Edward,4295,-31.0255928,30.2168319
+town,,,Porterville,6810,-33.0150528,18.9900434
+town,,,Port Nolloth,8280,-29.2585327,16.8740876
+town,,,Port St Johns,5120,-31.6318887,29.5312708
+local_municipality,EC154,municipal_code,Port St. Johns,,-31.5354903,29.2915933
+town,,,Postmasburg,8420,-28.3139627,23.0550719
+town,,,Potchefstroom,2531,-26.6947631,27.080836
+town,,,Potgietersrus,601,-24.176721,28.9892578
+city,,,Pretoria,2,-25.7234832,28.1565159
+local_municipality,WC053,municipal_code,Prince Albert,,-33.0383116,21.9022216
+town,,,Prince Albert,6930,-33.220525,22.0195294
+town,,,Prince Alfred Hamlet,6835,-33.2840598,19.3237872
+town,,,Pringle Bay,,-34.3481032,18.8297756
+town,,,Promosa,2531,-26.6997632,27.0296213
+town,,,Pudimoe,8581,-27.397691,24.7147242
+town,,,Pumula,4235,-30.6403053,30.5271386
+town,,,Qalabotjha,9840,-27.0205275,28.6216157
+town,,,Qamata,,-31.9766001,27.4345101
+town,,,Qibing,9944,-29.7163823,27.0172401
+town,,,Qolora,,-32.5731438,28.2831174
+town,,,Queensburgh,4093,-29.8788477,30.894107
+town,,,Queenstown,5319,-31.9126024,26.8567968
+town,,,Qumbu,5180,-31.1619215,28.8693211
+town,,,Rabie Ridge,1632,-26.0250844,28.1693641
+town,,,Raithby,7130,-34.0280794,18.7988779
+town,,,Ramokokastad,195,-25.1575997,27.4237683
+town,,,Ramotse,407,-25.3698183,28.2839171
+local_municipality,NW385,municipal_code,Ramotshere Moiloa,,-25.2359548,25.7582424
+town,,,Ramsgate,4285,-30.8686925,30.3542836
+town,,,Randburg,2194,-26.1490259,27.9828026
+local_municipality,GT482,municipal_code,Randfontein,,-26.1914621,27.5071708
+town,,,Randvaal,1961,-26.4897095,28.0497554
+town,,,Ratanang,8710,-29.1184541,24.7537177
+town,,,Ratanda,1441,-26.5580391,28.3162052
+local_municipality,NW381,municipal_code,Ratlou,,-26.1085965,24.851502
+town,,,Rawsonville,6845,-33.6821095,19.3124737
+town,,,Rayton,1001,-25.7411534,28.5320584
+town,,,Reagile,348,-25.8503236,26.880947
+town,,,Rebone,617,-23.4286475,28.6022541
+town,,,Redcliffe,4339,-29.6408576,31.0140123
+town,,,Reddersburg,9904,-29.6508804,26.1680644
+town,,,Redelinghuys,,-32.4793794,18.533409
+town,,,Reeston,5247,-32.9811503,27.7900432
+town,,,Refilwe,1003,-25.6396136,28.5231489
+town,,,Regorogile,387,-24.578964,27.380056
+town,,,Reitz,9810,-27.8003251,28.4250468
+town,,,Reivilo,8595,-27.5653726,24.1767761
+town,,,Relebohile,9986,-29.7433682,24.779391
+local_municipality,NC075,municipal_code,Renosterberg,,-30.256895,24.2548817
+town,,,Rethabile,122,-25.7102412,28.3757279
+town,,,Rethabiseng,1026,-25.7211193,28.7118118
+town,,,Rheenendal,6576,-33.9481795,22.9325096
+town,,,Rhodes,9787,-30.7956864,27.9613534
+town,,,Richmond,3780,-29.874536,30.272165
+local_municipality,KZN227,municipal_code,Richmond,,-29.8993543,30.1924382
+local_municipality,NC061,municipal_code,Richtersveld,,-28.7157798,16.7237424
+town,,,Riebeek East,5805,-33.2060478,26.1550015
+town,,,Riebeek West,,-33.3512982,18.867158
+town,,,Riverlands,7353,-33.5266797,18.5931274
+town,,,Riversdale,6670,-34.091492,21.2521256
+town,,,Riviersonderend,7250,-34.149338,19.9147409
+town,,,Robben Island,,-33.8047481,18.3663283
+town,,,Robertson,6705,-33.8025341,19.8830038
+town,,,Rodenbeck,,-29.1838691,26.2810266
+town,,,Roedtan,,-24.5990108,29.0778684
+town,,,Roodepan,8309,-28.6649299,24.7151046
+town,,,Roodepoort,1724,-26.117909,27.8816235
+town,,,Rooigrond,,-25.923024,25.7977004
+town,,,Roseneath,,-30.1880277,30.7401671
+town,,,Rosetta,,-29.3082359,29.9733322
+town,,,Rossouw,,-31.1684038,27.2775846
+town,,,Rust De Winter,,-25.1992045,28.6110582
+town,,,Rustenburg,299,-25.6673461,27.2246331
+local_municipality,NW373,municipal_code,Rustenburg,,-25.6444633,27.2139064
+town,,,Sabie,1260,-25.0924513,30.7749654
+town,,,Sada,5630,-32.1987398,26.8094427
+town,,,Sakhile,2431,-26.9747048,29.2003376
+local_municipality,EC138,municipal_code,Sakhisizwe,,-31.4594285,27.6340916
+town,,,Saldanha,7395,-33.010361,17.9432025
+local_municipality,WC014,municipal_code,Saldanha Bay,,-32.9585693,18.0085939
+suburb,,,Salt River,7925,-33.9287,18.4578
+town,,,Salt Rock,4392,-29.4948842,31.2400825
+town,,,Sandton,2196,-26.0609393,28.0306458
+town,,,Sangcwaba,,-30.1901738,30.4031652
+town,,,Sannieshof,2760,-26.5310902,25.8065268
+town,,,Saron,,-33.1849259,19.0031117
+town,,,Sasolburg,1947,-26.8147257,27.8412445
+town,,,Saulsville,125,-25.7744313,28.0546828
+town,,,Scarborough,,-34.1987763,18.3737909
+town,,,Schweizer-Reneke,2780,-27.1927661,25.2971956
+town,,,Scottburgh,4180,-30.292439,30.7465216
+town,,,Sea Park,,-30.6953181,30.483506
+town,,,Sebokeng,1983,-26.5701097,27.8336972
+town,,,Secunda,2302,-26.509323,29.188014
+town,,,Sedgefield,6573,-34.0202511,22.7919039
+district_municipality,DC42,municipal_code,Sedibeng,,-26.5403898,27.9446121
+town,,,Sekgakgapeng,,-24.171614,28.9688336
+town,,,Sekgopo,,-23.6127486,29.9994894
+district_municipality,DC47,municipal_code,Sekhukhune,,-24.7850042,29.4503635
+town,,,Senekal,9600,-28.3170894,27.6082706
+local_municipality,EC142,municipal_code,Senqu,,-30.7938113,27.2275775
+town,,,Seshego,741,-23.846174,29.3888815
+local_municipality,FS191,municipal_code,Setsoto,,-28.5695521,27.329784
+town,,,Settlers,,-24.9505293,28.5274478
+town,,,Seymour,,-32.555446,26.757349
+town,,,Sezela,,-30.4060364,30.6743906
+town,,,Shakaskraal,4430,-29.4466148,31.2171468
+town,,,Sharpeville,1928,-26.6866874,27.8679876
+town,,,Sheepmoor,2352,-26.7180877,30.2962541
+town,,,Shelly Beach,4265,-30.7978824,30.411426
+town,,,Sidbury,,-33.4318366,26.1777484
+town,,,Simile,,-25.0802595,30.7806007
+town,,,Simon's Town,7975,-34.1902932,18.4247532
+town,,,Sinthumule,921,-23.1017616,29.7661139
+district_municipality,DC43,municipal_code,Sisonke,,-30.0472421,29.4782871
+town,,,Siyabuswa,472,-25.1184651,29.0581779
+local_municipality,NC078,municipal_code,Siyancuma,,-29.023069,23.4024582
+district_municipality,DC8,municipal_code,Siyanda,,-28.0138778,20.4486667
+local_municipality,NC077,municipal_code,Siyathemba,,-29.4490798,22.326151
+town,,,Siyathuthuka,1102,-25.6776687,29.9914516
+town,,,Slurry,,-25.8159733,25.8375714
+town,,,Smithfield,9966,-30.2179332,26.5319741
+town,,,Sobantu,3201,-29.5969893,30.420937
+town,,,Soebatsfontein,,-30.1188357,17.589497
+town,,,Soekmekaar,810,-23.494788,29.9320105
+local_municipality,NC091,municipal_code,Sol Plaatje,,-28.752539,24.5590071
+town,,,Somerset East,5850,-32.7212988,25.5768742
+town,,,Somerset West,7130,-34.0710571,18.8377185
+town,,,Sonop,,-25.6467209,27.6897647
+town,,,Sonwabile,,-31.0751342,28.358753
+town,,,Soshanguve,152,-25.4968327,28.0885702
+town,,,Southbroom,,-30.9298314,30.2938458
+town,,,Southport,,-30.6793639,30.4981209
+town,,,Soutpan,,-28.7481833,26.0435251
+town,,,Soweto,4309,-26.2457852,27.8215852
+town,,,Springbok,8240,-29.6562794,17.8773592
+town,,,Springfontein,9917,-30.2633995,25.7039579
+town,,,Springs,1559,-26.2529211,28.4351948
+town,,,Standerton,2430,-26.9460939,29.2175088
+town,,,Stanford,,-34.4428796,19.4508026
+town,,,Steelpoort,1133,-24.8020345,30.1477683
+town,,,Steinkopf,8244,-29.2636461,17.7274306
+town,,,Stella,8650,-26.5521277,24.8541834
+local_municipality,WC024,municipal_code,Stellenbosch,,-33.9207202,18.8647361
+town,,,Stellenbosch,7600,-33.9334901,18.8619121
+town,,,Sterkspruit,9762,-30.5238752,27.3600657
+town,,,Sterkstroom,5425,-31.5580946,26.5495649
+local_municipality,MP313,municipal_code,Steve Tshwete,,-25.8319801,29.3614076
+town,,,Steynsburg,5920,-31.2986532,25.8197355
+town,,,Steytlerville,6250,-33.3340124,24.3392684
+town,,,St Francis Bay,6312,-34.1644503,24.8181973
+town,,,St Helena Bay,,-32.7515245,17.9877723
+town,,,Stilbaai,6674,-34.3677313,21.4062972
+town,,,Stilfontein,2551,-26.8428857,26.7632084
+town,,,St Lucia,,-28.3761996,32.4126694
+town,,,St Lucia,,-28.3773571,32.4110815
+town,,,Stormsrivier,,-33.9701692,23.8787931
+town,,,Strand,7140,-34.1130919,18.8419529
+town,,,Strandfontein,7798,-31.7554567,18.2278033
+town,,,Straussburg,,-28.4352455,21.3307323
+town,,,Stretford,1841,-26.4941948,27.8453482
+town,,,Struisbaai,7285,-34.8040089,20.0478456
+town,,,Strydenburg,8765,-29.9431158,23.6669891
+town,,,Stutterheim,4930,-32.5773857,27.4137433
+local_municipality,EC106,municipal_code,Sunday's River Valley,,-33.5196348,25.5533798
+town,,,Sundra,,-26.1973469,28.5389242
+town,,,Sundumbili,4491,-29.1311162,31.3823952
+town,,,Sunwich Port,,-30.6648418,30.5082311
+town,,,Sutherland,6920,-32.3928781,20.661643
+town,,,Suurbraak,,-34.0377062,20.6399255
+town,,,Suurman,407,-25.3666309,28.2211377
+local_municipality,WC015,municipal_code,Swartland,,-33.299151,18.3992969
+town,,,Swartruggens,2835,-25.6481591,26.6841528
+local_municipality,WC034,municipal_code,Swellendam,,-34.1121106,20.2168588
+town,,,Swellendam,6740,-34.0222345,20.433382
+town,,,Taaiboschgroet,,-22.846388,28.9059009
+town,,,Tabankulu,5130,-30.9613433,29.3048015
+town,,,Temba,407,-25.3789623,28.2648869
+local_municipality,MP321,municipal_code,Thaba Chweu,,-25.0981276,30.3938135
+town,,,Thaba Phatshwa,,-29.3146817,27.1123093
+town,,,Thabazimbi,387,-24.5898553,27.3895953
+local_municipality,LIM361,municipal_code,Thabazimbi,,-24.3910833,26.6866436
+district_municipality,DC19,municipal_code,Thabo Mofutsanyana,,-28.1608705,28.0258005
+local_municipality,WC031,municipal_code,Theewaterskloof,,-34.1651615,19.2355536
+town,,,Thembalesizwe,6270,-32.4879925,24.0611221
+local_municipality,NC076,municipal_code,Thembelihle,,-29.7001437,23.6900474
+local_municipality,MP315,municipal_code,Thembisile Hani,,-25.491787,28.8542929
+town,,,Theunissen,9410,-28.4046801,26.702175
+town,,,Thohoyandou,950,-22.9757962,30.4320235
+town,,,Thokoza,3838,-26.3526962,28.1259192
+town,,,Tholongwe,,-23.9649861,29.6872309
+town,,,Thubalethu,3850,-28.5661637,31.3881307
+town,,,Thubelihle,2271,-26.2139546,29.2858153
+local_municipality,LIM343,municipal_code,Thulamela,,-22.9129283,30.4332198
+town,,,Thulwe,419,-25.2311995,28.202095
+town,,,Tidimalo,,-28.4249347,24.3080976
+town,,,Tigane,2600,-26.7395232,26.4151568
+town,,,Tikwana,,-27.8407805,25.9187031
+town,,,Tlhabane,299,-25.6401548,27.2091225
+town,,,Tlhabologang,,-26.3291889,26.2990965
+town,,,Tlholong,,-28.3274717,28.6923728
+local_municipality,NW402,municipal_code,Tlokwe,,-26.7170924,26.8948772
+local_municipality,FS182,municipal_code,Tokologo,,-28.388635,25.0796897
+town,,,Tongaat,4399,-29.5761509,31.0943685
+town,,,Touws River,6880,-33.3357638,20.0289545
+town,,,Trafalgar,,-30.9562643,30.2902262
+town,,,Trichardt,2300,-26.489227,29.2218884
+town,,,Trompsburg,9913,-30.0276501,25.7726401
+town,,,Trust Feed,,-29.3977093,30.5401129
+town,,,Tsakane,1550,-26.3636292,28.3653028
+local_municipality,NC085,municipal_code,Tsantsabane,,-28.2604901,22.9216397
+town,,,Tshepiso,1928,-26.685681,27.8711927
+town,,,Tshepisong,1754,-26.1908913,27.7956678
+town,,,Tshimbupfe,983,-23.1764724,30.4817442
+town,,,Tshing,2710,-26.3184206,26.7965596
+local_municipality,EC132,municipal_code,Tsolwana,,-31.8337985,25.5138925
+local_municipality,NW382,municipal_code,Tswaing,,-26.5750747,25.4656353
+town,,,Tswelelang,2630,-27.227827,25.9783798
+local_municipality,FS183,municipal_code,Tswelopele,,-28.0517093,25.7308359
+town,,,Tugela Mouth,,-29.2188934,31.5030175
+town,,,Tumahole,9585,-26.9194574,27.4762583
+town,,,Turfloop,,-23.8854652,29.7359734
+town,,,Tweespruit,9770,-29.1911844,27.0264476
+town,,,Tzaneen,850,-23.8057696,30.1265001
+local_municipality,KZN434,municipal_code,Ubuhlebezwe,,-30.1773422,30.0867036
+local_municipality,NC071,municipal_code,Ubuntu,,-31.380985,22.7306115
+town,,,Ugie,5470,-31.202714,28.2321369
+district_municipality,DC21,municipal_code,Ugu,,-30.5296098,30.1223501
+town,,,Uitenhage,6229,-33.7569272,25.3819659
+town,,,Ulco,8390,-28.3236455,24.2176311
+town,,,Ulundi,3838,-28.2949668,31.4247265
+local_municipality,KZN266,municipal_code,Ulundi,,-28.2420436,31.17631
+town,,,uMasizakhe,6280,-32.2389347,24.5378614
+town,,,Umbumbulu,,-29.983899,30.7027206
+local_municipality,KZN212,municipal_code,uMdoni,,-30.334725,30.6129395
+town,,,Umgababa,4126,-30.1419211,30.8192635
+district_municipality,DC22,municipal_code,uMgungundlovu,,-29.4614549,29.9573407
+local_municipality,KZN271,municipal_code,uMhlabuyalingana,,-27.1815448,32.3725169
+local_municipality,KZN282,municipal_code,uMhlathuze,,-28.7760629,31.8453746
+local_municipality,MP323,municipal_code,Umjindi,,-25.7485499,30.9140799
+district_municipality,DC27,municipal_code,uMkhanyakude,,-27.6174011,31.8193068
+town,,,Umkomaas,4170,-30.2090036,30.7897212
+local_municipality,KZN284,municipal_code,uMlalazi,,-28.8987555,31.315475
+town,,,Umlazi,4066,-29.9678308,30.8665906
+local_municipality,KZN222,municipal_code,uMngeni,,-29.4399957,29.9623446
+local_municipality,KZN221,municipal_code,uMshwathi,,-29.3826588,30.4799853
+local_municipality,NC072,municipal_code,Umsobomvu,,-30.8036044,24.8219329
+town,,,Umtentweni,4235,-30.7178373,30.4580826
+local_municipality,KZN234,municipal_code,Umtshezi,,-28.9241551,29.7799232
+local_municipality,KZN214,municipal_code,uMuziwabantu,,-30.6322558,29.7822453
+local_municipality,KZN245,municipal_code,Umvoti,,-29.0308219,30.5645187
+local_municipality,KZN435,municipal_code,Umzimkhulu,,-30.276737,29.5544836
+town,,,Umzimkulu,,-30.265828,29.9276458
+local_municipality,EC442,municipal_code,Umzimvubu,,-30.7898887,28.8847353
+town,,,Umzinto,4200,-30.303684,30.6614194
+district_municipality,DC24,municipal_code,uMzinyathi,,-28.6032986,30.257676
+local_municipality,KZN213,municipal_code,Umzumbe,,-30.4865324,30.243392
+town,,,Umzumbe,4225,-30.6235967,30.5361543
+town,,,Underberg,,-29.7953692,29.4863753
+town,,,Uniondale,6460,-33.6588941,23.1200147
+local_municipality,KZN262,municipal_code,uPhongolo,,-27.5013132,31.3751839
+district_municipality,DC23,municipal_code,uThukela,,-28.7087015,29.3829485
+district_municipality,DC28,municipal_code,uThungulu,,-28.7419778,31.30125
+town,,,Utlwanang,,-27.8930006,25.1223489
+town,,,Utrecht,2980,-27.6642259,30.3030861
+town,,,Uvongo,4270,-30.8338278,30.3801203
+town,,,Vaal Marina,,-26.876528,28.2256915
+town,,,Vanderbijlpark,1911,-26.7152793,27.77909
+town,,,Vanderkloof,8771,-30.0013212,24.7407318
+town,,,Van Reenen,,-28.3757391,29.3796171
+town,,,Vanrhynsdorp,8170,-31.609493,18.7396888
+town,,,Vanwyksvlei,7655,-30.3509321,21.8113652
+town,,,Van Zylsrus,,-26.8781371,22.0497285
+town,,,Velddrif,7365,-32.7772295,18.155507
+town,,,Ventersburg,9450,-28.0849579,27.1388914
+town,,,Ventersdorp,2710,-26.3168483,26.8055743
+local_municipality,NW401,municipal_code,Ventersdorp,,-26.3217826,26.629892
+town,,,Venterstad,9798,-30.7737045,25.7953504
+town,,,Vereeniging,1939,-26.6022035,27.8903499
+town,,,Verkeerdevlei,9401,-28.834901,26.7736065
+town,,,Verulam,4339,-29.6492309,31.0398727
+district_municipality,DC34,municipal_code,Vhembe,,-22.8013964,29.7885079
+town,,,Victoria West,7070,-31.3990445,23.1180607
+local_municipality,MP311,municipal_code,Victor Khanye,,-26.1332631,28.6820978
+town,,,Vierfontein,2615,-27.0965053,26.7730226
+town,,,Viljoenskroon,9520,-27.2149087,26.9469546
+town,,,Villiers,9840,-27.029132,28.6066507
+town,,,Villiersdorp,6848,-33.9890899,19.2845903
+town,,,Vioolsdrif,,-28.775754,17.6228557
+town,,,Volksrust,2470,-27.3653558,29.8809268
+town,,,Vosburg,8780,-30.5715237,22.8766533
+town,,,Vosloorus,1475,-26.356951,28.1958832
+town,,,Vosman,1034,-25.8689684,29.1381037
+town,,,Vrede,9835,-27.4233129,29.1623203
+town,,,Vredefort,9595,-27.0055444,27.3678193
+town,,,Vredenburg,7380,-32.9100063,17.9897856
+town,,,Vryburg,8601,-26.9562557,24.7229346
+town,,,Vryheid,3100,-27.7701286,30.7863568
+town,,,Vukuzakhe,,-27.3664354,29.9039945
+local_municipality,KZN211,municipal_code,Vulamehlo,,-30.1957403,30.5289434
+town,,,Vuwani,952,-23.1379234,30.4219419
+town,,,Wakkerstroom,2480,-27.3525442,30.1454748
+town,,,Walkerville,1961,-26.415606,27.9551589
+town,,,Warden,9890,-27.8534365,28.9625819
+town,,,Wartburg,,-29.4322344,30.5716704
+town,,,Wasbank,,-28.3125992,30.1024773
+district_municipality,DC36,municipal_code,Waterberg,,-24.1849751,27.5676056
+town,,,Waterpan,1779,-26.3478949,27.6853297
+town,,,Wattville,1501,-26.2212283,28.297381
+town,,,Wedela,2499,-26.4649446,27.3799796
+town,,,Weenen,,-28.8476065,30.0820036
+suburb,,,Welgelegen,7500,-33.8753717,18.5675568
+town,,,Welkom,9459,-27.9809608,26.7282828
+town,,,Wellington,7655,-33.642066,19.0017711
+town,,,Welverdiend,2499,-26.3759688,27.2793876
+town,,,Wepener,9944,-29.7295915,27.0270318
+town,,,Wesselsbron,9680,-27.8366323,26.3666835
+town,,,Wesselton,2351,-26.4997273,29.9665109
+town,,,Westbrook,4399,-29.5917558,31.1642647
+district_municipality,DC1,municipal_code,West Coast,,-32.1562325,18.0498431
+province,ZA-WC,iso_3166,Western Cape,,-32.8697798,19.6348262
+town,,,Weston,,-33.9860813,24.8260034
+local_municipality,GT483,municipal_code,Westonaria,,-26.4246161,27.6051283
+town,,,Westonaria,1779,-26.3209021,27.6469144
+district_municipality,DC48,municipal_code,West Rand,,-26.210098,27.2656604
+town,,,Westville,3629,-29.824411,30.9434717
+town,,,Weza,,-30.5921498,29.7441201
+town,,,White River,1240,-25.3369764,31.0007605
+town,,,Whittlesea,5360,-32.1706239,26.8126213
+town,,,Wilderness,6560,-33.9902428,22.5916265
+town,,,Williston,8920,-31.3426686,20.9177335
+town,,,Willowmore,6445,-33.2825795,23.4888964
+town,,,Willowvale,5040,-32.2642012,28.5033391
+town,,,Winburg,9420,-28.5186811,27.0103835
+town,,,Windsorton,8510,-28.3351703,24.6878788
+suburb,,,Winterskloof,3201,-29.5830284,30.2864294
+town,,,Winterton,3340,-28.8150486,29.5323159
+town,,,Winterveld,198,-25.4810319,28.0384765
+town,,,Witbank,1034,-25.8885325,29.2264036
+town,,,Witelsbos,,-33.9951106,24.1181274
+town,,,Witpoort,,-27.1739822,26.1179345
+town,,,Wittedrif,6603,-34.0112347,23.3308025
+town,,,Wittewater,,-32.9151471,18.7013443
+local_municipality,WC022,municipal_code,Witzenberg,,-33.1226211,19.1048471
+town,,,Wolmaransstad,2630,-27.1956447,25.97238
+town,,,Wolseley,6830,-33.4153755,19.1920271
+town,,,Worcester,6850,-33.6495062,19.4445546
+district_municipality,DC16,municipal_code,Xhariep,,-29.745744,25.2603964
+town,,,Young Park,6001,-33.9164853,25.570711
+town,,,Yzerfontein,,-33.3499739,18.1506609
+town,,,Zakariyya Park,1813,-26.3674195,27.8933527
+town,,,Zamani,,-27.6689876,29.5555785
+town,,,Zastron,9950,-30.2981799,27.084822
+town,,,Zeerust,2865,-25.5456963,26.0743069
+town,,,Zithobeni,1024,-25.7807946,28.718243
+town,,,Zoar,,-33.4976774,21.4384791
+district_municipality,DC26,municipal_code,Zululand,,-27.8262158,31.1160125
+town,,,Zwavelpoort,81,-25.8334735,28.3711558
+town,,,Zwelethu,,-29.9600255,30.9196977

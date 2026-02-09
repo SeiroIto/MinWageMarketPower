@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
+<title>Read me for tasks using R</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Read me for tasks using R</h1></div>
+<div class="date"><h3>2026-Jan-23 17:28</h3></div>
+</div>
+<div class="body">
+<h1 id="chp:current-challenge">Current challenge</h1>
+<p>Too many and too few entries in 2009-2012, if we drop establishments with no location information</p>
+<p>Three ways to proceed</p>
+<ol>
+<li>Use selective sample with location information for whole periods</li>
+<li>Add location (Local Municipality) information from new version of firm panel</li>
+<li>Use HHI from later years (taxyear 2013, which is immediately before the increase in MW)
+<ul>
+<li>By doing this, 10.9M rows are saved from deletion</li>
+</ul>
+</li>
+</ol>
+<h1 id="chp:task-sequence">Task sequence</h1>
+<p>Process files in the following order</p>
+<ol>
+<li>IRP5Condense.rmd
+<ul>
+<li>Gives irp5.qs, irp5a.qs
+<ul>
+<li>a: Agriculture only</li>
+<li>Industry selected at 3 digit level (animal prod, crop prod, forest)</li>
+</ul>
+</li>
+<li>Job panel (firm ID, employee ID)</li>
+<li>Revised
+<ul>
+<li>Location information 2013 ==&gt; 2012, if firm ID and employee ID match
+<ul>
+<li>Assumes no transfer between branches in this two-year window, or effects of measurement error are minimal when considering the increase in sample size</li>
+</ul>
+</li>
+<li>Rows of <code>taxyear</code> that are submitted as revisin of the previous year</li>
+</ul>
+</li>
+<li>Dropped
+<ul>
+<li>Rows revised at a later year</li>
+<li>individual IDs that are not of natural person <strong>in all years</strong> (any ID == natural person at least one year, is retained), saving 42M+ rows</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>IRP5HHI.rmd
+<ul>
+<li>Gives irp5M.qs, irp5Ma.qs, LS.qs, FAD.qs, fa</li>
+<li>irp5 panel of jobs
+<ul>
+<li>M: Main place level</li>
+</ul>
+</li>
+<li>Establishment panel of HHI and FA
+<ul>
+<li>LS: HHI measured at Main Place, Loc Muni, Dist Muni, Prov
+<ul>
+<li>We use main place level sample <code>irp5M</code> by following the “same sample data sets”</li>
+<li><code>irp5M</code> data only holds entries with location information of Main Place
+<ol>
+<li>location entries are complete &amp; location is granular down to main place level, or, NARowsMai == 0L &amp; LocGranularFirm == Mai</li>
+<li>location == NA for some rows &amp; uniquely common locality level is main place</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>LSMa: Establishment panel of HHI, main place level and agriculture only</li>
+<li>FA: FA panel of establishment-workers
+<ul>
+<li>Establishment level; Number of jobs, employees, FA jobs, FA employees</li>
+<li>Employee level: Incomes, DofBirth, Job dates, gender</li>
+</ul>
+</li>
+<li>faa: FA panel of establishments, agriculture only</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>IRP5MergeData.rmd
+<ul>
+<li>Main analysis: faa + LSMa
+<ul>
+<li>faa is the base of merge</li>
+</ul>
+</li>
+<li>Decriptive statistics shows anomaly in number of jobs reported, too many and too few in 2009-2012
+<ul>
+<li>This is because we are selecting on firms with location information</li>
+<li>Unconditional number of jobs looks good for all years
+<ul>
+<li>Many NAs in location info in early years ⇒ loss of sample in early years</li>
+</ul>
+</li>
+<li>Computing FA does not require location information, so FA can serve as the base of estimation data</li>
+</ul>
+</li>
+<li>Three ways to proceed
+<ol>
+<li>Use selective sample with location information for whole periods</li>
+<li>Add location (Local Municipality) information from new version of firm panel</li>
+<li>Use HHI from later years (taxyear 2013, which is immediately before the increase in MW)</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>IRP5Impacts.rmd
+<ul>
+<li>Event study like estimation of job% on FA<em>HHI</em>time + FEs</li>
+<li>Negative estimates on firms with small HHI</li>
+<li>Noisy/bumpy estimates on firms with large HHI</li>
+</ul>
+</li>
+</ol>
+</div>
+</body>
+</html>

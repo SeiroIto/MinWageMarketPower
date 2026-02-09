@@ -1,0 +1,66 @@
+What we have:
+- [GeoLocationFile] (IRP5IT3aID, PAYERefno, IRP5IT3aIDPersonalDetailID, taxyear, LocMuni)
+  ==produce==> 
+  [GeoLocFile] (IRP5IT3aID, PAYERefno, IRP5IT3aIDPersonalDetailID, taxyear==2015:2017, LocMuni)
+- [irp5] (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, PAYERefno, idno, uid, taxyear) 
+  ==produce==> 
+  [smallIRP] unique(taxrefno, PAYERefno)
+
+Remarks on hashed IDs (IRP5IT3aID, IRP5IT3aIDPersonalDetailID)
+* 2009-2014: numbers
+* 2015-2022: letters
+We use 2015 entries
+
+* IRP5IT3aID: Tax (individual tax returns) certificate ID assigned on firms, changes every year
+* IRP5IT3aIDPersonalDetailID: Tax (individual tax returns) certificate ID assigned on jobs, changes every year
+* A pair IRP5IT3aID-IRP5IT3aIDPersonalDetailID (= firm-job) pins down establishment location
+
+Merge
+1. [GeoLocationFile] (IRP5IT3aID, PAYERefno, IRP5IT3aIDPersonalDetailID, taxyear, suburb, LocMuni)
+    ++merge using PAYERefno++ 
+    [smallIRP] (taxrefno, PAYERefno)
+    ==> 
+    [GeoLF] 
+    (taxrefno, IRP5IT3aID, PAYERefno, IRP5IT3aIDPersonalDetailID, taxyear, suburb, LocMuni)
+2. [GeoLF] 
+    ++merge using taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, taxyear++ 
+    [irp5] 
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, uid, taxyear, mainplace)
+    ==> 
+    [Irp5] 
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, uid, taxyear, LocMun, mainplace)
+3. Copy LocMuni from 2015 ==> other years
+
+>> Information that may be available
+
+[ExtendedFile] (suburb, postal codes) <= Michael searches for the file
+
+If it exists, can do:
+
+    [ExtendedFile]
+    (suburb, postal codes)
+    ==using codes==>
+    [GeoSubMain]
+    (suburb, postal codes, MainPlace)
+
+    [GeoSubMain]
+    (suburb, postal codes, MainPlace)
+    ++merge using suburb++ 
+    [GeoLF] 
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, LocMuni)
+    ==> 
+    [GeoSubMain]
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, LocMuni, MainPlace)
+
+    [GeoSubMain]
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, MainPlace)
+    ++merge using taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID++ 
+    [Irp5] 
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, uid, taxyear, mainplace)
+    ==> 
+    [IRP5] 
+    (taxrefno, IRP5IT3aID, IRP5IT3aIDPersonalDetailID, uid, taxyear, mainplace, MainPlace)
+
+    Copy MainPlace to mainplace
+    Copy MainPlace backwards in taxyear (2008-2012)
+

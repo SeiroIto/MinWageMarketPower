@@ -1,0 +1,79 @@
+---
+title: Minimum wages project
+author: "Seiro Ito"
+date: "`{r} Sys.Date()`"
+output:
+  html:
+    meta:
+      css: [default, snap]
+      js: [snap]
+#### setwd(path <- "c:/data/MinWageMarketPower/analysis/draft/"); litedown::fuse("Meeting2026Jan26.rmd")
+---
+
+
+### Minimum wages&uarr; &rArr; employment&darr;?
+
+<!--# class="slide inverse middle" contenteditable-->
+
+* Only mild &darr;, imprecisely (at the moment of analysis)
+
+---
+
+### Data
+
+<!--# class="slide inverse middle" contenteditable-->
+
+* IRP5 2008-2022, individual income tax returns, establishment level
+* Problem: Too few or too many rows in 2008-2012
+* Reasons
+   1. Probable reporting errors in dates 2008-2012 
+   1. Missing location information &rarr; dropped
+* More confidence in 2013-2022
+* Tax year 2013: March 01, 2012 - February 28, 2013
+
+---
+
+### Ways out
+
+<!--# class="slide inverse middle" contenteditable-->
+
+1. Only use complete panel portion of data
+1. Location information 2013 &rarr; 2008-2012 (11M obs saved from deletion) &larr; reporting errors remained the same
+   * If <span style="color:blue">`taxrefno-uid`</span> matches, copy location info
+1. Revision reporting &larr; reporting errors remained the same
+   * If <span style="color:blue">`periodemployedfrom`</span> < <span style="color:blue">`taxyear`</span>, it is revision of <span style="color:blue">`periodemployedfrom`</span> reported in <span style="color:blue">`taxyear`</span>
+1. Keep rows with missing location info
+   * FA does not need location info
+   * HHI needs location info
+      * Use only rows with location info, in 2013 or in a more complete year
+
+---
+
+<!--# class="slide inverse middle" contenteditable-->
+
+### Done so far
+
+* Put everything on litedown [rmd](TestLitedown.html) files
+  1. <span style="color:blue">IRP5Condense.rmd</span>: Read dta files and create IRP5 panel (all industries, agriculture)
+  1. <span style="color:blue">IRP5HHI.rmd</span>: Compute FA, HHI (all industries, establishment level)
+  1. <span style="color:blue">IRP5MergeData.rmd</span>: FA (base) + HHI, descriptive statistics
+  1. <span style="color:blue">IRP5Impact.rmd</span>: MW &rarr; Employment
+* Estimation using Main Place level HHI
+* Task management
+  1. Seiro edits rmd &rarr; Noreen edits rmd at the lab, Noreen reports outputs at the lab &rarr; Seiro edits rmd ...
+  1. Project repository: https://github.com/SeiroIto/MinWageMarketPower
+
+---
+
+<!--# class="slide inverse middle" contenteditable-->
+
+### To be done
+
+1. Improve estimation
+   * We are using `fixest` package of R
+   * We are using subsamples of high/low HHI
+   * Need triple interaction MW $\times$ treat $\times$ HHI
+1. Go back to CIT panel for interpretation
+   * Why impacts not so negative? 
+   * What are low/high HHI markets?
+

@@ -1,0 +1,202 @@
+{smcl}
+{txt}{sf}{ul off}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}W:\epguest\seiro_ito\geolocfile.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 3 Feb 2026, 08:52:10
+{txt}
+{com}. 
+. ** Open the geolocation file and produce geoloc file
+.         use "W:\epguest\seiro_ito\IRP5_Geo.dta", clear
+{txt}
+{com}.         rename IRP5IT3aID irp5it3aid
+{res}{txt}
+{com}.         rename TaxYear taxyear
+{res}{txt}
+{com}.         rename PAYERefno payereferenceno
+{res}{txt}
+{com}.         destring taxyear, replace
+{txt}taxyear: all characters numeric; {res}replaced {txt}as {res}int
+{txt}
+{com}.         keep if taxyear==2015
+{txt}(258,368,684 observations deleted)
+
+{com}.         save "W:\epguest\seiro_ito\data\GeoLocFile.dta", replace
+{txt}{p 0 4 2}
+file {bf}
+W:\epguest\seiro_ito\data\GeoLocFile.dta{rm}
+saved
+{p_end}
+
+{com}.         
+. ** Open the irp5 e5 data
+.         use "W:\epadmin\noreen_kajugusi\WaterCrisis\data\irp5_e5.dta", clear
+{txt}
+{com}.         keep if natureofperson == "A"
+{txt}(63,782,944 observations deleted)
+
+{com}.         keep taxrefno payereferenceno
+{txt}
+{com}.         duplicates drop
+
+{p 0 4}{txt}Duplicates in terms of {txt} all variables{p_end}
+
+(148,195,434 observations deleted)
+
+{com}.         save "W:\epguest\seiro_ito\data\smallIRP5.dta", replace
+{txt}{p 0 4 2}
+file {bf}
+W:\epguest\seiro_ito\data\smallIRP5.dta{rm}
+saved
+{p_end}
+
+{com}.         
+. ** A. 1. Use existing info
+.         use "W:\epguest\seiro_ito\data\GeoLocFile.dta", clear
+{txt}
+{com}.         merge m:1 payereferenceno using "W:\epguest\seiro_ito\data\smallIRP5.dta"
+{res}
+{txt}{col 5}Result{col 33}Number of obs
+{col 5}{hline 41}
+{col 5}Not matched{col 30}{res}       4,664,713
+{txt}{col 9}from master{col 30}{res}       4,421,751{txt}  (_merge==1)
+{col 9}from using{col 30}{res}         242,962{txt}  (_merge==2)
+
+{col 5}Matched{col 30}{res}      14,045,490{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}.         *keep matched obs from both datasets and unmatched obs from geolocfile
+.         keep if _m==3
+{txt}(4,664,713 observations deleted)
+
+{com}.         cap drop _m
+{txt}
+{com}.         save "W:\epguest\seiro_ito\data\GeoLF.dta", replace
+{txt}{p 0 4 2}
+file {bf}
+W:\epguest\seiro_ito\data\GeoLF.dta{rm}
+saved
+{p_end}
+
+{com}.         
+. ** A. 2. Use existing info      
+.         use "W:\epguest\seiro_ito\data\GeoLF.dta", clear
+{txt}
+{com}.         drop if Bus_adr_Geo_Munic == ""
+{txt}(1,358,266 observations deleted)
+
+{com}.         preserve
+{txt}
+{com}.         duplicates tag irp5it3aid, gen(dup_irp5)
+
+{p 0 4}{txt}Duplicates in terms of {res} irp5it3aid{p_end}
+{txt}
+{com}.         bys taxrefno: egen firm_has_dup = max(dup_irp5)
+{txt}
+{com}.         bys taxrefno: keep if _n==1
+{txt}(12,438,064 observations deleted)
+
+{com}.         count if firm_has_dup==1 
+  {res}34
+{txt}
+{com}.         *34 firms have duplicated irp5it3aids
+.         restore
+{txt}
+{com}.         *just keep one observation per irpit3aid for these obs that are duplicated
+.         bys irp5it3aid: keep if _n==1
+{txt}(485 observations deleted)
+
+{com}.         *merge with the irp5 dataset 
+.         merge 1:1 irp5it3aid payereferenceno taxrefno using "W:\epadmin\noreen_kajugusi\WaterCrisis\data\irp5_e5.dta"
+{res}
+{txt}{col 5}Result{col 33}Number of obs
+{col 5}{hline 41}
+{col 5}Not matched{col 30}{res}     199,855,195
+{txt}{col 9}from master{col 30}{res}          32,852{txt}  (_merge==1)
+{col 9}from using{col 30}{res}     199,822,343{txt}  (_merge==2)
+
+{col 5}Matched{col 30}{res}      12,653,887{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}.         keep if _m==2|_m==3
+{txt}(32,852 observations deleted)
+
+{com}.         keep if natureofperson == "A"
+{txt}(63,782,944 observations deleted)
+
+{com}.         
+.         *assign a value of 1 if for the UID and taxrefno, the new LocMuni info in 2015 exists (and not missing)
+.         cap drop locmuni_2015
+{txt}
+{com}.         bys UID taxrefno: egen locmuni_2015 = max(cond(taxyear==2015 & !missing(Bus_adr_Geo_Munic), 1, .))
+{txt}(86,547,560 missing values generated)
+
+{com}.         replace locmuni_2015 = 0 if Bus_adr_Geo_Munic == ""
+{txt}(136,777,657 real changes made)
+
+{com}.         bys UID taxrefno: egen ever_locmuni_2015 = max(locmuni_2015)
+{txt}
+{com}.         
+.         *indicator variable for the old missing geo info (municipality level) in 2014
+.         cap drop geo_missing_2014
+{txt}
+{com}.         gen geo_missing_2014 = 0
+{txt}
+{com}.         replace geo_missing_2014 = 1 if buslocmuni_geo== "" & taxyear==2014
+{txt}(76,739 real changes made)
+
+{com}.         label var geo_missing_2014 "Local municipality info in old geo is misisng in 2014"
+{txt}
+{com}.         bys UID taxrefno: egen ever_geo_missing_2014 = max(geo_missing_2014)
+{txt}
+{com}.         
+.         cap drop geo_missing_2015
+{txt}
+{com}.         gen geo_missing_2015 = 0
+{txt}
+{com}.         replace geo_missing_2015 = 1 if buslocmuni_geo== "" & taxyear==2015
+{txt}(76,693 real changes made)
+
+{com}.         label var geo_missing_2015 "Local municipality info in old geo is misisng in 2015"
+{txt}
+{com}.         bys UID taxrefno: egen ever_geo_missing_2015 = max(geo_missing_2015)
+{txt}
+{com}.         
+.         *copy local muni from 2015 to previous taxyears (2014)
+.         *only if that uid-taxrefno has missing geo_info (at municipality level) in 2014 & 2015
+.         sort UID taxrefno (taxyear)
+{txt}
+{com}.         bys UID taxrefno (taxyear): replace Bus_adr_Geo_Munic=Bus_adr_Geo_Munic[_n+1]  ///
+>                 if ever_locmuni_2015==1 & ever_geo_missing_2014==1 & ever_geo_missing_2015==1 & taxyear==2014
+{txt}(20,037 real changes made)
+
+{com}.                 
+.         count if Bus_adr_Geo_Munic != "" & buslocmuni_geo == "" & taxyear==2013
+  {res}0
+{txt}
+{com}. 
+.         cap log close
+{smcl}
+{com}{sf}{ul off}{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}W:\epguest\seiro_ito\geolocfile.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 3 Feb 2026, 09:20:39
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. do "C:\Users\noreenk\AppData\Local\Temp\4\STD9c0_00001v.tmp"
+{txt}
+{com}.         count if Bus_adr_Geo_Munic != "" & buslocmuni_geo == "" & taxyear==2014
+  {res}19,431
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. do "C:\Users\noreenk\AppData\Local\Temp\4\STD9c0_00001w.tmp"
+{txt}
+{com}.         cap log close
+{smcl}
+{com}{sf}{ul off}

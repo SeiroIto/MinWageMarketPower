@@ -1,0 +1,349 @@
+---
+title: "Merge IRP5, industry code, HHI, FA files"
+date: "r format(Sys.time(), "%Y%m%d %R")"
+output: html_document
+#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5MergeData.rmd"))
+---
+```{css, echo=F}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+```
+
+# What we do in the project
+
+1. Create merged panel using stata: "Data file" 
+   * Use the same definitions as Michael's codes
+   * But include `imp_mic_sic7_3d == 16` industry
+   * Done in other do file
+   * Save Data file in tsv format to read in R
+1. Compute HHI using CIT-IRP5 at various levels: "HHI file"
+   * Use CIT-IRP5_2012 HHI in 2012
+   * Verify if counts are not erroneous 
+1. "Analysis file" = Data file (panel 2009-2022) + HHI file
+   * Merge at various levels 
+   * Need main place level analysis for larger statistical power
+1. Descriptive statistic
+1. Hypothesis testing
+   * % Employment change = a + b1*FA + b2*HHI + b3*(FA*HHI) + FEs + e
+   * Test b3 > 0 labor market power mitigates disemployment impacts
+   * Expect b1<0 or b1 = 0
+   * No prior for the sign of b2 
+
+# Setup
+
+```{r setup}
+library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = F,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+table0 <- function(x) table(x, useNA = "ifany")
+```
+```{r path, eval = T}
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathresults <- paste0(pathprogram, "2026 01 23/")
+pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+library(qs); library(data.table); library(ggplot2)
+```
+
+
+
+# Merge data
+
+* FAD (FA, Jobs, Employment) + industry
+   * FA is measured at the establishment level
+   * `FAD`: Worker level data with establishment level aggregates
+   * For estimation, need to aggregate at establishment level, only agriculture &rarr; 
+   * `faa`: Collection of first rows of establishment-taxyear
+* LS (HHI, WorkersAtEstab) + industry
+   * HHI is measured at local market level
+   * `LS`: Establishment level data with area level aggregates
+   * For estimation, need to aggregate the worker characteristics at establishment level 
+* irp5Ma (IRP5), only agriculture
+   * All background information at worker level + establishment information
+
+We use:
+
+`faa` (establishment level FAA, Jobs, Employment) + `LSMa` (Main Place level HHI)
+
+
+
+```{r merge data}
+#### ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+#### setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
+#### ind[, n := 1:.N, by = taxrefno]
+#### inda <- ind[n == 1 & grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+#### inda[, n := NULL]
+#### inda[, c("Crop", "Animal", "Forest") := 0L]
+#### inda[grepl("Plant|cr", imp_mic_sic7_3d), Crop := 1L]
+#### inda[grepl("Anim", imp_mic_sic7_3d),   Animal := 1L]
+#### inda[grepl("Lo|for", imp_mic_sic7_3d), Forest := 1L]
+#### inda[, grepout("mp_mic", colnames(inda)) := NULL]
+#### setkey(inda, taxrefno)
+#### setnames(inda, "taxyear", "FirstYearOnSIC7")
+#### qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+#### 
+#### LSMa = LS + industry
+inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+#### LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+#### LSia <- inda[LS, on = "taxrefno"]
+#### LSa <- LSia[Crop ++ 1L | Animal == 1L | Forest == 1L, ]
+#### #### LSa is rows of agri only, but HHI is measured at all industries
+#### qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+#### LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+#### LSMa <- LSa[grepl("Mai", AreaLevel), ]
+#### LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
+####   buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### #### jobs are recorded poorly prior to 2013
+#### LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), by = taxyear]
+#### #### Need to set the population == 2012 firms
+#### setorder(LSMa, taxyear, taxrefno)
+#### LSMa[, num := 1:.N, by = .(taxyear, taxrefno)]
+#### LSMa[, ExistedBefore2013 := as.integer(NA)]
+#### LSMa[taxyear < 2013, ExistedBefore2013 := 1L]
+#### LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], by = taxrefno]
+#### LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+#### LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
+####   by = .(ExistedBefore2013, taxyear)]
+#### qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
+
+
+#### FAD + industry
+#### Extract establishment level entries of FA
+#### FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
+#### table(FAD[, taxyear])
+#### #### number by geo location, taxrefno, taxyear
+#### FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+####   buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
+#### fadata <- FAD[num == 1L, 
+####   grepout("^bus|^tax[ry]|^Tx|Mon|[nN]um|Jo|Emp|FA", colnames(FAD)), with = F]
+#### table(fadata[, taxyear])
+####   2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
+####  23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
+#### #### Drop date errors (Negative and over duration)
+#### fadata2 <- fadata[0 <= DurMonthMarch & DurMonthMarch <= 12, ]
+#### nrow(fadata); nrow(fadata2) # 30K rows
+#### #### Merge industry code, taking fadata as base
+#### fadata3 <- inda[fadata2, on = "taxrefno"]
+#### fadata3 <- fadata3[busmainplc_geo != "", ]
+#### faa <- fadata3[Crop == 1L | Animal == 1L | Forest == 1L, ]
+#### setkey(faa, taxrefno)
+#### faa[, SubDiv := "Crop"]
+#### faa[Animal == 1L, SubDiv := "Animal"]
+#### faa[Forest == 1L, SubDiv := "Forest"]
+#### faa[, SubDiv := factor(SubDiv, levels = c("Crop", "Animal", "Forest"))]
+#### faa[, .(TotalJobs = sum(Jobs, na.rm = T)), by = .(taxyear, SubDiv)]
+#### faa[, FApositive := 0L]
+#### faa[taxyear < 2014, FApositive:= as.integer(FA > 0)]
+#### faa[, FApositive := FApositive[FApositive == 1L][1], by = taxrefno]
+#### faa[is.na(FApositive), FApositive := 0L]
+#### faa[, Sample := "Unexposed"]
+#### faa[FApositive == 1L, Sample := "Exposed"]
+#### faa[, Sample := factor(Sample)]
+#### #### #### faa is unique at establishment level
+#### table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
+####  FALSE  TRUE 
+####  59627     5 
+#### qsave(faa, paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+faa[, .(mean = mean(FA, na.rm = T), median = median(FA, na.rm = T)), 
+  by = .(Sample, taxyear)]
+g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
+#  geom_point(size = .1, position = position_jitterdodge()) +
+#  geom_point(data = faama, size = 1, fill = "blue")
+  geom_boxplot(fill = "white", colour = "blue", outlier.alpha = 0) + 
+#  geom_jitter(width = .2) +
+  scale_x_discrete(name = "Tax year") +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "FA.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+
+#### irp5M, agriculture
+irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+irp5Ma[, .(num = 1:.N, Num), by = .(taxyear, taxrefno)][num == 1, 
+  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
+irp5Ma[, .(num = 1:.N, Num = .N), by = .(taxyear, taxrefno)][num == 1, 
+  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
+irp5Ma[, ExistedBefore2013 := as.integer(NA)]
+irp5Ma[taxyear < 2013, ExistedBefore2013 := 1L]
+irp5Ma[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], by = taxrefno]
+irp5Ma[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+JobsFirms <- irp5Ma[, .(num = 1:.N, Num = .N), 
+  by = .(ExistedBefore2013, taxyear, taxrefno)][
+  num == 1, .(TotalJobs = sum(Num, na.rm = T)), by = .(ExistedBefore2013, taxyear)]
+JobsFirms[, Sample := "Entrants"]
+JobsFirms[ExistedBefore2013 == 1L, Sample := "Incumbents"]
+g1 <- ggplot(data = JobsFirms, aes(x = taxyear, y = TotalJobs)) +
+  geom_col() +
+  scale_x_continuous(breaks = 2009:2022) +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "Employment.jpg")
+  , g1, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+
+```{r analsys sample descriptive statistics}
+#### faa (base) + LSMa
+faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
+faa[, FA0 := FA[1], by = taxrefno]
+faa[, Jobs0 := Jobs[1], by = taxrefno]
+faa[, rJobs := dJobs/Jobs0]
+
+LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+LSMa <- LSa[grepl("Mai", AreaLevel), ]
+LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### jobs are recorded poorly prior to 2013
+LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), by = taxyear]
+#### Need to set the population == 2012 firms
+setorder(LSMa, taxyear, taxrefno)
+LSMa[, num := 1:.N, by = .(taxyear, taxrefno)]
+LSMa[, ExistedBefore2013 := as.integer(NA)]
+LSMa[taxyear < 2013, ExistedBefore2013 := 1L]
+LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], 
+  by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
+  by = .(ExistedBefore2013, taxyear)][order(ExistedBefore2013, taxyear)]
+setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)
+qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
+LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
+#### Drop rows with no location info
+LSMa1 <- LSMa[busmainplc_geo != "", ]
+#### Keep only first row of each establishment
+LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### Pick the first entry of establishments
+#### LSMa1 <- LSMa1[num == 1L, ]
+#### Pick 2013 value of establishments for more sample size
+#### Keep either 2013 or first entry
+LSMa1 <- LSMa1[taxyear == 2013, ]
+#### But if there are two rows, drop the first entry
+LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno)]
+LSMa1 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
+
+setnames(LSMa1, "taxyear", "HHIBaseYear")
+###Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
+Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
+Lf[, .(busmainplc_geo, taxrefno, taxyear, Jobs)]
+Lf[, num := 1:.N, by = .(busmainplc_geo, taxrefno, taxyear)]
+Lf <- Lf[num == 1L, ]
+Lf[, ExistedBefore2013 := 0L]
+Lf[taxyear < 2013, ExistedBefore2013 := 1L]
+Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1], by = taxrefno]
+Lf[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+Lf[, FirstYear2013 := "Before"]
+Lf[ExistedBefore2013 == 0L, FirstYear2013 := "Not before"]
+Lf[, FirstYear2013 := factor(FirstYear2013)]
+Lf[, Sample := "Exposed"]
+Lf[FA0 == 0L, Sample := "Unexposed"]
+Lf[, Sample := factor(Sample)]
+Lf[, AgeSample := "Existed, exposed"]
+Lf[grepl("Be", FirstYear2013) & grepl("Un", Sample),
+  AgeSample := "Existed, unexposed"]
+Lf[grepl("N", FirstYear2013) & grepl("Ex", Sample), 
+  AgeSample := "New, exposed"]
+Lf[grepl("N", FirstYear2013) & grepl("Un", Sample),
+  AgeSample := "New, unexposed"]
+Lf[, AgeSample := factor(AgeSample, levels = 
+  c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
+qsave(Lf, paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)
+
+
+
+  rbind(
+    ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
+    All = table(Lf[, taxyear])
+  )
+
+
+#### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
+```
+
+
+
+
+# Other
+
+Get observation pattern: ObPattern
+
+```{r create ObPattern, eval = F}
+#### icount data is created in chunk "read irp5v5beta"
+Icount <- qread(paste0(pathdata, "icount08.qs"), nthreads = 8)
+Icount[, Taxyear := 2008]
+for (yr in 9:20) {
+  if (yr < 10) yr <- paste0("0", yr)
+  icount <- qread(paste0(pathdata, "icount", yr, ".qs"), nthreads = 8)
+  icount[, Taxyear := 2000+as.numeric(yr)]
+  Icount <- rbindlist(list(Icount, icount))
+}
+qsave(Icount, paste0(pathdata, "Icount.qs"), nthreads = 8)
+setkey(Icount, taxrefno, Taxyear)
+Icount[, Ob := 1L]
+Icount[is.na(Num), Ob := 2L]
+Icount <- Icount[grepl("A", natureofperson), ]
+Icount <- Icount[busmainplc_geo != "", ]
+IcountW <- reshape(Icount, direction = "wide", 
+  idvar = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", "taxrefno", "natureofperson"),
+  timevar = "Taxyear", v.names= c("Num", "Ob"))
+
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+
+cols <- grepout("Ob", colnames(IcountW))
+IcountW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
+IcountW[, ObPattern := paste(.SD, sep = "", collapse = ""), .SDcols = cols, by = .(taxrefno)]
+IcountW[, ObPattern := factor(ObPattern)]
+```
+
+Postal codes in stata
+
+```{verbatim}
+. use "Z:\Master Data\IRP5\Job level\v5\beta\aux_postal_codes_2008_2023_e6_v2.dta" , replace
+. by AddrPostalCode, sort: gen nvals = _n == 1
+. count if nvals
+  68,140
+```
+
+  
+
+    

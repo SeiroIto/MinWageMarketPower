@@ -21,7 +21,8 @@ format:
     linkcolor: "green"
     urlcolor: "#009900"
 #### https://github.com/quarto-dev/quarto-cli/issues/2275#issuecomment-1399047519
-    include-in-header: ../../../mathjax.html
+    include-in-header:
+      ../../../mathjax.html
 ####  pdf: default
 ####    include-in-header: 
 ####      text: |
@@ -111,7 +112,7 @@ The case for impact estimation of policy shocks rings horrow if the minimum wage
 
 # Previous literature
 
-Since the late 1990's, there has been a long debate on the employment impacts of minimum wages. The traditional view under a competitive labour market expected that the employment will be reduced with an increased level of minimum wages. The expectation did not match the empirical results, however. Summaries of evidence suggest that the employment impacts are relatively small, if they exist [@Manning2021; @DubeLindner2024]. 
+Since the late 1990's, there has been a long debate on the unemployment impacts of minimum wages. The traditional view under a competitive labour market expected that the unemployment will increase as the minimum wages rise. The expectation did not match the empirical results, however. Summaries of evidence suggest that the unemployment impacts are relatively small, if they exist [@Manning2021; @DubeLindner2024]. 
 
 It has always been argued that the labour markets may not be competitive [@Robinson1933; @Manning2013; @Manning2021ILRreview]. An early work discussed multiple channels that firms can adjust with, and firms can choose not to adjust on labour [@MaCurdy2015]. Even after narrowing the channel to labour market transactions, oligopsonistic firms still have a few options: laying off workers, labour-labour substituion^[Upgrading the skill contents of labour while keeping the level of employment. ] [@Horton2025], or reducing the firm's labour market transaction margins (wage markdowns). However, relatively few studies examine the adjustment channels beyond layoffs. This study aims to examine the plausibility of shrinking labour market margins. @Azaretal2023 are the first to examine this channel and use online labour market data of stock clerks, retail salespersons, and cashiers in the US. They find that labour market concentration as measured by Harhindahl-Hirschman Index (HHI) reduces the possible unemployment impacts of minimum wages. 
 
@@ -136,13 +137,16 @@ When the minimum wage is imposed at $\bar{w}$, the labour supply curve changes t
 ## Sampling frame of CIT-IRP5 data set
 
 
+The number of jobs listed almost doubles from 2012 to 2013. Given the stagnant economy, it is not plausible to take this as reality. We will take the firms listed in 2012 as the analysis's population. 
+
+
 ## HHI
 
 We count the number of employees at the establishment level and construct HHI in the respetive regional labour markets. Firms use corporate tax IDs when they report income taxes to SARS. Firms also report their employee incomes to SARS with individual tax IDs and corporate tax IDs. SARS data are thus a merged employer-employee (MEE) data set. 
 
-Firms report each establishments' geographical information. We can identify the firm branches up to the level of granularity in geographical information. The levels, from the most to the least granular, are Main Place, Local Municipality, District Municipality, and Province. We will use the least granular levels, Main Place, Local Municipality, and District Municipality, in defining HHI. 
+Firms report each establishments' geographical information. We can identify the firm branches up to the level of granularity in geographical information. The levels, from the most to the least granular, are Main Place, Local Municipality, District Municipality, and Province. We will use the least granular levels, Main Place, Local Municipality, and District Municipality, in defining HHI. In the current version (version 5) of data, merged (MEE) data set links all employees to the head quarter branch due to the limitation in the granularity of geographical information incorporated in the data. SARS MEE data (CIT-IRP5) is potent to identify exact branches of respective employees, yet its incorporation into the data set is scheduled in the future. 
 
-IRP5, the individual income tax data set, contains corporate tax IDs and geographical information of their employers. In the current version (version 5) of data, however, merged (MEE) data set links all employees to the head quarter branch due to the limitation in the granularity of geographical information incorporated in the data. SARS MEE data (CIT-IRP5) is potent to identify exact branches of respective employees, yet its incorporation into the data set is scheduled in the future. We thus use the indivudual tax returns data IRP5 and its geographical information to measure employment over space and time.
+IRP5, the individual income tax data set, contains corporate tax IDs and geographical information of their employers. We use the indivudual tax returns data IRP5 and its geographical information to measure employment over space and time.
 
 <!--
 In the CIT-IRP5 data set, all the employee information is linked to the head quarter branch, not the actual establishment they work at. So one needs to allocate the number of workers across establishments in a firm. We use establishment revenues in 2011 as weights. The advantage of this approach is that the sample size is retained. The disadvantage is we lose characteristics of individuals such as age or gender, and we can use such characteristics only at the firm level. An alternative approach we can take is to aggregate establishments and measure impacts at the firm level. The advantage is that we can use the individual characteristics of workers. The disadvantage is we lose establishment level variations and end up in smaller sample size. The former approach has a better chance of detecting the impacts due to stronger statistical power. The latter approach has a better chance of interpreting the impacts due to more detailed information of workers. Therefore, we will use both approaches. 
@@ -152,7 +156,7 @@ Distributions of HHIs at various geographical levels are shown in Figure X.
 
 ## Employment trends
 
-The CIT-IRP5 data have information of directly hired workers of firms. They include both permanent and temporary workers. The data do not contain information on self-employed firms or a manager-employer firms, because they do not report employees. These are typically operating at a micro scale and its majority is considered to be subsistent farming.^[Subsistent farming is estimated to employ about 2 million people in SA (Table 8, QLFS2025Q3, StatsSA). Time-related underemployment, defined as employment [less than 35 hours and desired to work more](https://www.statistics.gov.hk/wsc/CPS203-P15-S.pdf#page=2), amounts to 21,000 workers (Table 3.9, QLFS2025Q3, StatsSA). ] The data also do not cover outsourced labour, because the hiring agents may not list themselves as agrictultural firms. According to QLFS, informal employment in agriculture (519,000) is larger than formal employment (401,000). This contrasts with the aggregate employment where 11,032,000 work in the formal sector and 6,023,000 work in the informal sector. Thus the share of agriculture is higher in the informal sector (`r round((519/6023)*100, 2)`%) than the formal sector (`r round((401/11032)*100, 2)`%), with the aggregate share at `r round((519+401)/(6023+11032)*100, 2)`%. Given the tendency of lower wages in the informal sector, the higher ratio of informal activities makes agricultural minimum wage difficult to implement.
+The IRP5 data have information of workers hired by firms. They include both permanent and temporary workers. The data do not contain information on self-employed firms or a manager-employer firms, because they do not report employees. These are typically operating at a micro scale and its majority is considered to be subsistent farming.^[Subsistent farming is estimated to employ about 2 million people in SA (Table 8, QLFS2025Q3, StatsSA). Time-related underemployment, defined as employment [less than 35 hours and desired to work more](https://www.statistics.gov.hk/wsc/CPS203-P15-S.pdf#page=2), amounts to 21,000 workers (Table 3.9, QLFS2025Q3, StatsSA). ] The data also do not cover outsourced labour, because the hiring agents may not list themselves as agrictultural firms. According to QLFS, informal employment in agriculture (519,000) is larger than formal employment (401,000). This contrasts with the aggregate employment where 11,032,000 work in the formal sector and 6,023,000 work in the informal sector. Thus the share of agriculture is higher in the informal sector (`r round((519/6023)*100, 2)`%) than the formal sector (`r round((401/11032)*100, 2)`%), with the aggregate share at `r round((519+401)/(6023+11032)*100, 2)`%. Given the tendency of lower wages in the informal sector, the higher ratio of informal activities makes agricultural minimum wage difficult to implement.
 
 There are Y workers listed in 2012. 
 
@@ -161,6 +165,111 @@ There are Y workers listed in 2012.
 
 
 # Estimation strategy
+
+A Kronecker product $\bfA\otimes\bfB$ is
+$$
+\left[
+\begin{array}{ccc}
+a_{11}\bfB & \dots & a_{1K}\bfB\\
+ & \ddots & \\
+a_{L1}\bfB & \dots & a_{LK}\bfB\\
+\end{array}
+\right]
+$$
+
+If I want to have an interaction of group $\times$ some matrix, 
+we need
+$$
+G=\left(
+\begin{array}{cccc}
+\bfB_{1} & \0 & \dots &\0\\
+\0 & \bfB_{2} & \dots & \0\\
+\vdots & \vdots & \ddots & \vdots\\
+\0 & \0 & \dots & \B_{T}\\
+\end{array}
+\right)
+$$ T $\times$ (K$\times$T) matrix
+
+```{r }
+x <- matrix(1:100, ncol = 4)
+x1 <- x[1:5, ]
+x2 <- x[6:15, ]
+x3 <- x[16:25, ]
+G <- Matrix::bdiag(list(x1, x2, x3))
+G
+as.matrix(G)
+library(magic)
+Reduce(adiag, lst)
+diag(x1, x2, x3)
+
+Interact <- function(x, group) {
+####     x: matrix to be divided over groups
+#### group: 1, 1, ..., 1, 2, 2, ..., 2, 3, ...
+
+}
+
+```
+
+I need Group $$
+G=\left(
+\begin{array}{cccc}
+1 & 0 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+1 & 0 & \dots & 0\\
+0 & 1 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+0 & 1 & \dots & 0\\
+0 & 0 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+0 & 0 & \dots & 0\\
+0 & 0 & \dots & 1\\
+\vdots & \vdots &  & \vdots \\
+0 & 0 & \dots & 1
+\end{array}
+\right)
+$$ with
+$$
+\left[
+\begin{array}{ccc}
+\bfg_{1}\bfB & \dots & gG\bfB
+\end{array}
+\right]
+$$
+
+```{r }
+library(fixest)
+library(data.table)
+set.seed(200)
+x = rep(letters[1:4], 3)[1:20]
+y = sample(1:4, 20, replace = T)
+z = rep(0:1, each = 10)
+i(x, y, reference = 2)
+data(base_did)
+base_did <- data.table(base_did)
+dt <- data.table(base_did, base_did[, i(period, treat, 5)])
+
+
+dt[, Gr := 1L]
+dt[id > 50, Gr := 2L]
+dt[, i(period, treat, )]
+summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
+
+data(airquality)
+aq = airquality
+aq$week = aq$Day %/% 7 + 1
+aq <- data.table(aq)
+
+# Interacting Month and week:
+res_2 = feols(Ozone ~ Solar.R + i(Month, week), aq) # week as numbers (time trend)
+res_2F = feols(Ozone ~ Solar.R + i(Month, i.week), aq) # week as factor (dummy)
+aq[]
+
+# Same but dropping the 5th Month and 1st week
+res_2F_bis = feols(Ozone ~ Solar.R + i(Month, i.week, ref = 5, ref2 = 1), aq)
+
+etable(res_2F, res_2F_bis)
+
+```
 
 We estimate parameters at the industry subdividion (SIC-7 code at 2 digits) level:
 \begin{equation}

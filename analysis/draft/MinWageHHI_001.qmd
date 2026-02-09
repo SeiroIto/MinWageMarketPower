@@ -99,6 +99,8 @@ When the minimum wage is imposed at $\bar{w}$, the labour supply curve changes t
 
 # Data
 
+## Sampling frame
+
 # Estimation strategy
 
 

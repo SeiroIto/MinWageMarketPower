@@ -1,0 +1,100 @@
+---
+title: "Test litedown"
+date: "`{r} format(Sys.time(), "%Y%m%d %R")`"
+output: html_document
+#### path <- "W:/epguest/seiro_ito/outfiles/"; litedown::fuse(paste0(path, "TestLitedown.rmd"))
+#### path <- "C:/data/MinWageMarketPower/analysis/program/"; litedown::fuse(paste0(path, "TestLitedown.rmd"))
+---
+```{css, echo=F}
+.SeiroBenign {
+  background-color: #FFEBCD;
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+.SeiroLightGreen {
+  background-color: #D0F0C0; /* Tea green */
+  padding: 0.5em; /*文字まわり（上下左右）の余白*/
+  font-family: Lucida Sans;
+  /* border: 1px solid yellow; */
+  /* font-weight: bold; */
+}
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+```
+
+# What we do in the project
+
+1. Create merged panel using stata: "Data file" 
+   * Use the same definitions as Michael's codes
+   * But include `imp_mic_sic7_3d == 16` industry
+   * Done in other do file
+   * Save Data file in tsv format to read in R
+1. Compute HHI using CIT-IRP5 at various levels: "HHI file"
+   * Use CIT-IRP5_2012 HHI in 2012
+   * Verify if counts are not erroneous 
+1. "Analysis file" = Data file (panel 2009-2022) + HHI file
+   * Merge at various levels 
+   * Need main place level analysis for larger statistical power
+1. Descriptive statistic
+1. Hypothesis testing
+   * % Employment change = a + b1*FA + b2*HHI + b3*(FA*HHI) + FEs + e
+   * Test b3 > 0 labor market power mitigates disemployment impacts
+   * Expect b1<0 or b1 = 0
+   * No prior for the sign of b2 
+
+# Setup
+
+```{r setup}
+library(knitr)
+library(tufte)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = F, message = F,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+options(htmltools.dir.version = FALSE, width = 100)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+table0 <- function(x) table(x, useNA = "ifany")
+```
+```{r path, eval = T}
+path <- "W:/epguest/seiro_ito/"
+pathprogram <- paste0(path, "outfiles/")
+pathdata <- paste0(path, "data/")
+pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+library(qs); library(data.table); library(ggplot2)
+```
+
+
+
+
+
+# Employment
+
+
+
+```{r plot number of jobs taxyear 2012-2020}
+library(qs)
+library(data.table)
+library(ggplot2)
+x <- 1:10
+x
+#### g1 <- ggplot(data = lsa, aes(x = TotalJobs, group = ExistedBefore2013, 
+####   colour = ExistedBefore2013, fill = ExistedBefore2013)) +
+####   geom_col() + 
+####   scale_color_viridis_d("Existing firms") +
+####   scale_fill_viridis_d() +
+####   scale_x_discrete("Tax year") + facet_grid(~ ExistedBefore2013) +
+####   theme_bw()
+####  g1
+```
