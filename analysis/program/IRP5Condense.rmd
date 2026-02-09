@@ -291,7 +291,7 @@ smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 setkey(geoloc, payereferenceno)
 setkey(smallirp5, payereferenceno)
 GeoLF<- smallirp5[geoloc, on = "payereferenceno"]
-gsave(GeoLF,paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+qsave(GeoLF,paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
 
