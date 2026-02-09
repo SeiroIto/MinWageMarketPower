@@ -303,7 +303,7 @@ nrow(GeoLF[dup > 1, ])
 GeoLF <- GeoLF[dup == 1L, ]
 GeoLF[, dup := NULL]
 irp5ig <- GeoLF[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
-qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
+qsave(irp5ig, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
   nthreads = 13))
 ```
 
