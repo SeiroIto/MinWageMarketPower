@@ -311,7 +311,7 @@ Copy from GeoLF if
 
 * `UID` and `taxrefno` are the keys
 
-```{r copy 2015 location info, eval = T, echo = F}
+```{r copy 2015 location info, eval = F, echo = F}
 irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
   nthreads = 13))
 irp5gi[, uidtaxref := 0L]
@@ -369,14 +369,16 @@ If there are workers working for multiple establishments ... no problem
 #### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
-irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
-irp5i[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
-irp5i[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]
-irp5i[, TrueTaxYear := taxyear]
+irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13))
+#### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
+irp5gi[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]
+irp5gi[, TrueTaxYear := taxyear]
 #### Entries of earlier jobs
-irp5i[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5) , 
+irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5) , 
   TrueTaxYear := year(DateStart)]
-apply(table(irp5i[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
+apply(table(irp5gi[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
 ####    2003    2004    2005    2006    2007    2008    2009    2010    2011    2012 
 ####     376    1370    5448   16307   56706   65947 1219105 1205674 1541903 1483088 
 ####    2013    2014    2015    2016    2017    2018    2019    2020    2021 
@@ -399,11 +401,11 @@ apply(table(irp5i[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
 #### TrueTaxYear[TrueTaxYear != taxyear] == 2011, 2012 
 ####   taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear 
 #### is flagged as DropThisForRev
-irp5i[, DropThisForRev := 0L]
-irp5i[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+irp5gi[, DropThisForRev := 0L]
+irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
   DropThisForRev := 1L, 
   by = c(geovars, "taxrefno", "UID")]
-round((sum(irp5i[, DropThisForRev])/nrow(irp5i))*100, 4)
+round((sum(irp5gi[, DropThisForRev])/nrow(irp5gi))*100, 4)
 ####  9.0204
 #### Rename 
 ####  taxyear ==> Old.taxyear
@@ -413,54 +415,54 @@ round((sum(irp5i[, DropThisForRev])/nrow(irp5i))*100, 4)
 ####     2011        2012 *  
 ####     2012        2013 *  
 #### Revision rows dropped
-irp5ir <- irp5i[DropThisForRev == 0L, ]
-c(nrow(irp5i), nrow(irp5ir))
-setnames(irp5ir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
-irp5ir[, DropThisForRev := NULL]
+irp5gir <- irp5gi[DropThisForRev == 0L, ]
+c(nrow(irp5gi), nrow(irp5gir))
+setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+irp5gir[, DropThisForRev := NULL]
 #### Copy location information from 2013 ==> 2008-2012
 #### Use taxrefno-uid match ==> saved 10.9M rows
 #### Keep original variables
-irp5ir[, orig.bprov := busprov_geo]
-irp5ir[, orig.bdist := busdistmuni_geo]
-irp5ir[, orig.bloc  := buslocmuni_geo]
-irp5ir[, orig.bmain := busmainplc_geo]
+irp5gir[, orig.bprov := busprov_geo]
+irp5gir[, orig.bdist := busdistmuni_geo]
+irp5gir[, orig.bloc  := buslocmuni_geo]
+irp5gir[, orig.bmain := busmainplc_geo]
 #### If we do not condition on first row "[1]", we wind up 
 #### having multiple cases ==> error
 #### If there are multiple matches, we have no idea which to pick, so pick first
-irp5ir[, bprov13 := busprov_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5ir[, bdist13 := busdistmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5ir[, bloc13  := buslocmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5ir[, bmain13 := busmainplc_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5ir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, bloc13, buslocmuni_geo)]
-irp5ir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, 
+irp5gir[, bprov13 := busprov_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
+irp5gir[, bdist13 := busdistmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
+irp5gir[, bloc13  := buslocmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
+irp5gir[, bmain13 := busmainplc_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
+irp5gir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, bloc13, buslocmuni_geo)]
+irp5gir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, 
   bloc13, buslocmuni_geo, bmain13, busmainplc_geo)]
-irp5ir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
+irp5gir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
 #### Copy from bXXXX13 
-irp5ir[
+irp5gir[
   taxyear <= 2012 &
   (busprov_geo == "" | is.na(busprov_geo) | busprov_geo == "EXCEPTION") & 
   (bprov13 != "" & !is.na(bprov13) & bprov13 != "EXCEPTION"), 
    c("busprov_geo", "ProvCopied", "LocInfoCopiedFrom") := .(bprov13, 1L, 2013L)
 ]
-irp5ir[
+irp5gir[
   taxyear <= 2012 &
   (busdistmuni_geo == "" | is.na(busdistmuni_geo) | busdistmuni_geo == "EXCEPTION") & 
   (bdist13 != "" & !is.na(bdist13) & bdist13 != "EXCEPTION"),
   c("busdistmuni_geo", "DisCopied", "LocInfoCopiedFrom") := .(bdist13, 1L, 2013L)
 ]
-irp5ir[
+irp5gir[
   taxyear <= 2012 &
   (buslocmuni_geo == "" | is.na(buslocmuni_geo) | buslocmuni_geo == "EXCEPTION") &
   (bloc13 != "" & !is.na(bloc13) & bloc13 != "EXCEPTION"),
   c("buslocmuni_geo",  "LocCopied", "LocInfoCopiedFrom") := .(bloc13,  1L, 2013L)
 ]
-irp5ir[
+irp5gir[
   taxyear <= 2012 &
   (busmainplc_geo == "" | is.na(busmainplc_geo) | busmainplc_geo == "EXCEPTION") &
   (bmain13 != "" & !is.na(bmain13) & bmain13 != "EXCEPTION"),
   c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain13, 1L, 2013L)
 ]
-qsave(irp5ir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
 ```
 ```{r dropping rows, eval = T}
 #### Note: Firms with anomalous repetetive uids (AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ) are dropped
@@ -522,17 +524,17 @@ qsave(dropthese, paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = 13
 #### Keep only nature of person is "an individual"
 #### we did this: irp5[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
 #### irp5ir <- qread(paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
-addmargins(table(irp5ir[, .(natureof = grepl("A", natureofperson), 
+addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson), 
   NatureOf = grepl("A", NatureOfPer))]))
 ####         NatureOf
 #### natureof      TRUE       Sum
 ####    FALSE  42731611  42731611  * 42M saved!!!
 ####    TRUE  132692587 132692587
 ####    Sum   175424198 175424198
-irp5ir <- irp5ir[grepl("A", NatureOfPer), ]
+irp5gir <- irp5gir[grepl("A", NatureOfPer), ]
 #### repetetive UID
-irp5Clean <- irp5ir[!(taxrefno %in% dropthese[, taxrefno]), ]
-c(nrow(irp5ir), nrow(irp5Clean))
+irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+c(nrow(irp5gir), nrow(irp5Clean))
 #### [1] 175424198 175176433
 #### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
 #### Agriculture panel
