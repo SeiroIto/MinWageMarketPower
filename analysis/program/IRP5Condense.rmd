@@ -19,6 +19,8 @@ grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- c("busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo")
 ```
 Rread irp5 data by year
 
@@ -295,14 +297,24 @@ qsave(GeoLF,paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
 
-```{r merge irp5 GeoLF, eval = F}
-#### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
-#### GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+```{r merge irp5 GeoLF, eval = T}
+irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
 GeoLF <- GeoLF[dup == 1L, ]
 GeoLF[, dup := NULL]
 irp5ig <- GeoLF[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
+colnames(GeoLF)
+rbind(GeoLF=dim(GeoLF), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
+colnames(irp5ig)
+table(irp5ig[, taxyear], useNA = "ifany")
+table(irp5ig[, i.taxyear], useNA = "ifany")
+table(GeoLF[, taxyear], useNA = "ifany")
+table(irp5i[, taxyear], useNA = "ifany")
+irp5ig[, taxyear := NULL]
+if (any(grepl("i.taxyear", colnames(irp5ig)))) 
+  setnames(irp5ig, "i.taxyear", "taxyear")
 qsave(irp5ig, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
   nthreads = 13))
 ```
