@@ -16,5 +16,6 @@ analysis/program/2026*
 analysis/program/other
 analysis/program/IRP5Condense_WithTaxrefno.rmd
 analysis/program/Deliverable*
+analysis/program/_extensions
 source/**/
 program0/
