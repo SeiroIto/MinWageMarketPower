@@ -1,0 +1,3 @@
+# Require the repo owner (you) to review everything
+* @SeiroIto
+
