@@ -107,7 +107,7 @@ qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
 
 # Create irp5 panel
 
-## Appending all annual files
+Appending all annual files
 
 ```{r create long format of irp5, eval = F}
 library(qs)
@@ -263,7 +263,7 @@ setcolorder(irp5i, c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo",
 qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 ```
 
-## Copy location information from other source: IRP5_Geo
+# Copy location information from other source: IRP5_Geo
 
 ```{r Open the geolocation file and produce geoloc file, eval = F}
 library(readstata13)
@@ -277,7 +277,11 @@ setnames(geodat,
 geodat[, taxyear := as.integer(taxyear)]
 geoloc <- geodat[taxyear==2015, ]
 qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
-rm(geodat)
+geodat[, HaveInfo := 0L]
+geodat[(Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)), 
+  HaveInfo := 1L]
+table(geodat[, .(HaveInfo, taxyear)], useNA = "ifany")
+qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 ```
 
 ```{r smallirp5, eval = F}
@@ -330,7 +334,7 @@ irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
 irp5gi[, ShouldFill := 0L]
 irp5gi[
-  (buslocmuni_geo == "" |& is.na(buslocmuni_geo)) & 
+  (buslocmuni_geo == "" & is.na(buslocmuni_geo)) & 
   (Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)), 
   ShouldFill := 1L]
 irp5gi[taxyear < 2015, 
