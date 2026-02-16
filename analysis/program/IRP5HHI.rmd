@@ -476,7 +476,8 @@ ggsave(
 library(qs)
 library(data.table)
 library(ggplot2)
-#### irp5Ma is created in Location information granularity checks
+#### irp5Ma is created in 
+#### Location information granularity checks (next section)
 irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
 FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
 
@@ -484,7 +485,7 @@ FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
 FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
   .(yr, Num, NegRate = round(Neg/Num, 4))]
 
-
+#### fadata: establishment level FAs with location, taxrefno, taxyear
 fadata <- unique(FAD[, 
   grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(FAD)), with = F])
 qsave(fadata, paste0(pathdata, "FADUniqueEntries.qs"), nthreads = 13)
@@ -517,6 +518,7 @@ ggsave(
 # Location information granularity checks
 
 We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
+
 ```{r define irp5M by location granularity, eval = F}
 irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
@@ -524,49 +526,54 @@ geovars <- grepout("^bus.*geo$", colnames(irp5))
 #### Location granularity indicator
 irp5[, LocGranular := "none"]
 for (yr in 8:22) {
-	irp5[Txrf %in% Txrf
-		[
-		  busprov_geo     != "" & 
-		  busdistmuni_geo != "" & 
-		  buslocmuni_geo  != "" & 
-		  busmainplc_geo  != "" & 
+  irp5[Txrf %in% Txrf
+    #### Granular down to Main Place
+    [
+      busprov_geo     != "" & 
+      busdistmuni_geo != "" & 
+      buslocmuni_geo  != "" & 
+      busmainplc_geo  != "" & 
       taxyear == 2000 + yr
-		] &
+    ] &
     taxyear == 2000 + yr, 
-	  LocGranular := GeoLevel[4]]
-
-	irp5[Txrf %in% Txrf
-		[
-		  busprov_geo     != "" & 
-		  busdistmuni_geo != "" & 
-		  buslocmuni_geo  != "" & 
-		  busmainplc_geo  == "" &
+    LocGranular := GeoLevel[4]]
+  irp5[Txrf %in% Txrf
+    #### Granular down to Loc muni
+    [
+      busprov_geo     != "" & 
+      busdistmuni_geo != "" & 
+      buslocmuni_geo  != "" & 
+      busmainplc_geo  == "" &
       taxyear == 2000 + yr
-		] &
+    ] &
     taxyear == 2000 + yr, 
-	  LocGranular := GeoLevel[3]]
-	irp5[Txrf %in% Txrf
-		[
-		  busprov_geo     != "" & 
-		  busdistmuni_geo != "" & 
-		  buslocmuni_geo  == "" & 
-		  busmainplc_geo  == "" &
+    LocGranular := GeoLevel[3]]
+  irp5[Txrf %in% Txrf
+    #### Granular down to Dist muni
+    [
+      busprov_geo     != "" & 
+      busdistmuni_geo != "" & 
+      buslocmuni_geo  == "" & 
+      busmainplc_geo  == "" &
       taxyear == 2000 + yr
-		] &
+    ] &
     taxyear == 2000 + yr, 
-	  LocGranular := GeoLevel[2]]
-	irp5[Txrf %in% Txrf
-		[
-		  busprov_geo     != "" & 
-		  busdistmuni_geo == "" & 
-		  buslocmuni_geo  == "" & 
-		  busmainplc_geo  == "" &
+    LocGranular := GeoLevel[2]]
+  irp5[Txrf %in% Txrf
+    #### Granular down to Province
+    [
+      busprov_geo     != "" & 
+      busdistmuni_geo == "" & 
+      buslocmuni_geo  == "" & 
+      busmainplc_geo  == "" &
       taxyear == 2000 + yr
-		] &
+    ] &
     taxyear == 2000 + yr, 
-	  LocGranular := GeoLevel[1]]
+    LocGranular := GeoLevel[1]]
 }
 irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, "none"))]
+#### LocGranularFirm: Most granular location info (order sensitive)
+#### LocGranularJob: Most granular location info (order insensitive)
 setnames(irp5, "LocGranular", "LocGranularFirm")
 irp5[, LocGranularJob := "none"]
 irp5[busprov_geo != "", LocGranularJob := GeoLevel[1]]
