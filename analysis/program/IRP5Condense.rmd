@@ -332,27 +332,37 @@ irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"),
   nthreads = 13))
 irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
-irp5gi[, ShouldFill := 0L]
-irp5gi[
-  (buslocmuni_geo == "" | is.na(buslocmuni_geo)) & 
-  (Bus_adr_Geo_Munic != "" | !is.na(Bus_adr_Geo_Munic)), 
-  ShouldFill := 1L]
+irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
+irp5gi[buslocmuni_geo == "" | is.na(buslocmuni_geo),
+  NoLocMuni := 1L]
+irp5gi[Bus_adr_Geo_Munic != "" | !is.na(Bus_adr_Geo_Munic), 
+  CanFill := 1L]
+irp5gi[NoLocMuni == 1L & CanFill == 1L, ShouldFill := 1L]
 #### How much is loc muni information populated?
-table(irp5gi[, .(
-  LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
-  taxyear)], 
-  useNA = "ifany")
-#### fill in
+table(irp5gi[, .(NoLocMuni == 0L, taxyear)], useNA = "ifany")
+NAsInLocMuniBefore <- 
+  irp5gi[, .(BeforeFill = sum(NoLocMuni)), by = taxyear]
+print(NAsInLocMuniBefore)
+#### to be safe, create a variable for "fill in"
+irp5gi[, FillInLocMuni := buslocmuni_geo]
+#### For each uidtaxref that ShouldFill == 1L, 
+#### fill in loc muni info from the 1st CanFill row
 irp5gi[taxyear < 2015 & ShouldFill == 1L, 
-  buslocmuni_geo := Bus_adr_Geo_Munic[ShouldFill == 1L][1], 
+  FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], 
   by = uidtaxref] 
 #### How much is loc muni information populated after this?
-table(irp5gi[, .(
-  LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
-  taxyear)], 
-  useNA = "ifany")
+#### Number of NAs in loc muni info
+NAsInLocMuni <- irp5gi[, .(
+  BeforeFill = sum(NoLocMuni), 
+  AfterFill  = sum(FillInLocMuni == "" | is.na(FillInLocMuni))), 
+  by = taxyear]
+print(NAsInLocMuni)
+#### table(irp5gi[, .(
+####   LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
+####   taxyear)], 
+####   useNA = "ifany")
 #### How useful is GeoLocFile in fillling information?
-table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
+#### table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
   nthreads = 13))
 ```
