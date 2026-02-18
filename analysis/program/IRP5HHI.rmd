@@ -736,7 +736,8 @@ For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5
 #### code "hhi"
 library(qs)
 library(data.table)
-irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+#### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 for (yr in 8:22) {
@@ -746,13 +747,13 @@ for (yr in 8:22) {
   for (g in 1:length(GeoLevel)) {
     print(GeoLevel[g])
     byvar <- 	c("busprov_geo", "busdistmuni_geo", 
-  			           "buslocmuni_geo", "busmainplc_geo")[1:g]
+                "buslocmuni_geo", "busmainplc_geo")[1:g]
     ipGeo = copy(ipyr)
     #### Drop rows with no location info and location is "EXCEPTION"
     ipGeo <- ipGeo[get(byvar[g]) != "" & !is.na(get(byvar[g])) & get(byvar[g]) != "EXCEPTION", ]
     #### ipGeo <- ipGeo[!grepl("none", LocGranularJob) & get(byvar[g]) != "EXCEPTION", ]
     print(summary(ipGeo[, grepout("NARows", colnames(ipGeo)), with = F]))
-  	ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]
+    ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]
     #### ggplot(ipGeo[Txrf %in% Txrf[WorkersAtEstab > 50000][2], .(Txrf, a3601_income)], aes(x=a3601_income)) +
     #### geom_density() + scale_x_continuous(trans="log10") ==> # of workers > 50000 at main place seems correct
     #### E.g., Toyota in Umhlanga, Durban had over 80K workers    
@@ -773,7 +774,7 @@ for (yr in 8:22) {
     ipGeo[, AreaLevel := GeoLevel[g]]
 	  #### employment shares
     lshare <- unique(ipGeo[, c(
-	    byvar, "Entity", "Txrf",  "taxrefno",
+        byvar, "Entity", "Txrf",  "taxrefno",
         "AreaLevel", grepout("^Wo|^Sha", colnames(ipGeo))
       ), with = F])
     print(summary(lshare))
