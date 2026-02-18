@@ -337,9 +337,20 @@ irp5gi[
   (buslocmuni_geo == "" | is.na(buslocmuni_geo)) & 
   (Bus_adr_Geo_Munic != "" | !is.na(Bus_adr_Geo_Munic)), 
   ShouldFill := 1L]
-irp5gi[taxyear < 2015, 
+#### How much is loc muni information populated?
+table(irp5gi[, .(
+  LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
+  taxyear)], 
+  useNA = "ifany")
+#### fill in
+irp5gi[taxyear < 2015 & ShouldFill == 1L, 
   buslocmuni_geo := Bus_adr_Geo_Munic[ShouldFill == 1L][1], 
   by = uidtaxref] 
+#### How much is loc muni information populated after this?
+table(irp5gi[, .(
+  LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
+  taxyear)], 
+  useNA = "ifany")
 #### How useful is GeoLocFile in fillling information?
 table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
