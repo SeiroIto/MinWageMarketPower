@@ -528,6 +528,11 @@ FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
 FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
   .(yr, Num, NegRate = round(Neg/Num, 4))]
 
+#### fadata: establishment level FAs with location, taxrefno, taxyear
+fadata <- unique(FAD[, 
+  grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(FAD)), with = F])
+qsave(fadata, paste0(pathdata, "FADUniqueEntries.qs"), nthreads = 13)
+
 geovars <- grepout("^bus.*geo$", colnames(irp5Ma))
 irp5Ma[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
 irp5ForPlot <- unique(irp5Ma[taxyear >= 2012 & taxyear <= 2020, 
