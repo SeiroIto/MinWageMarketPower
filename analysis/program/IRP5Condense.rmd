@@ -296,7 +296,7 @@ geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
 smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 setkey(geoloc, payereferenceno)
 setkey(smallirp5, payereferenceno)
-GeoLF<- smallirp5[geoloc, on = "payereferenceno"]
+GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
 qsave(GeoLF,paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
@@ -345,11 +345,18 @@ NAsInLocMuniBefore <-
 print(NAsInLocMuniBefore)
 #### to be safe, create a variable for "fill in"
 irp5gi[, FillInLocMuni := buslocmuni_geo]
+
 #### For each uidtaxref that ShouldFill == 1L, 
 #### fill in loc muni info from the 1st CanFill row
-irp5gi[taxyear < 2015 & ShouldFill == 1L, 
+irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
   FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], 
   by = uidtaxref] 
+summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
+  .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+    naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
+irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
+  .(taxrefno, uid, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+    FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
 #### Number of NAs in loc muni info
 NAsInLocMuni <- irp5gi[, .(
@@ -363,11 +370,28 @@ print(NAsInLocMuni)
 ####   useNA = "ifany")
 #### How useful is GeoLocFile in fillling information?
 #### table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
+LocMuniCanBeFilled <- irp5[, .(
+  CanBeFilled  = sum(
+    (FillInLocMuni  != "" & !is.na(FillInLocMuni)) &
+    (buslocmuni_geo == "" | is.na(buslocmuni_geo)) &
+     FillInLocMuni != buslocmuni_geo
+    )), 
+  by = taxyear]
+print(LocMuniCanBeFilled)
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
   nthreads = 13))
 ```
 
 
+```{r copy Bus_adr_Geo_Munic, eval = F}
+irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13))
+setnames(irp5gi, 
+    c("buslocmuni_geo", "FillInLocMuni")
+  , c("old_buslocmuni_geo", "buslocmuni_geo")) 
+qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13))
+```
 
 Copy location info
 
@@ -458,7 +482,8 @@ irp5gir <- irp5gi[DropThisForRev == 0L, ]
 c(nrow(irp5gi), nrow(irp5gir))
 setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
 irp5gir[, DropThisForRev := NULL]
-#### Copy location information from 2013 ==> 2008-2012
+
+#### Copy location information from 2015 ==> 2008-2014
 #### Use taxrefno-uid match ==> saved 10.9M rows
 #### Keep original variables
 irp5gir[, orig.bprov := busprov_geo]
@@ -468,38 +493,38 @@ irp5gir[, orig.bmain := busmainplc_geo]
 #### If we do not condition on first row "[1]", we wind up 
 #### having multiple cases ==> error
 #### If there are multiple matches, we have no idea which to pick, so pick first
-irp5gir[, bprov13 := busprov_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5gir[, bdist13 := busdistmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5gir[, bloc13  := buslocmuni_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5gir[, bmain13 := busmainplc_geo[taxyear == 2013][1], by = .(taxrefno, uid)]
-irp5gir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, bloc13, buslocmuni_geo)]
-irp5gir[orig.bloc  == "" & bloc13  != "", .(taxrefno, uid, taxyear, 
-  bloc13, buslocmuni_geo, bmain13, busmainplc_geo)]
+irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bdist15 := busdistmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
+irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, 
+  bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
 irp5gir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
-#### Copy from bXXXX13 
+#### Copy from bXXXX15 
 irp5gir[
-  taxyear <= 2012 &
+  taxyear <= 2014 &
   (busprov_geo == "" | is.na(busprov_geo) | busprov_geo == "EXCEPTION") & 
-  (bprov13 != "" & !is.na(bprov13) & bprov13 != "EXCEPTION"), 
-   c("busprov_geo", "ProvCopied", "LocInfoCopiedFrom") := .(bprov13, 1L, 2013L)
+  (bprov15 != "" & !is.na(bprov15) & bprov15 != "EXCEPTION"), 
+   c("busprov_geo", "ProvCopied", "LocInfoCopiedFrom") := .(bprov15, 1L, 2015L)
 ]
 irp5gir[
-  taxyear <= 2012 &
+  taxyear <= 2014 &
   (busdistmuni_geo == "" | is.na(busdistmuni_geo) | busdistmuni_geo == "EXCEPTION") & 
-  (bdist13 != "" & !is.na(bdist13) & bdist13 != "EXCEPTION"),
-  c("busdistmuni_geo", "DisCopied", "LocInfoCopiedFrom") := .(bdist13, 1L, 2013L)
+  (bdist15 != "" & !is.na(bdist15) & bdist15 != "EXCEPTION"),
+  c("busdistmuni_geo", "DisCopied", "LocInfoCopiedFrom") := .(bdist15, 1L, 2015L)
 ]
 irp5gir[
-  taxyear <= 2012 &
+  taxyear <= 2014 &
   (buslocmuni_geo == "" | is.na(buslocmuni_geo) | buslocmuni_geo == "EXCEPTION") &
-  (bloc13 != "" & !is.na(bloc13) & bloc13 != "EXCEPTION"),
-  c("buslocmuni_geo",  "LocCopied", "LocInfoCopiedFrom") := .(bloc13,  1L, 2013L)
+  (bloc15 != "" & !is.na(bloc15) & bloc15 != "EXCEPTION"),
+  c("buslocmuni_geo",  "LocCopied", "LocInfoCopiedFrom") := .(bloc15,  1L, 2015L)
 ]
 irp5gir[
-  taxyear <= 2012 &
+  taxyear <= 2014 &
   (busmainplc_geo == "" | is.na(busmainplc_geo) | busmainplc_geo == "EXCEPTION") &
-  (bmain13 != "" & !is.na(bmain13) & bmain13 != "EXCEPTION"),
-  c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain13, 1L, 2013L)
+  (bmain15 != "" & !is.na(bmain15) & bmain15 != "EXCEPTION"),
+  c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain15, 1L, 2015L)
 ]
 qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
 ```
