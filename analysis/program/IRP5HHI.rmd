@@ -520,6 +520,8 @@ ggsave(
 We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
 
 ```{r define irp5M by location granularity, eval = F}
+rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
+rm(fadata2); rm(fadata3); rm(faa)
 irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- grepout("^bus.*geo$", colnames(irp5))

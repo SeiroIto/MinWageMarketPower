@@ -112,6 +112,10 @@ We use:
 #### setnames(inda, "taxyear", "FirstYearOnSIC7")
 #### qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 #### 
+
+
+table(irp5[. .(notMissing = (!is.na(buslocmuni_geo) | buslocmuni_geo != ""),  taxyear)])
+
 #### LSMa = LS + industry
 inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 #### LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
