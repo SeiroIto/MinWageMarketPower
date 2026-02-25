@@ -11,6 +11,7 @@ output: html_document
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "saveddata/")
 pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
