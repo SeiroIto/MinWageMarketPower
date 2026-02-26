@@ -73,6 +73,7 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "saveddata/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
 library(qs); library(data.table); library(ggplot2)
@@ -95,10 +96,13 @@ library(qs); library(data.table); library(ggplot2)
    * Many NAs in location info in early years &rArr; loss of sample in early years
 
 ```{r read irp5 file, eval = F}
+if (exists(irp5gi))    rm(irp5gi)
+if (exists(irp5gir))   rm(irp5gir)
+if (exists(irp5Clean)) rm(irp5Clean)
 #### irp5.qs is created in IRP5Condense.rmd
 library(qs)
 library(data.table)
-irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 ```
 
 ```{r fraction affected for all years, eval = F}
@@ -108,6 +112,7 @@ library(data.table)
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "saveddata/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
 #### Takes 20-30 mins: Start  ####
@@ -207,6 +212,9 @@ for (yr in 8:22) {
     .(busmainplc_geo, taxrefno, DateStart, DateEnd, 
       DurationMonth, a3601_income, IncomeMonth)]
   #### Find sub MW workers and define fraction affected
+  #### Sums (Jobs, NumSubMW, etc.) counts total in two levels
+  ####   a. Firm (Txrf):                good: more obs, bad: not granular
+  ####   b. Establishment (Main Place): good: granular, bad: fewer obs
   #### We can use IncomeMonth or TIncomeMonth
   ####   PropToMW: Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
   ####      SubMW: PropToMW < 1 & IncomeMonth > 0
@@ -219,12 +227,32 @@ for (yr in 8:22) {
   #### Note: uid is NA in some entries, UID is not 
   ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
   ipyrc[, SubMW     := as.integer(PropToMW < 1 & IncomeMonth > 0)]
-  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), by = .(Txrf, taxyear)]
-  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), by = .(Txrf, taxyear)]
-  ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), by = .(Txrf, taxyear)]
-  ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), by = .(Txrf, taxyear)]
-  ipyrc[, FA        := round(NumSubMW/Jobs, 6)]
-  ipyrc[, FAe       := round(NumSubMWe/Employees, 6)]
+  #### a. Firm level
+  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), 
+    by = .(Txrf, taxyear)]
+  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), 
+    by = .(Txrf, taxyear)]
+  ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), 
+    by = .(Txrf, taxyear)]
+  ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), 
+    by = .(Txrf, taxyear)]
+  #### b. Establishment level
+  ipyrc[, NumSubMWMP  := as.integer(sum(SubMW==1L)), 
+    by = .(Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, taxyear)]
+  ipyrc[, JobsMP      := as.integer(sum(IncomeMonth > 0)), 
+    by = .(Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, taxyear)]
+  ipyrc[, NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L])), 
+    by = .(Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, taxyear)]
+  ipyrc[, EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0])), 
+    by = .(Txrf, busprov_geo, busdistmuni_geo, 
+      buslocmuni_geo, busmainplc_geo, taxyear)]
+  ipyrc[, FA     := round(NumSubMW/Jobs, 6)]
+  ipyrc[, FAe    := round(NumSubMWe/Employees, 6)]
+  ipyrc[, FAMP   := round(NumSubMWMP/JobsMP, 6)]
+  ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
   ####ipyrc[grepl("^BCJXBCC", Txrf), 
   ####  .(busmainplc_geo, taxyear, 
   ####    Txrf, uid, UID, DateStart, DurationMonth, 
@@ -242,19 +270,20 @@ for (yr in 8:22) {
   FAdata <- ipyrc[, .(
       busprov_geo, 
       busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
-      taxrefno, Txrf, payereferenceno, UID, uid,
+      taxrefno, Txrf, UID, uid,
       DurationMonth, DurMonthMarch,
       a3601_income, IncomeMonth, NumJobsPerWorker,
-      PropToMW, SubMW, Jobs, NumSubMW, 
-      Employees, NumSubMWe,  
-      FA, FAe
+      PropToMW, SubMW, 
+      Jobs, NumSubMW, Employees, NumSubMWe,  
+      JobsMP, NumSubMWMP, EmployeesMP, NumSubMWeMP,  
+      FA, FAe, FAMP, FAeMP
     )]
   #### summary(FAdata)
   #### summary(FAdata[is.na(FA), .(FA, Jobs, a3601_income, IncomeMonth, DurationMonth)])
   FAdata[, Size := "micro"]
-  FAdata[Employees > 1 & Employees <= 10, Size := "small"]
-  FAdata[Employees > 10 & Employees <= 50, Size := "medium"]
-  FAdata[Employees > 50, Size := "large"]
+  FAdata[Employees >= 10 & Employees <= 49, Size := "small"]
+  FAdata[Employees >= 50 & Employees <= 249, Size := "medium"]
+  FAdata[Employees >= 250, Size := "large"]
   FAdata[is.na(Employees) | Employees == 0, Size := NA]
   FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
   #### Number of affected workers in aggregates
@@ -310,13 +339,19 @@ table(FAD[,taxyear])
 ####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
 ```
 
+```{r copy FAD to saveddata, eval = F}
+file.copy(
+         from = paste0(pathdata,      "FAD.qs")
+  ,        to = paste0(pathsaveddata, "FAD.qs")
+  , overwrite = T
+  )
+```
+
 ```{r Fadata is first lines of FAD in each year, eval = F}
 FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
 FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
-Fadata <- FAD[num == 1L, 
-  grepout("^bus|^tax[ry]|^Tx|Mon|Num|Jo|Emp|FA", colnames(FAD)), 
-  with = F]
+  buslocmuni_geo, busmainplc_geo, taxrefno, payerrefno, taxyear)]
+Fadata <- FAD[num == 1L, ]
 table(Fadata[, taxyear])
 ####  2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
 #### 23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
@@ -363,20 +398,23 @@ library(tinytable)
 aggsummary <- 
   qread(paste0(pathdata, "AggregateSummary.qs"), 
   nthreads = 13)
+#### total jobs, total sub MW jobs, aggregate FA
 aggsum <- 
   aggsummary[, .(
       TotalJobs               = sum(TotalEmployees)
     , TotalSubMWJobs          = sum(TotalSubMWWorkers)
+    , MeanFAJobs              = mean(TotalSubMWWorkers/TotalEmployees)
     , TotalFirmsWithEmployees = sum(TotalFirmsWithEmployees)
     , TotalAffectedFirms      = sum(TotalAffectedFirms)
   ), by = taxyear][, .(
-        taxyear,
-        TotalJobs, TotalSubMWJobs, 
-        TotalFirmsWithEmployee, TotalAffectedFirms
-      , AggregateFA           = round((TotalSubMWWorkers/TotalEmployees)*100, 2)
+        taxyear, TotalJobs, TotalSubMWJobs, 
+        TotalFirmsWithEmployees, TotalAffectedFirms,
+        MeanFAJobs
+      , AggregateFA = round((TotalSubMWjobs/TotalJobs)*100, 2)
     )
   ]
 tb <- tt(aggsum, width = 0.8, caption = "Jobs and sub-MW jobs")
+options(tinytable_format_digits = 2)
 format_tt(tb
     j = 1:4,
     num_mark_big = " "
@@ -385,6 +423,7 @@ format_tt(tb
 #### fadatai <- qread(paste0(pathdata, "FAAndJobs.qs""), nthreads = 13)
 #### estfa <- 
 ####  qread(paste0(pathdata, "fadataUniqueEntries.qs"), nthreads = 13)
+
 
 ```
 
@@ -527,11 +566,6 @@ FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
 #### To Michael, 2026 Jan 21, negative duration entries
 FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
   .(yr, Num, NegRate = round(Neg/Num, 4))]
-
-#### fadata: establishment level FAs with location, taxrefno, taxyear
-fadata <- unique(FAD[, 
-  grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(FAD)), with = F])
-qsave(fadata, paste0(pathdata, "FADUniqueEntries.qs"), nthreads = 13)
 
 geovars <- grepout("^bus.*geo$", colnames(irp5Ma))
 irp5Ma[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
