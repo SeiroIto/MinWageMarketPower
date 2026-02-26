@@ -422,8 +422,6 @@ tb.agg <- format_tt(tb
 tb.agg
 #### Agriculture
 faa <- qread(paste0(pathdata, "FAOfAgri.qs""), nthreads = 13)
-      Jobs, NumSubMW, Employees, NumSubMWe,  
-      JobsMP, NumSubMWMP, EmployeesMP, NumSubMWeMP,  
 agsum <- faa[, .(
       TotalJobs          = sum(Jobs[IncomeMonth > 0]) 
     , TotalSubMWJobs     = uniqueN(Jobs[IncomeMonth > 0 & SubMW==1L]) 
