@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.24">
+<meta name="generator" content="quarto-1.8.27">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -19,6 +19,41 @@ ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
 width: 0.8em;
 margin: 0 0.8em 0.2em -1em;  vertical-align: middle;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+}
+pre.numberSource { margin-left: 3em; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 
 div.csl-bib-body { }
@@ -2400,7 +2435,7 @@ window.Quarto = {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">January 29, 2026, 10:01 +0800</p>
+        <p class="date">February 26, 2026, 11:02 +0900</p>
       </div>
     </div>
     
@@ -2496,6 +2531,11 @@ body, td{
 font-size: 16pt;
 }
 </style>
+<!-- LaTeX math shortcode -->
+<div class="hidden">
+% Math Symbols % if we use amsthm we don’t need this. % Follwing is for blacking the box: {
+<p>} % Romans % Latins (?) % Greeks % alphabets % New Operators % Convenience definitions $$</p>
+</div>
 <section id="introduction" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
 </section>
@@ -2525,7 +2565,13 @@ Rani, Uma, Patrick Belser, Oelz Martin, and Setareh Ranjbar. 2013. <span>“Mini
 ———. 2021b. <span>“The Elusive Employment Effect of the Minimum Wage.”</span> <em>Journal of Economic Perspectives</em>.
 </div><div id="ref-DubeLindner2024" class="csl-entry" role="listitem">
 Dube, Arindrajit, and Attila Lindner. 2024. <span>“Minimum Wages in the 21st Century.”</span> In, edited by Christian Dustmann and Thomas Lemieux, 5:261–383. Handbook of Labor Economics. Elsevier. <a href="https://doi.org/10.1016/bs.heslab.2024.11.004">https://doi.org/10.1016/bs.heslab.2024.11.004</a>.
-</div><div id="ref-Robinson1933" class="csl-entry" role="listitem">
+</div><div id="ref-RaoRisch2026" class="csl-entry" role="listitem">
+Rao, Nirupama L., and Max Risch. 2025. <span>“Who’s Afraid of the Minimum Wage? Measuring the Impacts on Independent Businesses Using Matched u.s. Tax Returns*.”</span> <em>Quarterly Journal of Economics</em> 141 (1): 373–427. <a href="https://doi.org/10.1093/qje/qjaf053">https://doi.org/10.1093/qje/qjaf053</a>.
+</div><div id="fn3"><p><sup>3</sup> They use other data set, CPS MORGs, to compute each Census 2007 Code level industry’s share in the total sub-minimum wage workers of the economy in one year before the minimum wage increase. They define the “highly exposed” industries where the industry’s share exceeds 1%. It is a measure of relative concentration over the industries among total sub-minimum wage workers of the treated states, and is different from the fraction affected measure at each firm used by <span class="citation" data-cites="HarasztosiLindner2019">Harasztosi and Lindner (<a href="#ref-HarasztosiLindner2019" role="doc-biblioref">2019</a>)</span> that we follow. Authors copy this information to 2017 NAICS 4-digit industry code used in IRS data through a <a href="https://www2.census.gov/programs-surveys/demo/guidance/industry-occupation/industry-crosswalk-90-00-02-07-12.xls">crosswalk file</a>. </p><div id="ref-HarasztosiLindner2019" class="csl-entry" role="listitem">
+Harasztosi, Péter, and Attila Lindner. 2019. <span>“Who Pays for the Minimum Wage?”</span> <em>American Economic Review</em> 109 (8): 2693–2727.
+</div></div></div><p><span class="citation" data-cites="RaoRisch2026">Rao and Risch (<a href="#ref-RaoRisch2026" role="doc-biblioref">2025</a>)</span> relies on the data similar to this paper, the US Internal Revenues Services tax returns, and estimate the impacts of minimum wage increase.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> Focusing on pass-through corporations which consists of mostly small and medium scale but also includes a small number of large scale firms, they found small unemployment impacts, about -1.5 jobs per year per firm, mostly concentrated on teen part timers. A novel finding is that this small unemployment impact mostly stems from the vacancy positions that are left unfilled. They also found that profits are not affected. The majority of firms pass the cost increase to buyers. One concerning finding is that the job losses are found mostly among less productive (low value added per worker) firms which could not increase revenues by passing the costs to buyers just as the more productive firms did.</p>
+<p>It has always been argued that the labour markets may not be competitive <span class="citation" data-cites="Robinson1933 Manning2013 Manning2021ILRreview">(<a href="#ref-Robinson1933" role="doc-biblioref">Robinson 1933</a>; <a href="#ref-Manning2013" role="doc-biblioref">Manning 2013</a>, <a href="#ref-Manning2021ILRreview" role="doc-biblioref">2021a</a>)</span>. An early work discussed multiple channels that firms can adjust with, and firms can choose not to adjust on labour <span class="citation" data-cites="MaCurdy2015">(<a href="#ref-MaCurdy2015" role="doc-biblioref">MaCurdy 2015</a>)</span>. Even after narrowing the channel to labour market transactions, oligopsonistic firms still have a few options: laying off workers, labour-labour substituion<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <span class="citation" data-cites="Horton2025">(<a href="#ref-Horton2025" role="doc-biblioref">Horton 2025</a>)</span>, or reducing the firm’s labour market transaction margins (wage markdowns). However, relatively few studies examine the adjustment channels beyond layoffs. This study aims to examine the plausibility of shrinking labour market margins. <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> are the first to examine this channel and use online labour market data of stock clerks, retail salespersons, and cashiers in the US. They find that labour market concentration as measured by Harhindahl-Hirschman Index (HHI) reduces the possible unemployment impacts of minimum wages.</p>
+<div class="no-row-height column-margin column-container"><div id="ref-Robinson1933" class="csl-entry" role="listitem">
 Robinson, Joan. 1933. <em>The Economics of Imperfect Competition</em>. London: Mcmillan.
 </div><div id="ref-Manning2013" class="csl-entry" role="listitem">
 Manning, Alan. 2013. <em>Monopsony in Motion: Imperfect Competition in Labor Markets</em>. Princeton University Press.
@@ -2533,13 +2579,19 @@ Manning, Alan. 2013. <em>Monopsony in Motion: Imperfect Competition in Labor Mar
 ———. 2021a. <span>“Monopsony in Labor Markets: A Review.”</span> <em>ILR Review</em> 74 (1): 3–26. <a href="https://doi.org/10.1177/0019793920922499">https://doi.org/10.1177/0019793920922499</a>.
 </div><div id="ref-MaCurdy2015" class="csl-entry" role="listitem">
 MaCurdy, Thomas. 2015. <span>“How Effective Is the Minimum Wage at Supporting the Poor?”</span> <em>Journal of Political Economy</em> 123 (2): 497–545. <a href="https://doi.org/10.1086/679626">https://doi.org/10.1086/679626</a>.
-</div><div id="fn3"><p><sup>3</sup> Upgrading the skill contents of labour while keeping the level of employment. </p></div><div id="ref-Horton2025" class="csl-entry" role="listitem">
+</div><div id="fn4"><p><sup>4</sup> Upgrading the skill contents of labour while keeping the level of employment. </p></div><div id="ref-Horton2025" class="csl-entry" role="listitem">
 Horton, John J. 2025. <span>“Price Floors and Employer Preferences: Evidence from a Minimum Wage Experiment.”</span> <em>American Economic Review</em> 115 (1): 117–46. <a href="https://doi.org/10.1257/aer.20170637">https://doi.org/10.1257/aer.20170637</a>.
-</div></div><p>It has always been argued that the labour markets may not be competitive <span class="citation" data-cites="Robinson1933 Manning2013 Manning2021ILRreview">(<a href="#ref-Robinson1933" role="doc-biblioref">Robinson 1933</a>; <a href="#ref-Manning2013" role="doc-biblioref">Manning 2013</a>, <a href="#ref-Manning2021ILRreview" role="doc-biblioref">2021a</a>)</span>. An early work discussed multiple channels that firms can adjust with, and firms can choose not to adjust on labour <span class="citation" data-cites="MaCurdy2015">(<a href="#ref-MaCurdy2015" role="doc-biblioref">MaCurdy 2015</a>)</span>. Even after narrowing the channel to labour market transactions, oligopsonistic firms still have a few options: laying off workers, labour-labour substituion<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <span class="citation" data-cites="Horton2025">(<a href="#ref-Horton2025" role="doc-biblioref">Horton 2025</a>)</span>, or reducing the firm’s labour market transaction margins (wage markdowns). However, relatively few studies examine the adjustment channels beyond layoffs. This study aims to examine the plausibility of shrinking labour market margins. <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> are the first to examine this channel and use online labour market data of stock clerks, retail salespersons, and cashiers in the US. They find that labour market concentration as measured by Harhindahl-Hirschman Index (HHI) reduces the possible unemployment impacts of minimum wages.</p>
-<p>Agricultural minimum wage in South Africa has been suggested to have reduced employment. An early study examines the introduction in 2003 and found noisy unemployment impacts <span class="citation" data-cites="BhoratKanburStanwix2014">(<a href="#ref-BhoratKanburStanwix2014" role="doc-biblioref">Bhorat, Kanbur, and Stanwix 2014</a>)</span>.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> Some studies use the different changes in minimum wages by region in 2008 to estimate the impacts. However, the estimates turned out to be noisy due possibly to a relatively small increase in minimum wages that provides only modest statistical power <span class="citation" data-cites="ChrisRulofRankin2015 ItoSeiro2021e">(<a href="#ref-ChrisRulofRankin2015" role="doc-biblioref">Garber, Burger, and Rankin 2015</a>; <a href="#ref-ItoSeiro2021e" role="doc-biblioref">Ito 2021</a>)</span>. In the current study, we use the large increase in minimum wages in 2012 to estimate the impacts of minimum wages on employment and the possible mitigating factor of labour market power.</p>
+</div><div id="ref-FaiaLochnerSchoefer2026" class="csl-entry" role="listitem">
+Faia, Ester, Benjamin Lochner, and Benjamin Schoefer. 2026. <span>“Monopsony, Markdowns, and Minimum Wages.”</span> National Bureau of Economic Research. <a href="https://doi.org/10.3386/w34699">https://doi.org/10.3386/w34699</a>.
+</div><div id="ref-AckerbergCavesFrazer2015" class="csl-entry" role="listitem">
+Ackerberg, Daniel A., Kevin Caves, and Garth Frazer. 2015. <span>“Identification Properties of Recent Production Function Estimators.”</span> <em>Econometrica</em> 83 (6): 2411–51. <a href="https://doi.org/10.3982/ECTA13408">https://doi.org/10.3982/ECTA13408</a>.
+</div><div id="fn5"><p><sup>5</sup> ACF assumes Leontief-in-materials. Will results hold if they use <span class="citation" data-cites="GNR2020">Gandhi, Navarro, and Rivers (<a href="#ref-GNR2020" role="doc-biblioref">2020</a>)</span> to estimate the gross output production function? </p><div id="ref-GNR2020" class="csl-entry" role="listitem">
+Gandhi, Amit, Salvador Navarro, and David A. Rivers. 2020. <span>“On the Identification of Gross Output Production Functions.”</span> <em>Journal of Political Economy</em> 128 (8): 2973–3016. <a href="https://doi.org/10.1086/707736">https://doi.org/10.1086/707736</a>.
+</div></div></div><p>The monopsony story received some doubts when applied to a German data set. <span class="citation" data-cites="FaiaLochnerSchoefer2026">Faia, Lochner, and Schoefer (<a href="#ref-FaiaLochnerSchoefer2026" role="doc-biblioref">2026</a>)</span> uses the production approach to estimate the wage markdowns. They build a monopolistic competition model and derive an expression that shows the difference in markdowns before and after the minimum wage imposition. They show that the wage markdowns follow only 25% of what the monopsonistic model predicts. However,they use <span class="citation" data-cites="AckerbergCavesFrazer2015">Ackerberg, Caves, and Frazer (<a href="#ref-AckerbergCavesFrazer2015" role="doc-biblioref">2015</a>)</span> to estimate the gross output production function and use the estimated parameters to compute wage markdowns.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> It remains to be seen if the results hold under more general conditions.</p>
+<p>Agricultural minimum wage in South Africa has been suggested to have reduced employment. An early study examines the introduction in 2003 and found noisy unemployment impacts <span class="citation" data-cites="BhoratKanburStanwix2014">(<a href="#ref-BhoratKanburStanwix2014" role="doc-biblioref">Bhorat, Kanbur, and Stanwix 2014</a>)</span>.<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> Some studies use the different changes in minimum wages by region in 2008 to estimate the impacts. However, the estimates turned out to be noisy due possibly to a relatively small increase in minimum wages that provides only modest statistical power <span class="citation" data-cites="ChrisRulofRankin2015 ItoSeiro2021e">(<a href="#ref-ChrisRulofRankin2015" role="doc-biblioref">Garber, Burger, and Rankin 2015</a>; <a href="#ref-ItoSeiro2021e" role="doc-biblioref">Ito 2021</a>)</span>. In the current study, we use the large increase in minimum wages in 2012 to estimate the impacts of minimum wages on employment and the possible mitigating factor of labour market power.</p>
 <div class="no-row-height column-margin column-container"><div id="ref-BhoratKanburStanwix2014" class="csl-entry" role="listitem">
 Bhorat, Haroon, Ravi Kanbur, and Benjamin Stanwix. 2014. <span>“Estimating the Impact of Minimum Wages on Employment, Wages, and Non-Wage Benefits: The Case of Agriculture in South Africa.”</span> <em>American Journal of Agricultural Economics</em> 96 (5): 1402. <a href="https://doi.org/10.1093/ajae/aau049">https://doi.org/10.1093/ajae/aau049</a>.
-</div><div id="fn4"><p><sup>4</sup> Their results show stronger negative impacts on the part-time workers, hinting labour-labour substitution. </p></div><div id="ref-ChrisRulofRankin2015" class="csl-entry" role="listitem">
+</div><div id="fn6"><p><sup>6</sup> Their results show stronger negative impacts on the part-time workers, hinting labour-labour substitution. </p></div><div id="ref-ChrisRulofRankin2015" class="csl-entry" role="listitem">
 Garber, Chris, Rulof Burger, and Neil Rankin. 2015. <span>“The Impact of the Agricultural Minimum Wage on Farmworker Employment in South Africa: A Fixed Effects Approach.”</span> <em>Working Paper</em>. <a href="http://2015.essa.org.za/fullpaper/essa_2895.pdf">http://2015.essa.org.za/fullpaper/essa_2895.pdf</a>.
 </div><div id="ref-ItoSeiro2021e" class="csl-entry" role="listitem">
 Ito, Seiro. 2021. <span>“Minimum Wage Restrictions and Agricultural Production in South Africa.”</span> <em>Ajia Keizai (アジア経済)</em> 62 (2): 24–62. <a href="https://doi.org/10.24765/ajiakeizai.62.2_24">https://doi.org/10.24765/ajiakeizai.62.2_24</a>.
@@ -2570,8 +2622,8 @@ In the CIT-IRP5 data set, all the employee information is linked to the head qua
 </section>
 <section id="employment-trends" class="level2 page-columns page-full" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="employment-trends"><span class="header-section-number">5.3</span> Employment trends</h2>
-<p>The IRP5 data have information of workers hired by firms. They include both permanent and temporary workers. The data do not contain information on self-employed firms or a manager-employer firms, because they do not report employees. These are typically operating at a micro scale and its majority is considered to be subsistent farming.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> The data also do not cover outsourced labour, because the hiring agents may not list themselves as agrictultural firms. According to QLFS, informal employment in agriculture (519,000) is larger than formal employment (401,000). This contrasts with the aggregate employment where 11,032,000 work in the formal sector and 6,023,000 work in the informal sector. Thus the share of agriculture is higher in the informal sector (8.62%) than the formal sector (3.63%), with the aggregate share at 5.39%. Given the tendency of lower wages in the informal sector, the higher ratio of informal activities makes agricultural minimum wage difficult to implement.</p>
-<div class="no-row-height column-margin column-container"><div id="fn5"><p><sup>5</sup> Subsistent farming is estimated to employ about 2 million people in SA (Table 8, QLFS2025Q3, StatsSA). Time-related underemployment, defined as employment <a href="https://www.statistics.gov.hk/wsc/CPS203-P15-S.pdf#page=2">less than 35 hours and desired to work more</a>, amounts to 21,000 workers (Table 3.9, QLFS2025Q3, StatsSA). </p></div></div><p>There are Y workers listed in 2012.</p>
+<p>The IRP5 data have information of workers hired by firms. They include both permanent and temporary workers. The data do not contain information on self-employed firms or a manager-employer firms, because they do not report employees. These are typically operating at a micro scale and its majority is considered to be subsistent farming.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> The data also do not cover outsourced labour, because the hiring agents may not list themselves as agrictultural firms. According to QLFS, informal employment in agriculture (519,000) is larger than formal employment (401,000). This contrasts with the aggregate employment where 11,032,000 work in the formal sector and 6,023,000 work in the informal sector. Thus the share of agriculture is higher in the informal sector (8.62%) than the formal sector (3.63%), with the aggregate share at 5.39%. Given the tendency of lower wages in the informal sector, the higher ratio of informal activities makes agricultural minimum wage difficult to implement.</p>
+<div class="no-row-height column-margin column-container"><div id="fn7"><p><sup>7</sup> Subsistent farming is estimated to employ about 2 million people in SA (Table 8, QLFS2025Q3, StatsSA). Time-related underemployment, defined as employment <a href="https://www.statistics.gov.hk/wsc/CPS203-P15-S.pdf#page=2">less than 35 hours and desired to work more</a>, amounts to 21,000 workers (Table 3.9, QLFS2025Q3, StatsSA). </p></div></div><p>There are Y workers listed in 2012.</p>
 <ul>
 <li>Employment trends in agricture, in aggregate economy</li>
 <li>Measured HHI trends in aggreculture, in aggregate economy</li>
@@ -2580,25 +2632,84 @@ In the CIT-IRP5 data set, all the employee information is linked to the head qua
 </section>
 <section id="estimation-strategy" class="level1 page-columns page-full" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Estimation strategy</h1>
-<p>A Kronecker product <span class="math inline">\(\bfA\otimes\bfB\)</span> is <span class="math display">\[
+<p>A Kronecker product <span class="math inline">\({\mathbf{A}}\otimes{\mathbf{B}}\)</span> is <span class="math display">\[
 \left[
 \begin{array}{ccc}
-a_{11}\bfB &amp; \dots &amp; a_{1K}\bfB\\
+a_{11}{\mathbf{B}}&amp; \dots &amp; a_{1K}{\mathbf{B}}\\
 &amp; \ddots &amp; \\
-a_{L1}\bfB &amp; \dots &amp; a_{LK}\bfB\\
+a_{L1}{\mathbf{B}}&amp; \dots &amp; a_{LK}{\mathbf{B}}\\
 \end{array}
 \right]
 \]</span></p>
 <p>If I want to have an interaction of group <span class="math inline">\(\times\)</span> some matrix, we need <span class="math display">\[
 G=\left(
 \begin{array}{cccc}
-\bfB_{1} &amp; \0 &amp; \dots &amp;\0\\
-\0 &amp; \bfB_{2} &amp; \dots &amp; \0\\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
-\0 &amp; \0 &amp; \dots &amp; \B_{T}\\
+{\mathbf{B}}_{1} &amp; {\boldsymbol{0}}       &amp; \dots  &amp; {\boldsymbol{0}}\\
+{\boldsymbol{0}}       &amp; {\mathbf{B}}_{2} &amp; \dots  &amp; {\boldsymbol{0}}\\
+\vdots   &amp; \vdots   &amp; \ddots &amp; \vdots\\
+{\boldsymbol{0}}       &amp; {\boldsymbol{0}}       &amp; \dots  &amp; {\mathbf{B}}_{T}\\
 \end{array}
 \right)
 \]</span> T <span class="math inline">\(\times\)</span> (K<span class="math inline">\(\times\)</span>T) matrix</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>25 x 12 sparse Matrix of class &quot;dgCMatrix&quot;
+                                         
+ [1,] 1 26 51 76  .  .  .  .  .  .  .   .
+ [2,] 2 27 52 77  .  .  .  .  .  .  .   .
+ [3,] 3 28 53 78  .  .  .  .  .  .  .   .
+ [4,] 4 29 54 79  .  .  .  .  .  .  .   .
+ [5,] 5 30 55 80  .  .  .  .  .  .  .   .
+ [6,] .  .  .  .  6 31 56 81  .  .  .   .
+ [7,] .  .  .  .  7 32 57 82  .  .  .   .
+ [8,] .  .  .  .  8 33 58 83  .  .  .   .
+ [9,] .  .  .  .  9 34 59 84  .  .  .   .
+[10,] .  .  .  . 10 35 60 85  .  .  .   .
+[11,] .  .  .  . 11 36 61 86  .  .  .   .
+[12,] .  .  .  . 12 37 62 87  .  .  .   .
+[13,] .  .  .  . 13 38 63 88  .  .  .   .
+[14,] .  .  .  . 14 39 64 89  .  .  .   .
+[15,] .  .  .  . 15 40 65 90  .  .  .   .
+[16,] .  .  .  .  .  .  .  . 16 41 66  91
+[17,] .  .  .  .  .  .  .  . 17 42 67  92
+[18,] .  .  .  .  .  .  .  . 18 43 68  93
+[19,] .  .  .  .  .  .  .  . 19 44 69  94
+[20,] .  .  .  .  .  .  .  . 20 45 70  95
+[21,] .  .  .  .  .  .  .  . 21 46 71  96
+[22,] .  .  .  .  .  .  .  . 22 47 72  97
+[23,] .  .  .  .  .  .  .  . 23 48 73  98
+[24,] .  .  .  .  .  .  .  . 24 49 74  99
+[25,] .  .  .  .  .  .  .  . 25 50 75 100</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12]
+ [1,]    1   26   51   76    0    0    0    0    0     0     0     0
+ [2,]    2   27   52   77    0    0    0    0    0     0     0     0
+ [3,]    3   28   53   78    0    0    0    0    0     0     0     0
+ [4,]    4   29   54   79    0    0    0    0    0     0     0     0
+ [5,]    5   30   55   80    0    0    0    0    0     0     0     0
+ [6,]    0    0    0    0    6   31   56   81    0     0     0     0
+ [7,]    0    0    0    0    7   32   57   82    0     0     0     0
+ [8,]    0    0    0    0    8   33   58   83    0     0     0     0
+ [9,]    0    0    0    0    9   34   59   84    0     0     0     0
+[10,]    0    0    0    0   10   35   60   85    0     0     0     0
+[11,]    0    0    0    0   11   36   61   86    0     0     0     0
+[12,]    0    0    0    0   12   37   62   87    0     0     0     0
+[13,]    0    0    0    0   13   38   63   88    0     0     0     0
+[14,]    0    0    0    0   14   39   64   89    0     0     0     0
+[15,]    0    0    0    0   15   40   65   90    0     0     0     0
+[16,]    0    0    0    0    0    0    0    0   16    41    66    91
+[17,]    0    0    0    0    0    0    0    0   17    42    67    92
+[18,]    0    0    0    0    0    0    0    0   18    43    68    93
+[19,]    0    0    0    0    0    0    0    0   19    44    69    94
+[20,]    0    0    0    0    0    0    0    0   20    45    70    95
+[21,]    0    0    0    0    0    0    0    0   21    46    71    96
+[22,]    0    0    0    0    0    0    0    0   22    47    72    97
+[23,]    0    0    0    0    0    0    0    0   23    48    73    98
+[24,]    0    0    0    0    0    0    0    0   24    49    74    99
+[25,]    0    0    0    0    0    0    0    0   25    50    75   100</code></pre>
+</div>
+</div>
 <p>I need Group <span class="math display">\[
 G=\left(
 \begin{array}{cccc}
@@ -2619,21 +2730,19 @@ G=\left(
 \]</span> with <span class="math display">\[
 \left[
 \begin{array}{ccc}
-\bfg_{1}\bfB &amp; \dots &amp; gG\bfB
+{\mathbf{g}}_{1}{\mathbf{B}}&amp; \dots &amp; gG{\mathbf{B}}
 \end{array}
 \right]
 \]</span></p>
 <div class="cell">
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: package &#39;fixest&#39; was built under R version 4.4.3</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: package &#39;data.table&#39; was built under R version 4.4.3</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: In i(x, y, reference = 2):
- &#39;reference&#39; is not a valid argument of function i.</code></pre>
-</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fixest)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">rep</span>(letters[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>], <span class="dv">3</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>y <span class="ot">=</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">20</span>, <span class="at">replace =</span> T)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>z <span class="ot">=</span> <span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">each =</span> <span class="dv">10</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">i</span>(x, y, <span class="at">reference =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       a  b  c  d
  [1,]  2  0  0  0
@@ -2657,1089 +2766,131 @@ G=\left(
 [19,] NA NA NA NA
 [20,] NA NA NA NA</code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(base_did)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>base_did <span class="ot">&lt;-</span> <span class="fu">data.table</span>(base_did)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(base_did, base_did[, <span class="fu">i</span>(period, treat, <span class="dv">5</span>)])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>dt[, y <span class="sc">:</span><span class="er">=</span> <span class="fu">round</span>(y, <span class="dv">2</span>)]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dt[, x1 <span class="sc">:</span><span class="er">=</span> <span class="fu">round</span>(x1, <span class="dv">2</span>)]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">Matrix</span>(<span class="fu">as.matrix</span>(dt)[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ], <span class="at">sparse =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>        1 2 3 4 5 6 7 8 9 10
-   [1,] 1 0 0 0 0 0 0 0 0  0
-   [2,] 0 1 0 0 0 0 0 0 0  0
-   [3,] 0 0 1 0 0 0 0 0 0  0
-   [4,] 0 0 0 1 0 0 0 0 0  0
-   [5,] 0 0 0 0 1 0 0 0 0  0
-   [6,] 0 0 0 0 0 1 0 0 0  0
-   [7,] 0 0 0 0 0 0 1 0 0  0
-   [8,] 0 0 0 0 0 0 0 1 0  0
-   [9,] 0 0 0 0 0 0 0 0 1  0
-  [10,] 0 0 0 0 0 0 0 0 0  1
-  [11,] 1 0 0 0 0 0 0 0 0  0
-  [12,] 0 1 0 0 0 0 0 0 0  0
-  [13,] 0 0 1 0 0 0 0 0 0  0
-  [14,] 0 0 0 1 0 0 0 0 0  0
-  [15,] 0 0 0 0 1 0 0 0 0  0
-  [16,] 0 0 0 0 0 1 0 0 0  0
-  [17,] 0 0 0 0 0 0 1 0 0  0
-  [18,] 0 0 0 0 0 0 0 1 0  0
-  [19,] 0 0 0 0 0 0 0 0 1  0
-  [20,] 0 0 0 0 0 0 0 0 0  1
-  [21,] 1 0 0 0 0 0 0 0 0  0
-  [22,] 0 1 0 0 0 0 0 0 0  0
-  [23,] 0 0 1 0 0 0 0 0 0  0
-  [24,] 0 0 0 1 0 0 0 0 0  0
-  [25,] 0 0 0 0 1 0 0 0 0  0
-  [26,] 0 0 0 0 0 1 0 0 0  0
-  [27,] 0 0 0 0 0 0 1 0 0  0
-  [28,] 0 0 0 0 0 0 0 1 0  0
-  [29,] 0 0 0 0 0 0 0 0 1  0
-  [30,] 0 0 0 0 0 0 0 0 0  1
-  [31,] 1 0 0 0 0 0 0 0 0  0
-  [32,] 0 1 0 0 0 0 0 0 0  0
-  [33,] 0 0 1 0 0 0 0 0 0  0
-  [34,] 0 0 0 1 0 0 0 0 0  0
-  [35,] 0 0 0 0 1 0 0 0 0  0
-  [36,] 0 0 0 0 0 1 0 0 0  0
-  [37,] 0 0 0 0 0 0 1 0 0  0
-  [38,] 0 0 0 0 0 0 0 1 0  0
-  [39,] 0 0 0 0 0 0 0 0 1  0
-  [40,] 0 0 0 0 0 0 0 0 0  1
-  [41,] 1 0 0 0 0 0 0 0 0  0
-  [42,] 0 1 0 0 0 0 0 0 0  0
-  [43,] 0 0 1 0 0 0 0 0 0  0
-  [44,] 0 0 0 1 0 0 0 0 0  0
-  [45,] 0 0 0 0 1 0 0 0 0  0
-  [46,] 0 0 0 0 0 1 0 0 0  0
-  [47,] 0 0 0 0 0 0 1 0 0  0
-  [48,] 0 0 0 0 0 0 0 1 0  0
-  [49,] 0 0 0 0 0 0 0 0 1  0
-  [50,] 0 0 0 0 0 0 0 0 0  1
-  [51,] 1 0 0 0 0 0 0 0 0  0
-  [52,] 0 1 0 0 0 0 0 0 0  0
-  [53,] 0 0 1 0 0 0 0 0 0  0
-  [54,] 0 0 0 1 0 0 0 0 0  0
-  [55,] 0 0 0 0 1 0 0 0 0  0
-  [56,] 0 0 0 0 0 1 0 0 0  0
-  [57,] 0 0 0 0 0 0 1 0 0  0
-  [58,] 0 0 0 0 0 0 0 1 0  0
-  [59,] 0 0 0 0 0 0 0 0 1  0
-  [60,] 0 0 0 0 0 0 0 0 0  1
-  [61,] 1 0 0 0 0 0 0 0 0  0
-  [62,] 0 1 0 0 0 0 0 0 0  0
-  [63,] 0 0 1 0 0 0 0 0 0  0
-  [64,] 0 0 0 1 0 0 0 0 0  0
-  [65,] 0 0 0 0 1 0 0 0 0  0
-  [66,] 0 0 0 0 0 1 0 0 0  0
-  [67,] 0 0 0 0 0 0 1 0 0  0
-  [68,] 0 0 0 0 0 0 0 1 0  0
-  [69,] 0 0 0 0 0 0 0 0 1  0
-  [70,] 0 0 0 0 0 0 0 0 0  1
-  [71,] 1 0 0 0 0 0 0 0 0  0
-  [72,] 0 1 0 0 0 0 0 0 0  0
-  [73,] 0 0 1 0 0 0 0 0 0  0
-  [74,] 0 0 0 1 0 0 0 0 0  0
-  [75,] 0 0 0 0 1 0 0 0 0  0
-  [76,] 0 0 0 0 0 1 0 0 0  0
-  [77,] 0 0 0 0 0 0 1 0 0  0
-  [78,] 0 0 0 0 0 0 0 1 0  0
-  [79,] 0 0 0 0 0 0 0 0 1  0
-  [80,] 0 0 0 0 0 0 0 0 0  1
-  [81,] 1 0 0 0 0 0 0 0 0  0
-  [82,] 0 1 0 0 0 0 0 0 0  0
-  [83,] 0 0 1 0 0 0 0 0 0  0
-  [84,] 0 0 0 1 0 0 0 0 0  0
-  [85,] 0 0 0 0 1 0 0 0 0  0
-  [86,] 0 0 0 0 0 1 0 0 0  0
-  [87,] 0 0 0 0 0 0 1 0 0  0
-  [88,] 0 0 0 0 0 0 0 1 0  0
-  [89,] 0 0 0 0 0 0 0 0 1  0
-  [90,] 0 0 0 0 0 0 0 0 0  1
-  [91,] 1 0 0 0 0 0 0 0 0  0
-  [92,] 0 1 0 0 0 0 0 0 0  0
-  [93,] 0 0 1 0 0 0 0 0 0  0
-  [94,] 0 0 0 1 0 0 0 0 0  0
-  [95,] 0 0 0 0 1 0 0 0 0  0
-  [96,] 0 0 0 0 0 1 0 0 0  0
-  [97,] 0 0 0 0 0 0 1 0 0  0
-  [98,] 0 0 0 0 0 0 0 1 0  0
-  [99,] 0 0 0 0 0 0 0 0 1  0
- [100,] 0 0 0 0 0 0 0 0 0  1
- [101,] 1 0 0 0 0 0 0 0 0  0
- [102,] 0 1 0 0 0 0 0 0 0  0
- [103,] 0 0 1 0 0 0 0 0 0  0
- [104,] 0 0 0 1 0 0 0 0 0  0
- [105,] 0 0 0 0 1 0 0 0 0  0
- [106,] 0 0 0 0 0 1 0 0 0  0
- [107,] 0 0 0 0 0 0 1 0 0  0
- [108,] 0 0 0 0 0 0 0 1 0  0
- [109,] 0 0 0 0 0 0 0 0 1  0
- [110,] 0 0 0 0 0 0 0 0 0  1
- [111,] 1 0 0 0 0 0 0 0 0  0
- [112,] 0 1 0 0 0 0 0 0 0  0
- [113,] 0 0 1 0 0 0 0 0 0  0
- [114,] 0 0 0 1 0 0 0 0 0  0
- [115,] 0 0 0 0 1 0 0 0 0  0
- [116,] 0 0 0 0 0 1 0 0 0  0
- [117,] 0 0 0 0 0 0 1 0 0  0
- [118,] 0 0 0 0 0 0 0 1 0  0
- [119,] 0 0 0 0 0 0 0 0 1  0
- [120,] 0 0 0 0 0 0 0 0 0  1
- [121,] 1 0 0 0 0 0 0 0 0  0
- [122,] 0 1 0 0 0 0 0 0 0  0
- [123,] 0 0 1 0 0 0 0 0 0  0
- [124,] 0 0 0 1 0 0 0 0 0  0
- [125,] 0 0 0 0 1 0 0 0 0  0
- [126,] 0 0 0 0 0 1 0 0 0  0
- [127,] 0 0 0 0 0 0 1 0 0  0
- [128,] 0 0 0 0 0 0 0 1 0  0
- [129,] 0 0 0 0 0 0 0 0 1  0
- [130,] 0 0 0 0 0 0 0 0 0  1
- [131,] 1 0 0 0 0 0 0 0 0  0
- [132,] 0 1 0 0 0 0 0 0 0  0
- [133,] 0 0 1 0 0 0 0 0 0  0
- [134,] 0 0 0 1 0 0 0 0 0  0
- [135,] 0 0 0 0 1 0 0 0 0  0
- [136,] 0 0 0 0 0 1 0 0 0  0
- [137,] 0 0 0 0 0 0 1 0 0  0
- [138,] 0 0 0 0 0 0 0 1 0  0
- [139,] 0 0 0 0 0 0 0 0 1  0
- [140,] 0 0 0 0 0 0 0 0 0  1
- [141,] 1 0 0 0 0 0 0 0 0  0
- [142,] 0 1 0 0 0 0 0 0 0  0
- [143,] 0 0 1 0 0 0 0 0 0  0
- [144,] 0 0 0 1 0 0 0 0 0  0
- [145,] 0 0 0 0 1 0 0 0 0  0
- [146,] 0 0 0 0 0 1 0 0 0  0
- [147,] 0 0 0 0 0 0 1 0 0  0
- [148,] 0 0 0 0 0 0 0 1 0  0
- [149,] 0 0 0 0 0 0 0 0 1  0
- [150,] 0 0 0 0 0 0 0 0 0  1
- [151,] 1 0 0 0 0 0 0 0 0  0
- [152,] 0 1 0 0 0 0 0 0 0  0
- [153,] 0 0 1 0 0 0 0 0 0  0
- [154,] 0 0 0 1 0 0 0 0 0  0
- [155,] 0 0 0 0 1 0 0 0 0  0
- [156,] 0 0 0 0 0 1 0 0 0  0
- [157,] 0 0 0 0 0 0 1 0 0  0
- [158,] 0 0 0 0 0 0 0 1 0  0
- [159,] 0 0 0 0 0 0 0 0 1  0
- [160,] 0 0 0 0 0 0 0 0 0  1
- [161,] 1 0 0 0 0 0 0 0 0  0
- [162,] 0 1 0 0 0 0 0 0 0  0
- [163,] 0 0 1 0 0 0 0 0 0  0
- [164,] 0 0 0 1 0 0 0 0 0  0
- [165,] 0 0 0 0 1 0 0 0 0  0
- [166,] 0 0 0 0 0 1 0 0 0  0
- [167,] 0 0 0 0 0 0 1 0 0  0
- [168,] 0 0 0 0 0 0 0 1 0  0
- [169,] 0 0 0 0 0 0 0 0 1  0
- [170,] 0 0 0 0 0 0 0 0 0  1
- [171,] 1 0 0 0 0 0 0 0 0  0
- [172,] 0 1 0 0 0 0 0 0 0  0
- [173,] 0 0 1 0 0 0 0 0 0  0
- [174,] 0 0 0 1 0 0 0 0 0  0
- [175,] 0 0 0 0 1 0 0 0 0  0
- [176,] 0 0 0 0 0 1 0 0 0  0
- [177,] 0 0 0 0 0 0 1 0 0  0
- [178,] 0 0 0 0 0 0 0 1 0  0
- [179,] 0 0 0 0 0 0 0 0 1  0
- [180,] 0 0 0 0 0 0 0 0 0  1
- [181,] 1 0 0 0 0 0 0 0 0  0
- [182,] 0 1 0 0 0 0 0 0 0  0
- [183,] 0 0 1 0 0 0 0 0 0  0
- [184,] 0 0 0 1 0 0 0 0 0  0
- [185,] 0 0 0 0 1 0 0 0 0  0
- [186,] 0 0 0 0 0 1 0 0 0  0
- [187,] 0 0 0 0 0 0 1 0 0  0
- [188,] 0 0 0 0 0 0 0 1 0  0
- [189,] 0 0 0 0 0 0 0 0 1  0
- [190,] 0 0 0 0 0 0 0 0 0  1
- [191,] 1 0 0 0 0 0 0 0 0  0
- [192,] 0 1 0 0 0 0 0 0 0  0
- [193,] 0 0 1 0 0 0 0 0 0  0
- [194,] 0 0 0 1 0 0 0 0 0  0
- [195,] 0 0 0 0 1 0 0 0 0  0
- [196,] 0 0 0 0 0 1 0 0 0  0
- [197,] 0 0 0 0 0 0 1 0 0  0
- [198,] 0 0 0 0 0 0 0 1 0  0
- [199,] 0 0 0 0 0 0 0 0 1  0
- [200,] 0 0 0 0 0 0 0 0 0  1
- [201,] 1 0 0 0 0 0 0 0 0  0
- [202,] 0 1 0 0 0 0 0 0 0  0
- [203,] 0 0 1 0 0 0 0 0 0  0
- [204,] 0 0 0 1 0 0 0 0 0  0
- [205,] 0 0 0 0 1 0 0 0 0  0
- [206,] 0 0 0 0 0 1 0 0 0  0
- [207,] 0 0 0 0 0 0 1 0 0  0
- [208,] 0 0 0 0 0 0 0 1 0  0
- [209,] 0 0 0 0 0 0 0 0 1  0
- [210,] 0 0 0 0 0 0 0 0 0  1
- [211,] 1 0 0 0 0 0 0 0 0  0
- [212,] 0 1 0 0 0 0 0 0 0  0
- [213,] 0 0 1 0 0 0 0 0 0  0
- [214,] 0 0 0 1 0 0 0 0 0  0
- [215,] 0 0 0 0 1 0 0 0 0  0
- [216,] 0 0 0 0 0 1 0 0 0  0
- [217,] 0 0 0 0 0 0 1 0 0  0
- [218,] 0 0 0 0 0 0 0 1 0  0
- [219,] 0 0 0 0 0 0 0 0 1  0
- [220,] 0 0 0 0 0 0 0 0 0  1
- [221,] 1 0 0 0 0 0 0 0 0  0
- [222,] 0 1 0 0 0 0 0 0 0  0
- [223,] 0 0 1 0 0 0 0 0 0  0
- [224,] 0 0 0 1 0 0 0 0 0  0
- [225,] 0 0 0 0 1 0 0 0 0  0
- [226,] 0 0 0 0 0 1 0 0 0  0
- [227,] 0 0 0 0 0 0 1 0 0  0
- [228,] 0 0 0 0 0 0 0 1 0  0
- [229,] 0 0 0 0 0 0 0 0 1  0
- [230,] 0 0 0 0 0 0 0 0 0  1
- [231,] 1 0 0 0 0 0 0 0 0  0
- [232,] 0 1 0 0 0 0 0 0 0  0
- [233,] 0 0 1 0 0 0 0 0 0  0
- [234,] 0 0 0 1 0 0 0 0 0  0
- [235,] 0 0 0 0 1 0 0 0 0  0
- [236,] 0 0 0 0 0 1 0 0 0  0
- [237,] 0 0 0 0 0 0 1 0 0  0
- [238,] 0 0 0 0 0 0 0 1 0  0
- [239,] 0 0 0 0 0 0 0 0 1  0
- [240,] 0 0 0 0 0 0 0 0 0  1
- [241,] 1 0 0 0 0 0 0 0 0  0
- [242,] 0 1 0 0 0 0 0 0 0  0
- [243,] 0 0 1 0 0 0 0 0 0  0
- [244,] 0 0 0 1 0 0 0 0 0  0
- [245,] 0 0 0 0 1 0 0 0 0  0
- [246,] 0 0 0 0 0 1 0 0 0  0
- [247,] 0 0 0 0 0 0 1 0 0  0
- [248,] 0 0 0 0 0 0 0 1 0  0
- [249,] 0 0 0 0 0 0 0 0 1  0
- [250,] 0 0 0 0 0 0 0 0 0  1
- [251,] 1 0 0 0 0 0 0 0 0  0
- [252,] 0 1 0 0 0 0 0 0 0  0
- [253,] 0 0 1 0 0 0 0 0 0  0
- [254,] 0 0 0 1 0 0 0 0 0  0
- [255,] 0 0 0 0 1 0 0 0 0  0
- [256,] 0 0 0 0 0 1 0 0 0  0
- [257,] 0 0 0 0 0 0 1 0 0  0
- [258,] 0 0 0 0 0 0 0 1 0  0
- [259,] 0 0 0 0 0 0 0 0 1  0
- [260,] 0 0 0 0 0 0 0 0 0  1
- [261,] 1 0 0 0 0 0 0 0 0  0
- [262,] 0 1 0 0 0 0 0 0 0  0
- [263,] 0 0 1 0 0 0 0 0 0  0
- [264,] 0 0 0 1 0 0 0 0 0  0
- [265,] 0 0 0 0 1 0 0 0 0  0
- [266,] 0 0 0 0 0 1 0 0 0  0
- [267,] 0 0 0 0 0 0 1 0 0  0
- [268,] 0 0 0 0 0 0 0 1 0  0
- [269,] 0 0 0 0 0 0 0 0 1  0
- [270,] 0 0 0 0 0 0 0 0 0  1
- [271,] 1 0 0 0 0 0 0 0 0  0
- [272,] 0 1 0 0 0 0 0 0 0  0
- [273,] 0 0 1 0 0 0 0 0 0  0
- [274,] 0 0 0 1 0 0 0 0 0  0
- [275,] 0 0 0 0 1 0 0 0 0  0
- [276,] 0 0 0 0 0 1 0 0 0  0
- [277,] 0 0 0 0 0 0 1 0 0  0
- [278,] 0 0 0 0 0 0 0 1 0  0
- [279,] 0 0 0 0 0 0 0 0 1  0
- [280,] 0 0 0 0 0 0 0 0 0  1
- [281,] 1 0 0 0 0 0 0 0 0  0
- [282,] 0 1 0 0 0 0 0 0 0  0
- [283,] 0 0 1 0 0 0 0 0 0  0
- [284,] 0 0 0 1 0 0 0 0 0  0
- [285,] 0 0 0 0 1 0 0 0 0  0
- [286,] 0 0 0 0 0 1 0 0 0  0
- [287,] 0 0 0 0 0 0 1 0 0  0
- [288,] 0 0 0 0 0 0 0 1 0  0
- [289,] 0 0 0 0 0 0 0 0 1  0
- [290,] 0 0 0 0 0 0 0 0 0  1
- [291,] 1 0 0 0 0 0 0 0 0  0
- [292,] 0 1 0 0 0 0 0 0 0  0
- [293,] 0 0 1 0 0 0 0 0 0  0
- [294,] 0 0 0 1 0 0 0 0 0  0
- [295,] 0 0 0 0 1 0 0 0 0  0
- [296,] 0 0 0 0 0 1 0 0 0  0
- [297,] 0 0 0 0 0 0 1 0 0  0
- [298,] 0 0 0 0 0 0 0 1 0  0
- [299,] 0 0 0 0 0 0 0 0 1  0
- [300,] 0 0 0 0 0 0 0 0 0  1
- [301,] 1 0 0 0 0 0 0 0 0  0
- [302,] 0 1 0 0 0 0 0 0 0  0
- [303,] 0 0 1 0 0 0 0 0 0  0
- [304,] 0 0 0 1 0 0 0 0 0  0
- [305,] 0 0 0 0 1 0 0 0 0  0
- [306,] 0 0 0 0 0 1 0 0 0  0
- [307,] 0 0 0 0 0 0 1 0 0  0
- [308,] 0 0 0 0 0 0 0 1 0  0
- [309,] 0 0 0 0 0 0 0 0 1  0
- [310,] 0 0 0 0 0 0 0 0 0  1
- [311,] 1 0 0 0 0 0 0 0 0  0
- [312,] 0 1 0 0 0 0 0 0 0  0
- [313,] 0 0 1 0 0 0 0 0 0  0
- [314,] 0 0 0 1 0 0 0 0 0  0
- [315,] 0 0 0 0 1 0 0 0 0  0
- [316,] 0 0 0 0 0 1 0 0 0  0
- [317,] 0 0 0 0 0 0 1 0 0  0
- [318,] 0 0 0 0 0 0 0 1 0  0
- [319,] 0 0 0 0 0 0 0 0 1  0
- [320,] 0 0 0 0 0 0 0 0 0  1
- [321,] 1 0 0 0 0 0 0 0 0  0
- [322,] 0 1 0 0 0 0 0 0 0  0
- [323,] 0 0 1 0 0 0 0 0 0  0
- [324,] 0 0 0 1 0 0 0 0 0  0
- [325,] 0 0 0 0 1 0 0 0 0  0
- [326,] 0 0 0 0 0 1 0 0 0  0
- [327,] 0 0 0 0 0 0 1 0 0  0
- [328,] 0 0 0 0 0 0 0 1 0  0
- [329,] 0 0 0 0 0 0 0 0 1  0
- [330,] 0 0 0 0 0 0 0 0 0  1
- [331,] 1 0 0 0 0 0 0 0 0  0
- [332,] 0 1 0 0 0 0 0 0 0  0
- [333,] 0 0 1 0 0 0 0 0 0  0
- [334,] 0 0 0 1 0 0 0 0 0  0
- [335,] 0 0 0 0 1 0 0 0 0  0
- [336,] 0 0 0 0 0 1 0 0 0  0
- [337,] 0 0 0 0 0 0 1 0 0  0
- [338,] 0 0 0 0 0 0 0 1 0  0
- [339,] 0 0 0 0 0 0 0 0 1  0
- [340,] 0 0 0 0 0 0 0 0 0  1
- [341,] 1 0 0 0 0 0 0 0 0  0
- [342,] 0 1 0 0 0 0 0 0 0  0
- [343,] 0 0 1 0 0 0 0 0 0  0
- [344,] 0 0 0 1 0 0 0 0 0  0
- [345,] 0 0 0 0 1 0 0 0 0  0
- [346,] 0 0 0 0 0 1 0 0 0  0
- [347,] 0 0 0 0 0 0 1 0 0  0
- [348,] 0 0 0 0 0 0 0 1 0  0
- [349,] 0 0 0 0 0 0 0 0 1  0
- [350,] 0 0 0 0 0 0 0 0 0  1
- [351,] 1 0 0 0 0 0 0 0 0  0
- [352,] 0 1 0 0 0 0 0 0 0  0
- [353,] 0 0 1 0 0 0 0 0 0  0
- [354,] 0 0 0 1 0 0 0 0 0  0
- [355,] 0 0 0 0 1 0 0 0 0  0
- [356,] 0 0 0 0 0 1 0 0 0  0
- [357,] 0 0 0 0 0 0 1 0 0  0
- [358,] 0 0 0 0 0 0 0 1 0  0
- [359,] 0 0 0 0 0 0 0 0 1  0
- [360,] 0 0 0 0 0 0 0 0 0  1
- [361,] 1 0 0 0 0 0 0 0 0  0
- [362,] 0 1 0 0 0 0 0 0 0  0
- [363,] 0 0 1 0 0 0 0 0 0  0
- [364,] 0 0 0 1 0 0 0 0 0  0
- [365,] 0 0 0 0 1 0 0 0 0  0
- [366,] 0 0 0 0 0 1 0 0 0  0
- [367,] 0 0 0 0 0 0 1 0 0  0
- [368,] 0 0 0 0 0 0 0 1 0  0
- [369,] 0 0 0 0 0 0 0 0 1  0
- [370,] 0 0 0 0 0 0 0 0 0  1
- [371,] 1 0 0 0 0 0 0 0 0  0
- [372,] 0 1 0 0 0 0 0 0 0  0
- [373,] 0 0 1 0 0 0 0 0 0  0
- [374,] 0 0 0 1 0 0 0 0 0  0
- [375,] 0 0 0 0 1 0 0 0 0  0
- [376,] 0 0 0 0 0 1 0 0 0  0
- [377,] 0 0 0 0 0 0 1 0 0  0
- [378,] 0 0 0 0 0 0 0 1 0  0
- [379,] 0 0 0 0 0 0 0 0 1  0
- [380,] 0 0 0 0 0 0 0 0 0  1
- [381,] 1 0 0 0 0 0 0 0 0  0
- [382,] 0 1 0 0 0 0 0 0 0  0
- [383,] 0 0 1 0 0 0 0 0 0  0
- [384,] 0 0 0 1 0 0 0 0 0  0
- [385,] 0 0 0 0 1 0 0 0 0  0
- [386,] 0 0 0 0 0 1 0 0 0  0
- [387,] 0 0 0 0 0 0 1 0 0  0
- [388,] 0 0 0 0 0 0 0 1 0  0
- [389,] 0 0 0 0 0 0 0 0 1  0
- [390,] 0 0 0 0 0 0 0 0 0  1
- [391,] 1 0 0 0 0 0 0 0 0  0
- [392,] 0 1 0 0 0 0 0 0 0  0
- [393,] 0 0 1 0 0 0 0 0 0  0
- [394,] 0 0 0 1 0 0 0 0 0  0
- [395,] 0 0 0 0 1 0 0 0 0  0
- [396,] 0 0 0 0 0 1 0 0 0  0
- [397,] 0 0 0 0 0 0 1 0 0  0
- [398,] 0 0 0 0 0 0 0 1 0  0
- [399,] 0 0 0 0 0 0 0 0 1  0
- [400,] 0 0 0 0 0 0 0 0 0  1
- [401,] 1 0 0 0 0 0 0 0 0  0
- [402,] 0 1 0 0 0 0 0 0 0  0
- [403,] 0 0 1 0 0 0 0 0 0  0
- [404,] 0 0 0 1 0 0 0 0 0  0
- [405,] 0 0 0 0 1 0 0 0 0  0
- [406,] 0 0 0 0 0 1 0 0 0  0
- [407,] 0 0 0 0 0 0 1 0 0  0
- [408,] 0 0 0 0 0 0 0 1 0  0
- [409,] 0 0 0 0 0 0 0 0 1  0
- [410,] 0 0 0 0 0 0 0 0 0  1
- [411,] 1 0 0 0 0 0 0 0 0  0
- [412,] 0 1 0 0 0 0 0 0 0  0
- [413,] 0 0 1 0 0 0 0 0 0  0
- [414,] 0 0 0 1 0 0 0 0 0  0
- [415,] 0 0 0 0 1 0 0 0 0  0
- [416,] 0 0 0 0 0 1 0 0 0  0
- [417,] 0 0 0 0 0 0 1 0 0  0
- [418,] 0 0 0 0 0 0 0 1 0  0
- [419,] 0 0 0 0 0 0 0 0 1  0
- [420,] 0 0 0 0 0 0 0 0 0  1
- [421,] 1 0 0 0 0 0 0 0 0  0
- [422,] 0 1 0 0 0 0 0 0 0  0
- [423,] 0 0 1 0 0 0 0 0 0  0
- [424,] 0 0 0 1 0 0 0 0 0  0
- [425,] 0 0 0 0 1 0 0 0 0  0
- [426,] 0 0 0 0 0 1 0 0 0  0
- [427,] 0 0 0 0 0 0 1 0 0  0
- [428,] 0 0 0 0 0 0 0 1 0  0
- [429,] 0 0 0 0 0 0 0 0 1  0
- [430,] 0 0 0 0 0 0 0 0 0  1
- [431,] 1 0 0 0 0 0 0 0 0  0
- [432,] 0 1 0 0 0 0 0 0 0  0
- [433,] 0 0 1 0 0 0 0 0 0  0
- [434,] 0 0 0 1 0 0 0 0 0  0
- [435,] 0 0 0 0 1 0 0 0 0  0
- [436,] 0 0 0 0 0 1 0 0 0  0
- [437,] 0 0 0 0 0 0 1 0 0  0
- [438,] 0 0 0 0 0 0 0 1 0  0
- [439,] 0 0 0 0 0 0 0 0 1  0
- [440,] 0 0 0 0 0 0 0 0 0  1
- [441,] 1 0 0 0 0 0 0 0 0  0
- [442,] 0 1 0 0 0 0 0 0 0  0
- [443,] 0 0 1 0 0 0 0 0 0  0
- [444,] 0 0 0 1 0 0 0 0 0  0
- [445,] 0 0 0 0 1 0 0 0 0  0
- [446,] 0 0 0 0 0 1 0 0 0  0
- [447,] 0 0 0 0 0 0 1 0 0  0
- [448,] 0 0 0 0 0 0 0 1 0  0
- [449,] 0 0 0 0 0 0 0 0 1  0
- [450,] 0 0 0 0 0 0 0 0 0  1
- [451,] 1 0 0 0 0 0 0 0 0  0
- [452,] 0 1 0 0 0 0 0 0 0  0
- [453,] 0 0 1 0 0 0 0 0 0  0
- [454,] 0 0 0 1 0 0 0 0 0  0
- [455,] 0 0 0 0 1 0 0 0 0  0
- [456,] 0 0 0 0 0 1 0 0 0  0
- [457,] 0 0 0 0 0 0 1 0 0  0
- [458,] 0 0 0 0 0 0 0 1 0  0
- [459,] 0 0 0 0 0 0 0 0 1  0
- [460,] 0 0 0 0 0 0 0 0 0  1
- [461,] 1 0 0 0 0 0 0 0 0  0
- [462,] 0 1 0 0 0 0 0 0 0  0
- [463,] 0 0 1 0 0 0 0 0 0  0
- [464,] 0 0 0 1 0 0 0 0 0  0
- [465,] 0 0 0 0 1 0 0 0 0  0
- [466,] 0 0 0 0 0 1 0 0 0  0
- [467,] 0 0 0 0 0 0 1 0 0  0
- [468,] 0 0 0 0 0 0 0 1 0  0
- [469,] 0 0 0 0 0 0 0 0 1  0
- [470,] 0 0 0 0 0 0 0 0 0  1
- [471,] 1 0 0 0 0 0 0 0 0  0
- [472,] 0 1 0 0 0 0 0 0 0  0
- [473,] 0 0 1 0 0 0 0 0 0  0
- [474,] 0 0 0 1 0 0 0 0 0  0
- [475,] 0 0 0 0 1 0 0 0 0  0
- [476,] 0 0 0 0 0 1 0 0 0  0
- [477,] 0 0 0 0 0 0 1 0 0  0
- [478,] 0 0 0 0 0 0 0 1 0  0
- [479,] 0 0 0 0 0 0 0 0 1  0
- [480,] 0 0 0 0 0 0 0 0 0  1
- [481,] 1 0 0 0 0 0 0 0 0  0
- [482,] 0 1 0 0 0 0 0 0 0  0
- [483,] 0 0 1 0 0 0 0 0 0  0
- [484,] 0 0 0 1 0 0 0 0 0  0
- [485,] 0 0 0 0 1 0 0 0 0  0
- [486,] 0 0 0 0 0 1 0 0 0  0
- [487,] 0 0 0 0 0 0 1 0 0  0
- [488,] 0 0 0 0 0 0 0 1 0  0
- [489,] 0 0 0 0 0 0 0 0 1  0
- [490,] 0 0 0 0 0 0 0 0 0  1
- [491,] 1 0 0 0 0 0 0 0 0  0
- [492,] 0 1 0 0 0 0 0 0 0  0
- [493,] 0 0 1 0 0 0 0 0 0  0
- [494,] 0 0 0 1 0 0 0 0 0  0
- [495,] 0 0 0 0 1 0 0 0 0  0
- [496,] 0 0 0 0 0 1 0 0 0  0
- [497,] 0 0 0 0 0 0 1 0 0  0
- [498,] 0 0 0 0 0 0 0 1 0  0
- [499,] 0 0 0 0 0 0 0 0 1  0
- [500,] 0 0 0 0 0 0 0 0 0  1
- [501,] 1 0 0 0 0 0 0 0 0  0
- [502,] 0 1 0 0 0 0 0 0 0  0
- [503,] 0 0 1 0 0 0 0 0 0  0
- [504,] 0 0 0 1 0 0 0 0 0  0
- [505,] 0 0 0 0 1 0 0 0 0  0
- [506,] 0 0 0 0 0 1 0 0 0  0
- [507,] 0 0 0 0 0 0 1 0 0  0
- [508,] 0 0 0 0 0 0 0 1 0  0
- [509,] 0 0 0 0 0 0 0 0 1  0
- [510,] 0 0 0 0 0 0 0 0 0  1
- [511,] 1 0 0 0 0 0 0 0 0  0
- [512,] 0 1 0 0 0 0 0 0 0  0
- [513,] 0 0 1 0 0 0 0 0 0  0
- [514,] 0 0 0 1 0 0 0 0 0  0
- [515,] 0 0 0 0 1 0 0 0 0  0
- [516,] 0 0 0 0 0 1 0 0 0  0
- [517,] 0 0 0 0 0 0 1 0 0  0
- [518,] 0 0 0 0 0 0 0 1 0  0
- [519,] 0 0 0 0 0 0 0 0 1  0
- [520,] 0 0 0 0 0 0 0 0 0  1
- [521,] 1 0 0 0 0 0 0 0 0  0
- [522,] 0 1 0 0 0 0 0 0 0  0
- [523,] 0 0 1 0 0 0 0 0 0  0
- [524,] 0 0 0 1 0 0 0 0 0  0
- [525,] 0 0 0 0 1 0 0 0 0  0
- [526,] 0 0 0 0 0 1 0 0 0  0
- [527,] 0 0 0 0 0 0 1 0 0  0
- [528,] 0 0 0 0 0 0 0 1 0  0
- [529,] 0 0 0 0 0 0 0 0 1  0
- [530,] 0 0 0 0 0 0 0 0 0  1
- [531,] 1 0 0 0 0 0 0 0 0  0
- [532,] 0 1 0 0 0 0 0 0 0  0
- [533,] 0 0 1 0 0 0 0 0 0  0
- [534,] 0 0 0 1 0 0 0 0 0  0
- [535,] 0 0 0 0 1 0 0 0 0  0
- [536,] 0 0 0 0 0 1 0 0 0  0
- [537,] 0 0 0 0 0 0 1 0 0  0
- [538,] 0 0 0 0 0 0 0 1 0  0
- [539,] 0 0 0 0 0 0 0 0 1  0
- [540,] 0 0 0 0 0 0 0 0 0  1
- [541,] 1 0 0 0 0 0 0 0 0  0
- [542,] 0 1 0 0 0 0 0 0 0  0
- [543,] 0 0 1 0 0 0 0 0 0  0
- [544,] 0 0 0 1 0 0 0 0 0  0
- [545,] 0 0 0 0 1 0 0 0 0  0
- [546,] 0 0 0 0 0 1 0 0 0  0
- [547,] 0 0 0 0 0 0 1 0 0  0
- [548,] 0 0 0 0 0 0 0 1 0  0
- [549,] 0 0 0 0 0 0 0 0 1  0
- [550,] 0 0 0 0 0 0 0 0 0  1
- [551,] 0 0 0 0 0 0 0 0 0  0
- [552,] 0 0 0 0 0 0 0 0 0  0
- [553,] 0 0 0 0 0 0 0 0 0  0
- [554,] 0 0 0 0 0 0 0 0 0  0
- [555,] 0 0 0 0 0 0 0 0 0  0
- [556,] 0 0 0 0 0 0 0 0 0  0
- [557,] 0 0 0 0 0 0 0 0 0  0
- [558,] 0 0 0 0 0 0 0 0 0  0
- [559,] 0 0 0 0 0 0 0 0 0  0
- [560,] 0 0 0 0 0 0 0 0 0  0
- [561,] 0 0 0 0 0 0 0 0 0  0
- [562,] 0 0 0 0 0 0 0 0 0  0
- [563,] 0 0 0 0 0 0 0 0 0  0
- [564,] 0 0 0 0 0 0 0 0 0  0
- [565,] 0 0 0 0 0 0 0 0 0  0
- [566,] 0 0 0 0 0 0 0 0 0  0
- [567,] 0 0 0 0 0 0 0 0 0  0
- [568,] 0 0 0 0 0 0 0 0 0  0
- [569,] 0 0 0 0 0 0 0 0 0  0
- [570,] 0 0 0 0 0 0 0 0 0  0
- [571,] 0 0 0 0 0 0 0 0 0  0
- [572,] 0 0 0 0 0 0 0 0 0  0
- [573,] 0 0 0 0 0 0 0 0 0  0
- [574,] 0 0 0 0 0 0 0 0 0  0
- [575,] 0 0 0 0 0 0 0 0 0  0
- [576,] 0 0 0 0 0 0 0 0 0  0
- [577,] 0 0 0 0 0 0 0 0 0  0
- [578,] 0 0 0 0 0 0 0 0 0  0
- [579,] 0 0 0 0 0 0 0 0 0  0
- [580,] 0 0 0 0 0 0 0 0 0  0
- [581,] 0 0 0 0 0 0 0 0 0  0
- [582,] 0 0 0 0 0 0 0 0 0  0
- [583,] 0 0 0 0 0 0 0 0 0  0
- [584,] 0 0 0 0 0 0 0 0 0  0
- [585,] 0 0 0 0 0 0 0 0 0  0
- [586,] 0 0 0 0 0 0 0 0 0  0
- [587,] 0 0 0 0 0 0 0 0 0  0
- [588,] 0 0 0 0 0 0 0 0 0  0
- [589,] 0 0 0 0 0 0 0 0 0  0
- [590,] 0 0 0 0 0 0 0 0 0  0
- [591,] 0 0 0 0 0 0 0 0 0  0
- [592,] 0 0 0 0 0 0 0 0 0  0
- [593,] 0 0 0 0 0 0 0 0 0  0
- [594,] 0 0 0 0 0 0 0 0 0  0
- [595,] 0 0 0 0 0 0 0 0 0  0
- [596,] 0 0 0 0 0 0 0 0 0  0
- [597,] 0 0 0 0 0 0 0 0 0  0
- [598,] 0 0 0 0 0 0 0 0 0  0
- [599,] 0 0 0 0 0 0 0 0 0  0
- [600,] 0 0 0 0 0 0 0 0 0  0
- [601,] 0 0 0 0 0 0 0 0 0  0
- [602,] 0 0 0 0 0 0 0 0 0  0
- [603,] 0 0 0 0 0 0 0 0 0  0
- [604,] 0 0 0 0 0 0 0 0 0  0
- [605,] 0 0 0 0 0 0 0 0 0  0
- [606,] 0 0 0 0 0 0 0 0 0  0
- [607,] 0 0 0 0 0 0 0 0 0  0
- [608,] 0 0 0 0 0 0 0 0 0  0
- [609,] 0 0 0 0 0 0 0 0 0  0
- [610,] 0 0 0 0 0 0 0 0 0  0
- [611,] 0 0 0 0 0 0 0 0 0  0
- [612,] 0 0 0 0 0 0 0 0 0  0
- [613,] 0 0 0 0 0 0 0 0 0  0
- [614,] 0 0 0 0 0 0 0 0 0  0
- [615,] 0 0 0 0 0 0 0 0 0  0
- [616,] 0 0 0 0 0 0 0 0 0  0
- [617,] 0 0 0 0 0 0 0 0 0  0
- [618,] 0 0 0 0 0 0 0 0 0  0
- [619,] 0 0 0 0 0 0 0 0 0  0
- [620,] 0 0 0 0 0 0 0 0 0  0
- [621,] 0 0 0 0 0 0 0 0 0  0
- [622,] 0 0 0 0 0 0 0 0 0  0
- [623,] 0 0 0 0 0 0 0 0 0  0
- [624,] 0 0 0 0 0 0 0 0 0  0
- [625,] 0 0 0 0 0 0 0 0 0  0
- [626,] 0 0 0 0 0 0 0 0 0  0
- [627,] 0 0 0 0 0 0 0 0 0  0
- [628,] 0 0 0 0 0 0 0 0 0  0
- [629,] 0 0 0 0 0 0 0 0 0  0
- [630,] 0 0 0 0 0 0 0 0 0  0
- [631,] 0 0 0 0 0 0 0 0 0  0
- [632,] 0 0 0 0 0 0 0 0 0  0
- [633,] 0 0 0 0 0 0 0 0 0  0
- [634,] 0 0 0 0 0 0 0 0 0  0
- [635,] 0 0 0 0 0 0 0 0 0  0
- [636,] 0 0 0 0 0 0 0 0 0  0
- [637,] 0 0 0 0 0 0 0 0 0  0
- [638,] 0 0 0 0 0 0 0 0 0  0
- [639,] 0 0 0 0 0 0 0 0 0  0
- [640,] 0 0 0 0 0 0 0 0 0  0
- [641,] 0 0 0 0 0 0 0 0 0  0
- [642,] 0 0 0 0 0 0 0 0 0  0
- [643,] 0 0 0 0 0 0 0 0 0  0
- [644,] 0 0 0 0 0 0 0 0 0  0
- [645,] 0 0 0 0 0 0 0 0 0  0
- [646,] 0 0 0 0 0 0 0 0 0  0
- [647,] 0 0 0 0 0 0 0 0 0  0
- [648,] 0 0 0 0 0 0 0 0 0  0
- [649,] 0 0 0 0 0 0 0 0 0  0
- [650,] 0 0 0 0 0 0 0 0 0  0
- [651,] 0 0 0 0 0 0 0 0 0  0
- [652,] 0 0 0 0 0 0 0 0 0  0
- [653,] 0 0 0 0 0 0 0 0 0  0
- [654,] 0 0 0 0 0 0 0 0 0  0
- [655,] 0 0 0 0 0 0 0 0 0  0
- [656,] 0 0 0 0 0 0 0 0 0  0
- [657,] 0 0 0 0 0 0 0 0 0  0
- [658,] 0 0 0 0 0 0 0 0 0  0
- [659,] 0 0 0 0 0 0 0 0 0  0
- [660,] 0 0 0 0 0 0 0 0 0  0
- [661,] 0 0 0 0 0 0 0 0 0  0
- [662,] 0 0 0 0 0 0 0 0 0  0
- [663,] 0 0 0 0 0 0 0 0 0  0
- [664,] 0 0 0 0 0 0 0 0 0  0
- [665,] 0 0 0 0 0 0 0 0 0  0
- [666,] 0 0 0 0 0 0 0 0 0  0
- [667,] 0 0 0 0 0 0 0 0 0  0
- [668,] 0 0 0 0 0 0 0 0 0  0
- [669,] 0 0 0 0 0 0 0 0 0  0
- [670,] 0 0 0 0 0 0 0 0 0  0
- [671,] 0 0 0 0 0 0 0 0 0  0
- [672,] 0 0 0 0 0 0 0 0 0  0
- [673,] 0 0 0 0 0 0 0 0 0  0
- [674,] 0 0 0 0 0 0 0 0 0  0
- [675,] 0 0 0 0 0 0 0 0 0  0
- [676,] 0 0 0 0 0 0 0 0 0  0
- [677,] 0 0 0 0 0 0 0 0 0  0
- [678,] 0 0 0 0 0 0 0 0 0  0
- [679,] 0 0 0 0 0 0 0 0 0  0
- [680,] 0 0 0 0 0 0 0 0 0  0
- [681,] 0 0 0 0 0 0 0 0 0  0
- [682,] 0 0 0 0 0 0 0 0 0  0
- [683,] 0 0 0 0 0 0 0 0 0  0
- [684,] 0 0 0 0 0 0 0 0 0  0
- [685,] 0 0 0 0 0 0 0 0 0  0
- [686,] 0 0 0 0 0 0 0 0 0  0
- [687,] 0 0 0 0 0 0 0 0 0  0
- [688,] 0 0 0 0 0 0 0 0 0  0
- [689,] 0 0 0 0 0 0 0 0 0  0
- [690,] 0 0 0 0 0 0 0 0 0  0
- [691,] 0 0 0 0 0 0 0 0 0  0
- [692,] 0 0 0 0 0 0 0 0 0  0
- [693,] 0 0 0 0 0 0 0 0 0  0
- [694,] 0 0 0 0 0 0 0 0 0  0
- [695,] 0 0 0 0 0 0 0 0 0  0
- [696,] 0 0 0 0 0 0 0 0 0  0
- [697,] 0 0 0 0 0 0 0 0 0  0
- [698,] 0 0 0 0 0 0 0 0 0  0
- [699,] 0 0 0 0 0 0 0 0 0  0
- [700,] 0 0 0 0 0 0 0 0 0  0
- [701,] 0 0 0 0 0 0 0 0 0  0
- [702,] 0 0 0 0 0 0 0 0 0  0
- [703,] 0 0 0 0 0 0 0 0 0  0
- [704,] 0 0 0 0 0 0 0 0 0  0
- [705,] 0 0 0 0 0 0 0 0 0  0
- [706,] 0 0 0 0 0 0 0 0 0  0
- [707,] 0 0 0 0 0 0 0 0 0  0
- [708,] 0 0 0 0 0 0 0 0 0  0
- [709,] 0 0 0 0 0 0 0 0 0  0
- [710,] 0 0 0 0 0 0 0 0 0  0
- [711,] 0 0 0 0 0 0 0 0 0  0
- [712,] 0 0 0 0 0 0 0 0 0  0
- [713,] 0 0 0 0 0 0 0 0 0  0
- [714,] 0 0 0 0 0 0 0 0 0  0
- [715,] 0 0 0 0 0 0 0 0 0  0
- [716,] 0 0 0 0 0 0 0 0 0  0
- [717,] 0 0 0 0 0 0 0 0 0  0
- [718,] 0 0 0 0 0 0 0 0 0  0
- [719,] 0 0 0 0 0 0 0 0 0  0
- [720,] 0 0 0 0 0 0 0 0 0  0
- [721,] 0 0 0 0 0 0 0 0 0  0
- [722,] 0 0 0 0 0 0 0 0 0  0
- [723,] 0 0 0 0 0 0 0 0 0  0
- [724,] 0 0 0 0 0 0 0 0 0  0
- [725,] 0 0 0 0 0 0 0 0 0  0
- [726,] 0 0 0 0 0 0 0 0 0  0
- [727,] 0 0 0 0 0 0 0 0 0  0
- [728,] 0 0 0 0 0 0 0 0 0  0
- [729,] 0 0 0 0 0 0 0 0 0  0
- [730,] 0 0 0 0 0 0 0 0 0  0
- [731,] 0 0 0 0 0 0 0 0 0  0
- [732,] 0 0 0 0 0 0 0 0 0  0
- [733,] 0 0 0 0 0 0 0 0 0  0
- [734,] 0 0 0 0 0 0 0 0 0  0
- [735,] 0 0 0 0 0 0 0 0 0  0
- [736,] 0 0 0 0 0 0 0 0 0  0
- [737,] 0 0 0 0 0 0 0 0 0  0
- [738,] 0 0 0 0 0 0 0 0 0  0
- [739,] 0 0 0 0 0 0 0 0 0  0
- [740,] 0 0 0 0 0 0 0 0 0  0
- [741,] 0 0 0 0 0 0 0 0 0  0
- [742,] 0 0 0 0 0 0 0 0 0  0
- [743,] 0 0 0 0 0 0 0 0 0  0
- [744,] 0 0 0 0 0 0 0 0 0  0
- [745,] 0 0 0 0 0 0 0 0 0  0
- [746,] 0 0 0 0 0 0 0 0 0  0
- [747,] 0 0 0 0 0 0 0 0 0  0
- [748,] 0 0 0 0 0 0 0 0 0  0
- [749,] 0 0 0 0 0 0 0 0 0  0
- [750,] 0 0 0 0 0 0 0 0 0  0
- [751,] 0 0 0 0 0 0 0 0 0  0
- [752,] 0 0 0 0 0 0 0 0 0  0
- [753,] 0 0 0 0 0 0 0 0 0  0
- [754,] 0 0 0 0 0 0 0 0 0  0
- [755,] 0 0 0 0 0 0 0 0 0  0
- [756,] 0 0 0 0 0 0 0 0 0  0
- [757,] 0 0 0 0 0 0 0 0 0  0
- [758,] 0 0 0 0 0 0 0 0 0  0
- [759,] 0 0 0 0 0 0 0 0 0  0
- [760,] 0 0 0 0 0 0 0 0 0  0
- [761,] 0 0 0 0 0 0 0 0 0  0
- [762,] 0 0 0 0 0 0 0 0 0  0
- [763,] 0 0 0 0 0 0 0 0 0  0
- [764,] 0 0 0 0 0 0 0 0 0  0
- [765,] 0 0 0 0 0 0 0 0 0  0
- [766,] 0 0 0 0 0 0 0 0 0  0
- [767,] 0 0 0 0 0 0 0 0 0  0
- [768,] 0 0 0 0 0 0 0 0 0  0
- [769,] 0 0 0 0 0 0 0 0 0  0
- [770,] 0 0 0 0 0 0 0 0 0  0
- [771,] 0 0 0 0 0 0 0 0 0  0
- [772,] 0 0 0 0 0 0 0 0 0  0
- [773,] 0 0 0 0 0 0 0 0 0  0
- [774,] 0 0 0 0 0 0 0 0 0  0
- [775,] 0 0 0 0 0 0 0 0 0  0
- [776,] 0 0 0 0 0 0 0 0 0  0
- [777,] 0 0 0 0 0 0 0 0 0  0
- [778,] 0 0 0 0 0 0 0 0 0  0
- [779,] 0 0 0 0 0 0 0 0 0  0
- [780,] 0 0 0 0 0 0 0 0 0  0
- [781,] 0 0 0 0 0 0 0 0 0  0
- [782,] 0 0 0 0 0 0 0 0 0  0
- [783,] 0 0 0 0 0 0 0 0 0  0
- [784,] 0 0 0 0 0 0 0 0 0  0
- [785,] 0 0 0 0 0 0 0 0 0  0
- [786,] 0 0 0 0 0 0 0 0 0  0
- [787,] 0 0 0 0 0 0 0 0 0  0
- [788,] 0 0 0 0 0 0 0 0 0  0
- [789,] 0 0 0 0 0 0 0 0 0  0
- [790,] 0 0 0 0 0 0 0 0 0  0
- [791,] 0 0 0 0 0 0 0 0 0  0
- [792,] 0 0 0 0 0 0 0 0 0  0
- [793,] 0 0 0 0 0 0 0 0 0  0
- [794,] 0 0 0 0 0 0 0 0 0  0
- [795,] 0 0 0 0 0 0 0 0 0  0
- [796,] 0 0 0 0 0 0 0 0 0  0
- [797,] 0 0 0 0 0 0 0 0 0  0
- [798,] 0 0 0 0 0 0 0 0 0  0
- [799,] 0 0 0 0 0 0 0 0 0  0
- [800,] 0 0 0 0 0 0 0 0 0  0
- [801,] 0 0 0 0 0 0 0 0 0  0
- [802,] 0 0 0 0 0 0 0 0 0  0
- [803,] 0 0 0 0 0 0 0 0 0  0
- [804,] 0 0 0 0 0 0 0 0 0  0
- [805,] 0 0 0 0 0 0 0 0 0  0
- [806,] 0 0 0 0 0 0 0 0 0  0
- [807,] 0 0 0 0 0 0 0 0 0  0
- [808,] 0 0 0 0 0 0 0 0 0  0
- [809,] 0 0 0 0 0 0 0 0 0  0
- [810,] 0 0 0 0 0 0 0 0 0  0
- [811,] 0 0 0 0 0 0 0 0 0  0
- [812,] 0 0 0 0 0 0 0 0 0  0
- [813,] 0 0 0 0 0 0 0 0 0  0
- [814,] 0 0 0 0 0 0 0 0 0  0
- [815,] 0 0 0 0 0 0 0 0 0  0
- [816,] 0 0 0 0 0 0 0 0 0  0
- [817,] 0 0 0 0 0 0 0 0 0  0
- [818,] 0 0 0 0 0 0 0 0 0  0
- [819,] 0 0 0 0 0 0 0 0 0  0
- [820,] 0 0 0 0 0 0 0 0 0  0
- [821,] 0 0 0 0 0 0 0 0 0  0
- [822,] 0 0 0 0 0 0 0 0 0  0
- [823,] 0 0 0 0 0 0 0 0 0  0
- [824,] 0 0 0 0 0 0 0 0 0  0
- [825,] 0 0 0 0 0 0 0 0 0  0
- [826,] 0 0 0 0 0 0 0 0 0  0
- [827,] 0 0 0 0 0 0 0 0 0  0
- [828,] 0 0 0 0 0 0 0 0 0  0
- [829,] 0 0 0 0 0 0 0 0 0  0
- [830,] 0 0 0 0 0 0 0 0 0  0
- [831,] 0 0 0 0 0 0 0 0 0  0
- [832,] 0 0 0 0 0 0 0 0 0  0
- [833,] 0 0 0 0 0 0 0 0 0  0
- [834,] 0 0 0 0 0 0 0 0 0  0
- [835,] 0 0 0 0 0 0 0 0 0  0
- [836,] 0 0 0 0 0 0 0 0 0  0
- [837,] 0 0 0 0 0 0 0 0 0  0
- [838,] 0 0 0 0 0 0 0 0 0  0
- [839,] 0 0 0 0 0 0 0 0 0  0
- [840,] 0 0 0 0 0 0 0 0 0  0
- [841,] 0 0 0 0 0 0 0 0 0  0
- [842,] 0 0 0 0 0 0 0 0 0  0
- [843,] 0 0 0 0 0 0 0 0 0  0
- [844,] 0 0 0 0 0 0 0 0 0  0
- [845,] 0 0 0 0 0 0 0 0 0  0
- [846,] 0 0 0 0 0 0 0 0 0  0
- [847,] 0 0 0 0 0 0 0 0 0  0
- [848,] 0 0 0 0 0 0 0 0 0  0
- [849,] 0 0 0 0 0 0 0 0 0  0
- [850,] 0 0 0 0 0 0 0 0 0  0
- [851,] 0 0 0 0 0 0 0 0 0  0
- [852,] 0 0 0 0 0 0 0 0 0  0
- [853,] 0 0 0 0 0 0 0 0 0  0
- [854,] 0 0 0 0 0 0 0 0 0  0
- [855,] 0 0 0 0 0 0 0 0 0  0
- [856,] 0 0 0 0 0 0 0 0 0  0
- [857,] 0 0 0 0 0 0 0 0 0  0
- [858,] 0 0 0 0 0 0 0 0 0  0
- [859,] 0 0 0 0 0 0 0 0 0  0
- [860,] 0 0 0 0 0 0 0 0 0  0
- [861,] 0 0 0 0 0 0 0 0 0  0
- [862,] 0 0 0 0 0 0 0 0 0  0
- [863,] 0 0 0 0 0 0 0 0 0  0
- [864,] 0 0 0 0 0 0 0 0 0  0
- [865,] 0 0 0 0 0 0 0 0 0  0
- [866,] 0 0 0 0 0 0 0 0 0  0
- [867,] 0 0 0 0 0 0 0 0 0  0
- [868,] 0 0 0 0 0 0 0 0 0  0
- [869,] 0 0 0 0 0 0 0 0 0  0
- [870,] 0 0 0 0 0 0 0 0 0  0
- [871,] 0 0 0 0 0 0 0 0 0  0
- [872,] 0 0 0 0 0 0 0 0 0  0
- [873,] 0 0 0 0 0 0 0 0 0  0
- [874,] 0 0 0 0 0 0 0 0 0  0
- [875,] 0 0 0 0 0 0 0 0 0  0
- [876,] 0 0 0 0 0 0 0 0 0  0
- [877,] 0 0 0 0 0 0 0 0 0  0
- [878,] 0 0 0 0 0 0 0 0 0  0
- [879,] 0 0 0 0 0 0 0 0 0  0
- [880,] 0 0 0 0 0 0 0 0 0  0
- [881,] 0 0 0 0 0 0 0 0 0  0
- [882,] 0 0 0 0 0 0 0 0 0  0
- [883,] 0 0 0 0 0 0 0 0 0  0
- [884,] 0 0 0 0 0 0 0 0 0  0
- [885,] 0 0 0 0 0 0 0 0 0  0
- [886,] 0 0 0 0 0 0 0 0 0  0
- [887,] 0 0 0 0 0 0 0 0 0  0
- [888,] 0 0 0 0 0 0 0 0 0  0
- [889,] 0 0 0 0 0 0 0 0 0  0
- [890,] 0 0 0 0 0 0 0 0 0  0
- [891,] 0 0 0 0 0 0 0 0 0  0
- [892,] 0 0 0 0 0 0 0 0 0  0
- [893,] 0 0 0 0 0 0 0 0 0  0
- [894,] 0 0 0 0 0 0 0 0 0  0
- [895,] 0 0 0 0 0 0 0 0 0  0
- [896,] 0 0 0 0 0 0 0 0 0  0
- [897,] 0 0 0 0 0 0 0 0 0  0
- [898,] 0 0 0 0 0 0 0 0 0  0
- [899,] 0 0 0 0 0 0 0 0 0  0
- [900,] 0 0 0 0 0 0 0 0 0  0
- [901,] 0 0 0 0 0 0 0 0 0  0
- [902,] 0 0 0 0 0 0 0 0 0  0
- [903,] 0 0 0 0 0 0 0 0 0  0
- [904,] 0 0 0 0 0 0 0 0 0  0
- [905,] 0 0 0 0 0 0 0 0 0  0
- [906,] 0 0 0 0 0 0 0 0 0  0
- [907,] 0 0 0 0 0 0 0 0 0  0
- [908,] 0 0 0 0 0 0 0 0 0  0
- [909,] 0 0 0 0 0 0 0 0 0  0
- [910,] 0 0 0 0 0 0 0 0 0  0
- [911,] 0 0 0 0 0 0 0 0 0  0
- [912,] 0 0 0 0 0 0 0 0 0  0
- [913,] 0 0 0 0 0 0 0 0 0  0
- [914,] 0 0 0 0 0 0 0 0 0  0
- [915,] 0 0 0 0 0 0 0 0 0  0
- [916,] 0 0 0 0 0 0 0 0 0  0
- [917,] 0 0 0 0 0 0 0 0 0  0
- [918,] 0 0 0 0 0 0 0 0 0  0
- [919,] 0 0 0 0 0 0 0 0 0  0
- [920,] 0 0 0 0 0 0 0 0 0  0
- [921,] 0 0 0 0 0 0 0 0 0  0
- [922,] 0 0 0 0 0 0 0 0 0  0
- [923,] 0 0 0 0 0 0 0 0 0  0
- [924,] 0 0 0 0 0 0 0 0 0  0
- [925,] 0 0 0 0 0 0 0 0 0  0
- [926,] 0 0 0 0 0 0 0 0 0  0
- [927,] 0 0 0 0 0 0 0 0 0  0
- [928,] 0 0 0 0 0 0 0 0 0  0
- [929,] 0 0 0 0 0 0 0 0 0  0
- [930,] 0 0 0 0 0 0 0 0 0  0
- [931,] 0 0 0 0 0 0 0 0 0  0
- [932,] 0 0 0 0 0 0 0 0 0  0
- [933,] 0 0 0 0 0 0 0 0 0  0
- [934,] 0 0 0 0 0 0 0 0 0  0
- [935,] 0 0 0 0 0 0 0 0 0  0
- [936,] 0 0 0 0 0 0 0 0 0  0
- [937,] 0 0 0 0 0 0 0 0 0  0
- [938,] 0 0 0 0 0 0 0 0 0  0
- [939,] 0 0 0 0 0 0 0 0 0  0
- [940,] 0 0 0 0 0 0 0 0 0  0
- [941,] 0 0 0 0 0 0 0 0 0  0
- [942,] 0 0 0 0 0 0 0 0 0  0
- [943,] 0 0 0 0 0 0 0 0 0  0
- [944,] 0 0 0 0 0 0 0 0 0  0
- [945,] 0 0 0 0 0 0 0 0 0  0
- [946,] 0 0 0 0 0 0 0 0 0  0
- [947,] 0 0 0 0 0 0 0 0 0  0
- [948,] 0 0 0 0 0 0 0 0 0  0
- [949,] 0 0 0 0 0 0 0 0 0  0
- [950,] 0 0 0 0 0 0 0 0 0  0
- [951,] 0 0 0 0 0 0 0 0 0  0
- [952,] 0 0 0 0 0 0 0 0 0  0
- [953,] 0 0 0 0 0 0 0 0 0  0
- [954,] 0 0 0 0 0 0 0 0 0  0
- [955,] 0 0 0 0 0 0 0 0 0  0
- [956,] 0 0 0 0 0 0 0 0 0  0
- [957,] 0 0 0 0 0 0 0 0 0  0
- [958,] 0 0 0 0 0 0 0 0 0  0
- [959,] 0 0 0 0 0 0 0 0 0  0
- [960,] 0 0 0 0 0 0 0 0 0  0
- [961,] 0 0 0 0 0 0 0 0 0  0
- [962,] 0 0 0 0 0 0 0 0 0  0
- [963,] 0 0 0 0 0 0 0 0 0  0
- [964,] 0 0 0 0 0 0 0 0 0  0
- [965,] 0 0 0 0 0 0 0 0 0  0
- [966,] 0 0 0 0 0 0 0 0 0  0
- [967,] 0 0 0 0 0 0 0 0 0  0
- [968,] 0 0 0 0 0 0 0 0 0  0
- [969,] 0 0 0 0 0 0 0 0 0  0
- [970,] 0 0 0 0 0 0 0 0 0  0
- [971,] 0 0 0 0 0 0 0 0 0  0
- [972,] 0 0 0 0 0 0 0 0 0  0
- [973,] 0 0 0 0 0 0 0 0 0  0
- [974,] 0 0 0 0 0 0 0 0 0  0
- [975,] 0 0 0 0 0 0 0 0 0  0
- [976,] 0 0 0 0 0 0 0 0 0  0
- [977,] 0 0 0 0 0 0 0 0 0  0
- [978,] 0 0 0 0 0 0 0 0 0  0
- [979,] 0 0 0 0 0 0 0 0 0  0
- [980,] 0 0 0 0 0 0 0 0 0  0
- [981,] 0 0 0 0 0 0 0 0 0  0
- [982,] 0 0 0 0 0 0 0 0 0  0
- [983,] 0 0 0 0 0 0 0 0 0  0
- [984,] 0 0 0 0 0 0 0 0 0  0
- [985,] 0 0 0 0 0 0 0 0 0  0
- [986,] 0 0 0 0 0 0 0 0 0  0
- [987,] 0 0 0 0 0 0 0 0 0  0
- [988,] 0 0 0 0 0 0 0 0 0  0
- [989,] 0 0 0 0 0 0 0 0 0  0
- [990,] 0 0 0 0 0 0 0 0 0  0
- [991,] 0 0 0 0 0 0 0 0 0  0
- [992,] 0 0 0 0 0 0 0 0 0  0
- [993,] 0 0 0 0 0 0 0 0 0  0
- [994,] 0 0 0 0 0 0 0 0 0  0
- [995,] 0 0 0 0 0 0 0 0 0  0
- [996,] 0 0 0 0 0 0 0 0 0  0
- [997,] 0 0 0 0 0 0 0 0 0  0
- [998,] 0 0 0 0 0 0 0 0 0  0
- [999,] 0 0 0 0 0 0 0 0 0  0
-[1000,] 0 0 0 0 0 0 0 0 0  0
-[1001,] 0 0 0 0 0 0 0 0 0  0
-[1002,] 0 0 0 0 0 0 0 0 0  0
-[1003,] 0 0 0 0 0 0 0 0 0  0
-[1004,] 0 0 0 0 0 0 0 0 0  0
-[1005,] 0 0 0 0 0 0 0 0 0  0
-[1006,] 0 0 0 0 0 0 0 0 0  0
-[1007,] 0 0 0 0 0 0 0 0 0  0
-[1008,] 0 0 0 0 0 0 0 0 0  0
-[1009,] 0 0 0 0 0 0 0 0 0  0
-[1010,] 0 0 0 0 0 0 0 0 0  0
-[1011,] 0 0 0 0 0 0 0 0 0  0
-[1012,] 0 0 0 0 0 0 0 0 0  0
-[1013,] 0 0 0 0 0 0 0 0 0  0
-[1014,] 0 0 0 0 0 0 0 0 0  0
-[1015,] 0 0 0 0 0 0 0 0 0  0
-[1016,] 0 0 0 0 0 0 0 0 0  0
-[1017,] 0 0 0 0 0 0 0 0 0  0
-[1018,] 0 0 0 0 0 0 0 0 0  0
-[1019,] 0 0 0 0 0 0 0 0 0  0
-[1020,] 0 0 0 0 0 0 0 0 0  0
-[1021,] 0 0 0 0 0 0 0 0 0  0
-[1022,] 0 0 0 0 0 0 0 0 0  0
-[1023,] 0 0 0 0 0 0 0 0 0  0
-[1024,] 0 0 0 0 0 0 0 0 0  0
-[1025,] 0 0 0 0 0 0 0 0 0  0
-[1026,] 0 0 0 0 0 0 0 0 0  0
-[1027,] 0 0 0 0 0 0 0 0 0  0
-[1028,] 0 0 0 0 0 0 0 0 0  0
-[1029,] 0 0 0 0 0 0 0 0 0  0
-[1030,] 0 0 0 0 0 0 0 0 0  0
-[1031,] 0 0 0 0 0 0 0 0 0  0
-[1032,] 0 0 0 0 0 0 0 0 0  0
-[1033,] 0 0 0 0 0 0 0 0 0  0
-[1034,] 0 0 0 0 0 0 0 0 0  0
-[1035,] 0 0 0 0 0 0 0 0 0  0
-[1036,] 0 0 0 0 0 0 0 0 0  0
-[1037,] 0 0 0 0 0 0 0 0 0  0
-[1038,] 0 0 0 0 0 0 0 0 0  0
-[1039,] 0 0 0 0 0 0 0 0 0  0
-[1040,] 0 0 0 0 0 0 0 0 0  0
-[1041,] 0 0 0 0 0 0 0 0 0  0
-[1042,] 0 0 0 0 0 0 0 0 0  0
-[1043,] 0 0 0 0 0 0 0 0 0  0
-[1044,] 0 0 0 0 0 0 0 0 0  0
-[1045,] 0 0 0 0 0 0 0 0 0  0
-[1046,] 0 0 0 0 0 0 0 0 0  0
-[1047,] 0 0 0 0 0 0 0 0 0  0
-[1048,] 0 0 0 0 0 0 0 0 0  0
-[1049,] 0 0 0 0 0 0 0 0 0  0
-[1050,] 0 0 0 0 0 0 0 0 0  0
-[1051,] 0 0 0 0 0 0 0 0 0  0
-[1052,] 0 0 0 0 0 0 0 0 0  0
-[1053,] 0 0 0 0 0 0 0 0 0  0
-[1054,] 0 0 0 0 0 0 0 0 0  0
-[1055,] 0 0 0 0 0 0 0 0 0  0
-[1056,] 0 0 0 0 0 0 0 0 0  0
-[1057,] 0 0 0 0 0 0 0 0 0  0
-[1058,] 0 0 0 0 0 0 0 0 0  0
-[1059,] 0 0 0 0 0 0 0 0 0  0
-[1060,] 0 0 0 0 0 0 0 0 0  0
-[1061,] 0 0 0 0 0 0 0 0 0  0
-[1062,] 0 0 0 0 0 0 0 0 0  0
-[1063,] 0 0 0 0 0 0 0 0 0  0
-[1064,] 0 0 0 0 0 0 0 0 0  0
-[1065,] 0 0 0 0 0 0 0 0 0  0
-[1066,] 0 0 0 0 0 0 0 0 0  0
-[1067,] 0 0 0 0 0 0 0 0 0  0
-[1068,] 0 0 0 0 0 0 0 0 0  0
-[1069,] 0 0 0 0 0 0 0 0 0  0
-[1070,] 0 0 0 0 0 0 0 0 0  0
-[1071,] 0 0 0 0 0 0 0 0 0  0
-[1072,] 0 0 0 0 0 0 0 0 0  0
-[1073,] 0 0 0 0 0 0 0 0 0  0
-[1074,] 0 0 0 0 0 0 0 0 0  0
-[1075,] 0 0 0 0 0 0 0 0 0  0
-[1076,] 0 0 0 0 0 0 0 0 0  0
-[1077,] 0 0 0 0 0 0 0 0 0  0
-[1078,] 0 0 0 0 0 0 0 0 0  0
-[1079,] 0 0 0 0 0 0 0 0 0  0
-[1080,] 0 0 0 0 0 0 0 0 0  0</code></pre>
+<pre><code>50 x 15 sparse Matrix of class &quot;dgCMatrix&quot;</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  [[ suppressing 15 column names &#39;y&#39;, &#39;x1&#39;, &#39;id&#39; ... ]]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                             
+ [1,]   2.88  0.54 1  1 . 1 1 . . . . . . . .
+ [2,]   1.86 -3.04 1  2 . 1 . 1 . . . . . . .
+ [3,]   0.09  5.58 1  3 . 1 . . 1 . . . . . .
+ [4,]   3.78 -2.83 1  4 . 1 . . . 1 . . . . .
+ [5,]  -2.56 -5.04 1  5 . 1 . . . . . . . . .
+ [6,]   1.73 -0.64 1  6 1 1 . . . . 1 . . . .
+ [7,]   6.28 -2.13 1  7 1 1 . . . . . 1 . . .
+ [8,]   4.77  3.49 1  8 1 1 . . . . . . 1 . .
+ [9,]   5.35  0.84 1  9 1 1 . . . . . . . 1 .
+[10,]   4.95  0.63 1 10 1 1 . . . . . . . . 1
+[11,]  -4.26 -5.26 2  1 . 1 1 . . . . . . . .
+[12,]   0.61 -3.70 2  2 . 1 . 1 . . . . . . .
+[13,]   5.62 -0.22 2  3 . 1 . . 1 . . . . . .
+[14,]  -6.17 -2.03 2  4 . 1 . . . 1 . . . . .
+[15,]   0.71  0.01 2  5 . 1 . . . . . . . . .
+[16,]  -0.34 -3.49 2  6 1 1 . . . . 1 . . . .
+[17,]   6.84 -0.80 2  7 1 1 . . . . . 1 . . .
+[18,]   8.56 -1.21 2  8 1 1 . . . . . . 1 . .
+[19,]  11.52 -5.75 2  9 1 1 . . . . . . . 1 .
+[20,]  13.13  1.75 2 10 1 1 . . . . . . . . 1
+[21,]  -2.62 -0.66 3  1 . 1 1 . . . . . . . .
+[22,] -11.36 -1.34 3  2 . 1 . 1 . . . . . . .
+[23,]   3.13  5.02 3  3 . 1 . . 1 . . . . . .
+[24,]  -6.73 -4.44 3  4 . 1 . . . 1 . . . . .
+[25,]   1.03  1.54 3  5 . 1 . . . . . . . . .
+[26,]  -2.99  2.49 3  6 1 1 . . . . 1 . . . .
+[27,]  -1.66 -7.42 3  7 1 1 . . . . . 1 . . .
+[28,]   6.26 -0.97 3  8 1 1 . . . . . . 1 . .
+[29,]   1.23 -3.57 3  9 1 1 . . . . . . . 1 .
+[30,]   9.25 -0.73 3 10 1 1 . . . . . . . . 1
+[31,]   3.98 -1.86 4  1 . 1 1 . . . . . . . .
+[32,]   0.01 -0.30 4  2 . 1 . 1 . . . . . . .
+[33,]  -3.38 -2.83 4  3 . 1 . . 1 . . . . . .
+[34,]   7.13 -0.34 4  4 . 1 . . . 1 . . . . .
+[35,]  -4.51  2.63 4  5 . 1 . . . . . . . . .
+[36,]   7.62  3.68 4  6 1 1 . . . . 1 . . . .
+[37,]   8.89  2.00 4  7 1 1 . . . . . 1 . . .
+[38,]   3.99 -2.22 4  8 1 1 . . . . . . 1 . .
+[39,]   7.72 -2.86 4  9 1 1 . . . . . . . 1 .
+[40,]  11.59  3.46 4 10 1 1 . . . . . . . . 1
+[41,]  -5.74 -2.15 5  1 . 1 1 . . . . . . . .
+[42,]   9.31  5.38 5  2 . 1 . 1 . . . . . . .
+[43,]   2.49 -1.59 5  3 . 1 . . 1 . . . . . .
+[44,]   0.44  0.17 5  4 . 1 . . . 1 . . . . .
+[45,]   2.66 -0.23 5  5 . 1 . . . . . . . . .
+[46,]   2.15 -2.31 5  6 1 1 . . . . 1 . . . .
+[47,]  -1.80  0.16 5  7 1 1 . . . . . 1 . . .
+[48,]   9.23  0.75 5  8 1 1 . . . . . . 1 . .
+[49,]   3.21 -3.65 5  9 1 1 . . . . . . . 1 .
+[50,]   7.97  3.56 5 10 1 1 . . . . . . . . 1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### printSpMatrix2(Matrix(as.matrix(dt), sparse = T))</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dt[, Gr <span class="sc">:</span><span class="er">=</span> <span class="dv">1</span>L]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>dt[id <span class="sc">&gt;</span> <span class="dv">50</span>, Gr <span class="sc">:</span><span class="er">=</span> <span class="dv">2</span>L]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">Matrix</span>(<span class="fu">as.matrix</span>(dt[, <span class="fu">i</span>(period, treat, <span class="dv">5</span>)][<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]), <span class="at">sparse =</span> T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>50 x 9 sparse Matrix of class &quot;dgCMatrix&quot;
+      1 2 3 4 6 7 8 9 10
+ [1,] 1 . . . . . . .  .
+ [2,] . 1 . . . . . .  .
+ [3,] . . 1 . . . . .  .
+ [4,] . . . 1 . . . .  .
+ [5,] . . . . . . . .  .
+ [6,] . . . . 1 . . .  .
+ [7,] . . . . . 1 . .  .
+ [8,] . . . . . . 1 .  .
+ [9,] . . . . . . . 1  .
+[10,] . . . . . . . .  1
+[11,] 1 . . . . . . .  .
+[12,] . 1 . . . . . .  .
+[13,] . . 1 . . . . .  .
+[14,] . . . 1 . . . .  .
+[15,] . . . . . . . .  .
+[16,] . . . . 1 . . .  .
+[17,] . . . . . 1 . .  .
+[18,] . . . . . . 1 .  .
+[19,] . . . . . . . 1  .
+[20,] . . . . . . . .  1
+[21,] 1 . . . . . . .  .
+[22,] . 1 . . . . . .  .
+[23,] . . 1 . . . . .  .
+[24,] . . . 1 . . . .  .
+[25,] . . . . . . . .  .
+[26,] . . . . 1 . . .  .
+[27,] . . . . . 1 . .  .
+[28,] . . . . . . 1 .  .
+[29,] . . . . . . . 1  .
+[30,] . . . . . . . .  1
+[31,] 1 . . . . . . .  .
+[32,] . 1 . . . . . .  .
+[33,] . . 1 . . . . .  .
+[34,] . . . 1 . . . .  .
+[35,] . . . . . . . .  .
+[36,] . . . . 1 . . .  .
+[37,] . . . . . 1 . .  .
+[38,] . . . . . . 1 .  .
+[39,] . . . . . . . 1  .
+[40,] . . . . . . . .  1
+[41,] 1 . . . . . . .  .
+[42,] . 1 . . . . . .  .
+[43,] . . 1 . . . . .  .
+[44,] . . . 1 . . . .  .
+[45,] . . . . . . . .  .
+[46,] . . . . 1 . . .  .
+[47,] . . . . . 1 . .  .
+[48,] . . . . . . 1 .  .
+[49,] . . . . . . . 1  .
+[50,] . . . . . . . .  1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">lm</span>(y <span class="sc">~</span> <span class="fu">i</span>(treat)<span class="sc">*</span><span class="fu">i</span>(period, <span class="dv">2</span>)<span class="sc">*</span>Gr, <span class="at">data =</span> dt))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -3747,52 +2898,52 @@ lm(formula = y ~ i(treat) * i(period, 2) * Gr, data = dt)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--16.5338  -3.2785  -0.0406   3.3046  15.9941 
+-16.5360  -3.2785  -0.0406   3.3040  15.9908 
 
 Coefficients: (30 not defined because of singularities)
                             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)                 -0.08939    2.71003  -0.033 0.973692    
-i(treat)0                    0.59229    2.39600   0.247 0.804801    
+(Intercept)                  -0.0908     2.7102  -0.034 0.973279    
+i(treat)0                     0.5915     2.3961   0.247 0.805063    
 i(treat)1                         NA         NA      NA       NA    
-i(period, 2)1               -0.99946    3.83257  -0.261 0.794312    
-i(period, 2)3                2.06419    3.83257   0.539 0.590282    
-i(period, 2)4               -1.10851    3.83257  -0.289 0.772459    
-i(period, 2)5                1.35573    3.83257   0.354 0.723604    
-i(period, 2)6                1.91173    3.83257   0.499 0.618017    
-i(period, 2)7                4.56492    3.83257   1.191 0.233888    
-i(period, 2)8                3.67129    3.83257   0.958 0.338325    
-i(period, 2)9                8.08134    3.83257   2.109 0.035216 *  
-i(period, 2)10              14.04738    3.83257   3.665 0.000259 ***
-Gr                           0.12954    2.40219   0.054 0.957004    
-i(treat)0:i(period, 2)1      0.24349    3.38846   0.072 0.942728    
+i(period, 2)1                -0.9948     3.8327  -0.260 0.795260    
+i(period, 2)3                 2.0660     3.8327   0.539 0.589974    
+i(period, 2)4                -1.1060     3.8327  -0.289 0.772970    
+i(period, 2)5                 1.3564     3.8327   0.354 0.723487    
+i(period, 2)6                 1.9140     3.8327   0.499 0.617616    
+i(period, 2)7                 4.5656     3.8327   1.191 0.233841    
+i(period, 2)8                 3.6704     3.8327   0.958 0.338463    
+i(period, 2)9                 8.0840     3.8327   2.109 0.035164 *  
+i(period, 2)10               14.0484     3.8327   3.665 0.000259 ***
+Gr                            0.1304     2.4023   0.054 0.956721    
+i(treat)0:i(period, 2)1       0.2473     3.3886   0.073 0.941831    
 i(treat)1:i(period, 2)1           NA         NA      NA       NA    
-i(treat)0:i(period, 2)3     -1.25111    3.38846  -0.369 0.712032    
+i(treat)0:i(period, 2)3      -1.2505     3.3886  -0.369 0.712173    
 i(treat)1:i(period, 2)3           NA         NA      NA       NA    
-i(treat)0:i(period, 2)4     -2.37702    3.38846  -0.702 0.483142    
+i(treat)0:i(period, 2)4      -2.3755     3.3886  -0.701 0.483441    
 i(treat)1:i(period, 2)4           NA         NA      NA       NA    
-i(treat)0:i(period, 2)5     -1.50579    3.38846  -0.444 0.656854    
+i(treat)0:i(period, 2)5      -1.5039     3.3886  -0.444 0.657266    
 i(treat)1:i(period, 2)5           NA         NA      NA       NA    
-i(treat)0:i(period, 2)6     -4.14582    3.38846  -1.224 0.221411    
+i(treat)0:i(period, 2)6      -4.1447     3.3886  -1.223 0.221555    
 i(treat)1:i(period, 2)6           NA         NA      NA       NA    
-i(treat)0:i(period, 2)7     -6.89364    3.38846  -2.034 0.042157 *  
+i(treat)0:i(period, 2)7      -6.8928     3.3886  -2.034 0.042193 *  
 i(treat)1:i(period, 2)7           NA         NA      NA       NA    
-i(treat)0:i(period, 2)8     -7.50191    3.38846  -2.214 0.027046 *  
+i(treat)0:i(period, 2)8      -7.5023     3.3886  -2.214 0.027044 *  
 i(treat)1:i(period, 2)8           NA         NA      NA       NA    
-i(treat)0:i(period, 2)9     -5.62065    3.38846  -1.659 0.097462 .  
+i(treat)0:i(period, 2)9      -5.6188     3.3886  -1.658 0.097586 .  
 i(treat)1:i(period, 2)9           NA         NA      NA       NA    
-i(treat)0:i(period, 2)10    -3.67002    3.38846  -1.083 0.279014    
+i(treat)0:i(period, 2)10     -3.6683     3.3886  -1.083 0.279267    
 i(treat)1:i(period, 2)10          NA         NA      NA       NA    
 i(treat)0:Gr                      NA         NA      NA       NA    
 i(treat)1:Gr                      NA         NA      NA       NA    
-i(period, 2)1:Gr             0.11820    3.39721   0.035 0.972252    
-i(period, 2)3:Gr            -1.00924    3.39721  -0.297 0.766465    
-i(period, 2)4:Gr             1.75688    3.39721   0.517 0.605157    
-i(period, 2)5:Gr            -0.17455    3.39721  -0.051 0.959031    
-i(period, 2)6:Gr             1.45443    3.39721   0.428 0.668647    
-i(period, 2)7:Gr             0.98385    3.39721   0.290 0.772174    
-i(period, 2)8:Gr             2.21289    3.39721   0.651 0.514941    
-i(period, 2)9:Gr            -0.75236    3.39721  -0.221 0.824774    
-i(period, 2)10:Gr           -5.43540    3.39721  -1.600 0.109908    
+i(period, 2)1:Gr              0.1144     3.3974   0.034 0.973144    
+i(period, 2)3:Gr             -1.0100     3.3974  -0.297 0.766305    
+i(period, 2)4:Gr              1.7550     3.3974   0.517 0.605560    
+i(period, 2)5:Gr             -0.1752     3.3974  -0.052 0.958882    
+i(period, 2)6:Gr              1.4530     3.3974   0.428 0.668969    
+i(period, 2)7:Gr              0.9832     3.3974   0.289 0.772332    
+i(period, 2)8:Gr              2.2138     3.3974   0.652 0.514787    
+i(period, 2)9:Gr             -0.7540     3.3974  -0.222 0.824406    
+i(period, 2)10:Gr            -5.4362     3.3974  -1.600 0.109872    
 i(treat)0:i(period, 2)1:Gr        NA         NA      NA       NA    
 i(treat)1:i(period, 2)1:Gr        NA         NA      NA       NA    
 i(treat)0:i(period, 2)3:Gr        NA         NA      NA       NA    
@@ -3814,32 +2965,45 @@ i(treat)1:i(period, 2)10:Gr       NA         NA      NA       NA
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 
-Residual standard error: 5.121 on 1050 degrees of freedom
-Multiple R-squared:  0.2163,    Adjusted R-squared:  0.1946 
-F-statistic: 9.991 on 29 and 1050 DF,  p-value: &lt; 2.2e-16</code></pre>
+Residual standard error: 5.122 on 1050 degrees of freedom
+Multiple R-squared:  0.2162,    Adjusted R-squared:  0.1946 
+F-statistic:  9.99 on 29 and 1050 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
-<div class="cell-output cell-output-stderr">
-<pre><code>NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).
-NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).</code></pre>
-</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(airquality)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>aq <span class="ot">=</span> airquality</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>aq<span class="sc">$</span>week <span class="ot">=</span> aq<span class="sc">$</span>Day <span class="sc">%/%</span> <span class="dv">7</span> <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>aq <span class="ot">&lt;-</span> <span class="fu">data.table</span>(aq)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>aq[<span class="dv">1</span><span class="sc">:</span><span class="dv">11</span>, ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>     Ozone Solar.R  Wind  Temp Month   Day  week
-     &lt;int&gt;   &lt;int&gt; &lt;num&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;num&gt;
-  1:    41     190   7.4    67     5     1     1
-  2:    36     118   8.0    72     5     2     1
-  3:    12     149  12.6    74     5     3     1
-  4:    18     313  11.5    62     5     4     1
-  5:    NA      NA  14.3    56     5     5     1
- ---                                            
-149:    30     193   6.9    70     9    26     4
-150:    NA     145  13.2    77     9    27     4
-151:    14     191  14.3    75     9    28     5
-152:    18     131   8.0    76     9    29     5
-153:    20     223  11.5    68     9    30     5</code></pre>
+<pre><code>    Ozone Solar.R  Wind  Temp Month   Day  week
+    &lt;int&gt;   &lt;int&gt; &lt;num&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;num&gt;
+ 1:    41     190   7.4    67     5     1     1
+ 2:    36     118   8.0    72     5     2     1
+ 3:    12     149  12.6    74     5     3     1
+ 4:    18     313  11.5    62     5     4     1
+ 5:    NA      NA  14.3    56     5     5     1
+ 6:    28      NA  14.9    66     5     6     1
+ 7:    23     299   8.6    65     5     7     2
+ 8:    19      99  13.8    59     5     8     2
+ 9:     8      19  20.1    61     5     9     2
+10:    NA     194   8.6    69     5    10     2
+11:     7      NA   6.9    74     5    11     2</code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Interacting Month and week:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>res_2 <span class="ot">=</span> <span class="fu">feols</span>(Ozone <span class="sc">~</span> Solar.R <span class="sc">+</span> <span class="fu">i</span>(Month, week), aq) <span class="co"># week as numbers (time trend)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).</code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>res_2F <span class="ot">=</span> <span class="fu">feols</span>(Ozone <span class="sc">~</span> Solar.R <span class="sc">+</span> <span class="fu">i</span>(Month, i.week), aq) <span class="co"># week as factor (dummy)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">#### Same but dropping the 5th Month and 1st week</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>res_2F_bis <span class="ot">=</span> <span class="fu">feols</span>(Ozone <span class="sc">~</span> Solar.R <span class="sc">+</span> <span class="fu">i</span>(Month, i.week, <span class="at">ref =</span> <span class="dv">5</span>, <span class="at">ref2 =</span> <span class="dv">1</span>), aq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">etable</span>(res_2F, res_2F_bis)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                res_2F        res_2F_bis
 Dependent Var.:                  Ozone             Ozone
@@ -3885,13 +3049,11 @@ y_{ijrt}
 \end{aligned}
 \label{esteqn}
 \end{equation}\]</span> For industry subdivision <span class="math inline">\(i\)</span>, firm <span class="math inline">\(j\)</span> in region <span class="math inline">\(r\)</span> in period <span class="math inline">\(t\)</span>, <span class="math inline">\(y_{ijrt}\)</span> is an outcome variable, <span class="math inline">\(FA_{ijr0}\)</span> is a fraction of affected workers among all workers or a treatment exposure rate at period zero, <span class="math inline">\(H_{ijr0}\)</span> is HHI of employment in region <span class="math inline">\(r\)</span> at period zero, <span class="math inline">\(c_{i}\)</span>, <span class="math inline">\(c_{j}, c_{r}\)</span> and <span class="math inline">\(c_{t}\)</span> are four-way fixed effects in industry subdivisions, firms, regions, and periods, and <span class="math inline">\(e_{ijrt}\)</span> is an idiosyncratic error. <span class="math inline">\(a_{1it}\)</span> captures the classical wage increase impacts which we expect to be negative, and <span class="math inline">\(a_{3it}\)</span> gives the estimate of interest, the unemployment reduction impacts of labour market concentration. We follow <span class="citation" data-cites="HarasztosiLindner2019">Harasztosi and Lindner (<a href="#ref-HarasztosiLindner2019" role="doc-biblioref">2019</a>)</span> in transforming the LHS of <span class="math inline">\(\eqref{esteqn}\)</span> in percentages, so <span class="math inline">\(a_{1it}\)</span> becomes an elasticity of the minimum wage and <span class="math inline">\(a_{3it}\)</span> is the change in the elasticity.</p>
-<div class="no-row-height column-margin column-container"><div id="ref-HarasztosiLindner2019" class="csl-entry" role="listitem">
-Harasztosi, Péter, and Attila Lindner. 2019. <span>“Who Pays for the Minimum Wage?”</span> <em>American Economic Review</em> 109 (8): 2693–2727.
-</div><div id="ref-Callawayetal2025" class="csl-entry" role="listitem">
+<div class="no-row-height column-margin column-container"><div id="ref-Callawayetal2025" class="csl-entry" role="listitem">
 Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna. 2025. <span>“Difference-in-Differences with a Continuous Treatment.”</span> <a href="https://doi.org/10.48550/arXiv.2107.02637">https://doi.org/10.48550/arXiv.2107.02637</a>.
-</div><div id="fn6"><p><sup>6</sup> It is summarised as the strong parallel trends assumption. </p></div></div><p>This is basically a DID with continuous treatment. The underlying identification assumption behind <span class="math inline">\(\eqref{esteqn}\)</span> is the common trend in <span class="math inline">\(y_{ijrt}\)</span> at all the levels of <span class="math inline">\(FA_{ijr0}\)</span>. A natural justification is that the economy is in the steady state so all the level variables grow at the same rate for all firms. Empirically, it suffices to assume that the firm’s outcome growth to follow some probability distribution with the common mean. This intuition turns out to be correct and is formally derived in <span class="citation" data-cites="Callawayetal2025">Callaway, Goodman-Bacon, and Sant’Anna (<a href="#ref-Callawayetal2025" role="doc-biblioref">2025</a>)</span><a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. They also caution against using the two-way fixed effect specification, because the dose <span class="math inline">\(FA\)</span> levels around the mean receive high weights regardless of how the dose distribution looks like. They recommend the raw (nonparametric) DID estimation of ATE. We use the raw DID as a part of robustness checks.</p>
+</div><div id="fn8"><p><sup>8</sup> It is summarised as the strong parallel trends assumption. </p></div></div><p>This is basically a DID with continuous treatment. The underlying identification assumption behind <span class="math inline">\(\eqref{esteqn}\)</span> is the common trend in <span class="math inline">\(y_{ijrt}\)</span> at all the levels of <span class="math inline">\(FA_{ijr0}\)</span>. A natural justification is that the economy is in the steady state so all the level variables grow at the same rate for all firms. Empirically, it suffices to assume that the firm’s outcome growth to follow some probability distribution with the common mean. This intuition turns out to be correct and is formally derived in <span class="citation" data-cites="Callawayetal2025">Callaway, Goodman-Bacon, and Sant’Anna (<a href="#ref-Callawayetal2025" role="doc-biblioref">2025</a>)</span><a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>. They also caution against using the two-way fixed effect specification, because the dose <span class="math inline">\(FA\)</span> levels around the mean receive high weights regardless of how the dose distribution looks like. They recommend the raw (nonparametric) DID estimation of ATE. We use the raw DID as a part of robustness checks.</p>
 <p>We allow the estimated coefficients to be time variant. This gives an event-study like interpretation, or a cumulative impact interpretation, of the estimated impacts. Given the dynamic adjustment process of firms, this flexibility will give us more nuanced interpretation of impacts.</p>
-<p>For efficiency, we follow <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> and restrict the coefficients to be the same across industries by using the regional mean HHI <span class="math inline">\(\bar{H}_{jr0}\)</span> of all industries<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. This is to assume the regional labour markets are integrated at the sic-7’s 1 digit (broadly defined agriculture industry) level, estimating the parameters at the broadly defined agriculture industry level by dropping <span class="math inline">\(i\)</span> subscripts in <span class="math inline">\(H\)</span>:<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <span class="math display">\[\begin{equation}
+<p>For efficiency, we follow <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> and restrict the coefficients to be the same across industries by using the regional mean HHI <span class="math inline">\(\bar{H}_{jr0}\)</span> of all industries<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>. This is to assume the regional labour markets are integrated at the sic-7’s 1 digit (broadly defined agriculture industry) level, estimating the parameters at the broadly defined agriculture industry level by dropping <span class="math inline">\(i\)</span> subscripts in <span class="math inline">\(H\)</span>:<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> <span class="math display">\[\begin{equation}
 \begin{aligned}
 y_{ijrt}
 = a_{0}
@@ -3900,7 +3062,7 @@ y_{ijrt}
 \end{aligned}
 \label{esteqn2}
 \end{equation}\]</span></p>
-<div class="no-row-height column-margin column-container"><div id="fn7"><p><sup>7</sup> <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> used means of <span class="math inline">\(H\)</span> over three occupations at the county level. </p></div><div id="fn8"><p><sup>8</sup> <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> uses both overall (across periods and occupation-markets) county mean and pre-period (across occupation-markets) county mean as HHI. They show that overall county means are not correlated with minimum wages so endogeneity of mean HHI to outcomes through minimum wages is not a concern. </p><div id="ref-Azaretal2023" class="csl-entry" role="listitem">
+<div class="no-row-height column-margin column-container"><div id="fn9"><p><sup>9</sup> <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> used means of <span class="math inline">\(H\)</span> over three occupations at the county level. </p></div><div id="fn10"><p><sup>10</sup> <span class="citation" data-cites="Azaretal2023">Azar et al. (<a href="#ref-Azaretal2023" role="doc-biblioref">2023</a>)</span> uses both overall (across periods and occupation-markets) county mean and pre-period (across occupation-markets) county mean as HHI. They show that overall county means are not correlated with minimum wages so endogeneity of mean HHI to outcomes through minimum wages is not a concern. </p><div id="ref-Azaretal2023" class="csl-entry" role="listitem">
 Azar, José, Emiliano Huet-Vaughn, Ioana Marinescu, Bledi Taska, and Till von Wachter. 2023. <span>“<span class="nocase">Minimum wage employment effects and labour market concentration</span>.”</span> <em>The Review of Economic Studies</em> 91 (4): 1843–83. <a href="https://doi.org/10.1093/restud/rdad091">https://doi.org/10.1093/restud/rdad091</a>.
 </div></div></div></section>
 <section id="results" class="level1" data-number="7">
