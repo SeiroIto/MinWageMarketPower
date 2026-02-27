@@ -348,7 +348,7 @@ file.copy(
 ```
 
 ```{r Fadata is first lines of FAD in each year, eval = F}
-FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
+FAD <- qread(paste0(pathsaveddata, "FAD.qs"), nthreads = 13)
 FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
 Fadata <- FAD[num == 1L, ]
@@ -410,7 +410,7 @@ aggsum <-
         taxyear, TotalJobs, TotalSubMWJobs, 
         TotalFirmsWithEmployees, TotalAffectedFirms,
         MeanFAJobs
-      , AggregateFA = round((TotalSubMWjobs/TotalJobs)*100, 2)
+      , AggregateFA = round((TotalSubMWJobs/TotalJobs)*100, 2)
     )
   ]
 tb <- tt(aggsum, width = 0.8, caption = "Jobs and sub-MW jobs, all industries")
@@ -446,7 +446,6 @@ tb.ag <- format_tt(tb.ag,
     num_mark_big = " "
   )
 tb.ag
-
 #### estfa <- 
 ####  qread(paste0(pathdata, "fadataUniqueEntries.qs"), nthreads = 13)
 ```
@@ -466,33 +465,10 @@ FAdata[ii0 & (ii1 | ii2), ]
 #### ii0 & !ii1 = nonempty & non-duplicated
 table(duplicated(FAdata[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
-#### FA.orig:  FA of jobs
-#### FAe.orig: FA of employment/individuals
+#### FA : FA of jobs
+#### FAe: FA of employment/individuals
 library(ggplot2)
 library(cowplot)
-g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FA.orig)) +
-  geom_density(alpha = .1, fill = "blue") + 
-  ggtitle("Fraction of affected jobs")+
-  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
-  scale_color_manual(values = "blue")
-g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FAe.orig)) +
-  geom_density(alpha = .1, fill = "blue") + 
-  ggtitle("Fraction of affected workers")+
-  scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
-  scale_color_manual(values = "red")
-gs <- plot_grid(
-  g1, g2,
-  labels = c('a.', 'b.'),
-  align="h"
-)
-gs
-ggsave(
-  paste0(pathdata, "FAInJobsAndEmployment.jpg")
-  , gs, width = 8*2, height = 4*2, units = "cm",
-  dpi = 300
- )
 #### Below gives an error: idvar need to specify unique rows
 #### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
 ####   direction = "long", 
@@ -500,8 +476,8 @@ ggsave(
 ####     "Txrf", "payereferenceno"), 
 ####   varying = grepout("^FA", colnames(FAdata))
 #### )
-gsz <- ggplot(data = FAdata[!is.na(Size), ], 
-  aes(x = FA.orig)) +
+gsz <- ggplot(data = FAdata[ii0 & !ii1 & !is.na(Size), ], 
+  aes(x = FA)) +
   geom_density(alpha = .1, fill = "blue") + 
   xlim(0, 1) +
   scale_color_manual(values = c("red", "blue"))
@@ -512,8 +488,8 @@ ggsave(
   , gsz, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
-
 ```
+
 ```{r plot FAs by jobs employment, eval = F}
 #### possible duplicates with different local municipality names
 ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
@@ -525,19 +501,18 @@ ii2 <- duplicated(FAdata[, .(
    busmainplc_geo, Txrf
  )], fromLast = T)
 table(data.table(nonNA=ii0, duplicates=ii1))
-FAdata[ii0 & (ii1 | ii2), ]
 table(duplicated(FAdata[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
 library(ggplot2)
 library(cowplot)
 g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FA.orig)) +
+  aes(x = FA)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected jobs")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
   scale_color_manual(values = "blue")
 g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FAe.orig)) +
+  aes(x = FAe)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected workers")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
@@ -553,32 +528,13 @@ ggsave(
   , gs, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
-#### Below gives an error: idvar need to specify unique rows
-#### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
-####   direction = "long", 
-####   idvar = c("busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", 
-####     "Txrf", "payereferenceno"), 
-####   varying = grepout("^FA", colnames(FAdata))
-#### )
-gsz <- ggplot(data = FAdata[!is.na(Size), ], 
-  aes(x = FA.orig)) +
-  geom_density(alpha = .1, fill = "blue") + 
-  xlim(0, 1) +
-  scale_color_manual(values = c("red", "blue"))
-gsz <- gsz + facet_wrap(Size ~ .)
-gsz
-ggsave(
-   paste0(pathdata, "FAByFirmSize.jpg")
-  , gsz, width = 8*2, height = 4*2, units = "cm",
-  dpi = 300
- )
 ```
 
 
 # Plot employment, FA
 
 
-```{r plot number of employees taxyear 2012-2020, eval = F}
+```{r plot number of agri jobs taxyear 2012-2020, eval = F}
 library(qs)
 library(data.table)
 library(ggplot2)
@@ -586,30 +542,29 @@ library(ggplot2)
 #### Location information granularity checks (next section)
 irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
 FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
-
+#### Below is resolved. Negative duration reflects 
+#### "revision reporting to SARS" by firms.
 #### To Michael, 2026 Jan 21, negative duration entries
-FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
-  .(yr, Num, NegRate = round(Neg/Num, 4))]
-
+#### FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
+####  .(yr, Num, NegRate = round(Neg/Num, 4))]
 geovars <- grepout("^bus.*geo$", colnames(irp5Ma))
 irp5Ma[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
-irp5ForPlot <- unique(irp5Ma[taxyear >= 2012 & taxyear <= 2020, 
+irp5ForPlot <- unique(irp5Ma[taxyear >= 2010 & taxyear <= 2020, 
   c(geovars, "taxyear", "taxrefno", "Num", "FA"), with = F])
 irp5ForPlot[, taxyear := as.character(taxyear)]
 ForPlot <- reshape(irp5ForPlot, direction = "long", 
   idvar = c(c(geovars, "taxrefno"), timevar = "taxyear",
   varying = grepout("Num|FA", colnames(irp5ForPlot))))
-g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], aes(x = Num, group = taxyear, 
-  colour = taxyear, fill = taxyear)) +
+g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
+    aes(x = Num, group = taxyear, colour = taxyear, fill = taxyear)) +
   geom_density(alpha = .3) + 
   scale_color_viridis_d("Tax year") +
   scale_fill_viridis_d() +
   scale_x_continuous(limits = c(1, 100), trans = "log10") +
-  theme_bw()
- g1
-g1 + facet_grid(taxyear ~ .)
+  theme_bw() + 
+  facet_wrap(taxyear ~ .)
 ggsave(
-  paste0(pathdata, "NumberOfEmployees.jpg")
+  paste0(pathdata, "NumberOfAgEmployees.jpg")
   , g1, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
@@ -952,6 +907,15 @@ for (yr in 8:22) {
 }
 qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
 ```
+
+```{r copy LShareHHI to saveddata, eval = F}
+file.copy(
+         from = paste0(pathdata,      "LShareHHI.qs")
+  ,        to = paste0(pathsaveddata, "LShareHHI.qs")
+  , overwrite = T
+  )
+```
+
 ```{r LSa is LS of agri only}
 inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
