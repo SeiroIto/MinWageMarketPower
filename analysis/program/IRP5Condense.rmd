@@ -312,7 +312,7 @@ GeoLF[, dup := NULL]
 irp5gi <- GeoLF[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
 colnames(GeoLF)
 rbind(GeoLF=dim(GeoLF), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
-colnames(irp5ig)
+colnames(irp5gi)
 table(irp5gi[, taxyear], useNA = "ifany")
 table(irp5gi[, i.taxyear], useNA = "ifany")
 table(GeoLF[, taxyear], useNA = "ifany")
@@ -371,7 +371,7 @@ print(NAsInLocMuni)
 ####   useNA = "ifany")
 #### How useful is GeoLocFile in fillling information?
 #### table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
-LocMuniCanBeFilled <- irp5[, .(
+LocMuniCanBeFilled <- irp5gi[, .(
   CanBeFilled  = sum(
     (FillInLocMuni  != "" & !is.na(FillInLocMuni)) &
     (buslocmuni_geo == "" | is.na(buslocmuni_geo)) &

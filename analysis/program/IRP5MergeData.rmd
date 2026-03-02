@@ -69,7 +69,7 @@ table0 <- function(x) table(x, useNA = "ifany")
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
-pathresults <- paste0(pathprogram, "2026 01 23/")
+pathresults <- paste0(path, "results/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
 library(qs); library(data.table); library(ggplot2)
@@ -190,7 +190,7 @@ g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
   facet_grid(~ Sample) +
   theme(axis.text.x = element_text(angle = 90, vjust = .5))
 ggsave(
-  paste0(pathresults, "FA.jpg")
+  paste0(pathresults, "FAOfAgri.jpg")
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
@@ -216,7 +216,7 @@ g1 <- ggplot(data = JobsFirms, aes(x = taxyear, y = TotalJobs)) +
   facet_grid(~ Sample) +
   theme(axis.text.x = element_text(angle = 90, vjust = .5))
 ggsave(
-  paste0(pathresults, "Employment.jpg")
+  paste0(pathresults, "EmploymentOfAgri.jpg")
   , g1, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
@@ -291,8 +291,6 @@ Lf[, AgeSample := factor(AgeSample, levels =
   c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
 qsave(Lf, paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)
 
-
-
   rbind(
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
@@ -302,52 +300,3 @@ qsave(Lf, paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)
 #### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
 ```
 
-
-
-
-# Other
-
-Get observation pattern: ObPattern
-
-```{r create ObPattern, eval = F}
-#### icount data is created in chunk "read irp5v5beta"
-Icount <- qread(paste0(pathdata, "icount08.qs"), nthreads = 8)
-Icount[, Taxyear := 2008]
-for (yr in 9:20) {
-  if (yr < 10) yr <- paste0("0", yr)
-  icount <- qread(paste0(pathdata, "icount", yr, ".qs"), nthreads = 8)
-  icount[, Taxyear := 2000+as.numeric(yr)]
-  Icount <- rbindlist(list(Icount, icount))
-}
-qsave(Icount, paste0(pathdata, "Icount.qs"), nthreads = 8)
-setkey(Icount, taxrefno, Taxyear)
-Icount[, Ob := 1L]
-Icount[is.na(Num), Ob := 2L]
-Icount <- Icount[grepl("A", natureofperson), ]
-Icount <- Icount[busmainplc_geo != "", ]
-IcountW <- reshape(Icount, direction = "wide", 
-  idvar = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", "taxrefno", "natureofperson"),
-  timevar = "Taxyear", v.names= c("Num", "Ob"))
-
-grepout <- function(str, x)
-  # returns element of match (not numbers)
-  x[grep(str, x, perl = T)]
-
-cols <- grepout("Ob", colnames(IcountW))
-IcountW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
-IcountW[, ObPattern := paste(.SD, sep = "", collapse = ""), .SDcols = cols, by = .(taxrefno)]
-IcountW[, ObPattern := factor(ObPattern)]
-```
-
-Postal codes in stata
-
-```{verbatim}
-. use "Z:\Master Data\IRP5\Job level\v5\beta\aux_postal_codes_2008_2023_e6_v2.dta" , replace
-. by AddrPostalCode, sort: gen nvals = _n == 1
-. count if nvals
-  68,140
-```
-
-  
-
-    
