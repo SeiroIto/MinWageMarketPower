@@ -967,41 +967,55 @@ print(LShare[!is.na(Newgt.kerr),
   .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
     irp5_kerr_iweight_b, Newgt.kerr,
     EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
-
 ```
 
-# Other
+``{r plot HHI by year, eval = F}
+library(ggplot2)
+LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+gsh <- ggplot(data = LS, 
+    aes(x = HHI)) +
+  geom_density(alpha = .2) + 
+  scale_fill_manual(values = "blue") +
+  scale_color_manual(values = "blue") +
+  scale_x_continuous(trans = "log10") +
+  theme(legend.position = "none") +
+  facet_wrap( ~ taxyear, dir = "tl")
+ggsave(
+  paste0(pathresults, "HHI2010-2022.jpg")
+  , gsh, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
 
 Get observation pattern: ObPattern
 
 ```{r create ObPattern, eval = F}
-#### icount data is created in chunk "read irp5v5beta"
-Icount <- qread(paste0(pathdata, "icount08.qs"), nthreads = 8)
-Icount[, Taxyear := 2008]
-for (yr in 9:20) {
-  if (yr < 10) yr <- paste0("0", yr)
-  icount <- qread(paste0(pathdata, "icount", yr, ".qs"), nthreads = 8)
-  icount[, Taxyear := 2000+as.numeric(yr)]
-  Icount <- rbindlist(list(Icount, icount))
-}
-qsave(Icount, paste0(pathdata, "Icount.qs"), nthreads = 8)
-setkey(Icount, taxrefno, Taxyear)
-Icount[, Ob := 1L]
-Icount[is.na(Num), Ob := 2L]
-Icount <- Icount[grepl("A", natureofperson), ]
-Icount <- Icount[busmainplc_geo != "", ]
-IcountW <- reshape(Icount, direction = "wide", 
-  idvar = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", "taxrefno", "natureofperson"),
-  timevar = "Taxyear", v.names= c("Num", "Ob"))
-
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
-
-cols <- grepout("Ob", colnames(IcountW))
-IcountW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
-IcountW[, ObPattern := paste(.SD, sep = "", collapse = ""), .SDcols = cols, by = .(taxrefno)]
-IcountW[, ObPattern := factor(ObPattern)]
+idyr <- irp5[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid)]
+if (all(idyr[, uid == UID])) idyr[, UID := NULL]
+idyr[, TxUID := paste(Txrf, uid, sep = "-")]
+idyr[, Ob := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, Txrf)]
+idyrW <- reshape(Idyr, direction = "wide", 
+  idvar = c("busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo", "TxUID"),
+  timevar = "taxyear", v.names= c("Ob"))
+cols <- grepout("Ob", colnames(idyrW))
+idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
+  .SDcols = cols]
+idyrW[, ObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = cols, by = .(taxrefno)]
+idyrW[, ObPattern := factor(ObPattern)]
+qsave(idyrW, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+irp5[, TxUID := paste(Txrf, uid, sep = "-")]
+setkey(irp5, TxUID); setkey(idyrW, TxUID)
+irp5 <- idyrW[irp5, on = "TxUID"]
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
 ```
 
 Postal codes in stata
