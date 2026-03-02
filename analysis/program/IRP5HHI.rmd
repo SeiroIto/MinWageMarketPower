@@ -469,8 +469,8 @@ FAdata[ii0 & (ii1 | ii2), ]
 #### ii0 & !ii1 = nonempty & non-duplicated
 table(duplicated(FAdata[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
-#### FA : FA of jobs
-#### FAe: FA of employment/individuals
+#### FA.orig : FA of jobs
+#### FAe.orig: FA of employment/individuals
 library(ggplot2)
 library(cowplot)
 #### Below gives an error: idvar need to specify unique rows
@@ -481,7 +481,7 @@ library(cowplot)
 ####   varying = grepout("^FA", colnames(FAdata))
 #### )
 gsz <- ggplot(data = FAdata[ii0 & !ii1 & !is.na(Size), ], 
-  aes(x = FA)) +
+  aes(x = FA.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   xlim(0, 1) +
   scale_color_manual(values = c("red", "blue"))
@@ -510,13 +510,13 @@ table(duplicated(FAdata[ii0 & !ii1, ]))
 library(ggplot2)
 library(cowplot)
 g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FA)) +
+  aes(x = FA.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected jobs")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
   scale_color_manual(values = "blue")
 g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FAe)) +
+  aes(x = FAe.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected workers")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
@@ -541,17 +541,17 @@ library(data.table)
 library(ggplot2)
 #### irp5Ma is created in 
 #### Location information granularity checks (next section)
-irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
-FAD <- qread(paste0(pathdata, "FAD.qs"), nthreads = 13)
+#### irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+faa <- qread(paste0(pathdata, "FAOfAgri.qs""), nthreads = 13)
 #### Below is resolved. Negative duration reflects 
 #### "revision reporting to SARS" by firms.
 #### To Michael, 2026 Jan 21, negative duration entries
 #### FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
 ####  .(yr, Num, NegRate = round(Neg/Num, 4))]
-geovars <- grepout("^bus.*geo$", colnames(irp5Ma))
-irp5Ma[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
-irp5ForPlot <- unique(irp5Ma[taxyear >= 2010 & taxyear <= 2020, 
-  c(geovars, "taxyear", "taxrefno", "Num", "FA"), with = F])
+geovars <- grepout("^bus.*geo$", colnames(faa))
+faa[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
+irp5ForPlot <- unique(faa[taxyear >= 2010 & taxyear <= 2020, 
+  c(geovars, "taxyear", "taxrefno", "Num", "FA.orig"), with = F])
 irp5ForPlot[, taxyear := as.character(taxyear)]
 ForPlot <- reshape(irp5ForPlot, direction = "long", 
   idvar = c(c(geovars, "taxrefno"), timevar = "taxyear",
