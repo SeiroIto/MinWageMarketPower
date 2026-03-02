@@ -97,7 +97,7 @@ We use:
 
 
 
-```{r merge data}
+```{r plot ag data}
 #### ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
 #### setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
 #### ind[, n := 1:.N, by = taxrefno]
@@ -114,7 +114,8 @@ We use:
 #### 
 
 
-table(irp5[. .(notMissing = (!is.na(buslocmuni_geo) | buslocmuni_geo != ""),  taxyear)])
+#### table(irp5[. .(notMissing = (!is.na(buslocmuni_geo) | buslocmuni_geo != ""),  
+#### taxyear)])
 
 #### LSMa = LS + industry
 inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
@@ -181,6 +182,7 @@ inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
 faa[, .(mean = mean(FA, na.rm = T), median = median(FA, na.rm = T)), 
   by = .(Sample, taxyear)]
+#### FA of agri
 g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
 #  geom_point(size = .1, position = position_jitterdodge()) +
 #  geom_point(data = faama, size = 1, fill = "blue")
@@ -194,8 +196,8 @@ ggsave(
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
-
 #### irp5M, agriculture
+#### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
 irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
 irp5Ma[, .(num = 1:.N, Num), by = .(taxyear, taxrefno)][num == 1, 
   .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
@@ -216,20 +218,13 @@ g1 <- ggplot(data = JobsFirms, aes(x = taxyear, y = TotalJobs)) +
   facet_grid(~ Sample) +
   theme(axis.text.x = element_text(angle = 90, vjust = .5))
 ggsave(
-  paste0(pathresults, "EmploymentOfAgri.jpg")
+  paste0(pathresults, "NumberOfAgEmployees.jpg")
   , g1, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
 ```
 
-```{r analsys sample descriptive statistics}
-#### faa (base) + LSMa
-faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
-faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
-faa[, FA0 := FA[1], by = taxrefno]
-faa[, Jobs0 := Jobs[1], by = taxrefno]
-faa[, rJobs := dJobs/Jobs0]
-
+```{r create HHIAgriRowsMainPlaceLevel.qs from HHIAgriRows.qs, eval = F}
 LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
 LSMa <- LSa[grepl("Mai", AreaLevel), ]
 LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
@@ -246,8 +241,18 @@ LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1],
 LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
 LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
   by = .(ExistedBefore2013, taxyear)][order(ExistedBefore2013, taxyear)]
-setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)
+setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+  busmainplc_geo, taxrefno, taxyear)
 qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
+```
+
+```{r merge data, eval = F}
+#### faa (base) + LSMa1
+faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
+faa[, FA0 := FA[1], by = taxrefno]
+faa[, Jobs0 := Jobs[1], by = taxrefno]
+faa[, rJobs := dJobs/Jobs0]
 LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
 #### Drop rows with no location info
 LSMa1 <- LSMa[busmainplc_geo != "", ]
@@ -263,9 +268,8 @@ LSMa1 <- LSMa1[taxyear == 2013, ]
 LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno)]
 LSMa1 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
-
 setnames(LSMa1, "taxyear", "HHIBaseYear")
-###Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
+#### Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
 Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
 Lf[, .(busmainplc_geo, taxrefno, taxyear, Jobs)]
 Lf[, num := 1:.N, by = .(busmainplc_geo, taxrefno, taxyear)]
@@ -290,13 +294,13 @@ Lf[grepl("N", FirstYear2013) & grepl("Un", Sample),
 Lf[, AgeSample := factor(AgeSample, levels = 
   c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
 qsave(Lf, paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)
-
+```
+```{r analysis sample descriptive statistics, eval = F}
   rbind(
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
   )
 
 
-#### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
 ```
 
