@@ -72,6 +72,7 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 #### pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
+pathresults <- paste0(path, "results/")
 pathdata <- paste0(path, "data/")
 pathsaveddata <- paste0(path, "saveddata/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
@@ -450,6 +451,9 @@ tb.ag
 ####  qread(paste0(pathdata, "fadataUniqueEntries.qs"), nthreads = 13)
 ```
 
+# Plot employment, FAs
+
+
 ```{r plot FAs by size, eval = F}
 #### possible duplicates with different local municipality names
 ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
@@ -529,9 +533,6 @@ ggsave(
   dpi = 300
  )
 ```
-
-
-# Plot employment, FA
 
 
 ```{r plot number of agri jobs taxyear 2012-2020, eval = F}
@@ -968,6 +969,8 @@ print(LShare[!is.na(Newgt.kerr),
     irp5_kerr_iweight_b, Newgt.kerr,
     EachNeEmp, TotalNeEmp, ShareEmp, HHI)], topn = 25)
 ```
+
+# Plot HHI
 
 ``{r plot HHI by year, eval = F}
 library(ggplot2)
