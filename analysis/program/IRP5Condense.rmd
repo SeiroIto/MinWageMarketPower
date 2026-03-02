@@ -602,10 +602,40 @@ irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
 c(nrow(irp5gir), nrow(irp5Clean))
 #### [1] 175424198 175176433
 #### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
+#### grepl("^Crop|^Fore", imp_mic_sic7_2d), ]
+qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+```
+
+Get observation pattern: ObPattern
+
+```{r create ObPattern, eval = F}
+irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid)]
+if (all(idyr[, uid == UID])) idyr[, UID := NULL]
+idyr[, TxUID := paste(Txrf, uid, sep = "-")]
+idyr[, Ob := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, Txrf)]
+idyrW <- reshape(Idyr, direction = "wide", 
+  idvar = c("busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo", "TxUID"),
+  timevar = "taxyear", v.names= c("Ob"))
+cols <- grepout("Ob", colnames(idyrW))
+idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
+  .SDcols = cols]
+idyrW[, ObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = cols, by = .(taxrefno)]
+idyrW[, ObPattern := factor(ObPattern)]
+qsave(idyrW, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+irp5Clean[, TxUID := paste(Txrf, uid, sep = "-")]
+setkey(irp5Clean, TxUID); setkey(idyrW, TxUID)
+irp5 <- idyrW[irp5Clean, on = "TxUID"]
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
 #### Agriculture panel
 irp5a <- irp5Clean[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
-#### grepl("^Crop|^Fore", imp_mic_sic7_2d), ]
-qsave(irp5Clean, paste0(pathdata, "irp5.qs"), nthreads = 13)
 qsave(irp5a,     paste0(pathdata, "irp5a.qs"), nthreads = 13)
 ```
 
