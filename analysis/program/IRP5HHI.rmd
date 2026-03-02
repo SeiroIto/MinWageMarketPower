@@ -988,35 +988,6 @@ ggsave(
  )
 ```
 
-Get observation pattern: ObPattern
-
-```{r create ObPattern, eval = F}
-irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
-grepout <- function(str, x)
-  # returns element of match (not numbers)
-  x[grep(str, x, perl = T)]
-idyr <- irp5[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid)]
-if (all(idyr[, uid == UID])) idyr[, UID := NULL]
-idyr[, TxUID := paste(Txrf, uid, sep = "-")]
-idyr[, Ob := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, Txrf)]
-idyrW <- reshape(Idyr, direction = "wide", 
-  idvar = c("busprov_geo", "busdistmuni_geo", 
-    "buslocmuni_geo", "busmainplc_geo", "TxUID"),
-  timevar = "taxyear", v.names= c("Ob"))
-cols <- grepout("Ob", colnames(idyrW))
-idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
-  .SDcols = cols]
-idyrW[, ObPattern := paste(.SD, sep = "", collapse = ""), 
-  .SDcols = cols, by = .(taxrefno)]
-idyrW[, ObPattern := factor(ObPattern)]
-qsave(idyrW, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
-irp5[, TxUID := paste(Txrf, uid, sep = "-")]
-setkey(irp5, TxUID); setkey(idyrW, TxUID)
-irp5 <- idyrW[irp5, on = "TxUID"]
-qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
-```
 
 Postal codes in stata
 
