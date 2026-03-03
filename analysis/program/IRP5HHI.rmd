@@ -237,7 +237,7 @@ for (yr in 8:22) {
     by = .(Txrf, taxyear)]
   ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), 
     by = .(Txrf, taxyear)]
-  #### b. Establishment level
+  #### b. Establishment (Main Place) level
   ipyrc[, NumSubMWMP  := as.integer(sum(SubMW==1L)), 
     by = .(Txrf, busprov_geo, busdistmuni_geo, 
       buslocmuni_geo, busmainplc_geo, taxyear)]
@@ -325,6 +325,27 @@ qsave(aggsummary, paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
 aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
 ```
 
+1. For each taxyear, `FAdata` has 4 indicators of "Fraction Affected":
+   * `FA`: At firm level, computed with jobs
+   * `FAe`: At firm level, computed with individuals
+   * `FAMP`: At establishment (Main Place) level, computed with jobs
+   * `FAeMP`: At establishment (Main Place) level, computed with individuals
+
+    Accordingly, we have created for `FA`
+   * Jobs: Number of jobs
+   * NumSubMW: Number of sub MW jobs
+   * Employees: Number of employees
+   * NumSubMWe: Number of sub MW employees
+
+    Also for `FAe`, `FAMP`, `FAeMP`, we have created these four variables 
+1. We append `FAdata` of each taxyear &rarr; `FAD` (FA panel at individual level)
+1. We select rows of `FAD` as
+   *  `Fadata`: FAFirstRow.qs, establishment level FA panel (1st rows of FAD by location-taxrefno-taxyear)
+   * `fadatai`: FAAndJobs.qs, duration within 1 year of Fadata + industry
+   *     `faa`: FAOfAgri.qs, fadatai[Crop==1L|Animal==1L|Forest==1L, ]
+   *   `estfa`: fadataUniqueEntries.qs, unique entries by location-taxrefno-taxyear in fadatai (almost same as fadatai except uniqueness is explicitly imposed)
+
+
 ```{r create FA panel, eval = F}
 FAD <- NULL
 for (yr in 8:22) {
@@ -340,12 +361,22 @@ table(FAD[,taxyear])
 ####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
 ```
 
-```{r copy FAD to saveddata, eval = F}
-file.copy(
-         from = paste0(pathdata,      "FAD.qs")
-  ,        to = paste0(pathsaveddata, "FAD.qs")
-  , overwrite = T
-  )
+```{r industry code for ag, eval = F}
+#### DO NOT RUN THIS TWICE. It has been run and let us keep it that way.
+#### Merge industry code, taking fadata as base
+ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
+ind[, n := 1:.N, by = taxrefno]
+inda <- ind[n == 1 & grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+inda[, n := NULL]
+inda[, c("Crop", "Animal", "Forest") := 0L]
+inda[grepl("Plant|cr", imp_mic_sic7_3d), Crop := 1L]
+inda[grepl("Anim", imp_mic_sic7_3d),   Animal := 1L]
+inda[grepl("Lo|for", imp_mic_sic7_3d), Forest := 1L]
+inda[, grepout("mp_mic", colnames(inda)) := NULL]
+setkey(inda, taxrefno)
+setnames(inda, "taxyear", "FirstYearOnSIC7")
+qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 ```
 
 ```{r Fadata is first lines of FAD in each year, eval = F}
@@ -367,7 +398,7 @@ qsave(fadata,
 #### Merge industry code, taking fadata as base
 inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 fadatai <- inda[fadata, on = "taxrefno"]
-qsave(fadatai, paste0(pathdata, "FAAndJobs.qs""), nthreads = 13)
+qsave(fadatai, paste0(pathdata, "FAAndJobs.qs"), nthreads = 13)
 fadatain <- fadatai[busmainplc_geo != "", ]
 faa <- fadatain[Crop == 1L | Animal == 1L | Forest == 1L, ]
 setkey(faa, taxrefno)
@@ -390,14 +421,33 @@ table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
 qsave(faa, paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
 #### estfa: establishment level FAs with location, taxrefno, taxyear
 estfa <- unique(fadatai[, 
-  grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(FAD)), with = F])
+  grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(fadatai)), with = F])
 qsave(estfa, paste0(pathdata, "fadataUniqueEntries.qs"), nthreads = 13)
 ```
+
+```{r copy FAD and derived files to saveddata, eval = F}
+FilesToCopy <- paste0(c(
+  "FAD",        # row-bound FAdata over taxyears
+  "FAFirstRow", # Fadata : 1st rows of FAD by location-taxrefno-taxyear
+  "FAAndJobs",  # fadatai: Duration within 1 year of Fadata + industry
+  "FAOfAgri",   # faa    : fadatain[Crop==1L|Animal==1L|Forest==1L, ]
+  "fadataUniqueEntries" 
+                # estfa  : unique entries by location-taxrefno-taxyear
+  ), ".qs")
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+  )
+```
+
+
 
 ```{r descriptive stats FA and jobs, eval = F}
 library(tinytable)
 aggsummary <- 
-  qread(paste0(pathdata, "AggregateSummary.qs"), 
+  qread(paste0(pathsaveddata, "AggregateSummary.qs"), 
   nthreads = 13)
 #### total jobs, total sub MW jobs, aggregate FA
 aggsum <- 
@@ -422,7 +472,7 @@ tb.agg <- format_tt(tb
   )
 tb.agg
 #### Agriculture
-faa <- qread(paste0(pathdata, "FAOfAgri.qs""), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs""), nthreads = 13)
 agsum <- faa[, .(
       TotalJobs          = sum(Jobs[IncomeMonth > 0]) 
     , TotalSubMWJobs     = uniqueN(Jobs[IncomeMonth > 0 & SubMW==1L]) 
@@ -453,34 +503,38 @@ tb.ag
 
 # Plot employment, FAs
 
+# Plot employment, FAs
+
 
 ```{r plot FAs by size, eval = F}
+fadatai <- qread(paste0(pathsaveddata, "FAAndJobs.qs"), 
+  nthreads = 13)
 #### possible duplicates with different local municipality names
-ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
+ii0 <- fadatai[, buslocmuni_geo != "" & busdistmuni_geo != ""
    & busmainplc_geo != ""]
-ii1 <- duplicated(FAdata[, .(
+ii1 <- duplicated(fadatai[, .(
    busmainplc_geo, Txrf
  )])
-ii2 <- duplicated(FAdata[, .(
+ii2 <- duplicated(fadatai[, .(
    busmainplc_geo, Txrf
  )], fromLast = T)
 table(data.table(nonNA=ii0, duplicates=ii1))
-FAdata[ii0 & (ii1 | ii2), ]
+fadatai[ii0 & (ii1 | ii2), ]
 #### ii0 & !ii1 = nonempty & non-duplicated
-table(duplicated(FAdata[ii0 & !ii1, ]))
+table(duplicated(fadatai[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
 #### FA.orig : FA of jobs
 #### FAe.orig: FA of employment/individuals
 library(ggplot2)
 library(cowplot)
 #### Below gives an error: idvar need to specify unique rows
-#### FAdataL <- reshape(FAdata[ii0 & !ii1, ], 
+#### fadataiL <- reshape(fadatai[ii0 & !ii1, ], 
 ####   direction = "long", 
 ####   idvar = c("busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo", 
 ####     "Txrf", "payereferenceno"), 
-####   varying = grepout("^FA", colnames(FAdata))
+####   varying = grepout("^FA", colnames(fadatai))
 #### )
-gsz <- ggplot(data = FAdata[ii0 & !ii1 & !is.na(Size), ], 
+gsz <- ggplot(data = fadatai[ii0 & !ii1 & !is.na(Size), ], 
   aes(x = FA.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   xlim(0, 1) +
@@ -488,7 +542,7 @@ gsz <- ggplot(data = FAdata[ii0 & !ii1 & !is.na(Size), ],
 gsz <- gsz + facet_wrap(Size ~ .)
 gsz
 ggsave(
-   paste0(pathdata, "FAByFirmSize.jpg")
+   paste0(pathresults, "FAByFirmSize.jpg")
   , gsz, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
@@ -496,27 +550,27 @@ ggsave(
 
 ```{r plot FAs by jobs employment, eval = F}
 #### possible duplicates with different local municipality names
-ii0 <- FAdata[, buslocmuni_geo != "" & busdistmuni_geo != ""
+ii0 <- fadatai[, buslocmuni_geo != "" & busdistmuni_geo != ""
    & busmainplc_geo != ""]
-ii1 <- duplicated(FAdata[, .(
+ii1 <- duplicated(fadatai[, .(
    busmainplc_geo, Txrf
  )])
-ii2 <- duplicated(FAdata[, .(
+ii2 <- duplicated(fadatai[, .(
    busmainplc_geo, Txrf
  )], fromLast = T)
 table(data.table(nonNA=ii0, duplicates=ii1))
-table(duplicated(FAdata[ii0 & !ii1, ]))
+table(duplicated(fadatai[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
 library(ggplot2)
 library(cowplot)
-g1 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FA)) +
+g1 <- ggplot(data = fadatai[ii0 & !ii1, ], 
+  aes(x = FA.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected jobs")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
   scale_color_manual(values = "blue")
-g2 <- ggplot(data = FAdata[ii0 & !ii1, ], 
-  aes(x = FAe)) +
+g2 <- ggplot(data = fadatai[ii0 & !ii1, ], 
+  aes(x = FAe.orig)) +
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected workers")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
@@ -528,12 +582,11 @@ gs <- plot_grid(
 )
 gs
 ggsave(
-  paste0(pathdata, "FAInJobsAndEmployment.jpg")
+  paste0(pathresults, "FAInJobsAndEmployment.jpg")
   , gs, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
 ```
-
 
 ```{r plot number of agri jobs taxyear 2012-2020, eval = F}
 library(qs)
@@ -542,7 +595,7 @@ library(ggplot2)
 #### irp5Ma is created in 
 #### Location information granularity checks (next section)
 #### irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
-faa <- qread(paste0(pathdata, "FAOfAgri.qs""), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs""), nthreads = 13)
 #### Below is resolved. Negative duration reflects 
 #### "revision reporting to SARS" by firms.
 #### To Michael, 2026 Jan 21, negative duration entries
@@ -585,15 +638,33 @@ ggsave(
  )
 ```
 
+```{r plot FA in agri 2012-2020, eval = F}
+g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
+    aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
+  geom_density(alpha = .3) + 
+  scale_color_viridis_d("Tax year") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(1, 100)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+  facet_wrap(taxyear ~ ., ncol = 2)
+ggsave(
+  paste0(pathresults, "FAOfAg2010-2022.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+
 
 # Location information granularity checks
+
 
 We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
 
 ```{r define irp5M by location granularity, eval = F}
 rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
 rm(fadata2); rm(fadata3); rm(faa)
-irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 #### Location granularity indicator
@@ -791,6 +862,16 @@ irp5Ma <- irp5M[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d),
 qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
 ```
 
+```{r copy irp5M etc to saveddata, eval = F}
+FilesToCopy <- c(paste0("irp5", c("M", "L", "D", "P"), ".qs"), "irp5Ma.qs")
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+    )
+```
+
 
 # Compute HHI
 
@@ -810,7 +891,7 @@ For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5
 library(qs)
 library(data.table)
 #### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
-irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 for (yr in 8:22) {
@@ -832,10 +913,10 @@ for (yr in 8:22) {
     #### E.g., Toyota in Umhlanga, Durban had over 80K workers    
 	  #### Some firms have missing location information in some (but not all) rows
 	  #### Cannot allocate 8 workers with missing location info between branches
-	  if (yr == 12) print(
-	    ipGeo[Txrf %in% unique(Txrf[busmainplc_geo != ""])[2], 
-	      c(geovars, "Txrf", "payereferenceno", "UID",  "dateofbirth", 
-		    "periodemployedfrom", "WorkersAtEstab", "kerr_income"), with = F])
+    if (yr == 12) print(
+      ipGeo[Txrf %in% unique(Txrf[busmainplc_geo != ""])[2], 
+        c(geovars, "Txrf", "payereferenceno", "UID",  "dateofbirth", 
+        "periodemployedfrom", "WorkersAtEstab", "kerr_income"), with = F])
     ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]
     ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
     #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
@@ -923,23 +1004,29 @@ for (yr in 8:22) {
 qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
 ```
 
-```{r copy LShareHHI to saveddata, eval = F}
-file.copy(
-         from = paste0(pathdata,      "LShareHHI.qs")
-  ,        to = paste0(pathsaveddata, "LShareHHI.qs")
-  , overwrite = T
-  )
-```
 
 ```{r LSa is LS of agri only}
-inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+inda <- qread(paste0(pathsaveddata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
 LSia <- inda[LS, on = "taxrefno"]
-LSa <- LSia[Crop ++ 1L | Animal == 1L | Forest == 1L, ]
+LSa <- LSia[Crop == 1L | Animal == 1L | Forest == 1L, ]
 #### LSa is rows of agri only, but HHI is measured at all industries
 qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+table(LSa[grepl("M", AreaLevel), .(Nums = 1:.N), 
+  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+  "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
 ```
 
+```{r copy LShareHHI.qs HHIAgriRows.qs to saveddata, eval = F}
+FilesToCopy <- c("LShareHHI.qs", "HHIAgriRows.qs")
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+    )
+```
 
 ```{r further checks on shares, eval = F}
 #### further checks
@@ -955,7 +1042,6 @@ LShare[Nums %in% numtb[1:10],
     WorkersAtEstab, WorkersAtEstabNoGov, 
   	WorkersInMarket, WorkersInMarketNoGov, Share, 
 	  HHI)]
-
 ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
 ipyr <- ipyr[grepl("A", natureofperson), ]
 ipyr[, Txrf := taxrefno]
@@ -988,8 +1074,7 @@ print(LShare[!is.na(Newgt.kerr),
 
 ``{r plot HHI by year, eval = F}
 library(ggplot2)
-LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
-qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+LS <- qread(paste0(pathsaveddata, "LShareHHI.qs"), nthreads = 13)
 gsh <- ggplot(data = LS, 
     aes(x = HHI)) +
   geom_density(alpha = .2) + 
@@ -1006,15 +1091,3 @@ ggsave(
 ```
 
 
-Postal codes in stata
-
-```{verbatim}
-. use "Z:\Master Data\IRP5\Job level\v5\beta\aux_postal_codes_2008_2023_e6_v2.dta" , replace
-. by AddrPostalCode, sort: gen nvals = _n == 1
-. count if nvals
-  68,140
-```
-
-  
-
-    

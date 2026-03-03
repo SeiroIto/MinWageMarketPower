@@ -257,20 +257,15 @@ LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
 #### Drop rows with no location info
 LSMa1 <- LSMa[busmainplc_geo != "", ]
 #### Keep only first row of each establishment
-LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno)]
-#### Pick the first entry of establishments
-#### LSMa1 <- LSMa1[num == 1L, ]
 #### Pick 2013 value of establishments for more sample size
 #### Keep either 2013 or first entry
-LSMa1 <- LSMa1[taxyear == 2013, ]
 #### But if there are two rows, drop the first entry
 LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno)]
-LSMa1 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
-setnames(LSMa1, "taxyear", "HHIBaseYear")
+LSMa2 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
+setnames(LSMa2, "taxyear", "HHIBaseYear")
 #### Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
-Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
+Lf <- LSMa2[faa, on = c("taxrefno", grepout("bus", colnames(LSMa2)))]
 Lf[, .(busmainplc_geo, taxrefno, taxyear, Jobs)]
 Lf[, num := 1:.N, by = .(busmainplc_geo, taxrefno, taxyear)]
 Lf <- Lf[num == 1L, ]
@@ -301,6 +296,7 @@ qsave(Lf, paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)
     All = table(Lf[, taxyear])
   )
 
+table(LSMa1[num == 1L, HHIBaseYear])
 
 ```
 
