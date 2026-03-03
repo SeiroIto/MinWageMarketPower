@@ -165,12 +165,51 @@ Lf[, AgeSample := factor(AgeSample, levels =
   c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
 ```
+
 ```{r analysis sample descriptive statistics, eval = F}
   rbind(
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
   )
 table(LSMa1[num == 1L, HHIBaseYear])
+library(tinytable)
+agestsum <- Lf[, .(
+      TotalJobs          = sum(Jobs, na.rm = T) 
+    , TotalSubMWJobs     = sum(NumSubMW, na.rm = T) 
+    , TotalEmployees     = sum(Employees, na.rm = T) 
+    , TotalSubMWWorkers  = sum(NumSubMWe, na.rm = T) 
+    , TotalFirmsWithEmp  = sum(Employees>0, na.rm = T) 
+    , TotalAffectedFirms = sum(NumSubMWe>0, na.rm = T) 
+    ), 
+    by = .(taxyear)
+    ][, .(
+      taxyear, 
+      TotalJobs, TotalSubMWJobs, TotalEmployees, TotalSubMWWorkers, 
+      AggFA = round((TotalSubMWJobs/TotalJobs)*100, 2),
+      AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
+      TotalFirmsWithEmp, TotalAffectedFirms,
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
+    )]
+tb.agest <- tt(agestsum, width = 0.8, 
+  caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
+options(tinytable_format_digits = 2)
+tb.agest <- format_tt(tb.agest,
+    j = c(2:5, 8:9),
+    num_mark_big = " "
+  )
+tb.agest
+```
 
+```{r copy Lf estimation sample to saveddata, eval = F}
+FilesToCopy <- paste0(c(
+  "EstSample_Ag" # Lf: HHIAgriRowsMainPlaceLevel.qs + faa
+       # 2013 HHI or first observed HHI at establishment level
+  ), ".qs")
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+  )
 ```
 
