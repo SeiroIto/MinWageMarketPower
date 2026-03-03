@@ -488,7 +488,7 @@ agsum <- faa[, .(
       AggFA = round((TotalSubMWJobs/TotalJobs)*100, 2),
       AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       TotalFirmsWithEmp, TotalAffectedFirms,
-      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
+      AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
     )]
 tb.ag <- tt(agsum, width = 0.8, caption = "Jobs and sub-MW jobs, agriculture")
 options(tinytable_format_digits = 2)
