@@ -96,10 +96,18 @@ We use:
 `faa` (establishment level FAA, Jobs, Employment in agriculture) + `LSMa` (Main Place level HHI in agriculture)
 
 
+Tabulation gives 
+
+::: {.column-margin}
+![](other/LSaTabulationInIRP5MergeData.jpg){}
+:::
 
 
 ```{r create HHIAgriRowsMainPlaceLevel.qs from HHIAgriRows.qs, eval = F}
 LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+#### table(LSa[, .(Nums = 1:.N, taxyear), 
+####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+####  "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
 LSMa <- LSa[grepl("Mai", AreaLevel), ]
 LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno)]
