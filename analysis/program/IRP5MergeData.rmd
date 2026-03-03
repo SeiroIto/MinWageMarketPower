@@ -206,7 +206,7 @@ setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo,
 qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
 ```
 
-```{r merge data, eval = F}
+```{r merge faa (base) + LSMa1 gives Lf, eval = F}
 #### faa (base) + LSMa1
 faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
 faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
