@@ -505,6 +505,8 @@ tb.ag
 
 # Plot employment, FAs
 
+# Plot employment, FAs
+
 
 ```{r plot FAs by size, eval = F}
 fadatai <- qread(paste0(pathsaveddata, "FAAndJobs.qs"), 
@@ -621,6 +623,35 @@ ggsave(
   dpi = 300
  )
 ```
+
+```{r agri Jobs by firm age, eval = F}
+#### irp5M, agriculture
+#### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
+irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+irp5Ma[, .(num = 1:.N, Num), by = .(taxyear, taxrefno)][num == 1, 
+  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
+irp5Ma[, .(num = 1:.N, Num = .N), by = .(taxyear, taxrefno)][num == 1, 
+  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
+irp5Ma[, ExistedBefore2013 := as.integer(NA)]
+irp5Ma[taxyear < 2013, ExistedBefore2013 := 1L]
+irp5Ma[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], by = taxrefno]
+irp5Ma[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+JobsFirms <- irp5Ma[, .(num = 1:.N, Num = .N), 
+  by = .(ExistedBefore2013, taxyear, taxrefno)][
+  num == 1, .(TotalJobs = sum(Num, na.rm = T)), by = .(ExistedBefore2013, taxyear)]
+JobsFirms[, Sample := "Entrants"]
+JobsFirms[ExistedBefore2013 == 1L, Sample := "Incumbents"]
+g1 <- ggplot(data = JobsFirms, aes(x = taxyear, y = TotalJobs)) +
+  geom_col() +
+  scale_x_continuous(breaks = 2009:2022) +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "NumberOfAgEmployees.jpg")
+  , g1, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
 ```{r plot FA in agri 2012-2020, eval = F}
 g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
     aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
@@ -653,6 +684,40 @@ ggsave(
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
+```
+
+```{r plot FA in agri 2012-2020, eval = F}
+g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
+    aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
+  geom_density(alpha = .3) + 
+  scale_color_viridis_d("Tax year") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(1, 100)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+  facet_wrap(taxyear ~ ., ncol = 2)
+ggsave(
+  paste0(pathresults, "FAOfAg2010-2022.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+```
+```{r plot FA of agri, eval = F}
+#### FA of agri
+g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
+#  geom_point(size = .1, position = position_jitterdodge()) +
+#  geom_point(data = faama, size = 1, fill = "blue")
+  geom_boxplot(fill = "white", colour = "blue", outlier.alpha = 0) + 
+#  geom_jitter(width = .2) +
+  scale_x_discrete(name = "Tax year") +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "FAOfAgri.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+
 ```
 
 
@@ -862,7 +927,7 @@ irp5Ma <- irp5M[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d),
 qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
 ```
 
-```{r copy irp5M etc to saveddata, eval = F}
+```{r copy irp5M and derived files to saveddata, eval = F}
 FilesToCopy <- c(paste0("irp5", c("M", "L", "D", "P"), ".qs"), "irp5Ma.qs")
 for (ff in FilesToCopy)
   file.copy(
