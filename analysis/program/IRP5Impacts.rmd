@@ -50,7 +50,8 @@ table0 <- function(x) table(x, useNA = "ifany")
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
-pathresults <- paste0(pathprogram, "2026 01 23/")
+pathsaveddata <- paste0(path, "saveddata/")
+pathresults <- paste0(pathprogram, "results/")
 pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
 library(qs); library(data.table); library(ggplot2); library(rmarkdown); library(fixest)
@@ -64,47 +65,46 @@ library(qs); library(data.table); library(ggplot2); library(rmarkdown); library(
 
 
 
-``{r select nonanomalous sample}
-Lf <- qread(paste0(pathdata, "EstSample_AllSectorHHI.qs"), nthreads = 13)setkey(Lf, taxrefno, taxyear)
+``{r select sample and estimate, eval = F}
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+setkey(Lf, taxrefno, taxyear)
 Lf[, ReportEveryYear := 0L]
-Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, by = (taxrefno)]
+Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
+  by = (taxrefno)]
 Lf[, num := .N, by = (taxrefno)]
 Lf[MaxDiffTY == num, ReportEveryYear := 1L]
-
-Lf1 <- Lf[Jobs0 > 10 & DurMonthMarch > 0 & ReportEveryYear == 1L, ]
-
-Lf1[HHI <= median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Below"]
-Lf1[HHI > median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Above"]
-Lf1[, HHILevel := factor(HHILevel)]
-
+#### Complete panel sample
+LfC <- Lf[Jobs0 > 10 & DurMonthMarch > 0 & ReportEveryYear == 1L, ]
+LfC[HHI <= median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Below"]
+LfC[HHI > median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Above"]
+LfC[, HHILevel := factor(HHILevel)]
+LfCE <- LfC[ExistedBefore2013 == 1L, ]
+LfCEb <- LfCE[grepl("Be", HHILevel), ])
+LfCEa <- LfCE[grepl("Ab", HHILevel), ])
 library(fixest)
-es1 <- feols(Jobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLf <- feols(Jobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L, ])
-es2 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+  data = Lf)
+esLfC <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L, ])
-es3 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+  data = LfC)
+esLfCE <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1)
+  data = LfCE)
 #### Subsample: High and low concentrated markets
-es4 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLfCEa <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L & grepl("Be", HHILevel), ])
-es5 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+  data = LfCEa)
+esLfCEb <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L & grepl("Ab", HHILevel), ])
-es6 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[grepl("Be", HHILevel), ])
-es7 <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[grepl("Ab", HHILevel), ])
+  data = LfCEb)
 library(ggfixest)
 eslist <-  list(
-    "Existed firms, all sample" = es2, 
-    "Existed firms, low concentrated markets" = es4, 
-    "Existed firms, high concentrated markets" = es5 
+    "All sample" = esLf, 
+    "Complete panel" = esLfC, 
+    "Existed firms, all sample" = esLfCE, 
+    "Existed firms, high concentrated markets" = esLfCEa, 
+    "Existed firms, low concentrated markets" = esLfCEb 
   )
 gFE <- ggiplot(eslist,
   ref.line = 2012, 
@@ -121,7 +121,7 @@ gFE <- ggiplot(eslist,
 scale_x_continuous(limits = c(2010, 2022), breaks = 2010:2022) +
 scale_y_continuous(limits = c(15, -10)) 
 ggsave(
-  paste0(pathresults, "Results2026Jan23.jpg")
+  paste0(pathresults, "Results2026Mar03.jpg")
   , gFE, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
