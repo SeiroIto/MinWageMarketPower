@@ -107,7 +107,59 @@ setFixest_dict(c(
 #### gives 2*2=4 estimations
 est = feols(Ozone ~ Solar.R + sw0(Wind + Temp) | csw(Month, Day), 
   airquality, cluster = ~Day)                 
-
-
+etable(est)
+etable(est, 
+  style.df = style.df(depvar.title = "", fixef.title = "", 
+    fixef.suffix = " fixed effect", yesNo = "yes"))
+library(pander)
+```
+```{r}
+#| results = "asis"
+etable(est, postprocess.df = pandoc.table.return, style = "rmarkdown")
+my_style = style.df(depvar.title = "", fixef.title = "", 
+                    fixef.suffix = " fixed effect", yesNo = "yes")
+setFixest_etable(style.df = my_style, 
+  postprocess.df = pandoc.table.return)
+etable(est[rhs = 2], style = "rmarkdown", 
+  caption = "New default values")
 ```
 
+```{r try out of fixest, echo = T, warning = F}
+library(fixest)
+library(data.table)
+library(Matrix)
+set.seed(200)
+x = rep(letters[1:4], 3)[1:20]
+y = sample(1:4, 20, replace = T)
+z = rep(0:1, each = 10)
+i(x, y, reference = 2)
+data(base_did)
+base_did <- data.table(base_did)
+dt <- data.table(base_did, base_did[, i(period, treat, 5)])
+dt[, y := round(y, 2)]
+dt[, x1 := round(x1, 2)]
+Matrix(as.matrix(dt)[1:50, ], sparse = T)
+#### printSpMatrix2(Matrix(as.matrix(dt), sparse = T))
+
+dt[, Gr := 1L]
+dt[id > 50, Gr := 2L]
+Matrix(as.matrix(dt[, i(period, treat, 5)][1:50, ]), sparse = T)
+
+summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
+
+data(airquality)
+aq = airquality
+aq$week = aq$Day %/% 7 + 1
+aq <- data.table(aq)
+aq[1:11, ]
+#### Interacting Month and week:
+res_2 = feols(Ozone ~ Solar.R + i(Month, week), aq) # week as numbers (time trend)
+res_2F = feols(Ozone ~ Solar.R + i(Month, i.week), aq) # week as factor (dummy)
+
+
+#### Same but dropping the 5th Month and 1st week
+res_2F_bis = feols(Ozone ~ Solar.R + i(Month, i.week, ref = 5, ref2 = 1), aq)
+
+etable(res_2F, res_2F_bis)
+
+```

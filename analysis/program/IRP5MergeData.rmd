@@ -231,18 +231,18 @@ options(tinytable_format_digits = 2)
 tb.agest1 <- tt(tb.agest1, 
   caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
 tb.agest1 <- format_tt(tb.agest1,
-    j = c(2:6),
+    j = 2:5,
     num_mark_big = " "
   )
 tb.agest1 <- style_tt(tb.agest1, 
     i = 0, 
-    j = 2:6, 
+    j = 2:5, 
     fontsize = .7
   )
 tb.agest2 <- tt(tb.agest2, 
   caption = "Jobs and sub-MW jobs, agriculture, estimation sample (continued)")
 tb.agest2 <- format_tt(tb.agest2,
-    j = 2,
+    j = 2:4,
     num_mark_big = " "
   )
 tb.agest1

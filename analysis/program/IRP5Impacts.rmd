@@ -85,7 +85,7 @@ Lf[DurationTY == num, ReportEveryYear := 1L]
 ####   "Job duration in current taxyear" > 0
 ####     DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5)
 ####   Observed duration = latest TY - earliest TY + 1
-Lf[taxyear == taxyear[num == 1L], 
+Lf[num == 1L, ][, 
   .(
          Micro = sum(Jobs0>0 & Jobs0<10, na.rm = T)
     , NotMicro = sum(Jobs0>=10, na.rm = T)
@@ -159,6 +159,11 @@ lapply(eslist, summary)
 ```
 
 ```{r estimation with various Job0 and start year}
+Lf[num == 1L, ][, 
+  .(
+         Micro = sum(Jobs0>0 & Jobs0<10, na.rm = T)
+    , NotMicro = sum(Jobs0>=10, na.rm = T)
+  ), by = taxyear]
 for (Jb in c(2, 10)) {
   LfC <- Lf[
       grepl("^B", FirstYear2013) & 
@@ -180,11 +185,11 @@ for (Jb in c(2, 10)) {
     , LfCEa = table(LfCEa[, taxyear])
   ))
   for (Yr in c(2010, 2012)) {
-    LfYr    <- Lf[taxyear >= YR, ]
-    LfCYr   <- LfC[taxyear >= YR, ]
-    LfCEYr  <- LfCE[taxyear >= YR, ]
-    LfCEaYr <- LfCEa[taxyear >= UR, ]
-    LfCEbYr <- LfCEb[taxyear >= YR, ]
+    LfYr    <- Lf[taxyear >= Yr, ]
+    LfCYr   <- LfC[taxyear >= Yr, ]
+    LfCEYr  <- LfCE[taxyear >= Yr, ]
+    LfCEaYr <- LfCEa[taxyear >= Yr, ]
+    LfCEbYr <- LfCEb[taxyear >= Yr, ]
     library(fixest)
     esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
