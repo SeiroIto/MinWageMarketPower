@@ -217,31 +217,32 @@ agestsum <- Lf[, .(
     ][, .(
       taxyear, 
       TotalJobs, TotalSubMWJobs, TotalEmployees, TotalSubMWWorkers, 
-      TotalAffectedFirms,
+      TotalFirmsWithEmp, TotalAffectedFirms,
       AggFA = round((TotalSubMWJobs/TotalJobs)*100, 2),
       AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
     )]
-tb.agest1 <- tb.agest[, .(taxyear, TotalJobs, TotalSubMWJobs, 
-  TotalEmployees, TotalSubMWWorkers, TotalAffectedFirms)]
-tb.agest2 <- tb.agest[, .(taxyear, TotalJobs, AggFA,
-  AggFAe, AggFirmFA)]
+tb.agest1 <- agestsum[, .(taxyear, TotalJobs, TotalSubMWJobs, 
+  TotalEmployees, TotalSubMWWorkers)]
+tb.agest2 <- agestsum[, .(taxyear, TotalJobs, 
+  TotalFirmsWithEmp, TotalAffectedFirms, 
+  AggFA,AggFAe, AggFirmFA)]
 options(tinytable_format_digits = 2)
 tb.agest1 <- tt(tb.agest1, 
   caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
 tb.agest1 <- format_tt(tb.agest1,
-    j = c(2:6),
+    j = 2:5,
     num_mark_big = " "
   )
 tb.agest1 <- style_tt(tb.agest1, 
     i = 0, 
-    j = 2:6, 
+    j = 2:5, 
     fontsize = .7
   )
 tb.agest2 <- tt(tb.agest2, 
   caption = "Jobs and sub-MW jobs, agriculture, estimation sample (continued)")
 tb.agest2 <- format_tt(tb.agest2,
-    j = 2,
+    j = 2:4,
     num_mark_big = " "
   )
 tb.agest1

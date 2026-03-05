@@ -112,7 +112,7 @@ section.footnotes {
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Test litedown</h1></div>
-<div class="date"><h3>2026 3 05 13:07</h3></div>
+<div class="date"><h3>2026 3 05 19:50</h3></div>
 </div>
 <div class="body">
 <style type="text/css">
@@ -348,6 +348,856 @@ tb
 <!-- postamble end -->
 <!-- hack to avoid NA insertion in last line -->
 <pre><code class="language-r">x[, d := T]
+</code></pre>
+<pre><code class="language-r">library(fixest)
+data(airquality)
+#### Setting a dictionary 
+setFixest_dict(c(
+    Ozone = &quot;Ozone (ppb)&quot;, 
+  Solar.R = &quot;Solar Radiation (Langleys)&quot;,
+     Wind = &quot;Wind Speed (mph)&quot;, 
+     Temp = &quot;Temperature&quot;))
+#### On multiple estimations: see the dedicated vignette
+#### sw0: step wise addition Solar.R, Solar.R+Wind+Temp
+#### csw: cumulative step wise addition Month, Month+Day
+#### gives 2*2=4 estimations
+est = feols(Ozone ~ Solar.R + sw0(Wind + Temp) | csw(Month, Day), 
+  airquality, cluster = ~Day)                 
+</code></pre>
+<pre><code class="language-plain message">#&gt; NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).
+#&gt;       |-&gt; this msg only concerns the variables common to all estimations
+</code></pre>
+<pre><code class="language-r">etable(est)
+</code></pre>
+<pre><code>#&gt; 
+#&gt; ----------------------------------------------------------------------
+#&gt;            &amp;nbsp;                   est.1                est.2        
+#&gt; ---------------------------- -------------------- --------------------
+#&gt;                                  Ozone (ppb)          Ozone (ppb)     
+#&gt; 
+#&gt;                                                                       
+#&gt; 
+#&gt;  Solar Radiation (Langleys)   0.1148*** (0.0234)    0.0522* (0.0202)  
+#&gt; 
+#&gt;       Wind Speed (mph)                             -3.109*** (0.7986) 
+#&gt; 
+#&gt;         Temperature                                1.875*** (0.3671)  
+#&gt; 
+#&gt;      Month fixed effect              yes                  yes         
+#&gt; 
+#&gt;       Day fixed effect                                                
+#&gt; 
+#&gt;  __________________________   __________________   __________________ 
+#&gt; 
+#&gt;       S.E.: Clustered              by: Day              by: Day       
+#&gt; 
+#&gt;         Observations                 111                  111         
+#&gt; 
+#&gt;              R2                    0.31974              0.63686       
+#&gt; 
+#&gt;          Within R2                 0.12245              0.53154       
+#&gt; ----------------------------------------------------------------------
+#&gt; 
+#&gt; Table: Table continues below
+#&gt; 
+#&gt;  
+#&gt; ----------------------------------------
+#&gt;        est.3               est.4        
+#&gt; ------------------- --------------------
+#&gt;     Ozone (ppb)         Ozone (ppb)     
+#&gt; 
+#&gt;                                         
+#&gt; 
+#&gt;  0.1078** (0.0329)    0.0509* (0.0236)  
+#&gt; 
+#&gt;                      -3.289*** (0.7791) 
+#&gt; 
+#&gt;                      2.052*** (0.2420)  
+#&gt; 
+#&gt;         yes                 yes         
+#&gt; 
+#&gt;         yes                 yes         
+#&gt; 
+#&gt;  _________________   __________________ 
+#&gt; 
+#&gt;       by: Day             by: Day       
+#&gt; 
+#&gt;         109                 109         
+#&gt; 
+#&gt;       0.57983             0.81588       
+#&gt; 
+#&gt;       0.12074             0.61471       
+#&gt; ----------------------------------------
+#&gt; 
+</code></pre>
+<pre><code class="language-r">etable(est, 
+  style.df = style.df(depvar.title = &quot;&quot;, fixef.title = &quot;&quot;, 
+    fixef.suffix = &quot; fixed effect&quot;, yesNo = &quot;yes&quot;))
+</code></pre>
+<pre><code>#&gt; 
+#&gt; ----------------------------------------------------------------------
+#&gt;            &amp;nbsp;                   est.1                est.2        
+#&gt; ---------------------------- -------------------- --------------------
+#&gt;                                  Ozone (ppb)          Ozone (ppb)     
+#&gt; 
+#&gt;                                                                       
+#&gt; 
+#&gt;  Solar Radiation (Langleys)   0.1148*** (0.0234)    0.0522* (0.0202)  
+#&gt; 
+#&gt;       Wind Speed (mph)                             -3.109*** (0.7986) 
+#&gt; 
+#&gt;         Temperature                                1.875*** (0.3671)  
+#&gt; 
+#&gt;      Month fixed effect              yes                  yes         
+#&gt; 
+#&gt;       Day fixed effect                                                
+#&gt; 
+#&gt;  __________________________   __________________   __________________ 
+#&gt; 
+#&gt;       S.E.: Clustered              by: Day              by: Day       
+#&gt; 
+#&gt;         Observations                 111                  111         
+#&gt; 
+#&gt;              R2                    0.31974              0.63686       
+#&gt; 
+#&gt;          Within R2                 0.12245              0.53154       
+#&gt; ----------------------------------------------------------------------
+#&gt; 
+#&gt; Table: Table continues below
+#&gt; 
+#&gt;  
+#&gt; ----------------------------------------
+#&gt;        est.3               est.4        
+#&gt; ------------------- --------------------
+#&gt;     Ozone (ppb)         Ozone (ppb)     
+#&gt; 
+#&gt;                                         
+#&gt; 
+#&gt;  0.1078** (0.0329)    0.0509* (0.0236)  
+#&gt; 
+#&gt;                      -3.289*** (0.7791) 
+#&gt; 
+#&gt;                      2.052*** (0.2420)  
+#&gt; 
+#&gt;         yes                 yes         
+#&gt; 
+#&gt;         yes                 yes         
+#&gt; 
+#&gt;  _________________   __________________ 
+#&gt; 
+#&gt;       by: Day             by: Day       
+#&gt; 
+#&gt;         109                 109         
+#&gt; 
+#&gt;       0.57983             0.81588       
+#&gt; 
+#&gt;       0.12074             0.61471       
+#&gt; ----------------------------------------
+#&gt; 
+</code></pre>
+<pre><code class="language-r">library(pander)
+</code></pre>
+<pre><code class="language-r">etable(est, postprocess.df = pandoc.table.return, style = &quot;rmarkdown&quot;)
+</code></pre>
+<table>
+<caption>Table continues below</caption>
+<thead>
+<tr>
+<th align="center"> </th>
+<th align="center">est.1</th>
+<th align="center">est.2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"></td>
+<td align="center">Ozone (ppb)</td>
+<td align="center">Ozone (ppb)</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Solar Radiation (Langleys)</td>
+<td align="center">0.1148*** (0.0234)</td>
+<td align="center">0.0522* (0.0202)</td>
+</tr>
+<tr>
+<td align="center">Wind Speed (mph)</td>
+<td align="center"></td>
+<td align="center">-3.109*** (0.7986)</td>
+</tr>
+<tr>
+<td align="center">Temperature</td>
+<td align="center"></td>
+<td align="center">1.875*** (0.3671)</td>
+</tr>
+<tr>
+<td align="center">Month fixed effect</td>
+<td align="center">yes</td>
+<td align="center">yes</td>
+</tr>
+<tr>
+<td align="center">Day fixed effect</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">__________________________</td>
+<td align="center">__________________</td>
+<td align="center">__________________</td>
+</tr>
+<tr>
+<td align="center">S.E.: Clustered</td>
+<td align="center">by: Day</td>
+<td align="center">by: Day</td>
+</tr>
+<tr>
+<td align="center">Observations</td>
+<td align="center">111</td>
+<td align="center">111</td>
+</tr>
+<tr>
+<td align="center">R2</td>
+<td align="center">0.31974</td>
+<td align="center">0.63686</td>
+</tr>
+<tr>
+<td align="center">Within R2</td>
+<td align="center">0.12245</td>
+<td align="center">0.53154</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th align="center">est.3</th>
+<th align="center">est.4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Ozone (ppb)</td>
+<td align="center">Ozone (ppb)</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">0.1078** (0.0329)</td>
+<td align="center">0.0509* (0.0236)</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">-3.289*** (0.7791)</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">2.052*** (0.2420)</td>
+</tr>
+<tr>
+<td align="center">yes</td>
+<td align="center">yes</td>
+</tr>
+<tr>
+<td align="center">yes</td>
+<td align="center">yes</td>
+</tr>
+<tr>
+<td align="center">_________________</td>
+<td align="center">__________________</td>
+</tr>
+<tr>
+<td align="center">by: Day</td>
+<td align="center">by: Day</td>
+</tr>
+<tr>
+<td align="center">109</td>
+<td align="center">109</td>
+</tr>
+<tr>
+<td align="center">0.57983</td>
+<td align="center">0.81588</td>
+</tr>
+<tr>
+<td align="center">0.12074</td>
+<td align="center">0.61471</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">my_style = style.df(depvar.title = &quot;&quot;, fixef.title = &quot;&quot;, 
+                    fixef.suffix = &quot; fixed effect&quot;, yesNo = &quot;yes&quot;)
+setFixest_etable(style.df = my_style, 
+  postprocess.df = pandoc.table.return)
+etable(est[rhs = 2], style = &quot;rmarkdown&quot;, 
+  caption = &quot;New default values&quot;)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="center"> </th>
+<th align="center">est[rhs = 2].1</th>
+<th align="center">est[rhs = 2].2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"></td>
+<td align="center">Ozone (ppb)</td>
+<td align="center">Ozone (ppb)</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Solar Radiation (Langleys)</td>
+<td align="center">0.0522* (0.0202)</td>
+<td align="center">0.0509* (0.0236)</td>
+</tr>
+<tr>
+<td align="center">Wind Speed (mph)</td>
+<td align="center">-3.109*** (0.7986)</td>
+<td align="center">-3.289*** (0.7791)</td>
+</tr>
+<tr>
+<td align="center">Temperature</td>
+<td align="center">1.875*** (0.3671)</td>
+<td align="center">2.052*** (0.2420)</td>
+</tr>
+<tr>
+<td align="center">Month fixed effect</td>
+<td align="center">yes</td>
+<td align="center">yes</td>
+</tr>
+<tr>
+<td align="center">Day fixed effect</td>
+<td align="center"></td>
+<td align="center">yes</td>
+</tr>
+<tr>
+<td align="center">__________________________</td>
+<td align="center">__________________</td>
+<td align="center">__________________</td>
+</tr>
+<tr>
+<td align="center">S.E.: Clustered</td>
+<td align="center">by: Day</td>
+<td align="center">by: Day</td>
+</tr>
+<tr>
+<td align="center">Observations</td>
+<td align="center">111</td>
+<td align="center">109</td>
+</tr>
+<tr>
+<td align="center">R2</td>
+<td align="center">0.63686</td>
+<td align="center">0.81588</td>
+</tr>
+<tr>
+<td align="center">Within R2</td>
+<td align="center">0.53154</td>
+<td align="center">0.61471</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">library(fixest)
+library(data.table)
+library(Matrix)
+set.seed(200)
+x = rep(letters[1:4], 3)[1:20]
+y = sample(1:4, 20, replace = T)
+z = rep(0:1, each = 10)
+i(x, y, reference = 2)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="right">a</th>
+<th align="right">b</th>
+<th align="right">c</th>
+<th align="right">d</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">4</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">data(base_did)
+base_did &lt;- data.table(base_did)
+dt &lt;- data.table(base_did, base_did[, i(period, treat, 5)])
+dt[, y := round(y, 2)]
+dt[, x1 := round(x1, 2)]
+Matrix(as.matrix(dt)[1:50, ], sparse = T)
+</code></pre>
+<pre><code class="language-plain message">#&gt;   [[ suppressing 15 column names ‘y’, ‘x1’, ‘id’ ... ]]
+</code></pre>
+<pre><code>#&gt; 50 x 15 sparse Matrix of class &quot;dgCMatrix&quot;
+#&gt;                                              
+#&gt;  [1,]   2.88  0.54 1  1 . 1 1 . . . . . . . .
+#&gt;  [2,]   1.86 -3.04 1  2 . 1 . 1 . . . . . . .
+#&gt;  [3,]   0.09  5.58 1  3 . 1 . . 1 . . . . . .
+#&gt;  [4,]   3.78 -2.83 1  4 . 1 . . . 1 . . . . .
+#&gt;  [5,]  -2.56 -5.04 1  5 . 1 . . . . . . . . .
+#&gt;  [6,]   1.73 -0.64 1  6 1 1 . . . . 1 . . . .
+#&gt;  [7,]   6.28 -2.13 1  7 1 1 . . . . . 1 . . .
+#&gt;  [8,]   4.77  3.49 1  8 1 1 . . . . . . 1 . .
+#&gt;  [9,]   5.35  0.84 1  9 1 1 . . . . . . . 1 .
+#&gt; [10,]   4.95  0.63 1 10 1 1 . . . . . . . . 1
+#&gt; [11,]  -4.26 -5.26 2  1 . 1 1 . . . . . . . .
+#&gt; [12,]   0.61 -3.70 2  2 . 1 . 1 . . . . . . .
+#&gt; [13,]   5.62 -0.22 2  3 . 1 . . 1 . . . . . .
+#&gt; [14,]  -6.17 -2.03 2  4 . 1 . . . 1 . . . . .
+#&gt; [15,]   0.71  0.01 2  5 . 1 . . . . . . . . .
+#&gt; [16,]  -0.34 -3.49 2  6 1 1 . . . . 1 . . . .
+#&gt; [17,]   6.84 -0.80 2  7 1 1 . . . . . 1 . . .
+#&gt; [18,]   8.56 -1.21 2  8 1 1 . . . . . . 1 . .
+#&gt; [19,]  11.52 -5.75 2  9 1 1 . . . . . . . 1 .
+#&gt; [20,]  13.13  1.75 2 10 1 1 . . . . . . . . 1
+#&gt; [21,]  -2.62 -0.66 3  1 . 1 1 . . . . . . . .
+#&gt; [22,] -11.36 -1.34 3  2 . 1 . 1 . . . . . . .
+#&gt; [23,]   3.13  5.02 3  3 . 1 . . 1 . . . . . .
+#&gt; [24,]  -6.73 -4.44 3  4 . 1 . . . 1 . . . . .
+#&gt; [25,]   1.03  1.54 3  5 . 1 . . . . . . . . .
+#&gt; [26,]  -2.99  2.49 3  6 1 1 . . . . 1 . . . .
+#&gt; [27,]  -1.66 -7.42 3  7 1 1 . . . . . 1 . . .
+#&gt; [28,]   6.26 -0.97 3  8 1 1 . . . . . . 1 . .
+#&gt; [29,]   1.23 -3.57 3  9 1 1 . . . . . . . 1 .
+#&gt; [30,]   9.25 -0.73 3 10 1 1 . . . . . . . . 1
+#&gt; [31,]   3.98 -1.86 4  1 . 1 1 . . . . . . . .
+#&gt; [32,]   0.01 -0.30 4  2 . 1 . 1 . . . . . . .
+#&gt; [33,]  -3.38 -2.83 4  3 . 1 . . 1 . . . . . .
+#&gt; [34,]   7.13 -0.34 4  4 . 1 . . . 1 . . . . .
+#&gt; [35,]  -4.51  2.63 4  5 . 1 . . . . . . . . .
+#&gt; [36,]   7.62  3.68 4  6 1 1 . . . . 1 . . . .
+#&gt; [37,]   8.89  2.00 4  7 1 1 . . . . . 1 . . .
+#&gt; [38,]   3.99 -2.22 4  8 1 1 . . . . . . 1 . .
+#&gt; [39,]   7.72 -2.86 4  9 1 1 . . . . . . . 1 .
+#&gt; [40,]  11.59  3.46 4 10 1 1 . . . . . . . . 1
+#&gt; [41,]  -5.74 -2.15 5  1 . 1 1 . . . . . . . .
+#&gt; [42,]   9.31  5.38 5  2 . 1 . 1 . . . . . . .
+#&gt; [43,]   2.49 -1.59 5  3 . 1 . . 1 . . . . . .
+#&gt; [44,]   0.44  0.17 5  4 . 1 . . . 1 . . . . .
+#&gt; [45,]   2.66 -0.23 5  5 . 1 . . . . . . . . .
+#&gt; [46,]   2.15 -2.31 5  6 1 1 . . . . 1 . . . .
+#&gt; [47,]  -1.80  0.16 5  7 1 1 . . . . . 1 . . .
+#&gt; [48,]   9.23  0.75 5  8 1 1 . . . . . . 1 . .
+#&gt; [49,]   3.21 -3.65 5  9 1 1 . . . . . . . 1 .
+#&gt; [50,]   7.97  3.56 5 10 1 1 . . . . . . . . 1
+</code></pre>
+<pre><code class="language-r">#### printSpMatrix2(Matrix(as.matrix(dt), sparse = T))
+
+dt[, Gr := 1L]
+dt[id &gt; 50, Gr := 2L]
+Matrix(as.matrix(dt[, i(period, treat, 5)][1:50, ]), sparse = T)
+</code></pre>
+<pre><code>#&gt; 50 x 9 sparse Matrix of class &quot;dgCMatrix&quot;
+#&gt;       1 2 3 4 6 7 8 9 10
+#&gt;  [1,] 1 . . . . . . .  .
+#&gt;  [2,] . 1 . . . . . .  .
+#&gt;  [3,] . . 1 . . . . .  .
+#&gt;  [4,] . . . 1 . . . .  .
+#&gt;  [5,] . . . . . . . .  .
+#&gt;  [6,] . . . . 1 . . .  .
+#&gt;  [7,] . . . . . 1 . .  .
+#&gt;  [8,] . . . . . . 1 .  .
+#&gt;  [9,] . . . . . . . 1  .
+#&gt; [10,] . . . . . . . .  1
+#&gt; [11,] 1 . . . . . . .  .
+#&gt; [12,] . 1 . . . . . .  .
+#&gt; [13,] . . 1 . . . . .  .
+#&gt; [14,] . . . 1 . . . .  .
+#&gt; [15,] . . . . . . . .  .
+#&gt; [16,] . . . . 1 . . .  .
+#&gt; [17,] . . . . . 1 . .  .
+#&gt; [18,] . . . . . . 1 .  .
+#&gt; [19,] . . . . . . . 1  .
+#&gt; [20,] . . . . . . . .  1
+#&gt; [21,] 1 . . . . . . .  .
+#&gt; [22,] . 1 . . . . . .  .
+#&gt; [23,] . . 1 . . . . .  .
+#&gt; [24,] . . . 1 . . . .  .
+#&gt; [25,] . . . . . . . .  .
+#&gt; [26,] . . . . 1 . . .  .
+#&gt; [27,] . . . . . 1 . .  .
+#&gt; [28,] . . . . . . 1 .  .
+#&gt; [29,] . . . . . . . 1  .
+#&gt; [30,] . . . . . . . .  1
+#&gt; [31,] 1 . . . . . . .  .
+#&gt; [32,] . 1 . . . . . .  .
+#&gt; [33,] . . 1 . . . . .  .
+#&gt; [34,] . . . 1 . . . .  .
+#&gt; [35,] . . . . . . . .  .
+#&gt; [36,] . . . . 1 . . .  .
+#&gt; [37,] . . . . . 1 . .  .
+#&gt; [38,] . . . . . . 1 .  .
+#&gt; [39,] . . . . . . . 1  .
+#&gt; [40,] . . . . . . . .  1
+#&gt; [41,] 1 . . . . . . .  .
+#&gt; [42,] . 1 . . . . . .  .
+#&gt; [43,] . . 1 . . . . .  .
+#&gt; [44,] . . . 1 . . . .  .
+#&gt; [45,] . . . . . . . .  .
+#&gt; [46,] . . . . 1 . . .  .
+#&gt; [47,] . . . . . 1 . .  .
+#&gt; [48,] . . . . . . 1 .  .
+#&gt; [49,] . . . . . . . 1  .
+#&gt; [50,] . . . . . . . .  1
+</code></pre>
+<pre><code class="language-r">summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
+</code></pre>
+<pre><code>#&gt; 
+#&gt; Call:
+#&gt; lm(formula = y ~ i(treat) * i(period, 2) * Gr, data = dt)
+#&gt; 
+#&gt; Residuals:
+#&gt;      Min       1Q   Median       3Q      Max 
+#&gt; -16.5360  -3.2785  -0.0406   3.3040  15.9908 
+#&gt; 
+#&gt; Coefficients: (30 not defined because of singularities)
+#&gt;                             Estimate Std. Error t value Pr(&gt;|t|)    
+#&gt; (Intercept)                  -0.0908     2.7102  -0.034 0.973279    
+#&gt; i(treat)0                     0.5915     2.3961   0.247 0.805063    
+#&gt; i(treat)1                         NA         NA      NA       NA    
+#&gt; i(period, 2)1                -0.9948     3.8327  -0.260 0.795260    
+#&gt; i(period, 2)3                 2.0660     3.8327   0.539 0.589974    
+#&gt; i(period, 2)4                -1.1060     3.8327  -0.289 0.772970    
+#&gt; i(period, 2)5                 1.3564     3.8327   0.354 0.723487    
+#&gt; i(period, 2)6                 1.9140     3.8327   0.499 0.617616    
+#&gt; i(period, 2)7                 4.5656     3.8327   1.191 0.233841    
+#&gt; i(period, 2)8                 3.6704     3.8327   0.958 0.338463    
+#&gt; i(period, 2)9                 8.0840     3.8327   2.109 0.035164 *  
+#&gt; i(period, 2)10               14.0484     3.8327   3.665 0.000259 ***
+#&gt; Gr                            0.1304     2.4023   0.054 0.956721    
+#&gt; i(treat)0:i(period, 2)1       0.2473     3.3886   0.073 0.941831    
+#&gt; i(treat)1:i(period, 2)1           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)3      -1.2505     3.3886  -0.369 0.712173    
+#&gt; i(treat)1:i(period, 2)3           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)4      -2.3755     3.3886  -0.701 0.483441    
+#&gt; i(treat)1:i(period, 2)4           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)5      -1.5039     3.3886  -0.444 0.657266    
+#&gt; i(treat)1:i(period, 2)5           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)6      -4.1447     3.3886  -1.223 0.221555    
+#&gt; i(treat)1:i(period, 2)6           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)7      -6.8928     3.3886  -2.034 0.042193 *  
+#&gt; i(treat)1:i(period, 2)7           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)8      -7.5023     3.3886  -2.214 0.027044 *  
+#&gt; i(treat)1:i(period, 2)8           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)9      -5.6188     3.3886  -1.658 0.097586 .  
+#&gt; i(treat)1:i(period, 2)9           NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)10     -3.6683     3.3886  -1.083 0.279267    
+#&gt; i(treat)1:i(period, 2)10          NA         NA      NA       NA    
+#&gt; i(treat)0:Gr                      NA         NA      NA       NA    
+#&gt; i(treat)1:Gr                      NA         NA      NA       NA    
+#&gt; i(period, 2)1:Gr              0.1144     3.3974   0.034 0.973144    
+#&gt; i(period, 2)3:Gr             -1.0100     3.3974  -0.297 0.766305    
+#&gt; i(period, 2)4:Gr              1.7550     3.3974   0.517 0.605560    
+#&gt; i(period, 2)5:Gr             -0.1752     3.3974  -0.052 0.958882    
+#&gt; i(period, 2)6:Gr              1.4530     3.3974   0.428 0.668969    
+#&gt; i(period, 2)7:Gr              0.9832     3.3974   0.289 0.772332    
+#&gt; i(period, 2)8:Gr              2.2138     3.3974   0.652 0.514787    
+#&gt; i(period, 2)9:Gr             -0.7540     3.3974  -0.222 0.824406    
+#&gt; i(period, 2)10:Gr            -5.4362     3.3974  -1.600 0.109872    
+#&gt; i(treat)0:i(period, 2)1:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)1:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)3:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)3:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)4:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)4:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)5:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)5:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)6:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)6:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)7:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)7:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)8:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)8:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)9:Gr        NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)9:Gr        NA         NA      NA       NA    
+#&gt; i(treat)0:i(period, 2)10:Gr       NA         NA      NA       NA    
+#&gt; i(treat)1:i(period, 2)10:Gr       NA         NA      NA       NA    
+#&gt; ---
+#&gt; Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#&gt; 
+#&gt; Residual standard error: 5.122 on 1050 degrees of freedom
+#&gt; Multiple R-squared:  0.2162,	Adjusted R-squared:  0.1946 
+#&gt; F-statistic:  9.99 on 29 and 1050 DF,  p-value: &lt; 2.2e-16
+#&gt; 
+</code></pre>
+<pre><code class="language-r">data(airquality)
+aq = airquality
+aq$week = aq$Day %/% 7 + 1
+aq &lt;- data.table(aq)
+aq[1:11, ]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th align="right">Ozone</th>
+<th align="right">Solar.R</th>
+<th align="right">Wind</th>
+<th align="right">Temp</th>
+<th align="right">Month</th>
+<th align="right">Day</th>
+<th align="right">week</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">41</td>
+<td align="right">190</td>
+<td align="right">7.4</td>
+<td align="right">67</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">36</td>
+<td align="right">118</td>
+<td align="right">8.0</td>
+<td align="right">72</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">12</td>
+<td align="right">149</td>
+<td align="right">12.6</td>
+<td align="right">74</td>
+<td align="right">5</td>
+<td align="right">3</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">18</td>
+<td align="right">313</td>
+<td align="right">11.5</td>
+<td align="right">62</td>
+<td align="right">5</td>
+<td align="right">4</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">14.3</td>
+<td align="right">56</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+<td align="right">⋮</td>
+</tr>
+<tr>
+<td align="right">23</td>
+<td align="right">299</td>
+<td align="right">8.6</td>
+<td align="right">65</td>
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td align="right">19</td>
+<td align="right">99</td>
+<td align="right">13.8</td>
+<td align="right">59</td>
+<td align="right">5</td>
+<td align="right">8</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td align="right">19</td>
+<td align="right">20.1</td>
+<td align="right">61</td>
+<td align="right">5</td>
+<td align="right">9</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right">194</td>
+<td align="right">8.6</td>
+<td align="right">69</td>
+<td align="right">5</td>
+<td align="right">10</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="right"></td>
+<td align="right">6.9</td>
+<td align="right">74</td>
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-r">#### Interacting Month and week:
+res_2 = feols(Ozone ~ Solar.R + i(Month, week), aq) # week as numbers (time trend)
+</code></pre>
+<pre><code class="language-plain message">#&gt; NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).
+</code></pre>
+<pre><code class="language-r">res_2F = feols(Ozone ~ Solar.R + i(Month, i.week), aq) # week as factor (dummy)
+</code></pre>
+<pre><code class="language-plain message">#&gt; NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).
+</code></pre>
+<pre><code class="language-r">#### Same but dropping the 5th Month and 1st week
+res_2F_bis = feols(Ozone ~ Solar.R + i(Month, i.week, ref = 5, ref2 = 1), aq)
+</code></pre>
+<pre><code class="language-plain message">#&gt; NOTE: 42 observations removed because of NA values (LHS: 37, RHS: 7).
+</code></pre>
+<pre><code class="language-r">etable(res_2F, res_2F_bis)
+</code></pre>
+<pre><code>#&gt; 
+#&gt; --------------------------------------------------------------------
+#&gt;            &amp;nbsp;                  res_2F            res_2F_bis     
+#&gt; ---------------------------- ------------------- -------------------
+#&gt;                                  Ozone (ppb)         Ozone (ppb)    
+#&gt; 
+#&gt;                                                                     
+#&gt; 
+#&gt;           Constant              8.207 (14.16)      18.51* (7.343)   
+#&gt; 
+#&gt;  Solar Radiation (Langleys)   0.0963** (0.0314)   0.1007** (0.0324) 
+#&gt; 
+#&gt;     Month = 5 x week = 2       -11.36 (17.18)                       
+#&gt; 
+#&gt;     Month = 5 x week = 3       -9.660 (16.05)                       
+#&gt; 
+#&gt;     Month = 5 x week = 4       -6.923 (18.28)                       
+#&gt; 
+#&gt;     Month = 5 x week = 5        28.32 (18.10)                       
+#&gt; 
+#&gt;     Month = 6 x week = 2        10.88 (18.13)      -0.3936 (14.93)  
+#&gt; 
+#&gt;     Month = 6 x week = 3       -2.422 (17.22)      -13.40 (13.47)   
+#&gt; 
+#&gt;     Month = 7 x week = 1       31.87. (17.27)                       
+#&gt; 
+#&gt;     Month = 7 x week = 2       34.35* (16.59)      23.00. (12.58)   
+#&gt; 
+#&gt;     Month = 7 x week = 3        20.17 (16.54)       8.938 (12.47)   
+#&gt; 
+#&gt;     Month = 7 x week = 4       33.76. (17.26)      22.85. (13.51)   
+#&gt; 
+#&gt;     Month = 7 x week = 5       31.58. (18.19)       20.19 (15.04)   
+#&gt; 
+#&gt;     Month = 8 x week = 1        7.218 (19.98)                       
+#&gt; 
+#&gt;     Month = 8 x week = 2       48.12** (17.22)     36.81** (13.56)  
+#&gt; 
+#&gt;     Month = 8 x week = 3        19.17 (16.62)       8.257 (12.48)   
+#&gt; 
+#&gt;     Month = 8 x week = 4       36.50* (17.18)      25.35. (13.46)   
+#&gt; 
+#&gt;     Month = 8 x week = 5      62.00*** (18.12)    50.76*** (14.91)  
+#&gt; 
+#&gt;     Month = 9 x week = 1       46.47** (16.57)                      
+#&gt; 
+#&gt;     Month = 9 x week = 2       -5.661 (16.12)      -17.03 (11.82)   
+#&gt; 
+#&gt;     Month = 9 x week = 3       -2.978 (16.10)      -13.95 (11.65)   
+#&gt; 
+#&gt;     Month = 9 x week = 4        1.809 (16.73)      -8.973 (12.61)   
+#&gt; 
+#&gt;     Month = 9 x week = 5       -8.373 (19.56)      -19.47 (16.95)   
+#&gt; 
+#&gt;  __________________________   _________________   _________________ 
+#&gt; 
+#&gt;          S.E. type                   IID                 IID        
+#&gt; 
+#&gt;         Observations                 111                 111        
+#&gt; 
+#&gt;              R2                    0.52636             0.37684      
+#&gt; 
+#&gt;           Adj. R2                  0.40795             0.27844      
+#&gt; --------------------------------------------------------------------
+#&gt; 
+</code></pre>
+<pre><code class="language-r">
 </code></pre>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
