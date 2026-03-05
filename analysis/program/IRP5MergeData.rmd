@@ -141,7 +141,7 @@ Key variables defined at the establishment level:
 faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
 faa[, c("FA0", "Jobs0") := 
   list(
-    , FA[!is.na(FA) & FA != 0][1]       # FA0
+      FA[!is.na(FA) & FA != 0][1]       # FA0
     , Jobs[!is.na(Jobs) & Jobs != 0][1] # Jobs0
   ), by = 
   .(

@@ -173,13 +173,28 @@ There are Y workers listed in 2012.
 
 # Estimation strategy
 
-A Kronecker product $\bfA\otimes\bfB$ is
+We use TWFE event study estimator. The event study estimator requires time-varying estimates on treatment assignment. In a matrix form, I need Group $$
+G=\left(
+\begin{array}{cccc}
+1 & 0 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+1 & 0 & \dots & 0\\
+0 & 1 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+0 & 1 & \dots & 0\\
+0 & 0 & \dots & 0\\
+\vdots & \vdots &  & \vdots \\
+0 & 0 & \dots & 0\\
+0 & 0 & \dots & 1\\
+\vdots & \vdots &  & \vdots \\
+0 & 0 & \dots & 1
+\end{array}
+\right)
+$$ with
 $$
 \left[
 \begin{array}{ccc}
-a_{11}\bfB & \dots & a_{1K}\bfB\\
- & \ddots & \\
-a_{L1}\bfB & \dots & a_{LK}\bfB\\
+\bfg_{1}\bfB & \dots & gG\bfB
 \end{array}
 \right]
 $$
@@ -214,71 +229,18 @@ Interact <- function(x, group) {
 
 ```
 
-I need Group $$
-G=\left(
-\begin{array}{cccc}
-1 & 0 & \dots & 0\\
-\vdots & \vdots &  & \vdots \\
-1 & 0 & \dots & 0\\
-0 & 1 & \dots & 0\\
-\vdots & \vdots &  & \vdots \\
-0 & 1 & \dots & 0\\
-0 & 0 & \dots & 0\\
-\vdots & \vdots &  & \vdots \\
-0 & 0 & \dots & 0\\
-0 & 0 & \dots & 1\\
-\vdots & \vdots &  & \vdots \\
-0 & 0 & \dots & 1
-\end{array}
-\right)
-$$ with
+
+A Kronecker product $\bfA\otimes\bfB$ is
 $$
 \left[
 \begin{array}{ccc}
-\bfg_{1}\bfB & \dots & gG\bfB
+a_{11}\bfB & \dots & a_{1K}\bfB\\
+ & \ddots & \\
+a_{L1}\bfB & \dots & a_{LK}\bfB\\
 \end{array}
 \right]
 $$
 
-```{r try out of fixest, echo = T, warning = F}
-library(fixest)
-library(data.table)
-library(Matrix)
-set.seed(200)
-x = rep(letters[1:4], 3)[1:20]
-y = sample(1:4, 20, replace = T)
-z = rep(0:1, each = 10)
-i(x, y, reference = 2)
-data(base_did)
-base_did <- data.table(base_did)
-dt <- data.table(base_did, base_did[, i(period, treat, 5)])
-dt[, y := round(y, 2)]
-dt[, x1 := round(x1, 2)]
-Matrix(as.matrix(dt)[1:50, ], sparse = T)
-#### printSpMatrix2(Matrix(as.matrix(dt), sparse = T))
-
-dt[, Gr := 1L]
-dt[id > 50, Gr := 2L]
-Matrix(as.matrix(dt[, i(period, treat, 5)][1:50, ]), sparse = T)
-
-summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
-
-data(airquality)
-aq = airquality
-aq$week = aq$Day %/% 7 + 1
-aq <- data.table(aq)
-aq[1:11, ]
-#### Interacting Month and week:
-res_2 = feols(Ozone ~ Solar.R + i(Month, week), aq) # week as numbers (time trend)
-res_2F = feols(Ozone ~ Solar.R + i(Month, i.week), aq) # week as factor (dummy)
-
-
-#### Same but dropping the 5th Month and 1st week
-res_2F_bis = feols(Ozone ~ Solar.R + i(Month, i.week, ref = 5, ref2 = 1), aq)
-
-etable(res_2F, res_2F_bis)
-
-```
 
 We estimate parameters at the industry subdividion (SIC-7 code at 2 digits) level:
 \begin{equation}
