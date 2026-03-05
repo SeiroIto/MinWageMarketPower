@@ -103,7 +103,7 @@ Tabulation gives
 :::
 
 
-```{r create HHIAgriRowsMainPlaceLevel.qs from HHIAgriRows.qs, eval = F}
+```{r create HHIAgriRowsMainPlaceLevel from HHIAgriRows, results = F, eval = T}
 LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
 #### table(LSa[, .(Nums = 1:.N, taxyear), 
 ####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
@@ -121,19 +121,34 @@ LSMa[taxyear < 2013, ExistedBefore2013 := 1L]
 LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], 
   by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
 LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
-LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
-  by = .(ExistedBefore2013, taxyear)][order(ExistedBefore2013, taxyear)]
 setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, taxyear)
 qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
 ```
+```{r for printing LSMa, eval = T}
+LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
+  by = .(ExistedBefore2013, taxyear)][order(ExistedBefore2013, taxyear)]
+```
 
-```{r merge faa (base) + LSMa1 gives Lf, eval = F}
+Key variables defined at the establishment level:
+
+* `rJobs`: Percentage change relative to Jobs0
+* `dJobs`: Changes in jobs relative to Jobs0
+*   `FA0`: Earliest entry of FA 
+
+```{r merge faa plus LSMa1 gives Lf, results = F, eval = T}
 #### faa (base) + LSMa1
 faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
-faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
-faa[, FA0 := FA[1], by = taxrefno]
-faa[, Jobs0 := Jobs[1], by = taxrefno]
+faa[, c("dJobs", "FA0", "Jobs0") := 
+  list(
+      Jobs - mean(Jobs, na.rm = T)]     # dJobs
+    , FA[!is.na(FA) | FA != 0][1]       # FA0
+    , Jobs[!is.na(Jobs) | Jobs != 0][1] # Jobs0
+  ), by = 
+  .(
+    busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, taxrefno
+  )]
 faa[, rJobs := dJobs/Jobs0]
 LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), 
   nthreads = 13)
@@ -143,18 +158,27 @@ LSMa1 <- LSMa[busmainplc_geo != "", ]
 #### Pick 2013 value of establishments for more sample size
 #### Keep either 2013 or first entry
 #### But if there are two rows, drop the first entry
-LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno)]
+LSMa1[, num := 1:.N, by = 
+  .(
+    busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, taxrefno
+  )]
 LSMa2 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
 setnames(LSMa2, "taxyear", "HHIBaseYear")
 #### Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
 Lf <- LSMa2[faa, on = c("taxrefno", grepout("bus", colnames(LSMa2)))]
-Lf[, .(busmainplc_geo, taxrefno, taxyear, Jobs)]
+Lf[, Trno := gsub("^....", "....", taxrefno)]
+Lf[, Trno := gsub("....$", "....", Trno)]
+Lf[, .(busmainplc_geo, Trno,
+  # taxrefno, 
+  taxyear, Jobs)]
 Lf[, num := 1:.N, by = .(busmainplc_geo, taxrefno, taxyear)]
 Lf <- Lf[num == 1L, ]
 Lf[, ExistedBefore2013 := 0L]
 Lf[taxyear < 2013, ExistedBefore2013 := 1L]
-Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1], by = taxrefno]
+#### ExistedBefore2013 == 1L if there is 1L in this variable 
+Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1], 
+  by = taxrefno]
 Lf[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
 Lf[, FirstYear2013 := "Before"]
 Lf[ExistedBefore2013 == 0L, FirstYear2013 := "Not before"]
@@ -193,19 +217,35 @@ agestsum <- Lf[, .(
     ][, .(
       taxyear, 
       TotalJobs, TotalSubMWJobs, TotalEmployees, TotalSubMWWorkers, 
+      TotalAffectedFirms,
       AggFA = round((TotalSubMWJobs/TotalJobs)*100, 2),
       AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
-      TotalFirmsWithEmp, TotalAffectedFirms,
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
     )]
-tb.agest <- tt(agestsum, width = 0.8, 
-  caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
+tb.agest1 <- tb.agest[, .(taxyear, TotalJobs, TotalSubMWJobs, 
+  TotalEmployees, TotalSubMWWorkers, TotalAffectedFirms)]
+tb.agest2 <- tb.agest[, .(taxyear, TotalJobs, AggFA,
+  AggFAe, AggFirmFA)]
 options(tinytable_format_digits = 2)
-tb.agest <- format_tt(tb.agest,
-    j = c(2:5, 8:9),
+tb.agest1 <- tt(tb.agest1, 
+  caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
+tb.agest1 <- format_tt(tb.agest1,
+    j = c(2:6),
     num_mark_big = " "
   )
-tb.agest
+tb.agest1 <- style_tt(tb.agest1, 
+    i = 0, 
+    j = 2:6, 
+    fontsize = .7
+  )
+tb.agest2 <- tt(tb.agest2, 
+  caption = "Jobs and sub-MW jobs, agriculture, estimation sample (continued)")
+tb.agest2 <- format_tt(tb.agest2,
+    j = 2,
+    num_mark_big = " "
+  )
+tb.agest1
+tb.agest2
 ```
 
 ```{r copy Lf estimation sample to saveddata, eval = F}
