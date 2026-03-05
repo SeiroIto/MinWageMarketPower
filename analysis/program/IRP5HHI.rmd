@@ -684,6 +684,23 @@ ggsave(
  )
 
 ```
+```{r plot FA of agri, eval = F}
+#### FA of agri
+g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
+#  geom_point(size = .1, position = position_jitterdodge()) +
+#  geom_point(data = faama, size = 1, fill = "blue")
+  geom_boxplot(fill = "white", colour = "blue", outlier.alpha = 0) + 
+#  geom_jitter(width = .2) +
+  scale_x_discrete(name = "Tax year") +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "FAOfAgri.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+
+```
 
 
 # Location information granularity checks
