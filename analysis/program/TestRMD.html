@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="generator" content="litedown 0.7">
+<meta name="generator" content="litedown 0.9.2">
 <title>Test litedown</title>
 <style type="text/css">
 body {
@@ -73,6 +73,7 @@ span[class^="ref-number-"] { font-weight: bold; }
 .ref-number-fig::after, .ref-number-tab::after { content: ":"; }
 .cross-ref-chp::before { content: "Chapter "; }
 .cross-ref-sec::before { content: "Section "; }
+.cross-ref-apd::before { content: "Appendix "; }
 .cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
 .cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
 .cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
@@ -98,7 +99,6 @@ section.footnotes {
   background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
   opacity: 0.6;
 }
-
 @media print {
   body { max-width: 100%; }
   tr, img { break-inside: avoid; }
@@ -107,14 +107,12 @@ section.footnotes {
   body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
 }
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils/css/prism-xcode.min.css">
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/prism-xcode.min.css">
 </head>
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Test litedown</h1></div>
-<div class="date"><h3>2026 Jan 23 19:44</h3></div>
+<div class="date"><h3>2026 3 05 13:07</h3></div>
 </div>
 <div class="body">
 <style type="text/css">
@@ -194,816 +192,165 @@ pathdataCITIRP &lt;- &quot;T:/CIT-IRP5 Panel/&quot;
 pathdataIRP &lt;- &quot;T:/IRP5/Job level/v5/beta/&quot;
 library(qs); library(data.table); library(ggplot2)
 </code></pre>
-<h1 id="chp:merge-data_1">Merge data</h1>
-<ul>
-<li>FAD (FA, Jobs, Employment) + industry</li>
-<li>LS (HHI, WorkersAtEstablishment) + industry</li>
-<li>irp5Ma</li>
-</ul>
-<pre><code class="language-r">#### LS + industry
-inda &lt;- qread(paste0(pathdata, &quot;TaxrefnoOfAgri.qs&quot;), nthreads = 13)
-LSa &lt;- qread(paste0(pathdata, &quot;HHIAgriRows.qs&quot;), nthreads = 13)
-faa &lt;- qread(paste0(pathdata, &quot;FAOfAgri.qs&quot;), nthreads = 13)
-
-#### jobs are recorded poorly prior to 2013
-LSa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), by = taxyear]
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="right">taxyear</th>
-<th align="right">TotalJobs</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="right">2008</td>
-<td align="right">231820</td>
-</tr>
-<tr>
-<td align="right">2009</td>
-<td align="right">293712</td>
-</tr>
-<tr>
-<td align="right">2010</td>
-<td align="right">774196</td>
-</tr>
-<tr>
-<td align="right">2011</td>
-<td align="right">523126</td>
-</tr>
-<tr>
-<td align="right">2012</td>
-<td align="right">917852</td>
-</tr>
-<tr>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-</tr>
-<tr>
-<td align="right">2018</td>
-<td align="right">2032185</td>
-</tr>
-<tr>
-<td align="right">2019</td>
-<td align="right">2126401</td>
-</tr>
-<tr>
-<td align="right">2020</td>
-<td align="right">2149170</td>
-</tr>
-<tr>
-<td align="right">2021</td>
-<td align="right">2441860</td>
-</tr>
-<tr>
-<td align="right">2022</td>
-<td align="right">2150513</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">#### Need to set the population == 2012 firms
-LSa[, num := 1:.N, by = .(taxyear, taxrefno)]
-LSa[, ExistedBefore2013 := 0L]
-LSa[taxrefno %in% taxrefno[taxyear[num==1L]&lt;2013], ExistedBefore2013 := 1L]
-lsa &lt;- LSa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
-  by = .(taxyear, ExistedBefore2013)]
-lsa
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="right">taxyear</th>
-<th align="right">ExistedBefore2013</th>
-<th align="right">TotalJobs</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="right">2008</td>
-<td align="right">1</td>
-<td align="right">231820</td>
-</tr>
-<tr>
-<td align="right">2009</td>
-<td align="right">1</td>
-<td align="right">293712</td>
-</tr>
-<tr>
-<td align="right">2010</td>
-<td align="right">1</td>
-<td align="right">746341</td>
-</tr>
-<tr>
-<td align="right">2010</td>
-<td align="right">0</td>
-<td align="right">27855</td>
-</tr>
-<tr>
-<td align="right">2011</td>
-<td align="right">1</td>
-<td align="right">523042</td>
-</tr>
-<tr>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-</tr>
-<tr>
-<td align="right">2020</td>
-<td align="right">1</td>
-<td align="right">2146854</td>
-</tr>
-<tr>
-<td align="right">2020</td>
-<td align="right">0</td>
-<td align="right">2316</td>
-</tr>
-<tr>
-<td align="right">2021</td>
-<td align="right">1</td>
-<td align="right">2441860</td>
-</tr>
-<tr>
-<td align="right">2022</td>
-<td align="right">1</td>
-<td align="right">2143177</td>
-</tr>
-<tr>
-<td align="right">2022</td>
-<td align="right">0</td>
-<td align="right">7336</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">
-</code></pre>
-<h1 id="chp:employment">Employment</h1>
-<pre><code class="language-r">library(qs)
-library(data.table)
-library(ggplot2)
-lsa[, ExistedBefore2013 := factor(ExistedBefore2013)]
-g1 &lt;- ggplot(data = lsa, aes(x = taxyear, y = TotalJobs, group = ExistedBefore2013, 
-  colour = ExistedBefore2013, fill = ExistedBefore2013)) +
-  geom_col() + 
-  scale_color_viridis_d(&quot;Existing firms&quot;) +
-  scale_fill_viridis_d() +
-  scale_x_discrete(&quot;Tax year&quot;) + facet_grid(~ ExistedBefore2013) +
-  theme_bw()
- g1
-</code></pre>
-<p><img src="data:image/png;base64,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" alt="" /></p>
-<h1 id="chp:merge-data_2">Merge data</h1>
-<ul>
-<li>FAD (FA, Jobs, Employment) + industry
-<ul>
-<li>FA is measured at the establishment level</li>
-<li><code>FAD</code>: Worker level data with establishment level aggregates</li>
-<li>For estimation, need to aggregate at establishment level, only agriculture →</li>
-<li><code>faa</code>: Collection of first rows of establishment-taxyear</li>
-</ul>
-</li>
-<li>LS (HHI, WorkersAtEstab) + industry
-<ul>
-<li>HHI is measured at local market level</li>
-<li><code>LS</code>: Establishment level data with area level aggregates</li>
-<li>For estimation, need to aggregate the worker characteristics at establishment level</li>
-</ul>
-</li>
-<li>irp5Ma (IRP5), only agriculture
-<ul>
-<li>All background information at worker level + establishment information</li>
-</ul>
-</li>
-</ul>
-<p>We use:</p>
-<p><code>faa</code> (establishment level FAA, Jobs, Employment) + <code>LSMa</code> (Main Place level HHI)</p>
-<pre><code class="language-r">#### ind &lt;- qread(paste0(pathdata, &quot;IndustryCodeFromCIT_NoNAs.qs&quot;), nthreads = 13)
-#### setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
-#### ind[, n := 1:.N, by = taxrefno]
-#### inda &lt;- ind[n == 1 &amp; grepl(&quot;^Anim|^Plant pro|crops|Logging|forest&quot;, imp_mic_sic7_3d), ]
-#### inda[, n := NULL]
-#### inda[, c(&quot;Crop&quot;, &quot;Animal&quot;, &quot;Forest&quot;) := 0L]
-#### inda[grepl(&quot;Plant|cr&quot;, imp_mic_sic7_3d), Crop := 1L]
-#### inda[grepl(&quot;Anim&quot;, imp_mic_sic7_3d),   Animal := 1L]
-#### inda[grepl(&quot;Lo|for&quot;, imp_mic_sic7_3d), Forest := 1L]
-#### inda[, grepout(&quot;mp_mic&quot;, colnames(inda)) := NULL]
-#### setkey(inda, taxrefno)
-#### setnames(inda, &quot;taxyear&quot;, &quot;FirstYearOnSIC7&quot;)
-#### qsave(inda, paste0(pathdata, &quot;TaxrefnoOfAgri.qs&quot;), nthreads = 13)
-#### 
-#### LSMa = LS + industry
-inda &lt;- qread(paste0(pathdata, &quot;TaxrefnoOfAgri.qs&quot;), nthreads = 13)
-#### LS &lt;- qread(paste0(pathdata, &quot;LShareHHI.qs&quot;), nthreads = 13)
-#### LSia &lt;- inda[LS, on = &quot;taxrefno&quot;]
-#### LSa &lt;- LSia[Crop ++ 1L | Animal == 1L | Forest == 1L, ]
-#### #### LSa is rows of agri only, but HHI is measured at all industries
-#### qsave(LSa, paste0(pathdata, &quot;HHIAgriRows.qs&quot;), nthreads = 13)
-#### LSa &lt;- qread(paste0(pathdata, &quot;HHIAgriRows.qs&quot;), nthreads = 13)
-#### LSMa &lt;- LSa[grepl(&quot;Mai&quot;, AreaLevel), ]
-#### LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
-####   buslocmuni_geo, busmainplc_geo, taxrefno)]
-#### #### jobs are recorded poorly prior to 2013
-#### LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), by = taxyear]
-#### #### Need to set the population == 2012 firms
-#### setorder(LSMa, taxyear, taxrefno)
-#### LSMa[, num := 1:.N, by = .(taxyear, taxrefno)]
-#### LSMa[, ExistedBefore2013 := as.integer(NA)]
-#### LSMa[taxyear &lt; 2013, ExistedBefore2013 := 1L]
-#### LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], by = taxrefno]
-#### LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
-#### LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
-####   by = .(ExistedBefore2013, taxyear)]
-#### qsave(LSMa, paste0(pathdata, &quot;HHIAgriRowsMainPlaceLevel.qs&quot;), nthreads = 13)
-
-
-#### FAD + industry
-#### Extract establishment level entries of FA
-#### FAD &lt;- qread(paste0(pathdata, &quot;FAD.qs&quot;), nthreads = 13)
-#### table(FAD[, taxyear])
-#### #### number by geo location, taxrefno, taxyear
-#### FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-####   buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
-#### fadata &lt;- FAD[num == 1L, 
-####   grepout(&quot;^bus|^tax[ry]|^Tx|Mon|[nN]um|Jo|Emp|FA&quot;, colnames(FAD)), with = F]
-#### table(fadata[, taxyear])
-####   2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
-####  23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
-#### #### Drop date errors (Negative and over duration)
-#### fadata2 &lt;- fadata[0 &lt;= DurMonthMarch &amp; DurMonthMarch &lt;= 12, ]
-#### nrow(fadata); nrow(fadata2) # 30K rows
-#### #### Merge industry code, taking fadata as base
-#### fadata3 &lt;- inda[fadata2, on = &quot;taxrefno&quot;]
-#### fadata3 &lt;- fadata3[busmainplc_geo != &quot;&quot;, ]
-#### faa &lt;- fadata3[Crop == 1L | Animal == 1L | Forest == 1L, ]
-#### setkey(faa, taxrefno)
-#### faa[, SubDiv := &quot;Crop&quot;]
-#### faa[Animal == 1L, SubDiv := &quot;Animal&quot;]
-#### faa[Forest == 1L, SubDiv := &quot;Forest&quot;]
-#### faa[, SubDiv := factor(SubDiv, levels = c(&quot;Crop&quot;, &quot;Animal&quot;, &quot;Forest&quot;))]
-#### faa[, .(TotalJobs = sum(Jobs, na.rm = T)), by = .(taxyear, SubDiv)]
-#### faa[, FApositive := 0L]
-#### faa[taxyear &lt; 2014, FApositive:= as.integer(FA &gt; 0)]
-#### faa[, FApositive := FApositive[FApositive == 1L][1], by = taxrefno]
-#### faa[is.na(FApositive), FApositive := 0L]
-#### faa[, Sample := &quot;Unexposed&quot;]
-#### faa[FApositive == 1L, Sample := &quot;Exposed&quot;]
-#### faa[, Sample := factor(Sample)]
-#### #### #### faa is unique at establishment level
-#### table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
-####  FALSE  TRUE 
-####  59627     5 
-#### qsave(faa, paste0(pathdata, &quot;FAOfAgri.qs&quot;), nthreads = 13)
-faa &lt;- qread(paste0(pathdata, &quot;FAOfAgri.qs&quot;), nthreads = 13)
-faa[, .(mean = mean(FA, na.rm = T), median = median(FA, na.rm = T)), 
-  by = .(Sample, taxyear)]
-</code></pre>
-<table>
-<thead>
-<tr>
-<th>Sample</th>
-<th align="right">taxyear</th>
-<th align="right">mean</th>
-<th align="right">median</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Exposed</td>
-<td align="right">2010</td>
-<td align="right">0.767</td>
-<td align="right">0.875</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2012</td>
-<td align="right">0.781</td>
-<td align="right">0.881</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2013</td>
-<td align="right">0.765</td>
-<td align="right">0.856</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2014</td>
-<td align="right">0.496</td>
-<td align="right">0.495</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2015</td>
-<td align="right">0.375</td>
-<td align="right">0.357</td>
-</tr>
-<tr>
-<td>⋮</td>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-</tr>
-<tr>
-<td>Unexposed</td>
-<td align="right">2008</td>
-<td align="right">0.000</td>
-<td align="right">0.000</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2008</td>
-<td align="right">0.811</td>
-<td align="right">0.899</td>
-</tr>
-<tr>
-<td>Exposed</td>
-<td align="right">2011</td>
-<td align="right">0.819</td>
-<td align="right">0.890</td>
-</tr>
-<tr>
-<td>Unexposed</td>
-<td align="right">2009</td>
-<td align="right">0.383</td>
-<td align="right">0.214</td>
-</tr>
-<tr>
-<td>Unexposed</td>
-<td align="right">2011</td>
-<td align="right">0.258</td>
-<td align="right">0.000</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">g2 &lt;- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
-#  geom_point(size = .1, position = position_jitterdodge()) +
-#  geom_point(data = faama, size = 1, fill = &quot;blue&quot;)
-  geom_boxplot(fill = &quot;white&quot;, colour = &quot;blue&quot;, outlier.alpha = 0) + 
-#  geom_jitter(width = .2) +
-  scale_x_discrete(name = &quot;Tax year&quot;) +
-  facet_grid(~ Sample) +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5))
-ggsave(
-  paste0(path, &quot;outfiles/2026 01 21/FA.jpg&quot;)
-  , g2, width = 8*2, height = 4*2, units = &quot;cm&quot;,
-  dpi = 300
- )
-</code></pre>
-<pre><code class="language-plain warning">#&gt; Removed 10231 rows containing non-finite outside the scale range (`stat_boxplot()`).
-</code></pre>
-<pre><code class="language-r">#### irp5M, agriculture
-irp5Ma &lt;- qread(paste0(pathdata, &quot;irp5Ma.qs&quot;), nthreads = 13)
-irp5Ma[, .(num = 1:.N, Num), by = .(taxyear, taxrefno)][num == 1, 
-  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="right">taxyear</th>
-<th align="right">TotalJobs</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="right">2010</td>
-<td align="right">190590</td>
-</tr>
-<tr>
-<td align="right">2012</td>
-<td align="right">159805</td>
-</tr>
-<tr>
-<td align="right">2013</td>
-<td align="right">359131</td>
-</tr>
-<tr>
-<td align="right">2014</td>
-<td align="right">350386</td>
-</tr>
-<tr>
-<td align="right">2015</td>
-<td align="right">438907</td>
-</tr>
-<tr>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-</tr>
-<tr>
-<td align="right">2021</td>
-<td align="right">534273</td>
-</tr>
-<tr>
-<td align="right">2022</td>
-<td align="right">539264</td>
-</tr>
-<tr>
-<td align="right">2009</td>
-<td align="right">23291</td>
-</tr>
-<tr>
-<td align="right">2008</td>
-<td align="right">5570</td>
-</tr>
-<tr>
-<td align="right">2011</td>
-<td align="right">12859</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">irp5Ma[, .(num = 1:.N, Num = .N), by = .(taxyear, taxrefno)][num == 1, 
-  .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
-</code></pre>
-<table>
-<thead>
-<tr>
-<th align="right">taxyear</th>
-<th align="right">TotalJobs</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="right">2010</td>
-<td align="right">170002</td>
-</tr>
-<tr>
-<td align="right">2012</td>
-<td align="right">199991</td>
-</tr>
-<tr>
-<td align="right">2013</td>
-<td align="right">350211</td>
-</tr>
-<tr>
-<td align="right">2014</td>
-<td align="right">352650</td>
-</tr>
-<tr>
-<td align="right">2015</td>
-<td align="right">415364</td>
-</tr>
-<tr>
-<td align="right">⋮</td>
-<td align="right">⋮</td>
-</tr>
-<tr>
-<td align="right">2021</td>
-<td align="right">587803</td>
-</tr>
-<tr>
-<td align="right">2022</td>
-<td align="right">486314</td>
-</tr>
-<tr>
-<td align="right">2009</td>
-<td align="right">27419</td>
-</tr>
-<tr>
-<td align="right">2008</td>
-<td align="right">6863</td>
-</tr>
-<tr>
-<td align="right">2011</td>
-<td align="right">12436</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">irp5Ma[, ExistedBefore2013 := as.integer(NA)]
-irp5Ma[taxyear &lt; 2013, ExistedBefore2013 := 1L]
-irp5Ma[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1], by = taxrefno]
-irp5Ma[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
-JobsFirms &lt;- irp5Ma[, .(num = 1:.N, Num = .N), 
-  by = .(ExistedBefore2013, taxyear, taxrefno)][
-  num == 1, .(TotalJobs = sum(Num, na.rm = T)), by = .(ExistedBefore2013, taxyear)]
-JobsFirms[, Sample := &quot;Entrants&quot;]
-JobsFirms[ExistedBefore2013 == 1L, Sample := &quot;Incumbents&quot;]
-g1 &lt;- ggplot(data = JobsFirms, aes(x = taxyear, y = TotalJobs)) +
-  geom_col() +
-  scale_x_continuous(breaks = 2009:2022) +
-  facet_grid(~ Sample) +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5))
-ggsave(
-  paste0(pathdata, &quot;Employment.jpg&quot;)
-  , g1, width = 8*2, height = 4*2, units = &quot;cm&quot;,
-  dpi = 300
- )
-
-
-#### faa (base) + LSMa
-faa &lt;- qread(paste0(pathdata, &quot;FAOfAgri.qs&quot;), nthreads = 13)
-faa[, dJobs := Jobs - mean(Jobs, na.rm = T), by = taxrefno]
-faa[, FA0 := FA[1], by = taxrefno]
-faa[, Jobs0 := Jobs[1], by = taxrefno]
-faa[, rJobs := dJobs/Jobs0]
-LSMa &lt;- qread(paste0(pathdata, &quot;HHIAgriRowsMainPlaceLevel.qs&quot;), nthreads = 13)
-LSMa1 &lt;- LSMa[busmainplc_geo != &quot;&quot;, ]
-LSMa1[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno)]
-LSMa1 &lt;- LSMa1[num == 1L, ]
-Lf &lt;- LSMa1[faa, on = c(&quot;taxrefno&quot;, grepout(&quot;bus&quot;, colnames(LSMa1)))]
-Lf[, num := 1:.N, by = .(taxrefno, taxyear)]
-Lf &lt;- Lf[num == 1L &amp; grepl(&quot;Mai&quot;, AreaLevel), ]
-Lf[, ExistedBefore2013 := 0L]
-Lf[taxyear &lt; 2013, ExistedBefore2013 := 1L]
-Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1], by = taxrefno]
-Lf[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
-Lf[, FirstYear2013 := &quot;Before&quot;]
-Lf[ExistedBefore2013 == 0L, FirstYear2013 := &quot;Not before&quot;]
-Lf[, FirstYear2013 := factor(FirstYear2013)]
-Lf[, Sample := &quot;Exposed&quot;]
-Lf[FA0 == 0L, Sample := &quot;Unexposed&quot;]
-Lf[, Sample := factor(Sample)]
-Lf[, AgeSample := &quot;Existed, exposed&quot;]
-Lf[grepl(&quot;Be&quot;, FirstYear2013) &amp; grepl(&quot;Un&quot;, Sample),
-  AgeSample := &quot;Existed, unexposed&quot;]
-Lf[grepl(&quot;N&quot;, FirstYear2013) &amp; grepl(&quot;Ex&quot;, Sample), 
-  AgeSample := &quot;New, exposed&quot;]
-Lf[grepl(&quot;N&quot;, FirstYear2013) &amp; grepl(&quot;Un&quot;, Sample),
-  AgeSample := &quot;New, unexposed&quot;]
-Lf[, AgeSample := factor(AgeSample, levels = 
-  c(&quot;Existed, exposed&quot;, &quot;Existed, unexposed&quot;, &quot;New, exposed&quot;, &quot;New, unexposed&quot;))]
-
-  rbind(
-    ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
-    All = table(Lf[, taxyear])
+<pre><code class="language-r">set.seed(111)
+x &lt;- data.table(a = letters[1:10], b = 1:10, c = 1e+4+rpois(10, 10))
+library(tinytable)
+tb &lt;- tt(x, caption = &quot;test&quot;)
+options(tinytable_format_digits = 2)
+tb &lt;- format_tt(tb,
+    j = 3,
+    num_mark_big = &quot; &quot;
   )
+tb
 </code></pre>
-<table>
-<thead>
-<tr>
-<th></th>
-<th align="right">2008</th>
-<th align="right">2009</th>
-<th align="right">2010</th>
-<th align="right">2011</th>
-<th align="right">2012</th>
-<th align="right">2013</th>
-<th align="right">2014</th>
-<th align="right">2015</th>
-<th align="right">2016</th>
-<th align="right">2017</th>
-<th align="right">2018</th>
-<th align="right">2019</th>
-<th align="right">2020</th>
-<th align="right">2021</th>
-<th align="right">2022</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ExistedBefore2013</td>
-<td align="right">1720</td>
-<td align="right">449</td>
-<td align="right">949</td>
-<td align="right">359</td>
-<td align="right">421</td>
-<td align="right">88</td>
-<td align="right">297</td>
-<td align="right">241</td>
-<td align="right">203</td>
-<td align="right">183</td>
-<td align="right">157</td>
-<td align="right">145</td>
-<td align="right">133</td>
-<td align="right">123</td>
-<td align="right">121</td>
-</tr>
-<tr>
-<td>All</td>
-<td align="right">1720</td>
-<td align="right">449</td>
-<td align="right">949</td>
-<td align="right">359</td>
-<td align="right">421</td>
-<td align="right">378</td>
-<td align="right">649</td>
-<td align="right">656</td>
-<td align="right">660</td>
-<td align="right">720</td>
-<td align="right">740</td>
-<td align="right">802</td>
-<td align="right">695</td>
-<td align="right">361</td>
-<td align="right">295</td>
-</tr>
-</tbody>
-</table>
-<pre><code class="language-r">#### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
-g3 &lt;- ggplot(data = Lf[, .(Jobs = sum(Jobs, na.rm= T)), by = .(FirstYear2013, taxyear)], 
-   aes(x = taxyear, y = Jobs, 
-     group = FirstYear2013, fill = FirstYear2013, colour = FirstYear2013)) +
-  geom_col() +
-  scale_color_viridis_d() +
-  scale_fill_viridis_d() +
-  scale_x_continuous(breaks = 2009:2022) +
-  facet_grid(FirstYear2013 ~ .) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = .5),
-    legend.position = &quot;none&quot;
-    )
-ggsave(
-  paste0(pathdata, &quot;JobsByExistedBefore2013.jpg&quot;)
-  , g3, width = 8*2, height = 4*2, units = &quot;cm&quot;,
-  dpi = 300
- )
-#### Jobs by firm age * FA == 0
-g4 &lt;- 
-ggplot(data = Lf[, .(Jobs = sum(Jobs, na.rm= T), AgeSample), by = .(FirstYear2013, Sample, taxyear)], 
-   aes(x = taxyear, y = Jobs, group = AgeSample, fill = AgeSample, colour = AgeSample)) +
-  geom_col() +
-  scale_color_viridis_d() +
-  scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(2009, 2022), breaks = 2009:2022) +
-  facet_grid(FirstYear2013 ~ Sample) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = .5),
-    legend.position = &quot;none&quot;
-    )
-ggsave(
-  paste0(pathdata, &quot;JobsByExistedBefore2013AndFA.jpg&quot;)
-  , g4, width = 8*2, height = 4*2, units = &quot;cm&quot;,
-  dpi = 300
- )
-</code></pre>
-<pre><code class="language-plain warning">#&gt; Removed 2464 rows containing missing values or values outside the scale range (`geom_col()`).
-</code></pre>
-<pre><code class="language-r">Lf &lt;- qread(paste0(pathdata, &quot;EstSample_AllSectorHHI.qs&quot;), nthreads = 13)
-setkey(Lf, taxrefno, taxyear)
-Lf[, ReportEveryYear := 0L]
-Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, by = (taxrefno)]
-Lf[, num := .N, by = (taxrefno)]
-Lf[MaxDiffTY == num, ReportEveryYear := 1L]
+<!-- preamble start -->
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tinytable_hviwoqrraubu5u5h8bh5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+<!-- preamble end -->
 
-Lf1 &lt;- Lf[Jobs0 &gt; 10 &amp; DurMonthMarch &gt; 0 &amp; ReportEveryYear == 1L, ]
+    <script>
 
-Lf1[HHI &lt;= median(HHI[taxyear == 2013], na.rm = T), HHILevel := &quot;Below&quot;]
-Lf1[HHI &gt; median(HHI[taxyear == 2013], na.rm = T), HHILevel := &quot;Above&quot;]
-Lf1[, HHILevel := factor(HHILevel)]
+      function styleCell_hviwoqrraubu5u5h8bh5(i, j, css_id) {
+          var table = document.getElementById("tinytable_hviwoqrraubu5u5h8bh5");
+          var cell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+          if (cell) {
+              console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
+              cell.classList.add(css_id);
+          } else {
+              console.warn(`Cell at (${i}, ${j}) not found.`);
+          }
+      }
+      function spanCell_hviwoqrraubu5u5h8bh5(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_hviwoqrraubu5u5h8bh5");
+        const targetCell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+        if (!targetCell) {
+          console.warn(`Cell at (${i}, ${j}) not found.`);
+        }
 
-library(fixest)
-es1 &lt;- feols(Jobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L, ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 0/55/24 fixed-effect singletons were removed (72 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">es2 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L, ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 0/55/24 fixed-effect singletons were removed (72 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">es3 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1)
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 0/115/20 fixed-effect singletons were removed (128 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">#### Subsample: High and low concentrated markets
-es4 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L &amp; grepl(&quot;Be&quot;, HHILevel), ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 2/39/16 fixed-effect singletons were removed (48 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">es5 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[ExistedBefore2013 == 1L &amp; grepl(&quot;Ab&quot;, HHILevel), ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 0/31/18 fixed-effect singletons were removed (38 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">es6 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[grepl(&quot;Be&quot;, HHILevel), ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 2/87/8 fixed-effect singletons were removed (93 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">es7 &lt;- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-  vcov = ~ taxyear + busmainplc_geo,
-  data = Lf1[grepl(&quot;Ab&quot;, HHILevel), ])
-</code></pre>
-<pre><code class="language-plain message">#&gt; NOTE: 0/63/24 fixed-effect singletons were removed (73 observations).
-</code></pre>
-<pre><code class="language-plain warning">#&gt; The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov).
-</code></pre>
-<pre><code class="language-r">library(ggfixest)
-eslist &lt;-  list(
-    &quot;Existed firms, all sample&quot; = es2, 
-    &quot;Existed firms, low concentrated markets&quot; = es4, 
-    &quot;Existed firms, high concentrated markets&quot; = es5 
-  )
-gFE &lt;- ggiplot(eslist,
-  ref.line = 2012, 
-  main = &quot;Job impacts: Low and high concentration&quot;,
-  xlab = &quot;Tax year (March - Februray)&quot;,
-  multi_style = &quot;facet&quot;,
-  geom_style = &quot;ribbon&quot;,
-  theme = theme(
-    axis.text.x = element_text(angle = 90, vjust = .5),
-    legend.position = &quot;none&quot;
-    )
- 
-) + 
-scale_x_continuous(limits = c(2010, 2022), breaks = 2010:2022) 
-</code></pre>
-<pre><code class="language-plain message">#&gt; Scale for x is already present.
-#&gt; Adding another scale for x, which will replace the existing scale.
-</code></pre>
-<pre><code class="language-r">gFE
-</code></pre>
-<pre><code class="language-plain warning">#&gt; Removed 6 rows containing missing values or values outside the scale range (`geom_ribbon()`).
-#&gt; Removed 6 rows containing missing values or values outside the scale range (`geom_line()`).
-#&gt; Removed 6 rows containing missing values or values outside the scale range (`geom_point()`).
-</code></pre>
-<p><img src="data:image/png;base64,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" alt="" /></p>
-<pre><code class="language-r">lapply(eslist, summary)
-</code></pre>
-<pre><code>#&gt; $`Existed firms, all sample`
-#&gt; OLS estimation, Dep. Var.: rJobs
-#&gt; Observations: 4,197
-#&gt; Fixed-effects: taxyear: 15,  taxrefno: 432,  busmainplc_geo: 200
-#&gt; Standard-errors: Clustered (taxyear &amp; busmainplc_geo) 
-#&gt;                    Estimate Std. Error   t value Pr(&gt;|t|)    
-#&gt; taxyear::2008:FA0 -2.752055   1.485582 -1.852509 0.085151 .  
-#&gt; taxyear::2009:FA0 -3.681356   1.658362 -2.219875 0.043449 *  
-#&gt; taxyear::2010:FA0  5.291628   3.351852  1.578717 0.136723    
-#&gt; taxyear::2011:FA0  0.758030   0.918169  0.825588 0.422884    
-#&gt; taxyear::2013:FA0 -0.078686   0.088466 -0.889458 0.388785    
-#&gt; taxyear::2014:FA0 -0.781261   0.428737 -1.822236 0.089846 .  
-#&gt; taxyear::2015:FA0 -0.353905   0.430890 -0.821333 0.425223    
-#&gt; taxyear::2016:FA0 -0.819445   0.675317 -1.213422 0.245044    
-#&gt; taxyear::2017:FA0 -0.572645   0.381077 -1.502703 0.155134    
-#&gt; taxyear::2018:FA0  0.520432   0.726836  0.716024 0.485749    
-#&gt; taxyear::2019:FA0  1.102113   1.414666  0.779063 0.448912    
-#&gt; taxyear::2020:FA0  0.992310   1.608387  0.616960 0.547164    
-#&gt; taxyear::2021:FA0  1.101200   1.622213  0.678826 0.508315    
-#&gt; taxyear::2022:FA0  1.828220   1.816289  1.006569 0.331223    
-#&gt; ---
-#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#&gt; RMSE: 1.59161     Adj. R2: 0.286392
-#&gt;                 Within R2: 0.028808
-#&gt; 
-#&gt; $`Existed firms, low concentrated markets`
-#&gt; OLS estimation, Dep. Var.: rJobs
-#&gt; Observations: 1,970
-#&gt; Fixed-effects: taxyear: 13,  taxrefno: 224,  busmainplc_geo: 89
-#&gt; Standard-errors: Clustered (taxyear &amp; busmainplc_geo) 
-#&gt;                    Estimate Std. Error   t value Pr(&gt;|t|)    
-#&gt; taxyear::2010:FA0 -0.326570   0.174412 -1.872413 0.085711 .  
-#&gt; taxyear::2011:FA0 -0.269979   0.219469 -1.230143 0.242214    
-#&gt; taxyear::2013:FA0 -0.141016   0.089097 -1.582719 0.139471    
-#&gt; taxyear::2014:FA0 -0.962484   0.522790 -1.841055 0.090458 .  
-#&gt; taxyear::2015:FA0 -0.148045   0.063587 -2.328249 0.038192 *  
-#&gt; taxyear::2016:FA0 -0.225576   0.112282 -2.009007 0.067578 .  
-#&gt; taxyear::2017:FA0 -0.128404   0.076891 -1.669947 0.120787    
-#&gt; taxyear::2018:FA0  0.152110   0.089037  1.708400 0.113275    
-#&gt; taxyear::2019:FA0  0.154915   0.127269  1.217225 0.246915    
-#&gt; taxyear::2020:FA0 -0.136218   0.198409 -0.686550 0.505417    
-#&gt; taxyear::2021:FA0 -0.037294   0.212002 -0.175913 0.863296    
-#&gt; taxyear::2022:FA0 -0.006803   0.247769 -0.027459 0.978545    
-#&gt; ---
-#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#&gt; RMSE: 0.691044     Adj. R2: 0.368458
-#&gt;                  Within R2: 0.01373 
-#&gt; 
-#&gt; $`Existed firms, high concentrated markets`
-#&gt; OLS estimation, Dep. Var.: rJobs
-#&gt; Observations: 2,164
-#&gt; Fixed-effects: taxyear: 15,  taxrefno: 235,  busmainplc_geo: 127
-#&gt; Standard-errors: Clustered (taxyear &amp; busmainplc_geo) 
-#&gt;                    Estimate Std. Error   t value Pr(&gt;|t|)    
-#&gt; taxyear::2008:FA0 -2.505348   2.137567 -1.172056 0.260734    
-#&gt; taxyear::2009:FA0 -5.527797   2.487996 -2.221787 0.043293 *  
-#&gt; taxyear::2010:FA0 10.667786   5.987233  1.781756 0.096484 .  
-#&gt; taxyear::2011:FA0  3.269360   2.179142  1.500297 0.155749    
-#&gt; taxyear::2013:FA0 -0.035144   0.193904 -0.181243 0.858775    
-#&gt; taxyear::2014:FA0 -0.682855   1.037515 -0.658164 0.521109    
-#&gt; taxyear::2015:FA0 -0.868614   1.064131 -0.816266 0.428019    
-#&gt; taxyear::2016:FA0 -1.882950   1.596982 -1.179068 0.258021    
-#&gt; taxyear::2017:FA0 -1.378140   0.937453 -1.470089 0.163652    
-#&gt; taxyear::2018:FA0  0.754599   1.494262  0.504998 0.621416    
-#&gt; taxyear::2019:FA0  1.941573   2.800759  0.693231 0.499505    
-#&gt; taxyear::2020:FA0  1.963495   3.108285  0.631697 0.537764    
-#&gt; taxyear::2021:FA0  2.045743   3.139989  0.651513 0.525267    
-#&gt; taxyear::2022:FA0  2.411678   3.224033  0.748031 0.466822    
-#&gt; ---
-#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-#&gt; RMSE: 2.02701     Adj. R2: 0.222638
-#&gt;                 Within R2: 0.057597
-#&gt; 
+        // Get all cells that need to be removed
+        const cellsToRemove = [];
+        for (let r = 0; r < rowspan; r++) {
+          for (let c = 0; c < colspan; c++) {
+            if (r === 0 && c === 0) continue; // Skip the target cell
+            const cell = table.querySelector(`[data-row="${i + r}"][data-col="${j + c}"]`);
+            if (cell) {
+              cellsToRemove.push(cell);
+            }
+          }
+        }
+
+        // Remove all cells
+        cellsToRemove.forEach(cell => cell.remove());
+
+        // Set rowspan and colspan of the target cell if it exists
+        if (targetCell) {
+          targetCell.rowSpan = rowspan;
+          targetCell.colSpan = colspan;
+        }
+      }
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '10', j: 0 }, { i: '10', j: 1 }, { i: '10', j: 2 },  ], css_id: 'tinytable_css_zbl1yx2fkup3y908in2q',}, 
+          { positions: [ { i: '0', j: 0 }, { i: '0', j: 1 }, { i: '0', j: 2 },  ], css_id: 'tinytable_css_c4u5l5q63nmypcmo57zb',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  styleCell_hviwoqrraubu5u5h8bh5(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <style>
+      /* tinytable css entries after */
+      .table td.tinytable_css_zbl1yx2fkup3y908in2q, .table th.tinytable_css_zbl1yx2fkup3y908in2q { border-bottom: solid #d3d8dc 0.1em; }
+      .table td.tinytable_css_c4u5l5q63nmypcmo57zb, .table th.tinytable_css_c4u5l5q63nmypcmo57zb { border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+    </style>
+    <div class="container">
+      <table class="table table-borderless" id="tinytable_hviwoqrraubu5u5h8bh5" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing='true'>
+        <thead>
+        <caption>test</caption>
+              <tr>
+                <th scope="col" data-row="0" data-col="0">a</th>
+                <th scope="col" data-row="0" data-col="1">b</th>
+                <th scope="col" data-row="0" data-col="2">c</th>
+              </tr>
+        </thead>
+        
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="0">a</td>
+                  <td data-row="1" data-col="1">1</td>
+                  <td data-row="1" data-col="2">10 010</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="0">b</td>
+                  <td data-row="2" data-col="1">2</td>
+                  <td data-row="2" data-col="2">10 008</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="0">c</td>
+                  <td data-row="3" data-col="1">3</td>
+                  <td data-row="3" data-col="2">10 009</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="0">d</td>
+                  <td data-row="4" data-col="1">4</td>
+                  <td data-row="4" data-col="2">10 023</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="0">e</td>
+                  <td data-row="5" data-col="1">5</td>
+                  <td data-row="5" data-col="2">10 010</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="0">f</td>
+                  <td data-row="6" data-col="1">6</td>
+                  <td data-row="6" data-col="2">10 004</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="0">g</td>
+                  <td data-row="7" data-col="1">7</td>
+                  <td data-row="7" data-col="2">10 007</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="0">h</td>
+                  <td data-row="8" data-col="1">8</td>
+                  <td data-row="8" data-col="2">10 010</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="0">i</td>
+                  <td data-row="9" data-col="1">9</td>
+                  <td data-row="9" data-col="2">10 008</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="0">j</td>
+                  <td data-row="10" data-col="1">10</td>
+                  <td data-row="10" data-col="2">10 009</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- postamble start -->
+  </body>
+</html>
+<!-- postamble end -->
+<!-- hack to avoid NA insertion in last line -->
+<pre><code class="language-r">x[, d := T]
 </code></pre>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </body>
 </html>

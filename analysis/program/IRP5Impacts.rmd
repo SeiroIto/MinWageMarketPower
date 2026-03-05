@@ -61,7 +61,9 @@ library(qs); library(data.table); library(ggplot2); library(rmarkdown); library(
 
 
 
-# Simple estimation
+# Estimation
+
+We use the TWFE event sudy specification. 
 
 
 
@@ -69,35 +71,62 @@ library(qs); library(data.table); library(ggplot2); library(rmarkdown); library(
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 setkey(Lf, taxrefno, taxyear)
 Lf[, ReportEveryYear := 0L]
-Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
-  by = (taxrefno)]
-Lf[, num := .N, by = (taxrefno)]
-Lf[MaxDiffTY == num, ReportEveryYear := 1L]
-#### Complete panel sample
-LfC <- Lf[Jobs0 > 10 & DurMonthMarch > 0 & ReportEveryYear == 1L, ]
-LfC[HHI <= median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Below"]
-LfC[HHI > median(HHI[taxyear == 2013], na.rm = T), HHILevel := "Above"]
+Lf[, DurationTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
+  by = (
+    busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+    taxrefno
+  )]
+Lf[, num := .N, by = .(taxrefno)]
+Lf[DurationTY == num, ReportEveryYear := 1L]
+#### Complete panel sample: 
+####   Existed before 2013 Mar - 2014 Feb: FirstYear2013 = "Before"
+####   Jobs0 is defined in chunk "merge faa plus LSMa1 gives Lf"
+####   "Jobs in first taxyear" >= 10 <==> "small" or larger
+####   "Job duration in current taxyear" > 0
+####     DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5)
+####   Observed duration = latest TY - earliest TY + 1
+Lf[taxyear == taxyear[num == 1L], 
+  .(
+         Micro = sum(Jobs0>0 & Jobs0<10, na.rm = T)
+    , NotMicro = sum(Jobs0>=10, na.rm = T)
+  ), by = taxyear]
+LfC <- Lf[
+    grepl("^B", FirstYear2013) & 
+                   Jobs0 >= 10 & 
+             DurMonthMarch > 0 & 
+         ReportEveryYear == 1L , 
+  ]
+LfC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 LfC[, HHILevel := factor(HHILevel)]
 LfCE <- LfC[ExistedBefore2013 == 1L, ]
 LfCEb <- LfCE[grepl("Be", HHILevel), ])
 LfCEa <- LfCE[grepl("Ab", HHILevel), ])
+rbind(
+    Lf    = table(Lf[, taxyear])
+  , LfC   = table(LfC[, taxyear])
+  , LfCE  = table(LfCE[, taxyear])
+  , LfCEb = table(LfCEb[, taxyear])
+  , LfCEa = table(LfCEa[, taxyear])
+)
 library(fixest)
-esLf <- feols(Jobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLf <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
   data = Lf)
-esLfC <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLfC <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
   data = LfC)
-esLfCE <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLfCE <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
   data = LfCE)
 #### Subsample: High and low concentrated markets
-esLfCEa <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLfCEa <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
   data = LfCEa)
-esLfCEb <- feols(rJobs ~ i(taxyear, FA0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+esLfCEb <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
   vcov = ~ taxyear + busmainplc_geo,
   data = LfCEb)
+
 library(ggfixest)
 eslist <-  list(
     "All sample" = esLf, 
@@ -118,7 +147,7 @@ gFE <- ggiplot(eslist,
     )
  
 ) + 
-scale_x_continuous(limits = c(2010, 2022), breaks = 2010:2022) +
+scale_x_continuous(limits = c(2008, 2022), breaks = 2008:2022) +
 scale_y_continuous(limits = c(15, -10)) 
 ggsave(
   paste0(pathresults, "Results2026Mar03.jpg")
@@ -127,5 +156,71 @@ ggsave(
  )
 gFE
 lapply(eslist, summary)
+```
+
+```{r estimation using 2010 and 2012 onwards}
+rbind(
+    Lf    = table(Lf[, taxyear])
+  , LfC   = table(LfC[, taxyear])
+  , LfCE  = table(LfCE[, taxyear])
+  , LfCEb = table(LfCEb[, taxyear])
+  , LfCEa = table(LfCEa[, taxyear])
+)
+for (Yr in c(2010, 2012)) {
+  LfYr    <- Lf[taxyear >= YR, ]
+  LfCYr   <- LfC[taxyear >= YR, ]
+  LfCEYr  <- LfCE[taxyear >= YR, ]
+  LfCEaYr <- LfCEa[taxyear >= UR, ]
+  LfCEbYr <- LfCEb[taxyear >= YR, ]
+  library(fixest)
+  esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    vcov = ~ taxyear + busmainplc_geo,
+    data = LfYr)
+  esLfCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    vcov = ~ taxyear + busmainplc_geo,
+    data = LfCYr)
+  esLfCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    vcov = ~ taxyear + busmainplc_geo,
+    data = LfCEYr)
+  #### Subsample: High and low concentrated markets
+  esLfCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    vcov = ~ taxyear + busmainplc_geo,
+    data = LfCEaYr)
+  esLfCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    vcov = ~ taxyear + busmainplc_geo,
+    data = LfCEbYr)
+  library(ggfixest)
+  eslistYr <-  list(
+      "All sample" = esLfYr, 
+      "Complete panel" = esLfCYr, 
+      "Existed firms, all sample" = esLfCEYr, 
+      "Existed firms, high concentrated markets" = esLfCEaYr, 
+      "Existed firms, low concentrated markets" = esLfCEbYr 
+    )
+  gFEYr <- ggiplot(eslistYr,
+    ref.line = 2012, 
+    main = "Job impacts: Low and high concentration",
+    xlab = "Tax year (March - Februray)",
+    multi_style = "facet",
+    geom_style = "ribbon",
+    theme = theme(
+      axis.text.x = element_text(angle = 90, vjust = .5),
+      legend.position = "none"
+      )
+   
+  ) + 
+  scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
+  scale_y_continuous(limits = c(15, -10)) 
+  ggsave(
+    paste0(pathresults, "Results", Yr, "-2022.jpg")
+    , gFE, width = 8*2, height = 4*2, units = "cm",
+    dpi = 300
+   )
+  gFEYr
+  lapply(eslistYr, summary)
+  assign(paste0("eslist", Yr), eslistYr)
+  assign(paste0("gFE", Yr), gFEYr)
+  qsave(eslistYr, paste0(pathresults, "eslist", Yr, ".qs"))
+}
 ```
 
