@@ -222,9 +222,9 @@ agestsum <- Lf[, .(
       AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
     )]
-tb.agest1 <- tb.agest[, .(taxyear, TotalJobs, TotalSubMWJobs, 
+tb.agest1 <- agestsum[, .(taxyear, TotalJobs, TotalSubMWJobs, 
   TotalEmployees, TotalSubMWWorkers, TotalAffectedFirms)]
-tb.agest2 <- tb.agest[, .(taxyear, TotalJobs, AggFA,
+tb.agest2 <- agestsum[, .(taxyear, TotalJobs, AggFA,
   AggFAe, AggFirmFA)]
 options(tinytable_format_digits = 2)
 tb.agest1 <- tt(tb.agest1, 
