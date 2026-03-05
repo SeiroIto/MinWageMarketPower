@@ -158,69 +158,84 @@ gFE
 lapply(eslist, summary)
 ```
 
-```{r estimation using 2010 and 2012 onwards}
-rbind(
-    Lf    = table(Lf[, taxyear])
-  , LfC   = table(LfC[, taxyear])
-  , LfCE  = table(LfCE[, taxyear])
-  , LfCEb = table(LfCEb[, taxyear])
-  , LfCEa = table(LfCEa[, taxyear])
-)
-for (Yr in c(2010, 2012)) {
-  LfYr    <- Lf[taxyear >= YR, ]
-  LfCYr   <- LfC[taxyear >= YR, ]
-  LfCEYr  <- LfCE[taxyear >= YR, ]
-  LfCEaYr <- LfCEa[taxyear >= UR, ]
-  LfCEbYr <- LfCEb[taxyear >= YR, ]
-  library(fixest)
-  esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
-    vcov = ~ taxyear + busmainplc_geo,
-    data = LfYr)
-  esLfCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
-    vcov = ~ taxyear + busmainplc_geo,
-    data = LfCYr)
-  esLfCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
-    vcov = ~ taxyear + busmainplc_geo,
-    data = LfCEYr)
-  #### Subsample: High and low concentrated markets
-  esLfCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
-    vcov = ~ taxyear + busmainplc_geo,
-    data = LfCEaYr)
-  esLfCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
-    vcov = ~ taxyear + busmainplc_geo,
-    data = LfCEbYr)
-  library(ggfixest)
-  eslistYr <-  list(
-      "All sample" = esLfYr, 
-      "Complete panel" = esLfCYr, 
-      "Existed firms, all sample" = esLfCEYr, 
-      "Existed firms, high concentrated markets" = esLfCEaYr, 
-      "Existed firms, low concentrated markets" = esLfCEbYr 
-    )
-  gFEYr <- ggiplot(eslistYr,
-    ref.line = 2012, 
-    main = "Job impacts: Low and high concentration",
-    xlab = "Tax year (March - Februray)",
-    multi_style = "facet",
-    geom_style = "ribbon",
-    theme = theme(
-      axis.text.x = element_text(angle = 90, vjust = .5),
-      legend.position = "none"
+```{r estimation with various Job0 and start year}
+for (Jb in c(2, 10)) {
+  LfC <- Lf[
+      grepl("^B", FirstYear2013) & 
+                     Jobs0 >= Jb & 
+               DurMonthMarch > 0 & 
+           ReportEveryYear == 1L , 
+    ]
+  LfC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+  LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+  LfC[, HHILevel := factor(HHILevel)]
+  LfCE <- LfC[ExistedBefore2013 == 1L, ]
+  LfCEb <- LfCE[grepl("Be", HHILevel), ])
+  LfCEa <- LfCE[grepl("Ab", HHILevel), ])
+  print(rbind(
+      Lf    = table(Lf[, taxyear])
+    , LfC   = table(LfC[, taxyear])
+    , LfCE  = table(LfCE[, taxyear])
+    , LfCEb = table(LfCEb[, taxyear])
+    , LfCEa = table(LfCEa[, taxyear])
+  ))
+  for (Yr in c(2010, 2012)) {
+    LfYr    <- Lf[taxyear >= YR, ]
+    LfCYr   <- LfC[taxyear >= YR, ]
+    LfCEYr  <- LfCE[taxyear >= YR, ]
+    LfCEaYr <- LfCEa[taxyear >= UR, ]
+    LfCEbYr <- LfCEb[taxyear >= YR, ]
+    library(fixest)
+    esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfYr)
+    esLfCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCYr)
+    esLfCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr)
+    #### Subsample: High and low concentrated markets
+    esLfCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr)
+    esLfCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr)
+    library(ggfixest)
+    eslistYr <-  list(
+        "All sample" = esLfYr, 
+        "Complete panel" = esLfCYr, 
+        "Existed firms, all sample" = esLfCEYr, 
+        "Existed firms, high concentrated markets" = esLfCEaYr, 
+        "Existed firms, low concentrated markets" = esLfCEbYr 
       )
-   
-  ) + 
-  scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
-  scale_y_continuous(limits = c(15, -10)) 
-  ggsave(
-    paste0(pathresults, "Results", Yr, "-2022.jpg")
-    , gFE, width = 8*2, height = 4*2, units = "cm",
-    dpi = 300
-   )
-  gFEYr
-  lapply(eslistYr, summary)
-  assign(paste0("eslist", Yr), eslistYr)
-  assign(paste0("gFE", Yr), gFEYr)
-  qsave(eslistYr, paste0(pathresults, "eslist", Yr, ".qs"))
+    gFEYr <- ggiplot(eslistYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+     
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
+    scale_y_continuous(limits = c(15, -10)) 
+    if (Jb == 2) Jb <- paste0("0", Jb)
+    ggsave(
+      paste0(pathresults, "ResultsJob", Jb, Yr, "-2022.jpg")
+      , gFE, width = 8*2, height = 4*2, units = "cm",
+      dpi = 300
+     )
+    gFEYr
+    lapply(eslistYr, summary)
+    assign(paste0("eslist", Jb, Yr), eslistYr)
+    assign(paste0("gFE", Jb, Yr), gFEYr)
+    qsave(eslistYr, paste0(pathresults, "eslist", Jb, Yr, ".qs"))
+  }
 }
 ```
 
