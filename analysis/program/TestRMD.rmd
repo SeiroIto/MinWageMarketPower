@@ -111,9 +111,9 @@ etable(est)
 etable(est, 
   style.df = style.df(depvar.title = "", fixef.title = "", 
     fixef.suffix = " fixed effect", yesNo = "yes"))
-library(pander)
+#### library(pander)
 ```
-```{r}
+```{r, eval = F}
 #| results = "asis"
 etable(est, postprocess.df = pandoc.table.return, style = "rmarkdown")
 my_style = style.df(depvar.title = "", fixef.title = "", 
@@ -124,7 +124,7 @@ etable(est[rhs = 2], style = "rmarkdown",
   caption = "New default values")
 ```
 
-```{r try out of fixest, echo = T, warning = F}
+```{r try out of fixest, eval = F, echo = T, warning = F}
 library(fixest)
 library(data.table)
 library(Matrix)
