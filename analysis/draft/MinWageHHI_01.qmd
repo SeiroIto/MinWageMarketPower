@@ -92,6 +92,9 @@ Red {
 }
 </style>
 
+<!-- LaTeX math shortcode -->
+{{< include ../../../MathShorthandUsingNewcommand.qmd >}}
+
 
 # Introduction
 
@@ -114,7 +117,11 @@ The case for impact estimation of policy shocks rings horrow if the minimum wage
 
 Since the late 1990's, there has been a long debate on the unemployment impacts of minimum wages. The traditional view under a competitive labour market expected that the unemployment will increase as the minimum wages rise. The expectation did not match the empirical results, however. Summaries of evidence suggest that the unemployment impacts are relatively small, if they exist [@Manning2021; @DubeLindner2024]. 
 
+@RaoRisch2026 relies on the data similar to this paper, the US Internal Revenues Services tax returns, and estimate the impacts of minimum wage increase.^[They use other data set, CPS MORGs, to compute each Census 2007 Code level industry's share in the total sub-minimum wage workers of the economy in one year before the minimum wage increase. They define the "highly exposed" industries where the industry's share exceeds 1%. It is a measure of relative concentration over the industries among total sub-minimum wage workers of the treated states, and is different from the fraction affected measure at each firm used by @HarasztosiLindner2019 that we follow. Authors copy this information to 2017 NAICS 4-digit industry code used in IRS data through a [crosswalk file](https://www2.census.gov/programs-surveys/demo/guidance/industry-occupation/industry-crosswalk-90-00-02-07-12.xls). ] Focusing on pass-through corporations which consists of mostly small and medium scale but also includes a small number of large scale firms, they found small unemployment impacts, about -1.5 jobs per year per firm, mostly concentrated on teen part timers. A novel finding is that this small unemployment impact mostly stems from the vacancy positions that are left unfilled. They also found that profits are not affected. The majority of firms pass the cost increase to buyers. One concerning finding is that the job losses are found mostly among less productive (low value added per worker) firms which could not increase revenues by passing the costs to buyers just as the more productive firms did. 
+
 It has always been argued that the labour markets may not be competitive [@Robinson1933; @Manning2013; @Manning2021ILRreview]. An early work discussed multiple channels that firms can adjust with, and firms can choose not to adjust on labour [@MaCurdy2015]. Even after narrowing the channel to labour market transactions, oligopsonistic firms still have a few options: laying off workers, labour-labour substituion^[Upgrading the skill contents of labour while keeping the level of employment. ] [@Horton2025], or reducing the firm's labour market transaction margins (wage markdowns). However, relatively few studies examine the adjustment channels beyond layoffs. This study aims to examine the plausibility of shrinking labour market margins. @Azaretal2023 are the first to examine this channel and use online labour market data of stock clerks, retail salespersons, and cashiers in the US. They find that labour market concentration as measured by Harhindahl-Hirschman Index (HHI) reduces the possible unemployment impacts of minimum wages. 
+
+The monopsony story received some doubts when applied to a German data set. @FaiaLochnerSchoefer2026 uses the production approach to estimate the wage markdowns. They build a monopolistic competition model and derive an expression that shows the difference in markdowns before and after the minimum wage imposition. They show that the wage markdowns follow only 25% of what the monopsonistic model predicts. However,they use @AckerbergCavesFrazer2015 to estimate the gross output production function and use the estimated parameters to compute wage markdowns.^[ACF assumes Leontief-in-materials. Will results hold if they use @GNR2020 to estimate the gross output production function? ] It remains to be seen if the results hold under more general conditions. 
 
 Agricultural minimum wage in South Africa has been suggested to have reduced employment. An early study examines the introduction in 2003 and found noisy unemployment impacts [@BhoratKanburStanwix2014].^[Their results show stronger negative impacts on the part-time workers, hinting labour-labour substitution. ] Some studies use the different changes in minimum wages by region in 2008 to estimate the impacts. However, the estimates turned out to be noisy due possibly to a relatively small increase in minimum wages that provides only modest statistical power [@ChrisRulofRankin2015; @ItoSeiro2021e]. In the current study, we use the large increase in minimum wages in 2012 to estimate the impacts of minimum wages on employment and the possible mitigating factor of labour market power.
 
@@ -182,13 +189,14 @@ we need
 $$
 G=\left(
 \begin{array}{cccc}
-\bfB_{1} & \0 & \dots &\0\\
-\0 & \bfB_{2} & \dots & \0\\
-\vdots & \vdots & \ddots & \vdots\\
-\0 & \0 & \dots & \B_{T}\\
+\bfB_{1} & \0       & \dots  & \0\\
+\0       & \bfB_{2} & \dots  & \0\\
+\vdots   & \vdots   & \ddots & \vdots\\
+\0       & \0       & \dots  & \bfB_{T}\\
 \end{array}
 \right)
-$$ T $\times$ (K$\times$T) matrix
+$$ 
+T $\times$ (K$\times$T) matrix
 
 ```{r }
 x <- matrix(1:100, ncol = 4)
@@ -198,10 +206,6 @@ x3 <- x[16:25, ]
 G <- Matrix::bdiag(list(x1, x2, x3))
 G
 as.matrix(G)
-library(magic)
-Reduce(adiag, lst)
-diag(x1, x2, x3)
-
 Interact <- function(x, group) {
 ####     x: matrix to be divided over groups
 #### group: 1, 1, ..., 1, 2, 2, ..., 2, 3, ...
@@ -236,9 +240,10 @@ $$
 \right]
 $$
 
-```{r }
+```{r try out of fixest, echo = T, warning = F}
 library(fixest)
 library(data.table)
+library(Matrix)
 set.seed(200)
 x = rep(letters[1:4], 3)[1:20]
 y = sample(1:4, 20, replace = T)
@@ -247,24 +252,28 @@ i(x, y, reference = 2)
 data(base_did)
 base_did <- data.table(base_did)
 dt <- data.table(base_did, base_did[, i(period, treat, 5)])
-
+dt[, y := round(y, 2)]
+dt[, x1 := round(x1, 2)]
+Matrix(as.matrix(dt)[1:50, ], sparse = T)
+#### printSpMatrix2(Matrix(as.matrix(dt), sparse = T))
 
 dt[, Gr := 1L]
 dt[id > 50, Gr := 2L]
-dt[, i(period, treat, )]
+Matrix(as.matrix(dt[, i(period, treat, 5)][1:50, ]), sparse = T)
+
 summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
 
 data(airquality)
 aq = airquality
 aq$week = aq$Day %/% 7 + 1
 aq <- data.table(aq)
-
-# Interacting Month and week:
+aq[1:11, ]
+#### Interacting Month and week:
 res_2 = feols(Ozone ~ Solar.R + i(Month, week), aq) # week as numbers (time trend)
 res_2F = feols(Ozone ~ Solar.R + i(Month, i.week), aq) # week as factor (dummy)
-aq[]
 
-# Same but dropping the 5th Month and 1st week
+
+#### Same but dropping the 5th Month and 1st week
 res_2F_bis = feols(Ozone ~ Solar.R + i(Month, i.week, ref = 5, ref2 = 1), aq)
 
 etable(res_2F, res_2F_bis)
