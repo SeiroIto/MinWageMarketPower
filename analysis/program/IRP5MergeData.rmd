@@ -139,16 +139,16 @@ Key variables defined at the establishment level:
 ```{r merge faa plus LSMa1 gives Lf, results = F, eval = T}
 #### faa (base) + LSMa1
 faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
-faa[, c("dJobs", "FA0", "Jobs0") := 
+faa[, c("FA0", "Jobs0") := 
   list(
-      Jobs - mean(Jobs, na.rm = T)]     # dJobs
-    , FA[!is.na(FA) | FA != 0][1]       # FA0
-    , Jobs[!is.na(Jobs) | Jobs != 0][1] # Jobs0
+    , FA[!is.na(FA) & FA != 0][1]       # FA0
+    , Jobs[!is.na(Jobs) & Jobs != 0][1] # Jobs0
   ), by = 
   .(
     busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo, taxrefno
   )]
+faa[  dJobs := Jobs - Jobs0]
 faa[, rJobs := dJobs/Jobs0]
 LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), 
   nthreads = 13)
@@ -203,7 +203,7 @@ qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
   )
-table(LSMa1[num == 1L, HHIBaseYear])
+table(LSMa2[num == 1L, HHIBaseYear])
 library(tinytable)
 agestsum <- Lf[, .(
       TotalJobs          = sum(Jobs, na.rm = T) 
