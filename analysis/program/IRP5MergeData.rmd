@@ -217,15 +217,16 @@ agestsum <- Lf[, .(
     ][, .(
       taxyear, 
       TotalJobs, TotalSubMWJobs, TotalEmployees, TotalSubMWWorkers, 
-      TotalAffectedFirms,
+      TotalFirmsWithEmp, TotalAffectedFirms,
       AggFA = round((TotalSubMWJobs/TotalJobs)*100, 2),
       AggFAe = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmp)*100, 2)
     )]
 tb.agest1 <- agestsum[, .(taxyear, TotalJobs, TotalSubMWJobs, 
-  TotalEmployees, TotalSubMWWorkers, TotalAffectedFirms)]
-tb.agest2 <- agestsum[, .(taxyear, TotalJobs, AggFA,
-  AggFAe, AggFirmFA)]
+  TotalEmployees, TotalSubMWWorkers)]
+tb.agest2 <- agestsum[, .(taxyear, TotalJobs, 
+  TotalFirmsWithEmp, TotalAffectedFirms, 
+  AggFA,AggFAe, AggFirmFA)]
 options(tinytable_format_digits = 2)
 tb.agest1 <- tt(tb.agest1, 
   caption = "Jobs and sub-MW jobs, agriculture, estimation sample")
