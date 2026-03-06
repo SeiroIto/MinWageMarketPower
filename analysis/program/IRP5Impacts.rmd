@@ -190,6 +190,14 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- LfCE[taxyear >= Yr, ]
     LfCEaYr <- LfCEa[taxyear >= Yr, ]
     LfCEbYr <- LfCEb[taxyear >= Yr, ]
+    #### destat for each data
+    #### To be specified using destat and destatfactor
+    iifac <- sapply(LfCYr, is.factor)
+    iich <- sapply(LfCYr, is.character)
+    des1 <- destat(LfCYr[, !(..iifac | ..iich)])
+    des2 <- destatfactor(LfCYr[, (..iifac | ..iich)])
+    print(rbind(des1, des2))
+    
     library(fixest)
     esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
