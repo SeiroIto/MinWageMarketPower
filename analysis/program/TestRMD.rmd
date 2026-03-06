@@ -108,12 +108,16 @@ setFixest_dict(c(
 est = feols(Ozone ~ Solar.R + sw0(Wind + Temp) | csw(Month, Day), 
   airquality, cluster = ~Day)                 
 etable(est)
+est_slopes = feols(Ozone ~ Solar.R + Wind | Day + Month[Temp], airquality)
+etable(est, est_slopes, tex = TRUE)
+etable(est, est_slopes, style.tex = style.tex("aer"), 
+       signif.code = NA, fitstat = ~ r2 + n, tex = TRUE)
 etable(est, 
   style.df = style.df(depvar.title = "", fixef.title = "", 
     fixef.suffix = " fixed effect", yesNo = "yes"))
 #### library(pander)
 ```
-```{r, eval = F}
+```{r, eval = T}
 #| results = "asis"
 etable(est, postprocess.df = pandoc.table.return, style = "rmarkdown")
 my_style = style.df(depvar.title = "", fixef.title = "", 

@@ -67,12 +67,12 @@ We use the TWFE event sudy specification.
 
 
 
-``{r select sample and estimate, eval = F}
+```{r select sample and estimate, eval = F}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 setkey(Lf, taxrefno, taxyear)
 Lf[, ReportEveryYear := 0L]
 Lf[, DurationTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
-  by = (
+  by = .(
     busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
     taxrefno
   )]
@@ -100,8 +100,8 @@ LfC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
 LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 LfC[, HHILevel := factor(HHILevel)]
 LfCE <- LfC[ExistedBefore2013 == 1L, ]
-LfCEb <- LfCE[grepl("Be", HHILevel), ])
-LfCEa <- LfCE[grepl("Ab", HHILevel), ])
+LfCEb <- LfCE[grepl("Be", HHILevel), ]
+LfCEa <- LfCE[grepl("Ab", HHILevel), ]
 rbind(
     Lf    = table(Lf[, taxyear])
   , LfC   = table(LfC[, taxyear])
@@ -175,8 +175,8 @@ for (Jb in c(2, 10)) {
   LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
   LfC[, HHILevel := factor(HHILevel)]
   LfCE <- LfC[ExistedBefore2013 == 1L, ]
-  LfCEb <- LfCE[grepl("Be", HHILevel), ])
-  LfCEa <- LfCE[grepl("Ab", HHILevel), ])
+  LfCEb <- LfCE[grepl("Be", HHILevel), ]
+  LfCEa <- LfCE[grepl("Ab", HHILevel), ]
   print(rbind(
       Lf    = table(Lf[, taxyear])
     , LfC   = table(LfC[, taxyear])
