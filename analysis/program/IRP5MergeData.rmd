@@ -148,7 +148,7 @@ faa[, c("FA0", "Jobs0") :=
     busprov_geo, busdistmuni_geo, 
     buslocmuni_geo, busmainplc_geo, taxrefno
   )]
-faa[  dJobs := Jobs - Jobs0]
+faa[, dJobs := Jobs - Jobs0]
 faa[, rJobs := dJobs/Jobs0]
 LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), 
   nthreads = 13)
