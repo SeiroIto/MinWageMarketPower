@@ -51,7 +51,8 @@ destat <- function(x, prob = "short", signif = 1, removezero = F)
 }
 
 destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
-#  returns an array of descriptive statistics for factors/characters
+#  returns an array of descriptive statistics for factors/characters by all levels
+#  If gender = M, F is a factor, it gives 2 rows of gender: M, gender: F 
 #  prob specifies quantiles, "short", "even", "odd", "very short"
 {
   if (is.null(dim(x))) dim(x) <- c(length(x),1)
@@ -147,3 +148,143 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
   return(y)
 }
 
+latextab.simple <- function(tab, hleft = NULL, hcenter = NULL, unit = "cm", 
+   hright = NULL, hline = NULL, cline = F, 
+   longtable = F, delimiterline = NULL, 
+   headercolor = NULL, alternatecolor = NULL,
+   alternatecolor2 = NULL, alternatestart2 = 3, 
+   alternatecolor4 = NULL, alternatestart4 = 5, 
+   adjustlineskip = NULL)
+#  produces a LaTeX table.
+#    hleft = header left: >{ "here" }
+#    hcenter = header center length: p{ "here" lengthunit}, need for 
+#    unit = header center length unit: p{ length "here" }
+#    hright = header right: <{ "here" }
+#    hline = T: inserts "\hline" after each line
+#             = numeric vector: inserts "\hline" at specified rows
+#    cline = matrix(row, from, to) that gives "\cline{from-to}" at specified rows
+#    longtable: if T, produce header/footer for longtable
+#    delimterline: if needed, set delimiterline = T which gives vertical lines
+#    headercolor: if not NULL, specify color of the header row
+#    alternatecolor: if not NULL, specify color of the alternating rows (1, 3, ...)
+#    alternatecolor2: if not NULL, specify color of the alternating 2 rows (3:4, 6:7, ...)
+#    alternatecolor4: if not NULL, specify color of the alternating 4 rows (5:8, 13:16, ...)
+#    adjustlineskip: insert specified string to every second ""\\[here]""
+{
+  tab0 = copy(tab)
+  if (!is.matrix(tab)) tab <- as.matrix(tab)
+  ltab <- coln <- NULL
+  if (is.null(hcenter)) hcenter <- rep(2, ncol(tab))
+  if (length(hcenter) == 1) hcenter <- rep(hcenter, ncol(tab))
+  for (i in 1:ncol(tab)) 
+  {
+    ltab <- cbind(ltab, tab[, i], " & ")
+    coln <- c(coln, 
+      paste("\\makebox[", hcenter[i], unit, "]{", colnames(tab)[i], "}", sep = "", collapse = "")
+      , " & ")
+  }
+  ltab <- rbind(coln, ltab)
+  linebreak <- rep("\\\\", nrow(ltab))
+  if (!is.null(adjustlineskip))
+    linebreak[seq(2, nrow(ltab), 2)] <- 
+      paste(linebreak[seq(2, nrow(ltab), 2)], "[", adjustlineskip, "]", sep = "")
+  if (!is.null(alternatecolor))
+      linebreak[seq(2, nrow(ltab), 2)] <- 
+        paste(linebreak[seq(2, nrow(ltab), 2)], "\\rowcolor{", alternatecolor, "}", sep = "")
+  if (!is.null(alternatecolor2))
+  {
+    #  block sequence:  4, 5, 8, 9, ..., nrow(ltab)
+    seqby2 <- rep(seq(alternatestart2, nrow(ltab), 4), each=2)
+    seqby2[seq(2, length(seqby2), 2)] <- seqby2[seq(1, length(seqby2), 2)] + 1
+    if (seqby2[length(seqby2)] > nrow(ltab)) seqby2 <- seqby2[-length(seqby2)] 
+      linebreak[seqby2] <- 
+        paste(linebreak[seqby2], "\\rowcolor{", alternatecolor2, "}", sep = "")
+   }
+  if (!is.null(alternatecolor4))
+  {
+    #  block sequence:  5:8, 13:16, ..., nrow(ltab)
+    seqby4 <- rep(seq(alternatestart4, nrow(ltab), 8), each = 4)
+    for (k in 2:4)
+      seqby4[seq(k, length(seqby4), 4)] <- seqby4[seq(1, length(seqby4), 4)] + k-1
+    while (seqby4[length(seqby4)] > nrow(ltab)) seqby4 <- seqby4[-length(seqby4)] 
+      linebreak[seqby4] <- 
+        paste(linebreak[seqby4], "\\rowcolor{", alternatecolor4, "}", sep = "")
+  }
+  if (is.null(hline)) holine <- "" else holine <- "\\hline"
+  linebreak <- paste(linebreak, holine, sep ="") 
+  ltab[, ncol(ltab)] <- linebreak
+  # cline[, 1] + 1 because of the header line
+  if (!is.null(dim(cline)))
+  {
+    if (nrow(ltab) == cline[nrow(cline), 1])
+    {
+      cat("\\cline cannot be added at the bottom row...ignored.")
+      cline <- cline[-nrow(cline), , drop = FALSE]
+    }
+    clineadd <- rep("", nrow(ltab))
+    clineadd[cline[, 1] + 1] <- paste("\\cline{", cline[, 2], "-", cline[, 3], "}", sep = "")
+    # cline[, 1] + 1 because of the header line
+    ltab[, ncol(ltab)] <- paste(ltab[, ncol(ltab)], clineadd, sep = "")
+  }
+  if (!is.null(hline)) ltab[c(1, nrow(ltab)), ncol(ltab)] <- "\\\\\\hline"
+  ltab2 <- NULL
+  for (i in 1:nrow(ltab)) ltab2 <- rbind(ltab2, paste(ltab[i, ], collapse = ""))
+  if (is.null(delimiterline)) delim <- "" else delim <- "|"
+  if (!(longtable)) 
+  {
+    if (!is.null(hleft))
+      head <- paste(
+        c("\\begin{tabular}{", 
+            t(cbind(paste(delim, ">{", hleft, "}", sep = "")
+            , paste("p{", hcenter, unit, "}", sep = "")
+            , paste("<{", hright, "}", sep = "")))
+          , paste0(delim, "}"))
+        , collapse = "") else
+      head <- paste(
+        c("\\begin{tabular}{", 
+          t(cbind(paste(delim, ">{\\scriptsize\\hfil", rep("", ncol(tab)), "}", sep = "")
+            , paste("p{", hcenter, unit, "}", sep = "")
+            , paste("<{", rep("", ncol(tab)), "}", sep = "")))
+          , paste0(delim, "}"))
+        , collapse = "")
+    foot <- "\\end{tabular}"
+    if (!is.null(headercolor)) head <- paste0(head, "\\rowcolor{", headercolor, "}")
+  } else {
+    if (!is.null(hleft))
+      head1 <- paste(
+        c("\\begin{longtable}{",
+          t(cbind(paste(delim, ">{", hleft, "}", sep = "")
+            , paste("p{", hcenter, unit, "}", sep = "")
+            , paste("<{", rep("", ncol(tab)), "}", sep = "")))
+          , paste0(delim, "}"))
+        , collapse = "") else
+      head1 <- paste(
+        c("\\begin{longtable}{",
+          t(cbind(paste(delim, ">{\\scriptsize\\hfil", rep("", ncol(tab)), "}", sep = "")
+            , paste("p{", hcenter, unit, "}", sep = "")
+            , paste("<{", rep("", ncol(tab)), "}", sep = "")))
+          , paste0(delim, "}"))
+        , collapse = "")
+    head2 <- paste(paste(ltab[1, ], collapse = ""), "\\endfirsthead")
+    head3 <- paste(paste(ltab[1, ], collapse = ""), "\\endhead")
+    if (!is.null(headercolor)) {
+      head2 <- paste0("\\rowcolor{", headercolor, "}", head2)
+      head3 <- paste0("\\rowcolor{", headercolor, "}", head3)
+    }
+    ltab2 <- ltab2[-1, ]
+    head <- rbind(head1, head2, head3)
+    foot <- "\\end{longtable}"
+  }
+  if (!is.null(hline)) 
+    ltab3 <- rbind(head, "\\hline", ltab2, foot) else
+    ltab3 <- c(head, ltab2, foot)
+  if (any(iidrop <- which(ltab3 == ""))) ltab3 <- ltab3[-iidrop, , drop = F]
+  rownames(ltab3) <- NULL
+  return(ltab3)
+}
+
+write.tablev <- function(x, fn, 
+  colnamestrue = TRUE, rownamestrue = FALSE, 
+  nastrings = "", ...) 
+  write.table(x, fn, sep = "\t", quote = FALSE, 
+        row.names = rownamestrue, col.names = colnamestrue, na = nastrings, ...)
