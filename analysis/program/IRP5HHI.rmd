@@ -431,8 +431,10 @@ FilesToCopy <- paste0(c(
   "FAFirstRow", # Fadata : 1st rows of FAD by location-taxrefno-taxyear
   "FAAndJobs",  # fadatai: Duration within 1 year of Fadata + industry
   "FAOfAgri",   # faa    : fadatain[Crop==1L|Animal==1L|Forest==1L, ]
-  "fadataUniqueEntries" 
+  "fadataUniqueEntries" ,
                 # estfa  : unique entries by location-taxrefno-taxyear
+  "AggregateSummary.qs"
+                # aggsummary : summary stats, busprov_geo, TotalEmployees, TotalSubMWWorkers, AggFA, TotalFirmsWithEmployees, TotalAffectedFirms,      AggFirmFA
   ), ".qs")
 for (ff in FilesToCopy)
   file.copy(
