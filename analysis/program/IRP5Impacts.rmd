@@ -110,9 +110,9 @@ for (Jb in c(2, 10)) {
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
     iich <- sapply(LfCYr, is.character)
-    des1 <- destat(LfCYr[, !(..iifac | ..iich), with = F])
-    des2 <- destatfactor(LfCYr[, (..iifac | ..iich), with = F])
-    dess <- rbind(des1, des2))
+    des1 <- destat(LfCYr[, which(!(iifac|iich)), with = F])
+    des2 <- destatfactor(LfCYr)
+    dess <- rbind(des1, des2)
     #### LaTeX table
     ltb1 <- latextab.simple(des1, 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
@@ -135,11 +135,11 @@ for (Jb in c(2, 10)) {
     ktb <- data.table(dess)
     kt <- kable(ktb, align = 
      paste0("r", paste0(rep("c", ncol(ktb)-1), collapse = "")), 
-     caption = paste0("Descriptive statistics ", Yr, "-2022, Job0 cutoff", Jb)
+     caption = paste0("Descriptive statistics ", Yr, "-2022, Job0 cutoff", Jb))
     kt <- column_spec(kt, 1, width = "9cm; min-width:9cm;")
     kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
     kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
-    qsave(kt, pasted0(pathresults, "Destat", Yr, Jb, ".qs"))
+    qsave(kt, paste0(pathresults, "Destat", Yr, Jb, ".qs"))
     assign(pasted0("Destat", Yr, Jb), kt)
   }
 }
