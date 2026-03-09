@@ -74,14 +74,14 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
   iic <- sapply(xd, is.character)
   if (any(iic)) {
     Numunq <- unlist(lapply(xd[, ..iic], function(z) length(unique(z))))
-    if (!is.null(Numunq)) ii100 <- Numunq > 100 else ii00 <- F
+    if (!is.null(Numunq)) ii100 <- Numunq > 100 else ii100 <- F
     if (any(ii100)) {
-      message(paste(names(xd[, ..iic])[ii100], if (length(ii00)==1) "has" else "have",  
+      message(paste(names(xd[, ..iic])[ii100], if (length(ii100)==1) "has" else "have",  
         "more than 100 unique entries, dropped."))
       xf <- xd[, ..iic][!ii100]
     } else xf <- xd
     xf[, (names(xf)[iic]) := 
-    lapply(.SD, as.factor), .SDcols = names(xf)[iic]
+      lapply(.SD, as.factor), .SDcols = names(xf)[iic]
     ]
   } else xf <- xd
   iif <- sapply(xf, is.factor)
