@@ -431,8 +431,10 @@ FilesToCopy <- paste0(c(
   "FAFirstRow", # Fadata : 1st rows of FAD by location-taxrefno-taxyear
   "FAAndJobs",  # fadatai: Duration within 1 year of Fadata + industry
   "FAOfAgri",   # faa    : fadatain[Crop==1L|Animal==1L|Forest==1L, ]
-  "fadataUniqueEntries" 
+  "fadataUniqueEntries" ,
                 # estfa  : unique entries by location-taxrefno-taxyear
+  "AggregateSummary.qs"
+                # aggsummary : summary stats, busprov_geo, TotalEmployees, TotalSubMWWorkers, AggFA, TotalFirmsWithEmployees, TotalAffectedFirms,      AggFirmFA
   ), ".qs")
 for (ff in FilesToCopy)
   file.copy(
@@ -662,6 +664,23 @@ g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ],
   facet_wrap(taxyear ~ ., ncol = 2)
 ggsave(
   paste0(pathresults, "FAOfAg2010-2022.jpg")
+  , g2, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+ )
+
+```
+```{r plot FA of agri, eval = F}
+#### FA of agri
+g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
+#  geom_point(size = .1, position = position_jitterdodge()) +
+#  geom_point(data = faama, size = 1, fill = "blue")
+  geom_boxplot(fill = "white", colour = "blue", outlier.alpha = 0) + 
+#  geom_jitter(width = .2) +
+  scale_x_discrete(name = "Tax year") +
+  facet_grid(~ Sample) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+ggsave(
+  paste0(pathresults, "FAOfAgri.jpg")
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
