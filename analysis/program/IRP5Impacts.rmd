@@ -28,9 +28,23 @@ pre {
 
 # Setup
 
-```{r setup}
-library(knitr)
-library(tufte)
+```{r read setup from child file, child='setup.Rmd', message = F, warning = F}
+#### setup.rmd sets eval, echo, time to T
+```
+```{r read functions from child file, child='destatfactor.Rmd', message = F, warning = F}
+```
+
+```{r setup, eval = F, echo = F}
+library(qs); library(data.table); library(ggplot2)
+library(rmarkdown); library(fixest)
+library(knitr); library(tufte)
+library(litedown)
+litedown::reactor(
+  echo = TRUE,
+  eval = TRUE, 
+  time = TRUE
+)
+options(htmltools.dir.version = FALSE, width = 100)
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
@@ -40,21 +54,22 @@ knitr::opts_chunk$set(
   echo = T, cache = F, eval = F,
   class.source = "SeiroBenign", class.output = "SeiroLightGreen"
   )
-options(htmltools.dir.version = FALSE, width = 100)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- c("busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo")
 ```
-```{r path, eval = T}
+```{r path}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "saveddata/")
-pathresults <- paste0(pathprogram, "results/")
-pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
-pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
-library(qs); library(data.table); library(ggplot2); library(rmarkdown); library(fixest)
+pathsaveddata <- paste0(path, "data/")
+pathresults <- paste0(path, "results/")
+pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
+pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
 ```
 
 
@@ -69,6 +84,7 @@ We use the TWFE event sudy specification.
 
 
 ```{r select estimation sample}
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 Lf[num == 1L, ][, 
   .(
          Micro = sum(Jobs0>0 & Jobs0<10, na.rm = T)
@@ -122,9 +138,9 @@ for (Jb in c(2, 10)) {
       unit = "cm")
     ltb <- matrix(c(
         ltb1[1]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\"), 
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
       , ltb1[-length(ltb1)]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\"), 
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
     write.tablev(ltb1, pasted0(pathresults, "Destat", Yr, Jb, "_1.tex"))
@@ -145,6 +161,35 @@ for (Jb in c(2, 10)) {
 }
 Destat201002
 ```
+
+```{r examining estimation data}
+LfCYr[taxrefno %in% taxrefno[dJobs < -1000], 
+  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
+  taxyear, Jobs, dJobs, Share, FA)][1:50, ]
+LfCYr[, EstID := factor(as.numeric(factor(paste0(
+    busdistmuni_geo
+  , buslocmuni_geo
+  , busmainplc_geo
+  , taxrefno))))
+]
+LfCYr[, FAclass := "low"]
+LfCYr[.2 < FA0 & FA0 <= .5, FAclass := "mid"]
+LfCYr[.5 < FA0, FAclass := "high"]
+lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
+  busmainplc_geo, taxrefno, EstID, taxyear, 
+  rJobs, dJobs, Jobs, Jobs0, Share, FA, FA0, FAclass)]
+ggplot(data=lfdata, 
+  aes(x = taxyear, y = rJobs, group = EstID, colour = FAclass)) +
+geom_line() +
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
+```
+
 ```{r estimation with various Job0 and start year}
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)

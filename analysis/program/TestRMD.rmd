@@ -1,30 +1,49 @@
 ---
 title: "Test litedown"
 date: "`{r} format(Sys.time(), "%Y %b %d %R")`"
-output: html_document
+output: 
+  litedown::html_format:
+    meta:
+      css: ["@default", "@tabsets", "@copy-button"]
+      js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 21/TestRMD.rmd"))
 #### setwd("c:/data/MinWageMarketPower/analysis/program/"); litedown::fuse("TestRMD.rmd")
 ---
-```{css, echo=F}
-.SeiroBenign {
-  background-color: #FFEBCD;
-  padding: 0.5em; /*文字まわり（上下左右）の余白*/
-  /* border: 1px solid yellow; */
-  /* font-weight: bold; */
+```{css, echo = F}
+body {
+  background-color: #f5f5f5;
 }
-.SeiroLightGreen {
-  background-color: #D0F0C0; /* Tea green */
-  padding: 0.5em; /*文字まわり（上下左右）の余白*/
-  font-family: Lucida Sans;
-  /* border: 1px solid yellow; */
-  /* font-weight: bold; */
-}
-#### Default height of a block
-pre {
-  max-height: 700px;
-  overflow-y: auto;
+.body {
+  background-color: transparent;
 }
 ```
+<style>
+/* background color for the page */
+body {
+  background-color: #f0f8ff; 
+}
+/* 2. Background color ONLY for the R Source Code blocks */
+pre code[class*="language-"] {
+  background-color: #FAEDEA; /* A light brown box */
+  color: black;            /* Light text */
+  display: block;
+  padding: 1px;
+  border-radius: 1px;
+}
+/* 3. Background color ONLY for the R Output blocks */
+pre code:not([class*="language-"]) {
+  background-color: #ffffff; /* White background for the output */
+  color: #333333;            /* Dark text */
+  display: block;
+  padding: 10px;
+  border-left: 1px solid #007acc; /* Optional: A nice blue accent line on the left */
+  border-radius: 4px;
+}
+/* 4. Force tables and all rows/cells to be white and remove transparency */
+table {
+  background-color: white;
+}
+</style>
 
 # What we do in the project
 
@@ -46,33 +65,23 @@ pre {
    * Expect b1<0 or b1 = 0
    * No prior for the sign of b2 
 
+::: {.side .side-left}
+**Anything** on the left.
+:::
+
+
 # Setup
 
-```{r setup}
-library(knitr)
-library(tufte)
-#### invalidate cache when the tufte version changes
-knitr::opts_chunk$set(
-  tidy = FALSE, cache.extra = packageVersion('tufte'), 
-  margin_references = TRUE,
-  #### remove leading hashes in html output
-  comment = "", 
-  echo = T, cache = F, eval = T,
-  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
-  )
-options(htmltools.dir.version = FALSE, width = 100)
-grepout <- function(str, x)
-  # returns element of match (not numbers)
-  x[grep(str, x, perl = T)]
-table0 <- function(x) table(x, useNA = "ifany")
+```{r, child='setup.Rmd', message = F, warning = F}
 ```
+
+
 ```{r path, eval = T}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
 pathdataCITIRP <- "T:/CIT-IRP5 Panel/"
 pathdataIRP <- "T:/IRP5/Job level/v5/beta/"
-library(qs); library(data.table); library(ggplot2)
 ```
 
 ```{r }
@@ -85,11 +94,32 @@ tb <- format_tt(tb,
     j = 3,
     num_mark_big = " "
   )
+tb <- style_tt(tb, background = "white") 
+tb <- style_tt(tb, i = seq(2, nrow(x), by = 2), background = "#f2f2f2")
 tb
 ```
 
 ```{r }
 x[, d := T]
+x
+```
+
+```{r time series plot}
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+covid1 = read.csv(file="EUCOVIDdeaths.csv",header=TRUE)
+covid_perCapita <- covid1[,-(1:2)] / covid1$PopulationM
+covid_perCapita$Country <- covid1$Country
+covid_perCapita_deaths <- melt(covid_perCapita,id.vars=c("Country"),
+ value.name="value", variable.name="Day")
+ggplot(data=covid_perCapita_deaths,
+ aes(x=Day, y=value, group = Country, colour = Country)) + 
+geom_line() +
+labs(y= "Deaths per Capita", x = "Day")  + 
+theme_bw(base_size = 16) + 
+theme(axis.text.x=element_text(angle=60,hjust=1))+ 
+ggtitle("Day-wise COVID-deaths per Capita in Europe in 2020")
 ```
 
 ```{r export to itable}
@@ -115,7 +145,7 @@ etable(est, est_slopes, style.tex = style.tex("aer"),
 etable(est, 
   style.df = style.df(depvar.title = "", fixef.title = "", 
     fixef.suffix = " fixed effect", yesNo = "yes"))
-#### library(pander)
+library(pander)
 ```
 ```{r, eval = T}
 #| results = "asis"
@@ -128,7 +158,11 @@ etable(est[rhs = 2], style = "rmarkdown",
   caption = "New default values")
 ```
 
-```{r try out of fixest, eval = F, echo = T, warning = F}
+```{r tabset test}
+xfun::tabset(airquality)
+```
+
+```{r try out of fixest, eval = T, echo = T, warning = F}
 library(fixest)
 library(data.table)
 library(Matrix)

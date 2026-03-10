@@ -47,9 +47,21 @@ pre {
 
 # Setup
 
-```{r setup}
-library(knitr)
-library(tufte)
+```{r, child='setup.Rmd', message = F, warning = F}
+#### setup.rmd sets eval, echo, time to T
+```
+
+```{r setup, eval = F, echo = F}
+library(qs); library(data.table); library(ggplot2)
+library(rmarkdown); library(fixest)
+library(knitr); library(tufte)
+library(litedown)
+litedown::reactor(
+  echo = TRUE,
+  eval = TRUE, 
+  time = TRUE
+)
+options(htmltools.dir.version = FALSE, width = 100)
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
@@ -59,25 +71,22 @@ knitr::opts_chunk$set(
   echo = T, cache = F, eval = F,
   class.source = "SeiroBenign", class.output = "SeiroLightGreen"
   )
-options(htmltools.dir.version = FALSE, width = 100)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- c("busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo")
 ```
 ```{r path, eval = T}
-#### path <- "Z:/Workbenches/epguest/seiro_ito/"
-#### pathdataCITIRP <- "Z:/Master Data/CIT-IRP5 Panel/"
-#### pathdataIRP <- "Z:/Master Data/IRP5/Job level/v5/beta/"
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
-pathresults <- paste0(path, "results/")
 pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "saveddata/")
+pathsaveddata <- paste0(path, "data/")
+pathresults <- paste0(path, "results/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
-library(qs); library(data.table); library(ggplot2)
 ```
 
 

@@ -1,3 +1,4 @@
+```{r read functions}
 destat <- function(x, prob = "short", signif = 1, removezero = F)
 #  returns an array of descriptive statistics
 #  prob specifies quantiles, "short", "even", "odd", "very short"
@@ -77,8 +78,9 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
     if (!is.null(Numunq)) ii100 <- Numunq > 100 else ii100 <- F
     if (any(ii100)) {
       message(paste(names(xd[, ..iic])[ii100], if (length(ii100)==1) "has" else "have",  
-        "more than 100 unique entries, dropped."))
-      xf <- xd[, ..iic][!ii100]
+        "more than 100 unique entries, dropped.\n"))
+      #### drop iic[ii100] columns
+      xf <- xd[, -which(iic[ii100]), with = F]
     } else xf <- xd
     xf[, (names(xf)[iic]) := 
       lapply(.SD, as.factor), .SDcols = names(xf)[iic]
@@ -288,3 +290,4 @@ write.tablev <- function(x, fn,
   nastrings = "", ...) 
   write.table(x, fn, sep = "\t", quote = FALSE, 
         row.names = rownamestrue, col.names = colnamestrue, na = nastrings, ...)
+```

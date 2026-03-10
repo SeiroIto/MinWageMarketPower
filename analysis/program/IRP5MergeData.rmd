@@ -47,9 +47,21 @@ pre {
 
 # Setup
 
-```{r setup}
-library(knitr)
-library(tufte)
+```{r, child='setup.Rmd', message = F, warning = F}
+#### setup.rmd sets eval, echo, time to T
+```
+
+```{r setup, eval = F, echo = F}
+library(qs); library(data.table); library(ggplot2)
+library(rmarkdown); library(fixest)
+library(knitr); library(tufte)
+library(litedown)
+litedown::reactor(
+  echo = TRUE,
+  eval = TRUE, 
+  time = TRUE
+)
+options(htmltools.dir.version = FALSE, width = 100)
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
@@ -59,20 +71,22 @@ knitr::opts_chunk$set(
   echo = T, cache = F, eval = F,
   class.source = "SeiroBenign", class.output = "SeiroLightGreen"
   )
-options(htmltools.dir.version = FALSE, width = 100)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- c("busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo")
 ```
 ```{r path, eval = T}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "data/")
 pathresults <- paste0(path, "results/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
-library(qs); library(data.table); library(ggplot2)
 ```
 
 
@@ -104,7 +118,7 @@ Tabulation gives
 
 
 ```{r create HHIAgriRowsMainPlaceLevel from HHIAgriRows, results = F, eval = T}
-LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+LSa <- qread(paste0(pathsaveddata, "HHIAgriRows.qs"), nthreads = 13)
 #### table(LSa[, .(Nums = 1:.N, taxyear), 
 ####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
 ####  "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
@@ -130,6 +144,19 @@ LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)),
   by = .(ExistedBefore2013, taxyear)][order(ExistedBefore2013, taxyear)]
 ```
 
+```{r copy LSMa estimation sample to saveddata, eval = F}
+FilesToCopy <- paste0(c(
+  "HHIAgriRowsMainPlaceLevel" # LSMa: HHIAgriRows.qs main place level
+  ), ".qs")
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+  )
+```
+
+
 Key variables defined at the establishment level:
 
 * `rJobs`: Percentage change relative to Jobs0
@@ -138,7 +165,7 @@ Key variables defined at the establishment level:
 
 ```{r merge faa plus LSMa1 gives Lf, results = F, eval = T}
 #### faa (base) + LSMa1
-faa <- qread(paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13)
 faa[, c("FA0", "Jobs0") := 
   list(
       FA[!is.na(FA) & FA != 0][1]       # FA0
@@ -150,7 +177,7 @@ faa[, c("FA0", "Jobs0") :=
   )]
 faa[, dJobs := Jobs - Jobs0]
 faa[, rJobs := dJobs/Jobs0]
-LSMa <- qread(paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), 
+LSMa <- qread(paste0(pathsaveddata, "HHIAgriRowsMainPlaceLevel.qs"), 
   nthreads = 13)
 #### Drop rows with no location info
 LSMa1 <- LSMa[busmainplc_geo != "", ]
