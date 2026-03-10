@@ -672,6 +672,7 @@ ggsave(
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
+
 ```
 ```{r plot FA of agri, eval = F}
 #### FA of agri
