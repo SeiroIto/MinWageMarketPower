@@ -1,7 +1,12 @@
 ---
 title: "Minimum wage impacts on employment using IRP5 files"
 date: "r format(Sys.time(), "%Y%m%d %R")"
-output: html_document
+output: 
+  litedown::html_format:
+    meta:
+      css: ["@default", "@tabsets", "@copy-button"]
+      js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
+#### output: html_document
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 03 03/IRP5Impacts.rmd"))
 ---
 ```{css, echo=F}
@@ -66,7 +71,7 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "saveddata/")
 pathresults <- paste0(path, "results/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"

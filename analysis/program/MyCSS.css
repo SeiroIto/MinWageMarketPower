@@ -1,15 +1,39 @@
-#### Default height of a block
-pre {
-  max-height: 700px;
-  overflow-y: auto;
-}
 main {
   max-width: none;
   margin-left: 80px;
   margin-right: 40px;
   background-color: pink;
 }
+/* 1. background color for the page */
 body {
   margin-left: 80px;
-  background-color: pink;
+  background-color: #f0f8ff; 
 }
+
+/* Default height of a block */
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+/* 2. Background color ONLY for the R Source Code blocks */
+pre code[class*="language-"] {
+  background-color: #FAEDEA; /* A light brown box */
+  color: black;            /* Light text */
+  display: block;
+  padding: 1px;
+  border-radius: 1px;
+}
+/* 3. Background color ONLY for the R Output blocks */
+pre code:not([class*="language-"]) {
+  background-color: #ffffff; /* White background for the output */
+  color: #333333;            /* Dark text */
+  display: block;
+  padding: 10px;
+  border-left: 1px solid #007acc; /* Optional: A nice blue accent line on the left */
+  border-radius: 4px;
+}
+table {
+  background-color: white;
+}
+
+

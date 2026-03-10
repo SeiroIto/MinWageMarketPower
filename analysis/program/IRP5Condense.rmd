@@ -43,7 +43,7 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "data/")
+pathsaveddata <- paste0(path, "saveddata/")
 pathresults <- paste0(path, "results/")
 pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
 pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
