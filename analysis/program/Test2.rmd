@@ -1,0 +1,48 @@
+---
+title: "My Litedown Document"
+author: "Author Name"
+---
+
+<style>
+/* 1. Global Page Background */
+body {
+  background-color: #FAEDEA; 
+}
+
+/* 2. Generalized Background for ALL Output blocks */
+pre {
+  background-color: #ffffff; /* White background for Output */
+  border-radius: 4px;
+  padding: 1px;
+}
+
+/* 3. Different Background JUST for Source Code blocks */
+/* This overrides the above rule only if it is actually code */
+pre:has(code[class*="language-"]) {
+  background-color: #C5C6F1; /* light purple */
+  color: black;            /* Light text for Code */
+}
+
+/* Optional: Keep your inline code slightly different to stand out in text */
+code {
+  background-color: #e8e8e8; 
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+</style>
+
+# Introduction
+Your code will now be dark, and the outputs will be white. And because we didn't use hyper-specific overrides, it's natively much cleaner!
+
+
+
+```r
+print("This code and the output underneath will now share the same simple style!")
+```
+
+`r`
+
+```{r, echo = T}
+x <- data.table(a=1:10, b=letters[1:10])
+tinytable::tt(x)
+```

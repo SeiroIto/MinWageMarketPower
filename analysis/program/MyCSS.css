@@ -1,0 +1,15 @@
+#### Default height of a block
+pre {
+  max-height: 700px;
+  overflow-y: auto;
+}
+main {
+  max-width: none;
+  margin-left: 80px;
+  margin-right: 40px;
+  background-color: pink;
+}
+body {
+  margin-left: 80px;
+  background-color: pink;
+}

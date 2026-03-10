@@ -1,0 +1,88 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r libraries_needed}
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+
+```
+```{r}
+covid <- read.csv(file="EUCOVIDdeaths.csv",header=TRUE)
+```
+```{r}
+covid1 =(read.csv(file="EUCOVIDdeaths.csv",header=TRUE)[,-c(2)])
+```
+
+```{r}
+head(covid1)
+```
+
+```{r}
+covid_deaths <- melt(covid1,id.vars=c("Country"),value.name="value", variable.name="Day")
+```
+
+```{r}
+head(covid_deaths)
+```
+
+```{r}
+covid_plot <- ggplot(data=covid_deaths, aes(x=Day, y=value, group = Country, colour = Country)) + geom_line() +labs(y= "Deaths", x = "Day")
+
+
+covid_plot + ggtitle("Daily Deaths for European countries in March,2020")
+
+
+covid_plot + ggtitle("Daily Deaths for European countries in March,2020") + geom_point()
+
+```
+
+```{r}
+covid_perCapita <- covid1[,c(2:17)] / covid$PopulationM
+```
+
+
+```{r}
+covid_perCapita$Country <- covid1$Country
+
+head(covid_perCapita)
+```
+
+```{r}
+covid_perCapita_deaths <- melt(covid_perCapita,id.vars=c("Country"),value.name="value", variable.name="Day")
+```
+
+```{r}
+covidPerCapitaPlot <- ggplot(data=covid_perCapita_deaths, aes(x=Day, y=value, group = Country, colour = Country)) + geom_line() +labs(y= "Deaths per Capita", x = "Day") 
+
+
+covidPerCapitaPlot + theme_bw(base_size = 16) + theme(axis.text.x=element_text(angle=60,hjust=1))+ ggtitle("Day-wise Covid-Deaths per Capita in Europe in 2020")
+```
+
+```{r}
+#install.packages("hurricaneexposuredata")
+
+library(hurricaneexposuredata)
+library(hurricaneexposure)
+
+head(rain)
+
+county_centers
+
+
+rain_data <- county_rain(counties = c("01001","36005", "36047", "36061",
+                                  "36085", "36081", "36119",
+                                  "22071", "51700"), start_year = 1995, end_year = 2005,
+            rain_limit = 50, dist_limit = 500, days_included = c(-1, 0, 1))
+
+
+# Plot
+ggplot(data = rain_data, aes(x=fips, y=tot_precip, group=storm_id, color=storm_id)) + geom_line()
+
+```
+
+
