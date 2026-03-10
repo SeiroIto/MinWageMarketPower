@@ -174,10 +174,13 @@ LfCYr[, EstID := factor(as.numeric(factor(paste0(
 ]
 LfCYr[, FAclass := "low"]
 LfCYr[.2 < FA0 & FA0 <= .5, FAclass := "mid"]
-LfCYr[.5 < FA0, FAclass := "high"]
+LfCYr[FA0 > .5, FAclass := "high"]
+LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
   rJobs, dJobs, Jobs, Jobs0, Share, FA, FA0, FAclass)]
+destat(lfdata)
+destatfactor(lfdata)
 ggplot(data=lfdata, 
   aes(x = taxyear, y = rJobs, group = EstID, colour = FAclass)) +
 geom_line() +
