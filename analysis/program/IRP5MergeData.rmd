@@ -1,7 +1,12 @@
 ---
 title: "Merge IRP5, industry code, HHI, FA files"
 date: "r format(Sys.time(), "%Y%m%d %R")"
-output: html_document
+output: 
+  litedown::html_format:
+    meta:
+      css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
+      js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
+#### output: html_document
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5MergeData.rmd"))
 ---
 ```{css, echo=F}

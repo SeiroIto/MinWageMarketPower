@@ -4,7 +4,7 @@ date: "r format(Sys.time(), "%Y%m%d %R")"
 output: 
   litedown::html_format:
     meta:
-      css: ["@default", "@tabsets", "@copy-button"]
+      css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 03 03/IRP5Impacts.rmd"))
@@ -140,9 +140,9 @@ for (Jb in c(2, 10)) {
       , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
-    write.tablev(ltb1, pasted0(pathresults, "Destat", Yr, Jb, "_1.tex"))
-    write.tablev(ltb2, pasted0(pathresults, "Destat", Yr, Jb, "_2.tex"))
-    write.tablev(ltb , pasted0(pathresults, "Destat", Yr, Jb,   ".tex"))
+    write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
+    write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "_2.tex"))
+    write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   ".tex"))
     #### HTML table
     library(kableExtra)
     ktb <- data.table(dess)
@@ -153,7 +153,7 @@ for (Jb in c(2, 10)) {
     kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
     kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
     qsave(kt, paste0(pathresults, "Destat", Yr, Jb, ".qs"))
-    assign(pasted0("Destat", Yr, Jb), kt)
+    assign(paste0("Destat", Yr, Jb), kt)
   }
 }
 LfCEb[order(EstID, taxyear), 
@@ -253,6 +253,7 @@ for (Jb in c(2, 10)) {
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
   }
 }
+gFE201002
 ```
 
 ## Winsorizing
@@ -262,8 +263,9 @@ for (Jb in c(2, 10)) {
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
 Lfw <- Lf[num == 1L & (
-    EstID %in% EstID[abs(rJobsMP) < 2] # small changes
+    !(EstID %in% EstID[abs(rJobsMP) > 2]) # small changes
   ) , ]
+rbind(Lf=dim(Lf), LFw=dim(LFw))
 Lfw[, 
   .(
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
@@ -322,9 +324,9 @@ for (Jb in c(2, 10)) {
       , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
-    write.tablev(ltb1, pasted0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
-    write.tablev(ltb2, pasted0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
-    write.tablev(ltb , pasted0(pathresults, "Destat", Yr, Jb,   "w.tex"))
+    write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
+    write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
+    write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   "w.tex"))
     #### HTML table
     library(kableExtra)
     ktb <- data.table(dess)
@@ -335,10 +337,10 @@ for (Jb in c(2, 10)) {
     kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
     kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
     qsave(kt, paste0(pathresults, "Destat", Yr, Jb, "w.qs"))
-    assign(pasted0("Destatw", Yr, Jb), kt)
+    assign(paste0("Destatw", Yr, Jb), kt)
   }
 }
-Destat201002
+Destatw201002
 ```
 
 ```{r estimation with winsorized data}
@@ -401,5 +403,7 @@ for (Jb in c(2, 10)) {
     qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
+gFEw201002
+gFEw201202
 ```
 

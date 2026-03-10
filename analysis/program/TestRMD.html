@@ -54,7 +54,7 @@ table {
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Test litedown</h1></div>
-<div class="date"><h3>2026 3 10 16:42</h3></div>
+<div class="date"><h3>2026 3 10 23:19</h3></div>
 </div>
 <div class="body">
 <h1 id="chp:what-we-do-in-the-project">What we do in the project</h1>
@@ -85,7 +85,7 @@ table {
 <li>% Employment change = a + b1<em>FA + b2</em>HHI + b3*(FA*HHI) + FEs + e</li>
 <li>Test b3 &gt; 0 labor market power mitigates disemployment impacts</li>
 <li>Expect b1&lt;0 or b1 = 0</li>
-<li>No prior for the sign of b2^[bla ]</li>
+<li>No prior for the sign of b2</li>
 </ul>
 </li>
 </ol>
@@ -119,6 +119,14 @@ table0 &lt;- function(x) table(x, useNA = &quot;ifany&quot;)
 GeoLevel &lt;- c(&quot;Prv&quot;, &quot;Dis&quot;, &quot;Loc&quot;, &quot;Mai&quot;)
 geovars &lt;- c(&quot;busprov_geo&quot;, &quot;busdistmuni_geo&quot;, 
   &quot;buslocmuni_geo&quot;, &quot;busmainplc_geo&quot;)
+</code></pre>
+<pre><code class="language-r">path &lt;- &quot;W:/epguest/seiro_ito/&quot;
+pathprogram &lt;- paste0(path, &quot;outfiles/&quot;)
+pathdata &lt;- paste0(path, &quot;data/&quot;)
+pathsaveddata &lt;- paste0(path, &quot;saveddata/&quot;)
+pathresults &lt;- paste0(path, &quot;results/&quot;)
+pathdataCITIRP &lt;- &quot;U:/CIT-IRP5 Panel/&quot;
+pathdataIRP &lt;- &quot;U:/IRP5/Job level/v5/beta/&quot;
 </code></pre>
 <pre><code class="language-r">path &lt;- &quot;W:/epguest/seiro_ito/&quot;
 pathprogram &lt;- paste0(path, &quot;outfiles/&quot;)
