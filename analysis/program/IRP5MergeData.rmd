@@ -216,6 +216,14 @@ Lf[grepl("N", FirstYear2013) & grepl("Un", Sample),
   AgeSample := "New, unexposed"]
 Lf[, AgeSample := factor(AgeSample, levels = 
   c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
+#### ReportEveryYear (copied from /2026 01 23/IRP5Impacts.rmd)
+Lf[, ReportEveryYear := 0L]
+Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
+  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+Lf[, num := .N, 
+  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+Lf[MaxDiffTY == num, ReportEveryYear := 1L]
+Lf[, c("num", "MaxDiffTY") := NULL]
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
 ```
 

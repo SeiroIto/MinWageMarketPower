@@ -175,6 +175,7 @@ LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
   rJobs, dJobs, Jobs, Jobs0, Share, FA, FA0, FAclass)]
+rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 destatfactor(lfdata)
 ggplot(data=lfdata, 
