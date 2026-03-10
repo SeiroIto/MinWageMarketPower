@@ -35,11 +35,6 @@ output:
 :::
 
 
-::: {.side .side-left}
-**Anything** on the left.
-:::
-
-
 # Setup
 
 ```{r, child='setup.Rmd', message = F, warning = F}
