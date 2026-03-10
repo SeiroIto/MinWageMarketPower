@@ -28,7 +28,7 @@ output:
    * % Employment change = a + b1*FA + b2*HHI + b3*(FA*HHI) + FEs + e
    * Test b3 > 0 labor market power mitigates disemployment impacts
    * Expect b1<0 or b1 = 0
-   * No prior for the sign of b2^[bla ] 
+   * No prior for the sign of b2
 
 ::: {.side .side-left}
 **Anything** on the left.
