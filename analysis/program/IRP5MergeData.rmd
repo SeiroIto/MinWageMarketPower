@@ -224,6 +224,16 @@ Lf[, num := .N,
   by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
 Lf[MaxDiffTY == num, ReportEveryYear := 1L]
 Lf[, c("num", "MaxDiffTY") := NULL]
+#### EstID: establishment IDs
+#### If location info is missing, all establishments of a firm
+#### will be treated as a single establishment under EstID
+Lf[, EstID := factor(as.numeric(factor(paste0(
+    busprov_geo
+  , busdistmuni_geo
+  , buslocmuni_geo
+  , busmainplc_geo
+  , taxrefno))))
+]
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
 ```
 
