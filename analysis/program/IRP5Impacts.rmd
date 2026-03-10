@@ -203,20 +203,20 @@ for (Jb in c(2, 10)) {
     LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
     LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
     library(fixest)
-    esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
-    esLfCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCYr)
-    esLfCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr)
     #### Subsample: High and low concentrated markets
-    esLfCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEaYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEaYr)
-    esLfCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEbYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     library(ggfixest)
@@ -353,20 +353,20 @@ for (Jb in c(2, 10)) {
     LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
     LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
     library(fixest)
-    esLfwYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
-    esLfwCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCYr)
-    esLfwCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr)
     #### Subsample: High and low concentrated markets
-    esLfwCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEaYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEaYr)
-    esLfwCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEbYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     library(ggfixest)
