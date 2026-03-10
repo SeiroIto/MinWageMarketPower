@@ -228,12 +228,16 @@ Lf[, AgeSample := factor(AgeSample, levels =
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
 ```
 
-```{r analysis sample descriptive statistics, eval = F}
+```{r analysis sample descriptive statistics}
   rbind(
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
   )
 table(LSMa2[num == 1L, HHIBaseYear])
+Lf[, .(num = 1:.N), by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+  busmainplc_geo, taxrefno, taxyear)][num > 1L, ]
+Lf[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+  busmainplc_geo, Trno, taxyear, Jobs, rJobs, Jobs0, FA, FA0, Share)][1:30, ]
 library(tinytable)
 agestsum <- Lf[, .(
       TotalJobs          = sum(Jobs, na.rm = T) 

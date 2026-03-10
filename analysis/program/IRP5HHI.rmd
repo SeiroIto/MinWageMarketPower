@@ -79,7 +79,7 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
 ```
-```{r path, eval = T}
+```{r path}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
