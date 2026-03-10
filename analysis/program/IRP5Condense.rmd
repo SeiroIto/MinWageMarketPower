@@ -39,15 +39,6 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
 ```
-```{r path, eval = T}
-path <- "W:/epguest/seiro_ito/"
-pathprogram <- paste0(path, "outfiles/")
-pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "data/")
-pathresults <- paste0(path, "results/")
-pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
-pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
-```
 
 Read irp5 data by year
 

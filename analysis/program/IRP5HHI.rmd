@@ -79,16 +79,6 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
 ```
-```{r path, eval = T}
-path <- "W:/epguest/seiro_ito/"
-pathprogram <- paste0(path, "outfiles/")
-pathresults <- paste0(path, "results/")
-pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "data/")
-pathresults <- paste0(path, "results/")
-pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
-pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
-```
 
 
 * FA does not require location info
@@ -677,6 +667,7 @@ ggsave(
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
+
 ```
 ```{r plot FA of agri, eval = F}
 #### FA of agri

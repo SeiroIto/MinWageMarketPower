@@ -4,46 +4,11 @@ date: "`{r} format(Sys.time(), "%Y %b %d %R")`"
 output: 
   litedown::html_format:
     meta:
-      css: ["@default", "@tabsets", "@copy-button"]
+      css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 21/TestRMD.rmd"))
 #### setwd("c:/data/MinWageMarketPower/analysis/program/"); litedown::fuse("TestRMD.rmd")
 ---
-```{css, echo = F}
-body {
-  background-color: #f5f5f5;
-}
-.body {
-  background-color: transparent;
-}
-```
-<style>
-/* background color for the page */
-body {
-  background-color: #f0f8ff; 
-}
-/* 2. Background color ONLY for the R Source Code blocks */
-pre code[class*="language-"] {
-  background-color: #FAEDEA; /* A light brown box */
-  color: black;            /* Light text */
-  display: block;
-  padding: 1px;
-  border-radius: 1px;
-}
-/* 3. Background color ONLY for the R Output blocks */
-pre code:not([class*="language-"]) {
-  background-color: #ffffff; /* White background for the output */
-  color: #333333;            /* Dark text */
-  display: block;
-  padding: 10px;
-  border-left: 1px solid #007acc; /* Optional: A nice blue accent line on the left */
-  border-radius: 4px;
-}
-/* 4. Force tables and all rows/cells to be white and remove transparency */
-table {
-  background-color: white;
-}
-</style>
 
 # What we do in the project
 
@@ -63,7 +28,12 @@ table {
    * % Employment change = a + b1*FA + b2*HHI + b3*(FA*HHI) + FEs + e
    * Test b3 > 0 labor market power mitigates disemployment impacts
    * Expect b1<0 or b1 = 0
-   * No prior for the sign of b2 
+   * No prior for the sign of b2^[bla ] 
+
+::: {.side .side-left}
+**Anything** on the left.
+:::
+
 
 ::: {.side .side-left}
 **Anything** on the left.
@@ -95,7 +65,9 @@ tb <- format_tt(tb,
     num_mark_big = " "
   )
 tb <- style_tt(tb, background = "white") 
-tb <- style_tt(tb, i = seq(2, nrow(x), by = 2), background = "#f2f2f2")
+tb <- style_tt(tb, i = seq(2, nrow(x), by = 2), 
+  background = "#f5f5f5" #### background = "#f2f2f2"
+)
 tb
 ```
 
