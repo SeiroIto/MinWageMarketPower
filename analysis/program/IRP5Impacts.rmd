@@ -77,7 +77,7 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 We use the TWFE event sudy specification. 
 
 
-
+## Straight estimation
 
 ```{r select estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
@@ -112,20 +112,20 @@ for (Jb in c(2, 10)) {
     LfYr    <- Lf[taxyear >= Yr, ]
     LfCYr   <- LfC[taxyear >= Yr, ]
     LfCEYr  <- LfCE[taxyear >= Yr, ]
-    LfCEaYr <- LfCEa[taxyear >= Yr, ]
     LfCEbYr <- LfCEb[taxyear >= Yr, ]
-    assign(pasted0("Lf",    Yr, Jb), LfYr)
-    assign(pasted0("LfC",   Yr, Jb), LfCYr)
-    assign(pasted0("LfCE",  Yr, Jb), LfCEYr)
-    assign(pasted0("LfCEa", Yr, Jb), LfCEaYr)
-    assign(pasted0("LfCEb", Yr, Jb), LfCEaYr)
+    LfCEaYr <- LfCEa[taxyear >= Yr, ]
+    assign(paste0("Lf",    Yr, Jb), LfYr)
+    assign(paste0("LfC",   Yr, Jb), LfCYr)
+    assign(paste0("LfCE",  Yr, Jb), LfCEYr)
+    assign(paste0("LfCEb", Yr, Jb), LfCEbYr)
+    assign(paste0("LfCEa", Yr, Jb), LfCEaYr)
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
-    iich <- sapply(LfCYr, is.character)
-    des1 <- destat(LfCYr[, which(!(iifac|iich)), with = F])
-    des2 <- destatfactor(LfCYr)
-    dess <- rbind(des1, des2)
+    iich  <- sapply(LfCYr, is.character)
+    des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
+    des2  <- destatfactor(LfCYr)
+    dess  <- rbind(des1, des2)
     #### LaTeX table
     ltb1 <- latextab.simple(des1, 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
@@ -156,11 +156,16 @@ for (Jb in c(2, 10)) {
     assign(pasted0("Destat", Yr, Jb), kt)
   }
 }
+LfCEb[order(EstID, taxyear), 
+  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
+LfCEa[order(EstID, taxyear), 
+  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 Destat201002
 ```
 
 ```{r examining estimation data}
-LfCYr[EstID %in% EstID[dJobs < -100], 
+LfCYr <- LfC201002
+LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
   taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
 LfCYr[, FAclass := "low"]
@@ -174,9 +179,11 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 ### destatfactor(lfdata)
-ggplot(data=lfdata, 
+ggplot(data=lfdata[
+  EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ], 
   aes(x = taxyear, y = rJobsMP, group = EstID, colour = FAclass)) +
 geom_line() +
+scale_y_continuous(transform = "log10") + 
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)
   ) +
@@ -190,11 +197,11 @@ theme(
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
-    LfYr    <- get(pasted0("Lf",    Yr, Jb))
-    LfCYr   <- get(pasted0("LfC",   Yr, Jb))
-    LfCEYr  <- get(pasted0("LfCE",  Yr, Jb))
-    LfCEaYr <- get(pasted0("LfCEa", Yr, Jb))
-    LfCEbYr <- get(pasted0("LfCEb", Yr, Jb))
+    LfYr    <- get(paste0("Lf",    Yr, Jb))
+    LfCYr   <- get(paste0("LfC",   Yr, Jb))
+    LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
+    LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
+    LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
     library(fixest)
     esLfYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -230,13 +237,12 @@ for (Jb in c(2, 10)) {
         axis.text.x = element_text(angle = 90, vjust = .5),
         legend.position = "none"
         )
-     
     ) + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
     scale_y_continuous(limits = c(15, -10)) 
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb.jpg")
+    paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
       , gFE, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
@@ -245,6 +251,154 @@ for (Jb in c(2, 10)) {
     assign(paste0("eslist", Yr, Jb), eslistYr)
     assign(paste0("gFE",    Yr, Jb), gFEYr)
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
+  }
+}
+```
+
+## Winsorizing
+
+
+```{r select winsorized estimation sample}
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf[, num := 1:.N, by = .(EstID, taxyear)]
+Lfw <- Lf[num == 1L & (
+    EstID %in% EstID[abs(rJobsMP) < 2] # small changes
+  ) , ]
+Lfw[, 
+  .(
+         Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
+    , NotMicro = sum(JobsMP0>=10, na.rm = T)
+  ), by = taxyear]
+for (Jb in c(2, 10)) {
+  LfwC <- Lfw[
+      grepl("^B", FirstYear2013) & 
+                   JobsMP0 >= Jb & 
+               DurMonthMarch > 0 & 
+           ReportEveryYear == 1L , 
+    ]
+  LfwC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+  LfwC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+  LfwC[, HHILevel := factor(HHILevel)]
+  LfwCE <- LfwC[ExistedBefore2013 == 1L, ]
+  LfwCEb <- LfwCE[grepl("Be", HHILevel), ]
+  LfwCEa <- LfwCE[grepl("Ab", HHILevel), ]
+  print(rbind(
+      Lfw    = table(Lfw[, taxyear])
+    , LfwC   = table(LfwC[, taxyear])
+    , LfwCE  = table(LfwCE[, taxyear])
+    , LfwCEb = table(LfwCEb[, taxyear])
+    , LfwCEa = table(LfwCEa[, taxyear])
+  ))
+  if (Jb < 10) Jb <- paste0(0, Jb)
+  for (Yr in c(2010, 2012)) {
+    LfYr    <- Lfw[taxyear >= Yr, ]
+    LfCYr   <- LfwC[taxyear >= Yr, ]
+    LfCEYr  <- LfwCE[taxyear >= Yr, ]
+    LfCEbYr <- LfwCEb[taxyear >= Yr, ]
+    LfCEaYr <- LfwCEa[taxyear >= Yr, ]
+    assign(paste0("Lfw",    Yr, Jb), LfYr)
+    assign(paste0("LfwC",   Yr, Jb), LfCYr)
+    assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
+    assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
+    assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
+    #### destat for each data
+    #### To be specified using destat and destatfactor
+    iifac <- sapply(LfCYr, is.factor)
+    iich  <- sapply(LfCYr, is.character)
+    des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
+    des2  <- destatfactor(LfCYr)
+    dess  <- rbind(des1, des2)
+    #### LaTeX table
+    ltb1 <- latextab.simple(des1, 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+      unit = "cm")
+    ltb2 <- latextab.simple(des2, 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+      unit = "cm")
+    ltb <- matrix(c(
+        ltb1[1]
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
+      , ltb1[-length(ltb1)]
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
+      , ltb2[-1]
+    ))
+    write.tablev(ltb1, pasted0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
+    write.tablev(ltb2, pasted0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
+    write.tablev(ltb , pasted0(pathresults, "Destat", Yr, Jb,   "w.tex"))
+    #### HTML table
+    library(kableExtra)
+    ktb <- data.table(dess)
+    kt <- kable(ktb, align = 
+     paste0("r", paste0(rep("c", ncol(ktb)-1), collapse = "")), 
+     caption = paste0("Descriptive statistics ", Yr, "-2022, Job0 cutoff", Jb))
+    kt <- column_spec(kt, 1, width = "9cm; min-width:9cm;")
+    kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
+    kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
+    qsave(kt, paste0(pathresults, "Destat", Yr, Jb, "w.qs"))
+    assign(pasted0("Destatw", Yr, Jb), kt)
+  }
+}
+Destat201002
+```
+
+```{r estimation with winsorized data}
+for (Jb in c(2, 10)) {
+  if (Jb < 10) Jb <- paste0(0, Jb)
+  for (Yr in c(2010, 2012)) {
+    LfYr    <- get(paste0("Lfw",    Yr, Jb))
+    LfCYr   <- get(paste0("LfwC",   Yr, Jb))
+    LfCEYr  <- get(paste0("LfwCE",  Yr, Jb))
+    LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
+    LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
+    library(fixest)
+    esLfwYr <- feols(Jobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfYr)
+    esLfwCYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCYr)
+    esLfwCEYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr)
+    #### Subsample: High and low concentrated markets
+    esLfwCEaYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr)
+    esLfwCEbYr <- feols(rJobs ~ i(taxyear, FA0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr)
+    library(ggfixest)
+    eslistwYr <-  list(
+        "All sample" = esLfwYr, 
+        "Complete panel" = esLfwCYr, 
+        "Existed firms, all sample" = esLfwCEYr, 
+        "Existed firms, high concentrated markets" = esLfwCEaYr, 
+        "Existed firms, low concentrated markets" = esLfwCEbYr 
+      )
+    gFEYr <- ggiplot(eslistwYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration, winsorized data",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
+    scale_y_continuous(limits = c(15, -10)) 
+    if (Jb == 2) Jb <- paste0("0", Jb)
+    ggsave(
+    paste0(pathresults, "Results", Yr, "-2022Job", Jb, "w.jpg")
+      , gFE, width = 8*2, height = 4*2, units = "cm",
+      dpi = 300
+     )
+    gFEYr
+    lapply(eslistwYr, summary)
+    assign(paste0("eslistw", Yr, Jb), eslistwYr)
+    assign(paste0("gFEw",    Yr, Jb), gFEYr)
+    qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
 ```
