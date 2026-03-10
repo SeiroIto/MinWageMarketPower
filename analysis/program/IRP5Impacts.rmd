@@ -81,15 +81,16 @@ We use the TWFE event sudy specification.
 
 ```{r select estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf[, num := 1:.N, by = .(EstID, taxyear)]
 Lf[num == 1L, ][, 
   .(
-         Micro = sum(Jobs0>0 & Jobs0<10, na.rm = T)
-    , NotMicro = sum(Jobs0>=10, na.rm = T)
+         Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
+    , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
 for (Jb in c(2, 10)) {
   LfC <- Lf[
       grepl("^B", FirstYear2013) & 
-                     Jobs0 >= Jb & 
+                   JobsMP0 >= Jb & 
                DurMonthMarch > 0 & 
            ReportEveryYear == 1L , 
     ]
@@ -159,27 +160,22 @@ Destat201002
 ```
 
 ```{r examining estimation data}
-LfCYr[taxrefno %in% taxrefno[dJobs < -1000], 
+LfCYr[EstID %in% EstID[dJobs < -100], 
   .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
-  taxyear, Jobs, dJobs, Share, FA)][1:50, ]
-LfCYr[, EstID := factor(as.numeric(factor(paste0(
-    busdistmuni_geo
-  , buslocmuni_geo
-  , busmainplc_geo
-  , taxrefno))))
-]
+  taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
 LfCYr[, FAclass := "low"]
-LfCYr[.2 < FA0 & FA0 <= .5, FAclass := "mid"]
-LfCYr[FA0 > .5, FAclass := "high"]
+LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+LfCYr[FAMP0 > .5, FAclass := "high"]
 LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
-  rJobs, dJobs, Jobs, Jobs0, Share, FA, FA0, FAclass)]
+  rJobsMP, dJobsMP, JobsMP, JobsMP0, 
+  Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
-destatfactor(lfdata)
+### destatfactor(lfdata)
 ggplot(data=lfdata, 
-  aes(x = taxyear, y = rJobs, group = EstID, colour = FAclass)) +
+  aes(x = taxyear, y = rJobsMP, group = EstID, colour = FAclass)) +
 geom_line() +
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)

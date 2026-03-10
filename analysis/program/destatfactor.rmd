@@ -81,10 +81,15 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
         "more than 100 unique entries, dropped.\n"))
       #### drop iic[ii100] columns
       xf <- xd[, -which(iic[ii100]), with = F]
-    } else xf <- xd
-    xf[, (names(xf)[iic]) := 
-      lapply(.SD, as.factor), .SDcols = names(xf)[iic]
-    ]
+      xf[, (names(xf)[iic][!ii100]) := 
+        lapply(.SD, as.factor), .SDcols = names(xf)[iic][!ii100]
+      ]
+    } else {
+      xf <- xd
+      xf[, (names(xf)[iic]) := 
+        lapply(.SD, as.factor), .SDcols = names(xf)[iic]
+      ]
+    }
   } else xf <- xd
   iif <- sapply(xf, is.factor)
   #### list all levels
