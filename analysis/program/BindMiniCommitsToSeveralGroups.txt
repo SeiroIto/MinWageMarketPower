@@ -1,0 +1,114 @@
+When I typed
+git rebase -i main
+
+I get the "original" (at the end of this file) in my editor, so I edit as "edited"
+
+YOU MUST NOT REORDER MINI COMMITTS
+otherwise you will end up in a conflict resolution hell
+
+
+---edited
+pick c9452e8 added .github folder and CODEOWNERS (#1)
+
+pick b1da746 copied loc muni info from GeoLocationFile taxyear < 2015
+squash 67427a7 corrected error in copying location info
+squash 321765c corrected error in copying location info
+squash f8e1ab9 corrected copying loc muni info ==> condition on ShouldFill==1L
+squash 3eab183 corrected copying loc muni info ==> condition on ShouldFill==1L & copy from 1st row of CanFill == 1L
+squash 9139671 corrected CanFill == 1L condition: nonempty | NA ==> nonempty & NA
+squash e0d64bc Corrected: copy loc muni info from merged GeoLF; section numbering  (#2)
+squash 777c5cd Corrected copying loc muni info ==> condition on ShouldFill == 1L (#3)
+squash b9e5726 Just merge TestBranch to main (#4) # empty
+squash f86a963 Copied loc muni info of GeoLocation file ==> FillInLocMuni (#5)
+
+pick f2f6872 Created a chunk for destat
+squash 67641f3 added FA at Main Place level, added chunk 'copy FAD to saveddata'
+squash 17ce47e added FirmSizeClassificationInSA.pdf added 2 papers to previous litereture MinWageHHI_01.qmd'
+squash efe765d IRP5HHI.rmd: added desc stats for agri'
+squash d10c2fb IRP5HHI.rmd: deleted garbage in a chunk (strings that should not be left there)'
+squash 7201d4c IRP5HHI.rmd: Corrected errors in plots of jobs and FAs
+squash 9c08b37 Created destat chunk using aggsummary.qs (#6)
+squash c59a2bc Edit FA computation and copy FAD to saveddata folder (#7)
+squash 6a6d533 Added ObPattern
+--- 
+
+I get the following results
+
+---
+interactive rebase in progress; onto 629d40c
+Last command done (1 command done):
+   pick c9452e8 added .github folder and CODEOWNERS (#1)
+Next commands to do (19 remaining commands):
+   pick b1da746 copied loc muni info from GeoLocationFile taxyear < 2015
+   squash 67427a7 corrected error in copying location info
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'EditHHIRelated' on '629d40c'.
+  (all conflicts fixed: run "git rebase --continue")
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        analysis/program/BindMiniCommitsToSeveralGroups.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+The previous cherry-pick is now empty, possibly due to conflict resolution.
+If you wish to commit it anyway, use:
+
+    git commit --allow-empty
+
+Otherwise, please use 'git rebase --skip'
+Could not apply c9452e8... added .github folder and CODEOWNERS (#1)
+---
+
+---original
+pick 67427a7 corrected error in copying location info
+pick 321765c corrected error in copying location info
+pick f8e1ab9 corrected copying loc muni info ==> condition on ShouldFill==1L
+pick f2f6872 Created a chunk for destat
+pick 67641f3 added FA at Main Place level, added chunk 'copy FAD to saveddata'
+pick 17ce47e added FirmSizeClassificationInSA.pdf added 2 papers to previous litereture MinWageHHI_01.qmd'
+pick efe765d IRP5HHI.rmd: added desc stats for agri'
+pick d10c2fb IRP5HHI.rmd: deleted garbage in a chunk (strings that should not be left there)'
+pick 7201d4c IRP5HHI.rmd: Corrected errors in plots of jobs and FAs
+pick 9c08b37 Created destat chunk using aggsummary.qs (#6)
+pick 3eab183 corrected copying loc muni info ==> condition on ShouldFill==1L & copy from 1st row of CanFill == 1L
+pick 9139671 corrected CanFill == 1L condition: nonempty | NA ==> nonempty & NA
+pick b1da746 copied loc muni info from GeoLocationFile taxyear < 2015
+pick c9452e8 added .github folder and CODEOWNERS (#1)
+pick e0d64bc Corrected: copy loc muni info from merged GeoLF; section numbering  (#2)
+pick 777c5cd Corrected copying loc muni info ==> condition on ShouldFill == 1L (#3)
+pick b9e5726 Just merge TestBranch to main (#4) # empty
+pick f86a963 Copied loc muni info of GeoLocation file ==> FillInLocMuni (#5)
+pick c59a2bc Edit FA computation and copy FAD to saveddata folder (#7)
+pick 6a6d533 Added ObPattern
+
+# Rebase 629d40c..6a6d533 onto 629d40c (20 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+---

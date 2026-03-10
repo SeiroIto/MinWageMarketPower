@@ -82,6 +82,7 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 ```{r path, eval = T}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
+pathresults <- paste0(path, "results/")
 pathdata <- paste0(path, "data/")
 pathsaveddata <- paste0(path, "data/")
 pathresults <- paste0(path, "results/")
