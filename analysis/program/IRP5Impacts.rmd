@@ -93,6 +93,7 @@ DESS <- list("2010" = DESS, "2012" = DESS)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
 for (jj in 1:lengh(Jbs)) {
+####for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
@@ -116,6 +117,7 @@ for (jj in 1:lengh(Jbs)) {
     , LfCEa = table(LfCEa[, taxyear])
   ))
   for (yy in 1:length(Yrs)) {
+####  for (yy in 1) {
     Yr <- Yrs[yy]
     LfYr    <- Lf[taxyear >= Yr, ]
     LfCYr   <- LfC[taxyear >= Yr, ]
