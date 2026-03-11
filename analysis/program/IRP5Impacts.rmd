@@ -189,9 +189,15 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
-### destatfactor(lfdata)
-ggplot(data=lfdata[
-  EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ], 
+destatfactor(lfdata)
+#### plot rJobsMP after dropping outliers
+lfdata.dropped <- lfdata[
+  EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
+rbind(
+  lfdata = dim(lfdata),
+  dropped = dim(lfdata.dropped)
+)
+ggplot(data=lfdata.dropped, 
   aes(x = taxyear, y = rJobsMP, group = EstID, colour = FAclass)) +
 geom_line() +
 scale_y_continuous(transform = "log10") + 
@@ -202,6 +208,64 @@ theme(
   legend.text=element_text(size=9),
   legend.position = "bottom"
 )
+#### Sub-industry wise
+lfdata.crop   <- lfdata[EstID %in% EstID[Crop == 1L], ]
+lfdata.animal <- lfdata[EstID %in% EstID[Animal == 1L], ]
+lfdata.forest <- lfdata[EstID %in% EstID[Forest == 1L], ]
+lflist <- list(
+  lfdata = lfdata,
+  crop   = lfdata.crop,
+  animal = lfdata.animal,
+  forest = lfdata.forest
+)
+lapply(lflist, dim)
+jbdat <- lapply(lflist, function(x) x[, .(taxyear, JobsMP, rJobsMP)])
+jcols <- c("JobsMP", "rJobsMP")
+meanjbdat <- lapply(jbdat, function(x) 
+  x[, .(
+         MeanJobsMP    := mean(JobsMP,  na.rm = T), 
+         MeanrJobsMP   := mean(rJobsMP, na.rm = T), 
+         Sigma2JobsMP  := var(JobsMP,   na.rm = T), 
+         Sigma2rJobsMP := var(rJobsMP,  na.rm = T) 
+       ), by = taxyear]) 
+cihalf <- function(n, sigma) 1.96*(sigma/n)^(.5)
+for (ii in 1:4)
+  meanjbdat[[ii]][, c(
+    "MeanJobsMP.lb", "MeanJobsMP.ub", 
+    "MeanrJobsMP.lb", "MeanrJobsMP.ub") := 
+    list(
+      MeanJobsMP - cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2JobsMP]])
+    , MeanJobsMP + cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2JobsMP]])
+    , MeanrJobsMP - cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2rJobsMP]])
+    , MeanrJobsMP + cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2rJobsMP]])
+    )
+  ] 
+meanjbdat[[1]][, ind := "all"]
+meanjbdat[[2]][, ind := "crop"]
+meanjbdat[[3]][, ind := "animal"]
+meanjbdat[[4]][, ind := "forest"]
+mjb <- rbindlist(meanjbdat)
+ggplot(data=mjb, 
+  aes(x = taxyear, y = rJobsMP, group = , colour = FAclass)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+scale_y_continuous() + 
+facet_grid(ind ~ .) + 
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
+
 ```
 
 ```{r estimation with various Job0 and start year}
