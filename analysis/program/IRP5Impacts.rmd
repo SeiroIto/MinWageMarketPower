@@ -87,10 +87,18 @@ Lf[num == 1L, ][,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
-for (Jb in c(2, 10)) {
+DESS <- vector(length = 2, mode = "list")
+names(DESS) <- c("02", "10")
+DESS <- list("2010" = DESS, "2012" = DESS)
+Jbs <- c(2, 10)
+Yrs <- c(2010, 2012)
+for (jj in 1:lengh(Jbs)) {
+  if (Jbs[jj] < 10) 
+    Jb <- paste0(0, Jbs[jj]) else 
+    Jb <- Jbs[jj]
   LfC <- Lf[
       grepl("^B", FirstYear2013) & 
-                   JobsMP0 >= Jb & 
+              JobsMP0 >= Jbs[jj] & 
                DurMonthMarch > 0 & 
            ReportEveryYear == 1L , 
     ]
@@ -107,8 +115,8 @@ for (Jb in c(2, 10)) {
     , LfCEb = table(LfCEb[, taxyear])
     , LfCEa = table(LfCEa[, taxyear])
   ))
-  if (Jb < 10) Jb <- paste0(0, Jb)
-  for (Yr in c(2010, 2012)) {
+  for (yy in 1:length(Yrs)) {
+    Yr <- Yrs[yy]
     LfYr    <- Lf[taxyear >= Yr, ]
     LfCYr   <- LfC[taxyear >= Yr, ]
     LfCEYr  <- LfCE[taxyear >= Yr, ]
@@ -126,6 +134,7 @@ for (Jb in c(2, 10)) {
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr)
     dess  <- rbind(des1, des2)
+    DESS[[yy]][[jj]] <- dess
     #### LaTeX table
     ltb1 <- latextab.simple(des1, 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
@@ -143,6 +152,7 @@ for (Jb in c(2, 10)) {
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
     write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "_2.tex"))
     write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   ".tex"))
+    qsave(dess , paste0(pathresults, "dess", Yr, Jb,   ".qs"))
     #### HTML table
     library(kableExtra)
     ktb <- data.table(dess)
@@ -156,6 +166,7 @@ for (Jb in c(2, 10)) {
     assign(paste0("Destat", Yr, Jb), kt)
   }
 }
+qsave(DESS, paste0(pathresults, "DESS.qs"))
 LfCEb[order(EstID, taxyear), 
   .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 LfCEa[order(EstID, taxyear), 
@@ -271,10 +282,18 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
-for (Jb in c(2, 10)) {
+DESSw <- vector(length = 2, mode = "list")
+names(DESSw) <- c("02", "10")
+DESSw <- list("2010" = DESSw, "2012" = DESSw)
+Jbs <- c(2, 10)
+Yrs <- c(2010, 2012)
+for (jj in 1:lengh(Jbs)) {
+  if (Jbs[jj] < 10) 
+    Jb <- paste0(0, Jbs[jj]) else 
+    Jb <- Jbs[jj]
   LfwC <- Lfw[
       grepl("^B", FirstYear2013) & 
-                   JobsMP0 >= Jb & 
+              JobsMP0 >= Jbs[jj] & 
                DurMonthMarch > 0 & 
            ReportEveryYear == 1L , 
     ]
@@ -291,8 +310,8 @@ for (Jb in c(2, 10)) {
     , LfwCEb = table(LfwCEb[, taxyear])
     , LfwCEa = table(LfwCEa[, taxyear])
   ))
-  if (Jb < 10) Jb <- paste0(0, Jb)
-  for (Yr in c(2010, 2012)) {
+  for (yy in 1:length(Yrs)) {
+    Yr <- Yrs[yy]
     LfYr    <- Lfw[taxyear >= Yr, ]
     LfCYr   <- LfwC[taxyear >= Yr, ]
     LfCEYr  <- LfwCE[taxyear >= Yr, ]
@@ -310,6 +329,7 @@ for (Jb in c(2, 10)) {
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr)
     dess  <- rbind(des1, des2)
+    DESSw[[yy]][[jb]] <- dess
     #### LaTeX table
     ltb1 <- latextab.simple(des1, 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
@@ -340,6 +360,7 @@ for (Jb in c(2, 10)) {
     assign(paste0("Destatw", Yr, Jb), kt)
   }
 }
+qsave(DESSw, paste0(pathresults, "DESSw.qs"))
 Destatw201002
 ```
 
@@ -406,4 +427,34 @@ for (Jb in c(2, 10)) {
 gFEw201002
 gFEw201202
 ```
+
+<!-- files to be exported
+latex table files for destat 
+"Destat201002w_1.tex"
+"Destat201002w_2.tex"
+  "Destat201002w.tex"
+"Destat201202w_1.tex"
+"Destat201202w_2.tex"
+  "Destat201202w.tex"
+"Destat201010w_1.tex"
+"Destat201010w_2.tex"
+  "Destat201010w.tex"
+"Destat201210w_1.tex"
+"Destat201210w_2.tex"
+  "Destat201210w.tex"
+
+R table files for destat
+"DESS.qs"
+"DESSw.qs"
+
+estimation result image files
+"Results2010-2022Job02.jpg"
+"Results2010-2022Job10.jpg"
+"Results2012-2022Job02.jpg"
+"Results2012-2022Job10.jpg"
+"Results2010-2022Job02w.jpg"
+"Results2010-2022Job10w.jpg"
+"Results2012-2022Job02w.jpg"
+"Results2012-2022Job10w.jpg"
+-->
 
