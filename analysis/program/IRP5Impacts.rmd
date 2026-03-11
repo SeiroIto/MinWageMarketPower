@@ -154,7 +154,6 @@ for (jj in 1:lengh(Jbs)) {
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
     write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "_2.tex"))
     write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   ".tex"))
-    qsave(dess , paste0(pathresults, "dess", Yr, Jb,   ".qs"))
     #### HTML table
     library(kableExtra)
     ktb <- data.table(dess)
@@ -267,8 +266,8 @@ theme(
   legend.text=element_text(size=9),
   legend.position = "bottom"
 )
-
 ```
+
 
 ```{r estimation with various Job0 and start year}
 for (Jb in c(2, 10)) {
