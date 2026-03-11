@@ -7,7 +7,11 @@ output:
       css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
+<<<<<<< EstImpacts
+#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(pathprogram, "IRP5Impacts.rmd"))
+=======
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 03 03/IRP5Impacts.rmd"))
+>>>>>>> main
 ---
 ```{css, echo=F}
 .SeiroBenign {
@@ -66,6 +70,8 @@ table0 <- function(x) table(x, useNA = "ifany")
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
+<<<<<<< EstImpacts
+=======
 ```
 
 
@@ -161,6 +167,7 @@ LfCEb[order(EstID, taxyear),
 LfCEa[order(EstID, taxyear), 
   .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 Destat201002
+>>>>>>> main
 ```
 
 ```{r examining estimation data}
@@ -259,6 +266,19 @@ gFE201002
 ## Winsorizing
 
 
+<<<<<<< EstImpacts
+# Estimation
+
+We use the TWFE event sudy specification. 
+
+
+## Straight estimation
+
+```{r select estimation sample}
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf[, num := 1:.N, by = .(EstID, taxyear)]
+Lf[num == 1L, ][, 
+=======
 ```{r select winsorized estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
@@ -267,10 +287,55 @@ Lfw <- Lf[num == 1L & (
   ) , ]
 rbind(Lf=dim(Lf), LFw=dim(LFw))
 Lfw[, 
+>>>>>>> main
   .(
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
+<<<<<<< EstImpacts
+DESS <- vector(length = 2, mode = "list")
+names(DESS) <- c("02", "10")
+DESS <- list("2010" = DESS, "2012" = DESS)
+Jbs <- c(2, 10)
+Yrs <- c(2010, 2012)
+for (jj in 1:lengh(Jbs)) {
+####for (jj in 1) {
+  if (Jbs[jj] < 10) 
+    Jb <- paste0(0, Jbs[jj]) else 
+    Jb <- Jbs[jj]
+  LfC <- Lf[
+      grepl("^B", FirstYear2013) & 
+              JobsMP0 >= Jbs[jj] & 
+               DurMonthMarch > 0 & 
+           ReportEveryYear == 1L , 
+    ]
+  LfC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+  LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+  LfC[, HHILevel := factor(HHILevel)]
+  LfCE <- LfC[ExistedBefore2013 == 1L, ]
+  LfCEb <- LfCE[grepl("Be", HHILevel), ]
+  LfCEa <- LfCE[grepl("Ab", HHILevel), ]
+  print(rbind(
+      Lf    = table(Lf[, taxyear])
+    , LfC   = table(LfC[, taxyear])
+    , LfCE  = table(LfCE[, taxyear])
+    , LfCEb = table(LfCEb[, taxyear])
+    , LfCEa = table(LfCEa[, taxyear])
+  ))
+  for (yy in 1:length(Yrs)) {
+####  for (yy in 1) {
+    Yr <- Yrs[yy]
+    LfYr    <- Lf[taxyear >= Yr, ]
+    LfCYr   <- LfC[taxyear >= Yr, ]
+    LfCEYr  <- LfCE[taxyear >= Yr, ]
+    LfCEbYr <- LfCEb[taxyear >= Yr, ]
+    LfCEaYr <- LfCEa[taxyear >= Yr, ]
+    assign(paste0("Lf",    Yr, Jb), LfYr)
+    assign(paste0("LfC",   Yr, Jb), LfCYr)
+    assign(paste0("LfCE",  Yr, Jb), LfCEYr)
+    assign(paste0("LfCEb", Yr, Jb), LfCEbYr)
+    assign(paste0("LfCEa", Yr, Jb), LfCEaYr)
+=======
 for (Jb in c(2, 10)) {
   LfwC <- Lfw[
       grepl("^B", FirstYear2013) & 
@@ -303,6 +368,7 @@ for (Jb in c(2, 10)) {
     assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
     assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
     assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
+>>>>>>> main
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
@@ -310,6 +376,10 @@ for (Jb in c(2, 10)) {
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr)
     dess  <- rbind(des1, des2)
+<<<<<<< EstImpacts
+    DESS[[yy]][[jj]] <- dess
+=======
+>>>>>>> main
     #### LaTeX table
     ltb1 <- latextab.simple(des1, 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
@@ -324,9 +394,16 @@ for (Jb in c(2, 10)) {
       , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
+<<<<<<< EstImpacts
+    write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
+    write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "_2.tex"))
+    write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   ".tex"))
+    qsave(dess , paste0(pathresults, "dess", Yr, Jb,   ".qs"))
+=======
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
     write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
     write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   "w.tex"))
+>>>>>>> main
     #### HTML table
     library(kableExtra)
     ktb <- data.table(dess)
@@ -336,6 +413,112 @@ for (Jb in c(2, 10)) {
     kt <- column_spec(kt, 1, width = "9cm; min-width:9cm;")
     kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
     kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
+<<<<<<< EstImpacts
+    qsave(kt, paste0(pathresults, "Destat", Yr, Jb, ".qs"))
+    assign(paste0("Destat", Yr, Jb), kt)
+  }
+}
+qsave(DESS, paste0(pathresults, "DESS.qs"))
+LfCEb[order(EstID, taxyear), 
+  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
+LfCEa[order(EstID, taxyear), 
+  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
+Destat201002
+```
+
+```{r examining estimation data}
+LfCYr <- LfC201002
+LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
+  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
+  taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
+LfCYr[, FAclass := "low"]
+LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+LfCYr[FAMP0 > .5, FAclass := "high"]
+LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
+lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
+  busmainplc_geo, taxrefno, EstID, taxyear, 
+  rJobsMP, dJobsMP, JobsMP, JobsMP0, 
+  Share, FAMP, FAMP0, FAclass)])
+rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
+destat(lfdata)
+destatfactor(lfdata)
+#### plot rJobsMP after dropping outliers
+lfdata.dropped <- lfdata[
+  EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
+rbind(
+  lfdata = dim(lfdata),
+  dropped = dim(lfdata.dropped)
+)
+ggplot(data=lfdata.dropped, 
+  aes(x = taxyear, y = rJobsMP, group = EstID, colour = FAclass)) +
+geom_line() +
+scale_y_continuous(transform = "log10") + 
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
+#### Sub-industry wise
+lfdata.crop   <- lfdata[EstID %in% EstID[Crop == 1L], ]
+lfdata.animal <- lfdata[EstID %in% EstID[Animal == 1L], ]
+lfdata.forest <- lfdata[EstID %in% EstID[Forest == 1L], ]
+lflist <- list(
+  lfdata = lfdata,
+  crop   = lfdata.crop,
+  animal = lfdata.animal,
+  forest = lfdata.forest
+)
+lapply(lflist, dim)
+jbdat <- lapply(lflist, function(x) x[, .(taxyear, JobsMP, rJobsMP)])
+jcols <- c("JobsMP", "rJobsMP")
+meanjbdat <- lapply(jbdat, function(x) 
+  x[, .(
+         MeanJobsMP    := mean(JobsMP,  na.rm = T), 
+         MeanrJobsMP   := mean(rJobsMP, na.rm = T), 
+         Sigma2JobsMP  := var(JobsMP,   na.rm = T), 
+         Sigma2rJobsMP := var(rJobsMP,  na.rm = T) 
+       ), by = taxyear]) 
+cihalf <- function(n, sigma) 1.96*(sigma/n)^(.5)
+for (ii in 1:4)
+  meanjbdat[[ii]][, c(
+    "MeanJobsMP.lb", "MeanJobsMP.ub", 
+    "MeanrJobsMP.lb", "MeanrJobsMP.ub") := 
+    list(
+      MeanJobsMP - cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2JobsMP]])
+    , MeanJobsMP + cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2JobsMP]])
+    , MeanrJobsMP - cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2rJobsMP]])
+    , MeanrJobsMP + cihalf(
+        n=nrow(meanjbdat[[ii]]), 
+        sigma=meanjbdat[[ii]][[Sigma2rJobsMP]])
+    )
+  ] 
+meanjbdat[[1]][, ind := "all"]
+meanjbdat[[2]][, ind := "crop"]
+meanjbdat[[3]][, ind := "animal"]
+meanjbdat[[4]][, ind := "forest"]
+mjb <- rbindlist(meanjbdat)
+ggplot(data=mjb, 
+  aes(x = taxyear, y = rJobsMP, group = , colour = FAclass)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+scale_y_continuous() + 
+facet_grid(ind ~ .) + 
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
+
+=======
     qsave(kt, paste0(pathresults, "Destat", Yr, Jb, "w.qs"))
     assign(paste0("Destatw", Yr, Jb), kt)
   }
@@ -405,5 +588,260 @@ for (Jb in c(2, 10)) {
 }
 gFEw201002
 gFEw201202
+>>>>>>> main
 ```
+
+```{r estimation with various Job0 and start year}
+for (Jb in c(2, 10)) {
+  if (Jb < 10) Jb <- paste0(0, Jb)
+  for (Yr in c(2010, 2012)) {
+    LfYr    <- get(paste0("Lf",    Yr, Jb))
+    LfCYr   <- get(paste0("LfC",   Yr, Jb))
+    LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
+    LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
+    LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
+    library(fixest)
+    esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfYr)
+    esLfCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCYr)
+    esLfCEYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr)
+    #### Subsample: High and low concentrated markets
+    esLfCEaYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr)
+    esLfCEbYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr)
+    library(ggfixest)
+    eslistYr <-  list(
+        "All sample" = esLfYr, 
+        "Complete panel" = esLfCYr, 
+        "Existed firms, all sample" = esLfCEYr, 
+        "Existed firms, high concentrated markets" = esLfCEaYr, 
+        "Existed firms, low concentrated markets" = esLfCEbYr 
+      )
+    gFEYr <- ggiplot(eslistYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
+    scale_y_continuous(limits = c(15, -10)) 
+    if (Jb == 2) Jb <- paste0("0", Jb)
+    ggsave(
+    paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
+      , gFE, width = 8*2, height = 4*2, units = "cm",
+      dpi = 300
+     )
+    gFEYr
+    lapply(eslistYr, summary)
+    assign(paste0("eslist", Yr, Jb), eslistYr)
+    assign(paste0("gFE",    Yr, Jb), gFEYr)
+    qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
+  }
+}
+gFE201002
+```
+
+## Winsorizing
+
+
+```{r select winsorized estimation sample}
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf[, num := 1:.N, by = .(EstID, taxyear)]
+Lfw <- Lf[num == 1L & (
+    !(EstID %in% EstID[abs(rJobsMP) > 2 | abs(dJobsMP) > 3000]) # small changes
+  ) , ]
+rbind(Lf=dim(Lf), Lfw=dim(Lfw))
+Lfw[, 
+  .(
+         Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
+    , NotMicro = sum(JobsMP0>=10, na.rm = T)
+  ), by = taxyear]
+DESSw <- vector(length = 2, mode = "list")
+names(DESSw) <- c("02", "10")
+DESSw <- list("2010" = DESSw, "2012" = DESSw)
+Jbs <- c(2, 10)
+Yrs <- c(2010, 2012)
+for (jj in 1:lengh(Jbs)) {
+  if (Jbs[jj] < 10) 
+    Jb <- paste0(0, Jbs[jj]) else 
+    Jb <- Jbs[jj]
+  LfwC <- Lfw[
+      grepl("^B", FirstYear2013) & 
+              JobsMP0 >= Jbs[jj] & 
+               DurMonthMarch > 0 & 
+           ReportEveryYear == 1L , 
+    ]
+  LfwC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+  LfwC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+  LfwC[, HHILevel := factor(HHILevel)]
+  LfwCE <- LfwC[ExistedBefore2013 == 1L, ]
+  LfwCEb <- LfwCE[grepl("Be", HHILevel), ]
+  LfwCEa <- LfwCE[grepl("Ab", HHILevel), ]
+  print(rbind(
+      Lfw    = table(Lfw[, taxyear])
+    , LfwC   = table(LfwC[, taxyear])
+    , LfwCE  = table(LfwCE[, taxyear])
+    , LfwCEb = table(LfwCEb[, taxyear])
+    , LfwCEa = table(LfwCEa[, taxyear])
+  ))
+  for (yy in 1:length(Yrs)) {
+    Yr <- Yrs[yy]
+    LfYr    <- Lfw[taxyear >= Yr, ]
+    LfCYr   <- LfwC[taxyear >= Yr, ]
+    LfCEYr  <- LfwCE[taxyear >= Yr, ]
+    LfCEbYr <- LfwCEb[taxyear >= Yr, ]
+    LfCEaYr <- LfwCEa[taxyear >= Yr, ]
+    assign(paste0("Lfw",    Yr, Jb), LfYr)
+    assign(paste0("LfwC",   Yr, Jb), LfCYr)
+    assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
+    assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
+    assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
+    #### destat for each data
+    #### To be specified using destat and destatfactor
+    iifac <- sapply(LfCYr, is.factor)
+    iich  <- sapply(LfCYr, is.character)
+    des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
+    des2  <- destatfactor(LfCYr)
+    dess  <- rbind(des1, des2)
+    DESSw[[yy]][[jb]] <- dess
+    #### LaTeX table
+    ltb1 <- latextab.simple(des1, 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+      unit = "cm")
+    ltb2 <- latextab.simple(des2, 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+      unit = "cm")
+    ltb <- matrix(c(
+        ltb1[1]
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
+      , ltb1[-length(ltb1)]
+      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
+      , ltb2[-1]
+    ))
+    write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
+    write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
+    write.tablev(ltb , paste0(pathresults, "Destat", Yr, Jb,   "w.tex"))
+    #### HTML table
+    library(kableExtra)
+    ktb <- data.table(dess)
+    kt <- kable(ktb, align = 
+     paste0("r", paste0(rep("c", ncol(ktb)-1), collapse = "")), 
+     caption = paste0("Descriptive statistics ", Yr, "-2022, Job0 cutoff", Jb))
+    kt <- column_spec(kt, 1, width = "9cm; min-width:9cm;")
+    kt <- column_spec(kt, 2:6, width = "2.0cm; min-width:2.0cm;")
+    kt <- kableExtra::footnote(kt, general = "Sample of agricultural establishments.")
+    qsave(kt, paste0(pathresults, "Destatw", Yr, Jb, ".qs"))
+    assign(paste0("Destatw", Yr, Jb), kt)
+  }
+}
+qsave(DESSw, paste0(pathresults, "DESSw.qs"))
+Destatw201002
+```
+
+```{r estimation with winsorized data}
+for (Jb in c(2, 10)) {
+  if (Jb < 10) Jb <- paste0(0, Jb)
+  for (Yr in c(2010, 2012)) {
+    LfYr    <- get(paste0("Lfw",    Yr, Jb))
+    LfCYr   <- get(paste0("LfwC",   Yr, Jb))
+    LfCEYr  <- get(paste0("LfwCE",  Yr, Jb))
+    LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
+    LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
+    library(fixest)
+    esLfwYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfYr)
+    esLfwCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCYr)
+    esLfwCEYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr)
+    #### Subsample: High and low concentrated markets
+    esLfwCEaYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr)
+    esLfwCEbYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr)
+    library(ggfixest)
+    eslistwYr <-  list(
+        "All sample" = esLfwYr, 
+        "Complete panel" = esLfwCYr, 
+        "Existed firms, all sample" = esLfwCEYr, 
+        "Existed firms, high concentrated markets" = esLfwCEaYr, 
+        "Existed firms, low concentrated markets" = esLfwCEbYr 
+      )
+    gFEYr <- ggiplot(eslistwYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration, winsorized data",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
+    scale_y_continuous(limits = c(15, -10)) 
+    if (Jb == 2) Jb <- paste0("0", Jb)
+    ggsave(
+    paste0(pathresults, "Results", Yr, "-2022Job", Jb, "w.jpg")
+      , gFE, width = 8*2, height = 4*2, units = "cm",
+      dpi = 300
+     )
+    gFEYr
+    lapply(eslistwYr, summary)
+    assign(paste0("eslistw", Yr, Jb), eslistwYr)
+    assign(paste0("gFEw",    Yr, Jb), gFEYr)
+    qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
+  }
+}
+gFEw201002
+gFEw201202
+```
+
+<!-- files to be exported
+latex table files for destat 
+"Destat201002w_1.tex"
+"Destat201002w_2.tex"
+  "Destat201002w.tex"
+"Destat201202w_1.tex"
+"Destat201202w_2.tex"
+  "Destat201202w.tex"
+"Destat201010w_1.tex"
+"Destat201010w_2.tex"
+  "Destat201010w.tex"
+"Destat201210w_1.tex"
+"Destat201210w_2.tex"
+  "Destat201210w.tex"
+
+R table files for destat
+"DESS.qs"
+"DESSw.qs"
+
+estimation result image files
+"Results2010-2022Job02.jpg"
+"Results2010-2022Job10.jpg"
+"Results2012-2022Job02.jpg"
+"Results2012-2022Job10.jpg"
+"Results2010-2022Job02w.jpg"
+"Results2010-2022Job10w.jpg"
+"Results2012-2022Job02w.jpg"
+"Results2012-2022Job10w.jpg"
+-->
 

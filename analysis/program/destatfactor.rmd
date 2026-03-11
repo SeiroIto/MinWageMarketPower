@@ -51,10 +51,11 @@ destat <- function(x, prob = "short", signif = 1, removezero = F)
   return(y)
 }
 
-destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
+destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIfAbove = 10)
 #  returns an array of descriptive statistics for factors/characters by all levels
 #  If gender = M, F is a factor, it gives 2 rows of gender: M, gender: F 
-#  prob specifies quantiles, "short", "even", "odd", "very short"
+#    prob: specifies quantiles, "short", "even", "odd", "very short"
+#    IgnoreIfAbove: = 10, if length(levels(factor variable)) > 10, just skip
 {
   if (is.null(dim(x))) dim(x) <- c(length(x),1)
   if (is.null(colnames(x))) colnames(x) <- paste("v", 1:ncol(x), sepv = "")
@@ -75,10 +76,10 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F)
   iic <- sapply(xd, is.character)
   if (any(iic)) {
     Numunq <- unlist(lapply(xd[, ..iic], function(z) length(unique(z))))
-    if (!is.null(Numunq)) ii100 <- Numunq > 100 else ii100 <- F
+    if (!is.null(Numunq)) ii100 <- Numunq > IgnoreIfAbove else ii100 <- F
     if (any(ii100)) {
       message(paste(names(xd[, ..iic])[ii100], if (length(ii100)==1) "has" else "have",  
-        "more than 100 unique entries, dropped.\n"))
+        "more than", IgnoreIfAbove, "unique entries, dropped.\n"))
       #### drop iic[ii100] columns, turn the rest to factors
       xf <- xd[, -which(iic[ii100]), with = F]
       iic2 <- sapply(xf, is.character)
