@@ -10,6 +10,7 @@ docs/libs
 analysis/figure
 analysis/*png
 analysis/*html
+analysis/program/*html
 analysis/*_cache
 analysis/site_libs
 analysis/program/2026*
