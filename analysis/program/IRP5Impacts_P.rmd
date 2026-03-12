@@ -81,26 +81,22 @@ We use the TWFE event sudy specification.
 
 ```{r select estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf[, num := 1:.N, by = .(EstID, taxyear)]
+Lf[num == 1L, ][, 
+  .(
+         Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
+    , NotMicro = sum(JobsMP0>=10, na.rm = T)
+  ), by = taxyear]
 #### Complete panel
-#### definition of complete: observed everyear in start year - 2020
+
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 Lf[, c("Num", "DiffTY", "MaxDiffTY") := 
   .(1:.N, c(0L, diff(taxyear)), max(taxyear)-min(taxyear)+1), 
   by = EstID]
 Lf[, GapInTY := 0L]
-Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
-print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
-  order(GapInTY, taxyear), ])
-Lf[, num := 1:.N, by = .(EstID, taxyear)]
-print(Lf[num == 1L, ][, 
-  .(
-         Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
-    , NotMicro = sum(JobsMP0>=10, na.rm = T)
-  ), by = taxyear])
-#### HHI grouping
-Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
-Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
-Lf[, HHILevel := factor(HHILevel)]
+Lf[EstID %in% EstID[DiffTY > 1], GapInTY := 1L]
+Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][order(GapInTY, taxyear), ]
+
 DESS <- vector(length = 2, mode = "list")
 names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
@@ -112,14 +108,14 @@ for (jj in 1:lengh(Jbs)) {
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
   LfC <- Lf[
-      grepl("^B", FirstYear2013) &  #### first year < 2013
-              JobsMP0 >= Jbs[jj] &  #### baseline jobs > Jbs[jj]
-               DurMonthMarch > 0 &  #### job duration > 0 month
-                   GapInTY == 0L ,  #### no gap in taxyear for all observed periods
-      c(geovars, "EstID", 
-        grepout("taxy|Job|Dur|Cr|An|Fo|Are|Work|Sha|HHI|nc|Emp|FA|Siz|Sub", 
-        colnames(Lf))), with = F
+      grepl("^B", FirstYear2013) & 
+              JobsMP0 >= Jbs[jj] & 
+               DurMonthMarch > 0 & 
+           ReportEveryYear == 1L , 
     ]
+  LfC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
+  LfC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+  LfC[, HHILevel := factor(HHILevel)]
   LfCE <- LfC[ExistedBefore2013 == 1L, ]
   LfCEb <- LfCE[grepl("Be", HHILevel), ]
   LfCEa <- LfCE[grepl("Ab", HHILevel), ]
@@ -148,7 +144,7 @@ for (jj in 1:lengh(Jbs)) {
     iifac <- sapply(LfCYr, is.factor)
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
-    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+    des2  <- destatfactor(LfCYr)
     dess  <- rbind(des1, des2)
     DESS[[yy]][[jj]] <- dess
     #### LaTeX table
@@ -188,6 +184,7 @@ LfCEa[order(EstID, taxyear),
   .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 Destat201002
 ```
+
 
 ```{r examining estimation data}
 LfCYr <- LfC201002

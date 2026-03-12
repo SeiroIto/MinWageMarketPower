@@ -106,8 +106,8 @@ names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
-for (jj in 1:lengh(Jbs)) {
-####for (jj in 1) {
+####for (jj in 1:lengh(Jbs)) {
+for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
@@ -130,8 +130,8 @@ for (jj in 1:lengh(Jbs)) {
     , LfCEb = table(LfCEb[, taxyear])
     , LfCEa = table(LfCEa[, taxyear])
   ))
-  for (yy in 1:length(Yrs)) {
-####  for (yy in 1) {
+####  for (yy in 1:length(Yrs)) {
+  for (yy in 1) {
     Yr <- Yrs[yy]
     LfYr    <- Lf[taxyear >= Yr, ]
     LfCYr   <- LfC[taxyear >= Yr, ]
@@ -223,73 +223,6 @@ theme(
   legend.text=element_text(size=9),
   legend.position = "bottom"
 )
-#### Sub-industry (imp_mic_sic7_3d) wise mean and CIs
-####  Crop: ^Plant pro|crops
-####  Animal: ^Anim
-####  Forest: Logging|forest
-lfdata.crop   <- lfdata[EstID %in% EstID[Crop == 1L], ]
-lfdata.animal <- lfdata[EstID %in% EstID[Animal == 1L], ]
-lfdata.forest <- lfdata[EstID %in% EstID[Forest == 1L], ]
-lflist <- list(
-  lfdata = lfdata,
-  crop   = lfdata.crop,
-  animal = lfdata.animal,
-  forest = lfdata.forest
-)
-lapply(lflist, dim)
-jbdat <- lapply(lflist, function(x) x[, .(taxyear, JobsMP, rJobsMP)])
-jcols <- c("JobsMP", "rJobsMP")
-meanjbdat <- lapply(jbdat, function(x) 
-  x[, c("MeanJobsMP",
-        "MeanrJobsMP",
-        "Sigma2JobsMP",
-        "Sigma2rJobsMP",
-        "nJobsMP",
-        "nrJobsMP") 
-       :=
-      .(mean(JobsMP,  na.rm = T), 
-        mean(rJobsMP, na.rm = T), 
-        var(JobsMP,   na.rm = T), 
-        var(rJobsMP,  na.rm = T), 
-        sum(!is.na(JobsMP)), 
-        sum(!is.na(rJobsMP)))
-      , by = taxyear])
-cihalf <- function(n, sigma) qt(.975, n-1)*(sigma/n)^(.5)
-meanjbdat <- lapply(meanjbdat, function(x) 
-  x[, c("MeanJobsMP.ci",
-        "MeanrJobsMP.ci")
-      :=
-      .(cihalf(n=nJobsMP , sigma=Sigma2JobsMP), 
-        cihalf(n=nrJobsMP, sigma=Sigma2rJobsMP))
-   ])
-meanjbdat <- lapply(meanjbdat, function(x) 
-  x[, .("MeanJobsMP.lb"
-        "MeanJobsMP.ub"
-        "MeanrJobsMP.lb"
-        "MeanrJobsMP.ub")
-      :=
-      .(MeanJobsMP  - MeanJobsMP.ci,
-        MeanJobsMP  + MeanJobsMP.ci,
-        MeanrJobsMP - MeanrJobsMP.ci,
-        MeanrJobsMP + MeanrJobsMP.ci)
-   ])
-meanjbdat[[1]][, ind := "all"]
-meanjbdat[[2]][, ind := "crop"]
-meanjbdat[[3]][, ind := "animal"]
-meanjbdat[[4]][, ind := "forest"]
-mjb <- rbindlist(meanjbdat)
-ggplot(data=mjb, 
-  aes(x = taxyear, y = rJobsMP, group = , colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
-scale_y_continuous() + 
-facet_grid(ind ~ .) + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
-theme(
-  legend.text=element_text(size=9),
-  legend.position = "bottom"
-)
 ```
 
 
@@ -359,7 +292,7 @@ gFE201002
 ## Winsorizing
 
 
-```{r select winsorized estimation sample}
+```{r select winsorized estimation sample, eval = F}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
 Lfw <- Lf[num == 1L & (
@@ -453,7 +386,7 @@ qsave(DESSw, paste0(pathresults, "DESSw.qs"))
 Destatw201002
 ```
 
-```{r estimation with winsorized data}
+```{r estimation with winsorized data, eval = F}
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
