@@ -9,6 +9,9 @@ litedown::reactor(
   time = TRUE
 )
 options(htmltools.dir.version = FALSE, width = 100)
+#### DT threads
+MaxCores <- parallel::detectCores()
+setDTthreads(threads = MaxCores - 1)
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 

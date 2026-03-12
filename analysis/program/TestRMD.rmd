@@ -140,6 +140,29 @@ z = rep(0:1, each = 10)
 i(x, y, reference = 2)
 data(base_did)
 base_did <- data.table(base_did)
+mag = 1e7
+
+ii <- rep(1:(mag/10), each = 10)
+x1 <- rpois(mag, 100)
+x2 <- sample(1:100, mag/10, replace = T)
+x <- data.table(x1, x2)
+ep <- rnorm(mag)
+beta <- c(2, 5)
+z = c(rep(0, each = mag/20), rep(1, each = mag/20))
+y <- x[, 1] * beta[1] + x[, 2] * beta[2] + 10*z + ep
+setnames(y, "y")
+xx <- data.table(y, x, z)
+xx[, time := rep(1:10, mag/10)]
+xx[, id := rep(1:(mag/10), each = 10)]
+xx[, group := 1L]
+xx[mag/1000 < id & id < mag/300, group := 2L]
+xx[mag/20 < id & id < mag/12.5, group := 2L]
+xx[mag/300 < id  & id < mag/50, group := 3L]
+xx[, .(num = .N), by = .(group, z)]
+rg1 <- lm(y ~ i(z, 0)*i(time, 2)*i(group, 2), data = xx)
+rg2 <- feols(y ~ i(time, z, ref = 2)|time+group, data = xx)
+summary()
+
 dt <- data.table(base_did, base_did[, i(period, treat, 5)])
 dt[, y := round(y, 2)]
 dt[, x1 := round(x1, 2)]
@@ -150,7 +173,7 @@ dt[, Gr := 1L]
 dt[id > 50, Gr := 2L]
 Matrix(as.matrix(dt[, i(period, treat, 5)][1:50, ]), sparse = T)
 
-summary(lm(y ~ i(treat)*i(period, 2)*Gr, data = dt))
+summary(lm(y ~ i(treat, 1)*i(period, 2)*i(Gr, 2), data = dt))
 
 data(airquality)
 aq = airquality
