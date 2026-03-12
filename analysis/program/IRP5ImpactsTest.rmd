@@ -117,7 +117,7 @@ for (jj in 1) {
                DurMonthMarch > 0 &  #### job duration > 0 month
                    GapInTY == 0L ,  #### no gap in taxyear for all observed periods
       c(geovars, "EstID", 
-        grepout("taxy|Job|Dur|Cr|An|Fo|Are|Work|Sha|HHI|nc|Emp|FA|Siz|Sub", 
+        grepout("taxy|Exist|Job|Dur|Cr|An|Fo|Are|Work|Sha|HHI|nc|Emp|FA|Siz|Sub", 
         colnames(Lf))), with = F
     ]
   LfCE <- LfC[ExistedBefore2013 == 1L, ]
