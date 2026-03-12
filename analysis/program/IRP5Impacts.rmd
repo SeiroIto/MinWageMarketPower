@@ -209,7 +209,7 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
-destatfactor(lfdata)
+destatfactor(lfdata, IgnoreIfAbove = 8)
 #### plot rJobsMP after dropping outliers
 lfdata.dropped <- lfdata[
   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
@@ -450,7 +450,7 @@ for (jj in 1:lengh(Jbs)) {
     iifac <- sapply(LfCYr, is.factor)
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
-    des2  <- destatfactor(LfCYr)
+    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
     dess  <- rbind(des1, des2)
     DESSw[[yy]][[jb]] <- dess
     #### LaTeX table
