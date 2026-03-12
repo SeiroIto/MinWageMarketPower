@@ -196,7 +196,6 @@ Destat201002
 
 ```{r examining estimation data}
 LfCYr <- qread(paste0(pathdata, "LfC201002.qs"))
-LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, EstID, 
   taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
