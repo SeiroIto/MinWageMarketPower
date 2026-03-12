@@ -205,6 +205,7 @@ LfCYr[FAMP0 > .5, FAclass := "high"]
 LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
+  Crop, Animal, Forest,
   rJobsMP, dJobsMP, JobsMP, JobsMP0, 
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
@@ -268,7 +269,7 @@ meanjbdat <- lapply(meanjbdat, function(x)
         cihalf(n=nrJobsMP, sigma=Sigma2rJobsMP))
    ])
 meanjbdat <- lapply(meanjbdat, function(x) 
-  x[, .("MeanJobsMP.lb"
+  x[, c("MeanJobsMP.lb"
         "MeanJobsMP.ub"
         "MeanrJobsMP.lb"
         "MeanrJobsMP.ub")
@@ -284,7 +285,7 @@ meanjbdat[[3]][, ind := "animal"]
 meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
-  aes(x = taxyear, y = rJobsMP, group = , colour = FAclass)) +
+  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, colour = FAclass)) +
 geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
