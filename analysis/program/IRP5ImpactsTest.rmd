@@ -79,7 +79,7 @@ We use the TWFE event sudy specification.
 
 ## Straight estimation
 
-```{r select estimation sample}
+```{r select estimation sample, eval = F}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -195,6 +195,7 @@ Destat201002
 ```
 
 ```{r examining estimation data}
+LfCYr <- qread(paste0(pathdata, "LfC201002.qs"))
 LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, EstID, 
@@ -205,6 +206,7 @@ LfCYr[FAMP0 > .5, FAclass := "high"]
 LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, EstID, taxyear, 
+  Crop, Animal, Forest,
   rJobsMP, dJobsMP, JobsMP, JobsMP0, 
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
@@ -228,6 +230,73 @@ theme(
   legend.text=element_text(size=9),
   legend.position = "bottom"
 )
+#### Sub-industry (imp_mic_sic7_3d) wise mean and CIs
+####  Crop: ^Plant pro|crops
+####  Animal: ^Anim
+####  Forest: Logging|forest
+lfdata.crop   <- lfdata[EstID %in% EstID[Crop == 1L], ]
+lfdata.animal <- lfdata[EstID %in% EstID[Animal == 1L], ]
+lfdata.forest <- lfdata[EstID %in% EstID[Forest == 1L], ]
+lflist <- list(
+  lfdata = lfdata,
+  crop   = lfdata.crop,
+  animal = lfdata.animal,
+  forest = lfdata.forest
+)
+lapply(lflist, dim)
+jbdat <- lapply(lflist, function(x) x[, .(taxyear, JobsMP, rJobsMP)])
+jcols <- c("JobsMP", "rJobsMP")
+meanjbdat <- lapply(jbdat, function(x) 
+  x[, c("MeanJobsMP",
+        "MeanrJobsMP",
+        "Sigma2JobsMP",
+        "Sigma2rJobsMP",
+        "nJobsMP",
+        "nrJobsMP") 
+       :=
+      .(mean(JobsMP,  na.rm = T), 
+        mean(rJobsMP, na.rm = T), 
+        var(JobsMP,   na.rm = T), 
+        var(rJobsMP,  na.rm = T), 
+        sum(!is.na(JobsMP)), 
+        sum(!is.na(rJobsMP)))
+      , by = taxyear])
+cihalf <- function(n, sigma) qt(.975, n-1)*(sigma/n)^(.5)
+meanjbdat <- lapply(meanjbdat, function(x) 
+  x[, c("MeanJobsMP.ci",
+        "MeanrJobsMP.ci")
+      :=
+      .(cihalf(n=nJobsMP , sigma=Sigma2JobsMP), 
+        cihalf(n=nrJobsMP, sigma=Sigma2rJobsMP))
+   ])
+meanjbdat <- lapply(meanjbdat, function(x) 
+  x[, .("MeanJobsMP.lb"
+        "MeanJobsMP.ub"
+        "MeanrJobsMP.lb"
+        "MeanrJobsMP.ub")
+      :=
+      .(MeanJobsMP  - MeanJobsMP.ci,
+        MeanJobsMP  + MeanJobsMP.ci,
+        MeanrJobsMP - MeanrJobsMP.ci,
+        MeanrJobsMP + MeanrJobsMP.ci)
+   ])
+meanjbdat[[1]][, ind := "all"]
+meanjbdat[[2]][, ind := "crop"]
+meanjbdat[[3]][, ind := "animal"]
+meanjbdat[[4]][, ind := "forest"]
+mjb <- rbindlist(meanjbdat)
+ggplot(data=mjb, 
+  aes(x = taxyear, y = rJobsMP, group = , colour = FAclass)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+scale_y_continuous() + 
+facet_grid(ind ~ .) + 
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
 ```
 
 
@@ -237,11 +306,16 @@ for (Jb in 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)
 ####  for (Yr in c(2010, 2012)) {
   for (Yr in 2010) {
-    LfYr    <- get(paste0("Lf",    Yr, Jb))
-    LfCYr   <- get(paste0("LfC",   Yr, Jb))
-    LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
-    LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
-    LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
+####     LfYr    <- get(paste0("Lf",    Yr, Jb))
+####     LfCYr   <- get(paste0("LfC",   Yr, Jb))
+####     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
+####     LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
+####     LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
+    LfYr <-    qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
+    LfCYr <-   qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
+    LfCEYr <-  qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
+    LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
+    LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
     library(fixest)
     esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -278,12 +352,13 @@ for (Jb in 2) {
         legend.position = "none"
         )
     ) + 
-    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
-    scale_y_continuous(limits = c(15, -10)) 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+####     +
+####    scale_y_continuous(limits = c(15, -10)) 
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
     paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
-      , gFE, width = 8*2, height = 4*2, units = "cm",
+      , gFEYr, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     gFEYr
@@ -301,7 +376,18 @@ gFE201002
 
 ```{r select winsorized estimation sample, eval = F}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+#### Complete panel
+#### definition of complete: observed everyear in start year - 2020
+Lf[, c("Num", "DiffTY", "MaxDiffTY") := 
+  .(1:.N, c(0L, diff(taxyear)), max(taxyear)-min(taxyear)+1), 
+  by = EstID]
+Lf[, GapInTY := 0L]
+Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
+print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
+  order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
+
+#### Changed from here: start
 Lfw <- Lf[num == 1L & (
     !(EstID %in% EstID[abs(rJobsMP) > 2 | abs(dJobsMP) > 3000]) # small changes
   ) , ]
@@ -311,24 +397,38 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
+#### HHI grouping
+Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+HH0Median <- median(Lf[taxyear == 2012, HHI0], na.rm = T)
+Lfw[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+Lfw[HHI0 <= HH0Median, HHILevel := "Below"]
+Lfw[HHI0 >  HH0Median, HHILevel := "Above"]
+#### Changed from here: end
+
+Lfw[, HHILevel := factor(HHILevel)]
 DESSw <- vector(length = 2, mode = "list")
 names(DESSw) <- c("02", "10")
 DESSw <- list("2010" = DESSw, "2012" = DESSw)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
 for (jj in 1:lengh(Jbs)) {
+####for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
+
+  #### Changed from here: start
   LfwC <- Lfw[
-      grepl("^B", FirstYear2013) & 
-              JobsMP0 >= Jbs[jj] & 
-               DurMonthMarch > 0 & 
-           ReportEveryYear == 1L , 
+      grepl("^B", FirstYear2013) &  #### first year < 2013
+              JobsMP0 >= Jbs[jj] &  #### baseline jobs > Jbs[jj]
+               DurMonthMarch > 0 &  #### job duration > 0 month
+                   GapInTY == 0L ,  #### no gap in taxyear for all observed periods
+      c(geovars, "EstID", 
+        grepout("tax|Exist|Job|Dur|Cr|An|Fo|Are|Work|Sha|HHI|nc|Emp|FA|Siz|Sub", 
+        colnames(Lfw))), with = F
     ]
-  LfwC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
-  LfwC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
-  LfwC[, HHILevel := factor(HHILevel)]
+  #### Changed from here: end
+
   LfwCE <- LfwC[ExistedBefore2013 == 1L, ]
   LfwCEb <- LfwCE[grepl("Be", HHILevel), ]
   LfwCEa <- LfwCE[grepl("Ab", HHILevel), ]
@@ -351,6 +451,11 @@ for (jj in 1:lengh(Jbs)) {
     assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
     assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
     assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
+    qsave(LfYr,    paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
+    qsave(LfCYr,   paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
+    qsave(LfCEYr,  paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
+    qsave(LfCEbYr, paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
+    qsave(LfCEaYr, paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)

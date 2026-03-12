@@ -195,6 +195,7 @@ Destat201002
 ```
 
 ```{r examining estimation data}
+LfC201002 <- qread(paste0(pathdata, "LfC201002.qs"))
 LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, EstID, 
@@ -309,6 +310,11 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
     LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
     LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
+    LfYr    <- qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
+    LfCYr   <- qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
+    LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
+    LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
+    LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
     library(fixest)
     esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -368,6 +374,15 @@ gFE201002
 
 ```{r select winsorized estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+#### Complete panel
+#### definition of complete: observed everyear in start year - 2020
+Lf[, c("Num", "DiffTY", "MaxDiffTY") := 
+  .(1:.N, c(0L, diff(taxyear)), max(taxyear)-min(taxyear)+1), 
+  by = EstID]
+Lf[, GapInTY := 0L]
+Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
+print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
+  order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
 Lfw <- Lf[num == 1L & (
     !(EstID %in% EstID[abs(rJobsMP) > 2 | abs(dJobsMP) > 3000]) # small changes
@@ -378,24 +393,32 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
+#### HHI grouping
+Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+HH0Median <- median(Lf[taxyear == 2012, HHI0], na.rm = T)
+Lfw[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+Lfw[HHI0 <= HH0Median, HHILevel := "Below"]
+Lfw[HHI0 >  HH0Median, HHILevel := "Above"]
+Lfw[, HHILevel := factor(HHILevel)]
 DESSw <- vector(length = 2, mode = "list")
 names(DESSw) <- c("02", "10")
 DESSw <- list("2010" = DESSw, "2012" = DESSw)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
 for (jj in 1:lengh(Jbs)) {
+####for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
   LfwC <- Lfw[
-      grepl("^B", FirstYear2013) & 
-              JobsMP0 >= Jbs[jj] & 
-               DurMonthMarch > 0 & 
-           ReportEveryYear == 1L , 
+      grepl("^B", FirstYear2013) &  #### first year < 2013
+              JobsMP0 >= Jbs[jj] &  #### baseline jobs > Jbs[jj]
+               DurMonthMarch > 0 &  #### job duration > 0 month
+                   GapInTY == 0L ,  #### no gap in taxyear for all observed periods
+      c(geovars, "EstID", 
+        grepout("tax|Exist|Job|Dur|Cr|An|Fo|Are|Work|Sha|HHI|nc|Emp|FA|Siz|Sub", 
+        colnames(Lfw))), with = F
     ]
-  LfwC[HHI <= median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Below"]
-  LfwC[HHI > median(HHI[taxyear == 2012], na.rm = T), HHILevel := "Above"]
-  LfwC[, HHILevel := factor(HHILevel)]
   LfwCE <- LfwC[ExistedBefore2013 == 1L, ]
   LfwCEb <- LfwCE[grepl("Be", HHILevel), ]
   LfwCEa <- LfwCE[grepl("Ab", HHILevel), ]
@@ -418,6 +441,11 @@ for (jj in 1:lengh(Jbs)) {
     assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
     assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
     assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
+    qsave(LfYr,    paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
+    qsave(LfCYr,   paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
+    qsave(LfCEYr,  paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
+    qsave(LfCEbYr, paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
+    qsave(LfCEaYr, paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
@@ -464,11 +492,16 @@ Destatw201002
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
-    LfYr    <- get(paste0("Lfw",    Yr, Jb))
-    LfCYr   <- get(paste0("LfwC",   Yr, Jb))
-    LfCEYr  <- get(paste0("LfwCE",  Yr, Jb))
-    LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
-    LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
+####     LfYr    <- get(paste0("Lfw",    Yr, Jb))
+####     LfCYr   <- get(paste0("LfwC",   Yr, Jb))
+####     LfCEYr  <- get(paste0("LfwCE",  Yr, Jb))
+####     LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
+####     LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
+    LfYr    <- qread(paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
+    LfCYr   <- qread(paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
+    LfCEYr  <- qread(paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
+    LfCEbYr <- qread(paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
+    LfCEaYr <- qread(paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
     library(fixest)
     esLfwYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -510,7 +543,7 @@ for (Jb in c(2, 10)) {
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
     paste0(pathresults, "Results", Yr, "-2022Job", Jb, "w.jpg")
-      , gFE, width = 8*2, height = 4*2, units = "cm",
+      , gFEYr, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     gFEYr
