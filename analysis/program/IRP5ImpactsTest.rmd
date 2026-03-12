@@ -143,11 +143,11 @@ for (jj in 1) {
     assign(paste0("LfCE",  Yr, Jb), LfCEYr)
     assign(paste0("LfCEb", Yr, Jb), LfCEbYr)
     assign(paste0("LfCEa", Yr, Jb), LfCEaYr)
-    qsave(LfYr,    paste0(pathsave, "Lf",    Yr, Jb, ".qs"))
-    qsave(LfCYr,   paste0(pathsave, "LfC",   Yr, Jb, ".qs"))
-    qsave(LfCEYr,  paste0(pathsave, "LfCE",  Yr, Jb, ".qs"))
-    qsave(LfCEbYr, paste0(pathsave, "LfCEb", Yr, Jb, ".qs"))
-    qsave(LfCEaYr, paste0(pathsave, "LfCEa", Yr, Jb, ".qs"))
+    qsave(LfYr,    paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
+    qsave(LfCYr,   paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
+    qsave(LfCEYr,  paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
+    qsave(LfCEbYr, paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
+    qsave(LfCEaYr, paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
@@ -197,14 +197,14 @@ Destat201002
 ```{r examining estimation data}
 LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
-  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, EstID, 
+  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
   taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
 LfCYr[, FAclass := "low"]
 LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
 LfCYr[FAMP0 > .5, FAclass := "high"]
 LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
-  busmainplc_geo, EstID, taxyear, 
+  busmainplc_geo, EstID, taxrefno, taxyear, 
   rJobsMP, dJobsMP, JobsMP, JobsMP0, 
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
