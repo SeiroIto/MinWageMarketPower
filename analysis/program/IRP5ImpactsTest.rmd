@@ -197,14 +197,14 @@ Destat201002
 ```{r examining estimation data}
 LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
-  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
+  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, EstID, 
   taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
 LfCYr[, FAclass := "low"]
 LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
 LfCYr[FAMP0 > .5, FAclass := "high"]
 LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
-  busmainplc_geo, EstID, taxrefno, taxyear, 
+  busmainplc_geo, EstID, taxyear, 
   rJobsMP, dJobsMP, JobsMP, JobsMP0, 
   Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
