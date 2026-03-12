@@ -286,7 +286,7 @@ meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
 guides(
