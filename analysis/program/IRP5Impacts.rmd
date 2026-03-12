@@ -197,7 +197,7 @@ Destat201002
 ```{r examining estimation data}
 LfCYr <- LfC201002
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
-  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, 
+  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, EstID, 
   taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
 LfCYr[, FAclass := "low"]
 LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
