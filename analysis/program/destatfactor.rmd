@@ -52,7 +52,7 @@ destat <- function(x, prob = "short", signif = 1, removezero = F)
 }
 
 destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIfAbove = 10)
-#  returns an array of descriptive statistics for factors/characters by all levels
+#  returns an array of descriptive statistics for factors/characters at all levels
 #  If gender = M, F is a factor, it gives 2 rows of gender: M, gender: F 
 #    prob: specifies quantiles, "short", "even", "odd", "very short"
 #    IgnoreIfAbove: = 10, if length(levels(factor variable)) > 10, just skip
