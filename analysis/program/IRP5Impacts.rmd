@@ -153,7 +153,8 @@ for (jj in 1:lengh(Jbs)) {
     iifac <- sapply(LfCYr, is.factor)
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
-    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+###    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+    des2  <- NULL
     dess  <- rbind(des1, des2)
     DESS[[yy]][[jj]] <- dess
     #### LaTeX table

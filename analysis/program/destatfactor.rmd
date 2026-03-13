@@ -74,30 +74,33 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
     xd <- x[, !(iinum|iiInt), with = F]
   } else xd <- x
   iic <- sapply(xd, is.character)
-  if (any(iic)) {
-    Numunq <- unlist(lapply(xd[, ..iic], function(z) length(unique(z))))
+  iif <- sapply(xf, is.factor)
+  iifc <- iic|iif
+  #### Drop characters/factors with too many elements (> IgnoreIfAbove)
+  if (any(iifc)) {
+    Numunq <- unlist(lapply(xd[, ..iifc], function(z) length(unique(z))))
     if (!is.null(Numunq)) ii100 <- Numunq > IgnoreIfAbove else ii100 <- F
     if (any(ii100)) {
-      message(paste(names(xd[, ..iic])[ii100], if (length(ii100)==1) "has" else "have",  
+      message(paste(names(xd[, ..iifc])[ii100], if (length(ii100)==1) "has" else "have",  
         "more than", IgnoreIfAbove, "unique entries, dropped.\n"))
-      #### drop iic[ii100] columns, turn the rest to factors
-      xf <- xd[, -which(iic[ii100]), with = F]
+      #### drop iifc[ii100] columns, turn the rest to factors
+      xf <- xd[, -which(iifc[ii100]), with = F]
       iic2 <- sapply(xf, is.character)
       xf[, (names(xf)[iic2]) := 
         lapply(.SD, as.factor), .SDcols = names(xf)[iic2]
       ]
-    } else {
+    } else {  # if number of all character/factor element <= IgnoreIfAbove
       xf <- xd
-      xf[, (names(xf)[iic]) := 
-        lapply(.SD, as.factor), .SDcols = names(xf)[iic]
+      xf[, (names(xf)[iifc]) := 
+        lapply(.SD, as.factor), .SDcols = names(xf)[iifc]
       ]
     }
   } else xf <- xd
-  iif <- sapply(xf, is.factor)
   #### list all levels
   AllLvList <- lapply(xf[, ..iif], levels)
   AllLvls <- unlist(AllLvList)
-  AllNames <- unlist(lapply(1:length(AllLvList), function(i) paste0(names(AllLvList)[i], ": ", AllLvList[[i]])))
+  AllNames <- unlist(lapply(1:length(AllLvList), 
+    function(i) paste0(names(AllLvList)[i], ": ", AllLvList[[i]])))
   Nrows <- length(AllLvls)
   if (is.character(prob)) {
     if (prob=="short")
