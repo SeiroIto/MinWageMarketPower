@@ -153,8 +153,8 @@ for (jj in 1:lengh(Jbs)) {
     iifac <- sapply(LfCYr, is.factor)
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
-###    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
-    des2  <- NULL
+    des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+####des2  <- NULL
     dess  <- rbind(des1, des2)
     DESS[[yy]][[jj]] <- dess
     #### LaTeX table
@@ -373,8 +373,10 @@ gFE201002
 
 ## Winsorizing
 
+Some entries show wild swings in the number of jobs between contiguous years at the order of a few thousands. This may be due to revision reporting that have not materialised. Therefore, we winsorize establishments more than doubling jobs or increasing jobs by more than 3000 at the establishment (Main Place) level.
 
-```{r select winsorized estimation sample, eval = F}
+
+```{r select winsorized estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -386,6 +388,8 @@ Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
 print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
   order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
+#### Winsorization
+#### Establishments with abs(rJobsMP) > 2 or abs(dJobsMP) > 3000 are dropped
 Lfw <- Lf[num == 1L & (
     !(EstID %in% EstID[abs(rJobsMP) > 2 | abs(dJobsMP) > 3000]) # small changes
   ) , ]
