@@ -286,7 +286,8 @@ meanjbdat[[3]][, ind := "animal"]
 meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
-  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, colour = FAclass)) +
+  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
+    fill = FAclass, colour = FAclass)) +
 geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
@@ -372,7 +373,7 @@ gFE201002
 ## Winsorizing
 
 
-```{r select winsorized estimation sample}
+```{r select winsorized estimation sample, eval = F}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -488,7 +489,7 @@ qsave(DESSw, paste0(pathresults, "DESSw.qs"))
 Destatw201002
 ```
 
-```{r estimation with winsorized data}
+```{r estimation with winsorized data, eval = F}
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
