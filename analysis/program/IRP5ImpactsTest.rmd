@@ -286,13 +286,10 @@ meanjbdat[[3]][, ind := "animal"]
 meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
-  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+  aes(x = taxyear, y = MeanrJobsMP)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
 theme(
   legend.text=element_text(size=9),
   legend.position = "bottom"

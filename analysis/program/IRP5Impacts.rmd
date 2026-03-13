@@ -112,7 +112,7 @@ for (jj in 1:lengh(Jbs)) {
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
   LfC <- Lf[
-      grepl("^B", FirstYear2013) &  #### first year < 2013
+####  grepl("^B", FirstYear2013) &  #### first year < 2013
               JobsMP0 >= Jbs[jj] &  #### baseline jobs > Jbs[jj]
                DurMonthMarch > 0 &  #### job duration > 0 month
                    GapInTY == 0L ,  #### no gap in taxyear for all observed periods
@@ -243,7 +243,8 @@ lflist <- list(
   forest = lfdata.forest
 )
 lapply(lflist, dim)
-jbdat <- lapply(lflist, function(x) x[, .(taxyear, JobsMP, rJobsMP)])
+jbdat <- lapply(lflist, function(x) 
+  x[, .(taxyear, JobsMP, rJobsMP, FAclass)])
 jcols <- c("JobsMP", "rJobsMP")
 meanjbdat <- lapply(jbdat, function(x) 
   x[, c("MeanJobsMP",
@@ -259,7 +260,7 @@ meanjbdat <- lapply(jbdat, function(x)
         var(rJobsMP,  na.rm = T), 
         sum(!is.na(JobsMP)), 
         sum(!is.na(rJobsMP)))
-      , by = taxyear])
+      , by = .(FAclass, taxyear)])
 cihalf <- function(n, sigma) qt(.975, n-1)*(sigma/n)^(.5)
 meanjbdat <- lapply(meanjbdat, function(x) 
   x[, c("MeanJobsMP.ci",
@@ -286,7 +287,7 @@ meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.Ub)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
 guides(
@@ -305,11 +306,11 @@ for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
 #### for (Yr in 2010) {
-    LfYr    <- get(paste0("Lf",    Yr, Jb))
-    LfCYr   <- get(paste0("LfC",   Yr, Jb))
-    LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
-    LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
-    LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
+####     LfYr    <- get(paste0("Lf",    Yr, Jb))
+####     LfCYr   <- get(paste0("LfC",   Yr, Jb))
+####     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
+####     LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
+####     LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
     LfYr    <- qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
     LfCYr   <- qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
@@ -351,8 +352,7 @@ for (Jb in c(2, 10)) {
         legend.position = "none"
         )
     ) + 
-    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
-    scale_y_continuous(limits = c(15, -10)) 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
     paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
@@ -411,7 +411,7 @@ for (jj in 1:lengh(Jbs)) {
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
   LfwC <- Lfw[
-      grepl("^B", FirstYear2013) &  #### first year < 2013
+####  grepl("^B", FirstYear2013) &  #### first year < 2013
               JobsMP0 >= Jbs[jj] &  #### baseline jobs > Jbs[jj]
                DurMonthMarch > 0 &  #### job duration > 0 month
                    GapInTY == 0L ,  #### no gap in taxyear for all observed periods
@@ -538,8 +538,7 @@ for (Jb in c(2, 10)) {
         legend.position = "none"
         )
     ) + 
-    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022) +
-    scale_y_continuous(limits = c(15, -10)) 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
     paste0(pathresults, "Results", Yr, "-2022Job", Jb, "w.jpg")
