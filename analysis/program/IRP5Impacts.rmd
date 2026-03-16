@@ -351,6 +351,7 @@ geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
   stat = "identity", width = .01) +
 scale_y_continuous() + 
 scale_x_continuous(breaks = 2010:2022) + 
+labs(title = "Mean job change rates by FA class and by industry") + 
 facet_grid(ind ~ .) + 
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)
@@ -395,13 +396,26 @@ for (Jb in c(2, 10)) {
     esLfCEbYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
+    #### Subsample: FAclass
+    esLfCEaYrLow <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("low", FAclass), ])
+    esLfCEaYrMid <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("mid", FAclass), ])
+    esLfCEaYrHigh <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("hi", FAclass), ])
     library(ggfixest)
     eslistYr <-  list(
         "All sample"                               = esLfYr
       , "Complete panel"                           = esLfCYr
       , "Existed firms, all sample"                = esLfCEYr
       , "Existed firms, high concentrated markets" = esLfCEaYr
-      , "Existed firms, lo concentrated markets"   = esLfCEbYr
+      , "Existed firms, low concentrated markets"  = esLfCEbYr
+      , "Existed firms, low FA"                    = esLfCEbYrLow
+      , "Existed firms, mid FA"                    = esLfCEbYrMid
+      , "Existed firms, high FA"                    = esLfCEbYrHigh
     )
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
