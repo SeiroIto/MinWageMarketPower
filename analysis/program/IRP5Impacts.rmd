@@ -379,6 +379,12 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+
+LfCEYr[, FAclass := "low"]
+LfCEYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+LfCEYr[FAMP0 > .5, FAclass := "high"]
+LfCEYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
+
     library(fixest)
     esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -397,15 +403,15 @@ for (Jb in c(2, 10)) {
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     #### Subsample: FAclass
-    esLfCEaYrLow <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("low", FAclass), ])
-    esLfCEaYrMid <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      data = LfCEYr[grepl("low", FAclass), ])
+    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("mid", FAclass), ])
-    esLfCEaYrHigh <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      data = LfCEYr[grepl("mid", FAclass), ])
+    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("hi", FAclass), ])
+      data = LfCEYr[grepl("hi", FAclass), ])
     library(ggfixest)
     eslistYr <-  list(
         "All sample"                               = esLfYr
@@ -413,9 +419,9 @@ for (Jb in c(2, 10)) {
       , "Existed firms, all sample"                = esLfCEYr
       , "Existed firms, high concentrated markets" = esLfCEaYr
       , "Existed firms, low concentrated markets"  = esLfCEbYr
-      , "Existed firms, low FA"                    = esLfCEbYrLow
-      , "Existed firms, mid FA"                    = esLfCEbYrMid
-      , "Existed firms, high FA"                    = esLfCEbYrHigh
+      , "Existed firms, low FA"                    = esLfCEYrLow
+      , "Existed firms, mid FA"                    = esLfCEYrMid
+      , "Existed firms, high FA"                   = esLfCEYrHigh
     )
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
