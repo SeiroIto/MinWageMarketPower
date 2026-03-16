@@ -201,11 +201,13 @@ LfCEa[order(EstID, taxyear),
 Destat201002
 ```
 
-```{r examining estimation data}
+```{r show estimation data, echo = F}
 LfCYr <- qread(paste0(pathdata, "LfC201002.qs"))
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
-  .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno, EstID, 
-  taxyear, JobsMP, dJobsMP, Share, FAMP)][1:50, ]
+  .(busdistmuni_geo, buslocmuni_geo, rk=EstID, 
+  taxyear, y=JobsMP, dy=dJobsMP, Share, FAMP)][1:50, ]
+```
+```{r examining estimation data}
 LfCYr[, FAclass := "low"]
 LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
 LfCYr[FAMP0 > .5, FAclass := "high"]
@@ -229,6 +231,53 @@ ggplot(data=lfdata.dropped,
   aes(x = taxyear, y = rJobsMP, group = EstID, colour = FAclass)) +
 geom_line() +
 scale_y_continuous(transform = "log10") + 
+guides(
+  colour = guide_legend(title = "FA classes", nrow = 1)
+  ) +
+theme(
+  legend.text=element_text(size=9),
+  legend.position = "bottom"
+)
+#### mean plot by FAclass
+cihalf <- function(n, sigma) qt(.975, n-1)*(sigma/n)^(.5)
+lfdata[, c("MeanJobsMP",
+        "MeanrJobsMP",
+        "Sigma2JobsMP",
+        "Sigma2rJobsMP",
+        "nJobsMP",
+        "nrJobsMP") 
+       :=
+      .(mean(JobsMP,  na.rm = T), 
+        mean(rJobsMP, na.rm = T), 
+        var(JobsMP,   na.rm = T), 
+        var(rJobsMP,  na.rm = T), 
+        sum(!is.na(JobsMP)), 
+        sum(!is.na(rJobsMP)))
+      , by = .(FAclass, taxyear)
+]
+lfdata[, c("MeanJobsMP.ci",
+        "MeanrJobsMP.ci")
+      :=
+      .(cihalf(n=nJobsMP , sigma=Sigma2JobsMP), 
+        cihalf(n=nrJobsMP, sigma=Sigma2rJobsMP))
+]
+lfdata[, c("MeanJobsMP.lb"
+        , "MeanJobsMP.ub"
+        , "MeanrJobsMP.lb"
+        , "MeanrJobsMP.ub")
+      :=
+      .(MeanJobsMP  - MeanJobsMP.ci,
+        MeanJobsMP  + MeanJobsMP.ci,
+        MeanrJobsMP - MeanrJobsMP.ci,
+        MeanrJobsMP + MeanrJobsMP.ci)
+]
+ggplot(data=lfdata, 
+  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
+    fill = FAclass, colour = FAclass)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+  position = position_jitter(width = .1)) +
+scale_y_continuous() + 
+labs(title = "Mean job change rates by FA class") + 
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)
   ) +
@@ -268,7 +317,6 @@ meanjbdat <- lapply(jbdat, function(x)
         sum(!is.na(JobsMP)), 
         sum(!is.na(rJobsMP)))
       , by = .(FAclass, taxyear)])
-cihalf <- function(n, sigma) qt(.975, n-1)*(sigma/n)^(.5)
 meanjbdat <- lapply(meanjbdat, function(x) 
   x[, c("MeanJobsMP.ci",
         "MeanrJobsMP.ci")
@@ -295,7 +343,9 @@ mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)) +
+geom_pointrange(
+    aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)
+  , position = position_jitter(width = .1)) +
 scale_y_continuous() + 
 facet_grid(ind ~ .) + 
 guides(
