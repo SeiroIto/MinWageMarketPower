@@ -195,9 +195,9 @@ Destat201002
 
 ```{r LfCEb and LfCEa contents, echo = F}
 LfCEb[order(EstID, taxyear), 
-  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
+  .(rk=EstID, taxyear, y=JobsMP, ry=rJobsMP, dy=dJobsMP, FAMP )][1:30, ]
 LfCEa[order(EstID, taxyear), 
-  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
+  .(rk=EstID, taxyear, y=JobsMP, ry=rJobsMP, dy=dJobsMP, FAMP )][1:30, ]
 Destat201002
 ```
 
