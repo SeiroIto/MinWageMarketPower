@@ -271,12 +271,15 @@ lfdata[, c("MeanJobsMP.lb"
         MeanrJobsMP - MeanrJobsMP.ci,
         MeanrJobsMP + MeanrJobsMP.ci)
 ]
-ggplot(data=lfdata, 
+ggplot(data=
+  unique(lfdata[, .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
 geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-  position = position_jitter(width = .1)) +
+  position = position_jitter(width = .2), 
+  stat = "identity", width = .01) +
 scale_y_continuous() + 
+scale_x_continuous(breaks = 2010:2022) + 
 labs(title = "Mean job change rates by FA class") + 
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)
@@ -343,10 +346,11 @@ mjb <- rbindlist(meanjbdat)
 ggplot(data=mjb, 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-geom_pointrange(
-    aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub)
-  , position = position_jitter(width = .1)) +
+geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+  position = position_jitter(width = .2), 
+  stat = "identity", width = .01) +
 scale_y_continuous() + 
+scale_x_continuous(breaks = 2010:2022) + 
 facet_grid(ind ~ .) + 
 guides(
   colour = guide_legend(title = "FA classes", nrow = 1)
