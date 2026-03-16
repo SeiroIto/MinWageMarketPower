@@ -106,7 +106,7 @@ names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
-####for (jj in 1:lengh(Jbs)) {
+####for (jj in 1:length(Jbs)) {
 for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
@@ -153,25 +153,25 @@ for (jj in 1) {
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
 ####des2  <- NULL
+    des1 <- data.table(rn=rownames(des1), des1)
+    des2 <- data.table(rn=rownames(des2), des2)
     dess  <- rbind(des1, des2)
     DESS[[yy]][[jj]] <- dess
-    rn1 <- rownames(des1)
-    rn2 <- rownames(des2)
     #### LaTeX tables
-    ltb1 <- latextab.simple(cbind(rn1, des1), 
+    ltb1 <- latextab.simple(as.matrix(des1), 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
-    ltb2 <- latextab.simple(cbind(rn2, des2), 
+    ltb2 <- latextab.simple(as.matrix(des2), 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
     ltb <- matrix(c(
-        ltb1[1]
+        ltb1[1:2]
       , paste0("\\multicolumn{", ncol(des1)+1, 
         "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
-      , ltb1[-length(ltb1)]
+      , ltb1[-c(1:2, length(ltb1))]
       , paste0("\\multicolumn{", ncol(des1)+1, 
         "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
-      , ltb2[-1]
+      , ltb2[-(1:2)]
     ))
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
     write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "_2.tex"))
@@ -309,7 +309,7 @@ theme(
  for (Jb in 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)
 ####  for (Yr in c(2010, 2012)) {
- for (Yr in 2010) {
+  for (Yr in 2010) {
 ####     LfYr    <- get(paste0("Lf",    Yr, Jb))
 ####     LfCYr   <- get(paste0("LfC",   Yr, Jb))
 ####     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
@@ -343,15 +343,15 @@ theme(
       , "Complete panel"                           = esLfCYr
       , "Existed firms, all sample"                = esLfCEYr
       , "Existed firms, high concentrated markets" = esLfCEaYr
-      , "Existed firms, lo concentrated markets"  = esLfCEbYr
+      , "Existed firms, lo concentrated markets"   = esLfCEbYr
     )
     dictvec <- c(
-        "JobsMP"        , "Number of jobs at the establishment"
-      , "FAMP0"         , "Fraction affected in the taxyear 2012"
-      , "taxrefno"      , "Firm ID"
-      , "busmainplc_geo", "Main Place"
+        "JobsMP"         = "Number of jobs at the establishment"
+      , "FAMP0"          = "Fraction affected in the taxyear 2012"
+      , "taxrefno"       = "Firm ID"
+      , "busmainplc_geo" = "Main Place"
     )
-    setFixest_dict(dict = dictvec, ..., reset = FALSE)
+    setFixest_dict(dict = dictvec, reset = FALSE)
     estdf <- etable(eslistYr, 
       style.df = style.df(
         depvar.title = "Number of jobs", 
@@ -387,9 +387,9 @@ theme(
     assign(paste0("eslist", Yr, Jb), eslistYr)
     assign(paste0("gFE",    Yr, Jb), gFEYr)
     qsave(estdf, 
-      paste0(pathresults, "est", Yr, Jb, ".qn")
-    rite.tablev(estltx, 
-      paste0(pathresults, "est", Yr, Jb, ".tex")
+      paste0(pathresults, "est", Yr, Jb, ".qs"))
+    write.tablev(estltx, 
+      paste0(pathresults, "est", Yr, Jb, ".tex"))
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
   }
 }
@@ -440,8 +440,8 @@ names(DESSw) <- c("02", "10")
 DESSw <- list("2010" = DESSw, "2012" = DESSw)
 Jbs <- c(2, 10)
 Yrs <- c(2010, 2012)
-for (jj in 1:lengh(Jbs)) {
-####for (jj in 1) {
+####for (jj in 1:length(Jbs)) {
+for (jj in 1) {
   if (Jbs[jj] < 10) 
     Jb <- paste0(0, Jbs[jj]) else 
     Jb <- Jbs[jj]
@@ -464,7 +464,8 @@ for (jj in 1:lengh(Jbs)) {
     , LfwCEb = table(LfwCEb[, taxyear])
     , LfwCEa = table(LfwCEa[, taxyear])
   ))
-  for (yy in 1:length(Yrs)) {
+####  for (yy in 1:length(Yrs)) {
+  for (yy in 1) {
     Yr <- Yrs[yy]
     LfYr    <- Lfw[taxyear >= Yr, ]
     LfCYr   <- LfwC[taxyear >= Yr, ]
@@ -484,23 +485,26 @@ for (jj in 1:lengh(Jbs)) {
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+####des2  <- NULL
+    des1 <- data.table(rn=rownames(des1), des1)
+    des2 <- data.table(rn=rownames(des2), des2)
     dess  <- rbind(des1, des2)
-    DESSw[[yy]][[jb]] <- dess
-    #### LaTeX table
-    ltb1 <- latextab.simple(cbind(rn1, des1), 
+    DESS[[yy]][[jj]] <- dess
+    #### LaTeX tables
+    ltb1 <- latextab.simple(as.matrix(des1), 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
-    ltb2 <- latextab.simple(cbind(rn2, des2), 
+    ltb2 <- latextab.simple(as.matrix(des2), 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
     ltb <- matrix(c(
-        ltb1[1]
+        ltb1[1:2]
       , paste0("\\multicolumn{", ncol(des1)+1, 
         "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
-      , ltb1[-length(ltb1)]
+      , ltb1[-c(1:2, length(ltb1))]
       , paste0("\\multicolumn{", ncol(des1)+1, 
         "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
-      , ltb2[-1]
+      , ltb2[-(1:2)]
     ))
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
     write.tablev(ltb2, paste0(pathresults, "Destat", Yr, Jb, "w_2.tex"))
@@ -522,9 +526,9 @@ qsave(DESSw, paste0(pathresults, "DESSw.qs"))
 Destatw201002
 ```
 
-```{r estimation with winsorized data}
+```{r estimation with winsorized data, eval = F}
 #### for (Jb in c(2, 10)) {
-for (Jb in 2) {
+for (Jb 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)
 ####  for (Yr in c(2010, 2012)) {
   for (Yr in 2010) {
@@ -564,12 +568,12 @@ for (Jb in 2) {
       , "Existed firms, low concentrated markets"  = esLfwCEbYr
     )
     dictvec <- c(
-        "JobsMP"        , "Number of jobs at the establishment"
-      , "FAMP0"         , "Fraction affected in the taxyear 2012"
-      , "taxrefno"      , "Firm ID"
-      , "busmainplc_geo", "Main Place"
+        "JobsMP"         = "Number of jobs at the establishment"
+      , "FAMP0"          = "Fraction affected in the taxyear 2012"
+      , "taxrefno"       = "Firm ID"
+      , "busmainplc_geo" = "Main Place"
     )
-    setFixest_dict(dict = dictvec, ..., reset = FALSE)
+    setFixest_dict(dict = dictvec, reset = FALSE)
     estdfw <- etable(eslistYrw, 
       style.df = style.df(
         depvar.title = "Number of jobs", 
@@ -605,9 +609,9 @@ for (Jb in 2) {
     assign(paste0("eslist", Yr, Jb, "w"), eslistYrw)
     assign(paste0("gFE",    Yr, Jb, "w"), gFEYr)
     qsave(estdfw, 
-      paste0(pathresults, "est", Yr, Jb, "w.qn")
+      paste0(pathresults, "est", Yr, Jb, "w.qn"))
     write.tablev(estltxw, 
-      paste0(pathresults, "est", Yr, Jb, "w.tex")
+      paste0(pathresults, "est", Yr, Jb, "w.tex"))
     qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
