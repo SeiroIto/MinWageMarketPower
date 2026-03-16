@@ -140,34 +140,37 @@ for (jj in 1:lengh(Jbs)) {
     LfCEaYr <- LfCEa[taxyear >= Yr, ]
     assign(paste0("Lf",    Yr, Jb), LfYr)
     assign(paste0("LfC",   Yr, Jb), LfCYr)
-    assign(paste0("LfCE",  Yr, Jb), LfCEYr)
-    assign(paste0("LfCEb", Yr, Jb), LfCEbYr)
-    assign(paste0("LfCEa", Yr, Jb), LfCEaYr)
     qsave(LfYr,    paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
     qsave(LfCYr,   paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
     qsave(LfCEYr,  paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     qsave(LfCEbYr, paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     qsave(LfCEaYr, paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+    rm(LfCEaYr, LfCEbYr, LfCEYr)
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
     iich  <- sapply(LfCYr, is.character)
     des1  <- destat(LfCYr[, which(!(iifac|iich)), with = F])
     des2  <- destatfactor(LfCYr, IgnoreIfAbove = 8)
+####des2  <- NULL
     dess  <- rbind(des1, des2)
     DESS[[yy]][[jj]] <- dess
-    #### LaTeX table
-    ltb1 <- latextab.simple(des1, 
-      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+    rn1 <- rownames(des1)
+    rn2 <- rownames(des2)
+    #### LaTeX tables
+    ltb1 <- latextab.simple(cbind(rn1, des1), 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
-    ltb2 <- latextab.simple(des2, 
-      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+    ltb2 <- latextab.simple(cbind(rn2, des2), 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
     ltb <- matrix(c(
         ltb1[1]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
+      , paste0("\\multicolumn{", ncol(des1)+1, 
+        "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
       , ltb1[-length(ltb1)]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
+      , paste0("\\multicolumn{", ncol(des1)+1, 
+        "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "_1.tex"))
@@ -336,12 +339,31 @@ for (Jb in c(2, 10)) {
       data = LfCEbYr)
     library(ggfixest)
     eslistYr <-  list(
-        "All sample" = esLfYr, 
-        "Complete panel" = esLfCYr, 
-        "Existed firms, all sample" = esLfCEYr, 
-        "Existed firms, high concentrated markets" = esLfCEaYr, 
-        "Existed firms, low concentrated markets" = esLfCEbYr 
-      )
+        "All sample"                               = esLfYr
+      , "Complete panel"                           = esLfCYr
+      , "Existed firms, all sample"                = esLfCEYr
+      , "Existed firms, high concentrated markets" = esLfCEaYr
+      , "Existed firms, lo concentrated markets"  = esLfCEbYr
+    )
+    dictvec <- c(
+        "JobsMP"        , "Number of jobs at the establishment"
+      , "FAMP0"         , "Fraction affected in the taxyear 2012"
+      , "taxrefno"      , "Firm ID"
+      , "busmainplc_geo", "Main Place"
+    )
+    setFixest_dict(dict = dictvec, ..., reset = FALSE)
+    estdf <- etable(eslistYr, 
+      style.df = style.df(
+        depvar.title = "Number of jobs", 
+        fixef.title = "Fixed effects", 
+        fixef.suffix = " FEs", 
+        yesNo = "yes")
+    )
+    estltx <- etable(eslistYr, 
+      style.tex = style.tex("aer"), 
+      fitstat = ~ r2 + n, 
+      tex = TRUE
+    )
     gFEYr <- ggiplot(eslistYr,
       ref.line = 2012, 
       main = "Job impacts: Low and high concentration",
@@ -356,7 +378,7 @@ for (Jb in c(2, 10)) {
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
-    paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
       , gFEYr, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
@@ -364,6 +386,10 @@ for (Jb in c(2, 10)) {
     lapply(eslistYr, summary)
     assign(paste0("eslist", Yr, Jb), eslistYr)
     assign(paste0("gFE",    Yr, Jb), gFEYr)
+    qsave(estdf, 
+      paste0(pathresults, "est", Yr, Jb, ".qn")
+    rite.tablev(estltx, 
+      paste0(pathresults, "est", Yr, Jb, ".tex")
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
   }
 }
@@ -372,8 +398,10 @@ gFE201002
 
 ## Winsorizing
 
+Some entries show wild swings in the number of jobs between contiguous years at the order of a few thousands. This may be due to revision reporting that have not materialised. Therefore, we winsorize establishments more than doubling jobs or increasing jobs by more than 3000 at the establishment (Main Place) level.
 
-```{r select winsorized estimation sample, eval = F}
+
+```{r select winsorized estimation sample}
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -385,9 +413,15 @@ Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
 print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
   order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
-Lfw <- Lf[num == 1L & (
-    !(EstID %in% EstID[abs(rJobsMP) > 2 | abs(dJobsMP) > 3000]) # small changes
-  ) , ]
+#### Winsorization
+#### Establishments with abs(dJobsMP) > 2000 or 
+#### abs(rJobsMP) > 2 & JobsMP0 > 500 are dropped
+Lfw <- Lf[
+ num == 1L & 
+ !(EstID %in% EstID[
+      abs(dJobsMP) > 2000 |
+     (abs(rJobsMP) > 2 & JobsMP0 > 500)])  # keep only small changes
+ , ]
 rbind(Lf=dim(Lf), Lfw=dim(Lfw))
 Lfw[, 
   .(
@@ -438,15 +472,12 @@ for (jj in 1:lengh(Jbs)) {
     LfCEbYr <- LfwCEb[taxyear >= Yr, ]
     LfCEaYr <- LfwCEa[taxyear >= Yr, ]
     assign(paste0("Lfw",    Yr, Jb), LfYr)
-    assign(paste0("LfwC",   Yr, Jb), LfCYr)
-    assign(paste0("LfwCE",  Yr, Jb), LfCEYr)
-    assign(paste0("LfwCEb", Yr, Jb), LfCEbYr)
-    assign(paste0("LfwCEa", Yr, Jb), LfCEaYr)
     qsave(LfYr,    paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
     qsave(LfCYr,   paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
     qsave(LfCEYr,  paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
     qsave(LfCEbYr, paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
     qsave(LfCEaYr, paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
+    rm(LfCEaYr, LfCEbYr, LfCEYr)
     #### destat for each data
     #### To be specified using destat and destatfactor
     iifac <- sapply(LfCYr, is.factor)
@@ -456,17 +487,19 @@ for (jj in 1:lengh(Jbs)) {
     dess  <- rbind(des1, des2)
     DESSw[[yy]][[jb]] <- dess
     #### LaTeX table
-    ltb1 <- latextab.simple(des1, 
-      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+    ltb1 <- latextab.simple(cbind(rn1, des1), 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
-    ltb2 <- latextab.simple(des2, 
-      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .3), 
+    ltb2 <- latextab.simple(cbind(rn2, des2), 
+      hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
       unit = "cm")
     ltb <- matrix(c(
         ltb1[1]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
+      , paste0("\\multicolumn{", ncol(des1)+1, 
+        "}{l}{\\textit{\\footnotesize A. Continuous variables}}\\\\") 
       , ltb1[-length(ltb1)]
-      , paste0("\\multicolumn{", des1, "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
+      , paste0("\\multicolumn{", ncol(des1)+1, 
+        "}{l}{\\textit{\\footnotesize B. Categorical variables}}\\\\") 
       , ltb2[-1]
     ))
     write.tablev(ltb1, paste0(pathresults, "Destat", Yr, Jb, "w_1.tex"))
@@ -521,14 +554,33 @@ for (Jb in c(2, 10)) {
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     library(ggfixest)
-    eslistwYr <-  list(
-        "All sample" = esLfwYr, 
-        "Complete panel" = esLfwCYr, 
-        "Existed firms, all sample" = esLfwCEYr, 
-        "Existed firms, high concentrated markets" = esLfwCEaYr, 
-        "Existed firms, low concentrated markets" = esLfwCEbYr 
-      )
-    gFEYr <- ggiplot(eslistwYr,
+    eslistYrw <-  list(
+        "All sample"                               = esLfwYr
+      , "Complete panel"                           = esLfwCYr
+      , "Existed firms, all sample"                = esLfwCEYr
+      , "Existed firms, high concentrated markets" = esLfwCEaYr
+      , "Existed firms, low concentrated markets"  = esLfwCEbYr
+    )
+    dictvec <- c(
+        "JobsMP"        , "Number of jobs at the establishment"
+      , "FAMP0"         , "Fraction affected in the taxyear 2012"
+      , "taxrefno"      , "Firm ID"
+      , "busmainplc_geo", "Main Place"
+    )
+    setFixest_dict(dict = dictvec, ..., reset = FALSE)
+    estdfw <- etable(eslistYrw, 
+      style.df = style.df(
+        depvar.title = "Number of jobs", 
+        fixef.title = "Fixed effects", 
+        fixef.suffix = " FEs", 
+        yesNo = "yes")
+    )
+    estltxw <- etable(eslistYrw, 
+      style.tex = style.tex("aer"), 
+      fitstat = ~ r2 + n, 
+      tex = TRUE
+    )
+    gFEYr <- ggiplot(eslistYrw,
       ref.line = 2012, 
       main = "Job impacts: Low and high concentration, winsorized data",
       xlab = "Tax year (March - Februray)",
@@ -548,13 +600,17 @@ for (Jb in c(2, 10)) {
      )
     gFEYr
     lapply(eslistwYr, summary)
-    assign(paste0("eslistw", Yr, Jb), eslistwYr)
-    assign(paste0("gFEw",    Yr, Jb), gFEYr)
+    assign(paste0("eslist", Yr, Jb, "w"), eslistYrw)
+    assign(paste0("gFE",    Yr, Jb, "w"), gFEYr)
+    qsave(estdfw, 
+      paste0(pathresults, "est", Yr, Jb, "w.qn")
+    write.tablev(estltxw, 
+      paste0(pathresults, "est", Yr, Jb, "w.tex")
     qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
-gFEw201002
-gFEw201202
+gFE201002w
+gFE201202w
 ```
 
 <!-- files to be exported
