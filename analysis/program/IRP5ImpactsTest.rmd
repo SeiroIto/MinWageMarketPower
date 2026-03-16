@@ -531,7 +531,7 @@ Destatw201002
 
 ```{r estimation with winsorized data}
 #### for (Jb in c(2, 10)) {
-for (Jb 2) {
+for (Jb in 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)
 ####  for (Yr in c(2010, 2012)) {
   for (Yr in 2010) {
@@ -608,18 +608,17 @@ for (Jb 2) {
       dpi = 300
      )
     gFEYr
-    lapply(eslistwYr, summary)
+    lapply(eslistYrw, summary)
     assign(paste0("eslist", Yr, Jb, "w"), eslistYrw)
     assign(paste0("gFE",    Yr, Jb, "w"), gFEYr)
     qsave(estdfw, 
-      paste0(pathresults, "est", Yr, Jb, "w.qn"))
+      paste0(pathresults, "est", Yr, Jb, "w.qs"))
     write.tablev(estltxw, 
       paste0(pathresults, "est", Yr, Jb, "w.tex"))
-    qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
+    qsave(eslistYrw, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
 gFE201002w
-gFE201202w
 ```
 
 <!-- files to be exported

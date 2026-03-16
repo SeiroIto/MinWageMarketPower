@@ -277,10 +277,10 @@ meanjbdat <- lapply(meanjbdat, function(x)
         cihalf(n=nrJobsMP, sigma=Sigma2rJobsMP))
    ])
 meanjbdat <- lapply(meanjbdat, function(x) 
-  x[, c("MeanJobsMP.lb"
-        "MeanJobsMP.ub"
-        "MeanrJobsMP.lb"
-        "MeanrJobsMP.ub")
+  x[, c( "MeanJobsMP.lb"
+        , "MeanJobsMP.ub"
+        , "MeanrJobsMP.lb"
+        , "MeanrJobsMP.ub")
       :=
       .(MeanJobsMP  - MeanJobsMP.ci,
         MeanJobsMP  + MeanJobsMP.ci,
@@ -388,6 +388,9 @@ for (Jb in c(2, 10)) {
      )
     gFEYr
     lapply(eslistYr, summary)
+    #### drop data from estimated objects
+    #### eslistShort <- lapply(eslistYr
+    #### scores, residuals, fitted.values, 
     assign(paste0("eslist", Yr, Jb), eslistYr)
     assign(paste0("gFE",    Yr, Jb), gFEYr)
     qsave(estdf, 
@@ -606,14 +609,14 @@ for (Jb in c(2, 10)) {
       dpi = 300
      )
     gFEYr
-    lapply(eslistwYr, summary)
+    lapply(eslistYrw, summary)
     assign(paste0("eslist", Yr, Jb, "w"), eslistYrw)
     assign(paste0("gFE",    Yr, Jb, "w"), gFEYr)
     qsave(estdfw, 
-      paste0(pathresults, "est", Yr, Jb, "w.qn"))
+      paste0(pathresults, "est", Yr, Jb, "w.qs"))
     write.tablev(estltxw, 
       paste0(pathresults, "est", Yr, Jb, "w.tex"))
-    qsave(eslistwYr, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
+    qsave(eslistYrw, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
 gFE201002w
