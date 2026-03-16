@@ -309,7 +309,7 @@ theme(
  for (Jb in 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)
 ####  for (Yr in c(2010, 2012)) {
-  for (Yr in 2010) {
+ for (Yr in 2010) {
 ####     LfYr    <- get(paste0("Lf",    Yr, Jb))
 ####     LfCYr   <- get(paste0("LfC",   Yr, Jb))
 ####     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
