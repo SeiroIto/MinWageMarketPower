@@ -74,7 +74,7 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
     xd <- x[, !(iinum|iiInt), with = F]
   } else xd <- x
   iic <- sapply(xd, is.character)
-  iif <- sapply(xf, is.factor)
+  iif <- sapply(xd, is.factor)
   iifc <- iic|iif
   #### Drop characters/factors with too many elements (> IgnoreIfAbove)
   if (any(iifc)) {
@@ -97,7 +97,8 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
     }
   } else xf <- xd
   #### list all levels
-  AllLvList <- lapply(xf[, ..iif], levels)
+  iif2 <- sapply(xf, is.factor)
+  AllLvList <- lapply(xf[, ..iif2], levels)
   AllLvls <- unlist(AllLvList)
   AllNames <- unlist(lapply(1:length(AllLvList), 
     function(i) paste0(names(AllLvList)[i], ": ", AllLvList[[i]])))
@@ -128,13 +129,13 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
     }
   }
   #### ..prefix allows data.table to search global environ, a level up from function
-  for (ii in 1:ncol(xf[, ..iif])) {
-    z <- xf[ , colnames(xf[, ..iif])[ii], with = F]
+  for (ii in 1:ncol(xf[, ..iif2])) {
+    z <- xf[ , colnames(xf[, ..iif2])[ii], with = F]
     zn <- na.omit(z)
     if (removezero) zn <- z[!(is.na(z) | (!is.na(z) & z == 0))]
     NAs <- sum(is.na(z))
     if (any(grepl("POSIX|Date", class(z)))) 
-      y[ii, ] <- c(rep(NA, 5 + length(prob)), NAs, length(z)) else
+      y[ii, ] <- c(rep(NA, 5 + length(prob)), NAs, length(z)) else 
     {
       Lvls <- levels(unlist(zn))
       #### number of rows by far = length of AllLvList[1:(ii-1)]
