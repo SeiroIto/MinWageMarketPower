@@ -190,11 +190,14 @@ for (jj in 1) {
   }
 }
 qsave(DESS, paste0(pathresults, "DESS.qs"))
-LfCEb[order(EstID, taxyear), 
-  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
-LfCEa[order(EstID, taxyear), 
-  .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 Destat201002
+```
+
+```{r LfCEb and LfCEa contents, echo = F}
+LfCEb[order(EstID, taxyear), 
+  .(rk=EstID, taxyear, y=JobsMP, ry=rJobsMP, dy=dJobsMP, FAMP )][1:30, ]
+LfCEa[order(EstID, taxyear), 
+  .(rk=EstID, taxyear, y=JobsMP, ry=rJobsMP, dy=dJobsMP, FAMP )][1:30, ]
 ```
 
 ```{r examining estimation data, eval = F}
@@ -526,7 +529,7 @@ qsave(DESSw, paste0(pathresults, "DESSw.qs"))
 Destatw201002
 ```
 
-```{r estimation with winsorized data, eval = F}
+```{r estimation with winsorized data}
 #### for (Jb in c(2, 10)) {
 for (Jb 2) {
   if (Jb < 10) Jb <- paste0(0, Jb)

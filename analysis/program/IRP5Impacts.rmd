@@ -190,6 +190,10 @@ for (jj in 1:length(Jbs)) {
   }
 }
 qsave(DESS, paste0(pathresults, "DESS.qs"))
+Destat201002
+```
+
+```{r LfCEb and LfCEa contents, echo = F}
 LfCEb[order(EstID, taxyear), 
   .(EstID, taxyear, JobsMP, rJobsMP, dJobsMP, FAMP )][1:30, ]
 LfCEa[order(EstID, taxyear), 
