@@ -214,10 +214,6 @@ LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   taxyear, y=JobsMP, dy=dJobsMP, Share, FAMP)][1:50, ]
 ```
 ```{r examining estimation data}
-LfCYr[, FAclass := "low"]
-LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
-LfCYr[FAMP0 > .5, FAclass := "high"]
-LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
   Crop, Animal, Forest,
@@ -234,14 +230,53 @@ destatfactor(lfdata, IgnoreIfAbove = 8)
 #### destat of rJobsMP by year
 desrJobsByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destat(ldfdata[taxyear == yr, rJobsMP], prob = "odd"))))
+    destat(ldfdata[taxyear == yr, rJobsMP], prob = "long"))))
 )
 desrJobsByYear <- rbindlist(desrJobsByYear)
-desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
-  hcenter = c(3, rep(.8, 7), rep(.6, 2), .5, .3, .5), 
-  unit = "cm")
-write.tablev(desrjby, paste0(pathresults, "rJobsMPByYear.tex"))
-qsave(desrJobsByYear, paste0(pathresults, "rJobsMPByYear.qs"))
+#### destat of HHI by year
+desHHIByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destat(ldfdata[taxyear == yr, HHI], prob = "long"))))
+)
+desHHIByYear <- rbindlist(desHHIByYear)
+#### destat of FAclass by year
+desFAclassByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destatfactor(ldfdata[taxyear == yr, FAclass], prob = "long"))))
+)
+desFAclassByYear <- rbindlist(desFAclassByYear)
+#### desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+#### deshby <- latextab.simple(
+####   as.matrix(rn=rownames(desHHIByYear), desHHIByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+#### desfby <- latextab.simple(as.matrix(desFAclassByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+DesDTBy <- rbind(desrJobsByYear, desHHIByYear, desFAclassByYear)
+DesDTBy <- data.table(year = rep(2010:2022, 3), DesDTBy)
+hcentre.long <- c(3, rep(.8, 9), rep(.6, 2), .5, .3, .5)
+destblby <- latextab.simple(as.matrix(DesDTBy), 
+   hcenter = hcentre.long, unit = "cm")
+DesTblBy <- rbind(
+    destblby[1:2]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+        "}{l}{\\textit{\\footnotesize Rate of job change}}\\\\")
+  , destblby[3:15]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize HHI}}\\\\") 
+  , destblby[13+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: low}}\\\\") 
+  , destblby[13*2+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: mid}}\\\\") 
+  , destblby[13*3+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: high}}\\\\") 
+  , destblby[(13*4+3):length(desfby)]
+)
+write.tablev(DesTblBy, paste0(pathresults, "rJobsHHIFAclassByYear.tex"))
+qsave(DesDTBy, paste0(pathresults, "rJobsHHIFAclassByYear.qs"))
 #### plot rJobsMP after dropping outliers
 lfdata.dropped <- lfdata[
   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
@@ -397,6 +432,7 @@ ggsave(
 
 ::: {.fullwidth}
 ```{r rjobs graphs by FAclass and by Subindustry}
+DesDTBy
 gMean
 gmjb
 ```
@@ -547,6 +583,11 @@ Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
 print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
   order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
+#### FAclass
+Lf[, FAclass := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+Lf[FAMP0 > .5, FAclass := "high"]
+Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 #### Winsorization
 #### Establishments with abs(dJobsMP) > 2000 or 
 #### abs(rJobsMP) > 2 & JobsMP0 > 500 are dropped
