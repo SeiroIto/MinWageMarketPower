@@ -116,6 +116,7 @@ Tabulation gives
 
 
 ```{r create LSMa HHIAgriRowsMainPlaceLevel from LSa HHIAgriRows, results = F}
+#| attr.source = '.r .line-numbers',
 LSa <- qread(paste0(pathsaveddata, "HHIAgriRows.qs"), nthreads = 13)
 #### table(LSa[, .(Nums = 1:.N, taxyear), 
 ####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
@@ -162,6 +163,7 @@ Key variables defined at the establishment level:
 *   `FA0`: Earliest entry of FA 
 
 ```{r merge faa plus LSMa1 gives Lf, results = F}
+#| attr.source = '.r .line-numbers',
 #### faa (base) + LSMa1
 faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13)
 faa[, c("FA0", "Jobs0", "FAMP0", "JobsMP0") := 
@@ -245,9 +247,11 @@ Lf[, EstID := factor(as.numeric(factor(paste0(
 ]
 Lf[, .(Num = .N), by = (taxyear)]
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
+litedown::timing_data() 
 ```
 
 ```{r analysis sample descriptive statistics}
+#| attr.source = '.r .line-numbers',
   rbind(
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])

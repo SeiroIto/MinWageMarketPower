@@ -101,7 +101,8 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
    * Entries of irp5 look naturally balanced across years
    * Many NAs in location info in early years &rArr; loss of sample in early years
 
-```{r read irp5 file, eval = F}
+```{r read irp5 file}
+#| attr.source = '.r .line-numbers',
 if (exists(irp5gi))    rm(irp5gi)
 if (exists(irp5gir))   rm(irp5gir)
 if (exists(irp5Clean)) rm(irp5Clean)
@@ -111,16 +112,8 @@ library(data.table)
 irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 ```
 
-```{r fraction affected for all years, eval = F}
-#### code "compute FA"
-library(qs)
-library(data.table)
-path <- "W:/epguest/seiro_ito/"
-pathprogram <- paste0(path, "outfiles/")
-pathdata <- paste0(path, "data/")
-pathsaveddata <- paste0(path, "saveddata/")
-pathdataCITIRP <- "U:/CIT-IRP5 Panel/"
-pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
+```{r fraction affected for all years}
+#| attr.source = '.r .line-numbers',
 #### Takes 20-30 mins: Start  ####
 #### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
 #### ipyrc0 <- irp5M[
@@ -129,9 +122,6 @@ pathdataIRP <- "U:/IRP5/Job level/v5/beta/"
 #### kerr_income, ptrs_income, a3601_income)]), 
 #### ]
 #### Takes 20-30 mins: End  ####
-grepout <- function(str, x)
-  # returns element of match (not numbers)
-  x[grep(str, x, perl = T)]
 aggsummary <- NULL
 for (yr in 8:22) { 
   ipyrc <- irp5[taxyear == 2000+yr, ]#[1:100000, ]
@@ -351,7 +341,8 @@ aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
    *   `estfa`: fadataUniqueEntries.qs, unique entries by location-taxrefno-taxyear in fadatai (almost same as fadatai except uniqueness is explicitly imposed)
 
 
-```{r create FA panel, eval = F}
+```{r create FA panel}
+#| attr.source = '.r .line-numbers',
 FAD <- NULL
 for (yr in 8:22) {
   if (yr < 10)  yr <- paste0("0", yr)
@@ -367,6 +358,7 @@ table(FAD[,taxyear])
 ```
 
 ```{r industry code for ag, eval = F}
+#| attr.source = '.r .line-numbers',
 #### DO NOT RUN THIS TWICE. It has been run and let us keep it that way.
 #### Merge industry code, taking fadata as base
 ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
@@ -384,7 +376,8 @@ setnames(inda, "taxyear", "FirstYearOnSIC7")
 qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 ```
 
-```{r Fadata is first lines of FAD in each year, eval = F}
+```{r faa and Fadata are first lines of FAD in each year}
+#| attr.source = '.r .line-numbers',
 FAD <- qread(paste0(pathsaveddata, "FAD.qs"), nthreads = 13)
 FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
@@ -451,7 +444,8 @@ for (ff in FilesToCopy)
 
 
 
-```{r descriptive stats FA and jobs, eval = F}
+```{r descriptive stats FA and jobs}
+#| attr.source = '.r .line-numbers',
 library(tinytable)
 aggsummary <- 
   qread(paste0(pathsaveddata, "AggregateSummary.qs"), 
@@ -512,7 +506,8 @@ tb.ag
 # Plot employment, FAs
 
 
-```{r plot FAs by size, eval = F}
+```{r plot FAs by size}
+#| attr.source = '.r .line-numbers',
 fadatai <- qread(paste0(pathsaveddata, "FAAndJobs.qs"), 
   nthreads = 13)
 #### possible duplicates with different local municipality names
@@ -554,7 +549,8 @@ ggsave(
  )
 ```
 
-```{r plot FAs by jobs employment, eval = F}
+```{r plot FAs by jobs employment}
+#| attr.source = '.r .line-numbers',
 #### possible duplicates with different local municipality names
 ii0 <- fadatai[, buslocmuni_geo != "" & busdistmuni_geo != ""
    & busmainplc_geo != ""]
@@ -594,7 +590,8 @@ ggsave(
  )
 ```
 
-```{r plot number of agri jobs taxyear 2012-2020, eval = F}
+```{r plot number of agri jobs taxyear 2012-2020}
+#| attr.source = '.r .line-numbers',
 library(qs)
 library(data.table)
 library(ggplot2)
@@ -629,6 +626,7 @@ ggsave(
 ```
 
 ```{r agri Jobs by firm age, eval = F}
+#| attr.source = '.r .line-numbers',
 #### irp5M, agriculture
 #### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
 irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
@@ -657,7 +655,8 @@ ggsave(
  )
 ```
 
-```{r plot FA in agri 2012-2020, eval = F}
+```{r plot FA in agri 2012-2020}
+#| attr.source = '.r .line-numbers',
 g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
     aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
   geom_density(alpha = .3) + 
@@ -673,7 +672,8 @@ ggsave(
   dpi = 300
  )
 ```
-```{r plot FA of agri, eval = F}
+```{r plot FA of agri}
+#| attr.source = '.r .line-numbers',
 #### FA of agri
 g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
 #  geom_point(size = .1, position = position_jitterdodge()) +
@@ -688,7 +688,6 @@ ggsave(
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
-
 ```
 
 
@@ -697,7 +696,8 @@ ggsave(
 
 We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
 
-```{r define irp5M by location granularity, eval = F}
+```{r define irp5M by location granularity}
+#| attr.source = '.r .line-numbers',
 rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
 rm(fadata2); rm(fadata3); rm(faa)
 irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
@@ -922,7 +922,8 @@ We use main place level sample `irp5M` by following the "same sample data sets"
 For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5M`, because I do not have time to run to get `irp5M`
 
 
-```{r hhi, eval = F}
+```{r hhi}
+#| attr.source = '.r .line-numbers',
 #### code "hhi"
 library(qs)
 library(data.table)
@@ -1029,7 +1030,8 @@ ggsave(
 #### HHI at Dist muni and Loc muni are similar
 ```
 
-```{r create LShare panel, eval = F}
+```{r create LShare panel}
+#| attr.source = '.r .line-numbers',
 LS <- NULL
 for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
@@ -1042,6 +1044,7 @@ qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
 
 
 ```{r LSa is LS of agri only}
+#| attr.source = '.r .line-numbers',
 inda <- qread(paste0(pathsaveddata, "TaxrefnoOfAgri.qs"), nthreads = 13)
 LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
 LSia <- inda[LS, on = "taxrefno"]
@@ -1052,6 +1055,7 @@ LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
 table(LSa[grepl("M", AreaLevel), .(Nums = 1:.N), 
   by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
   "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
+litedown::timing_data() 
 ```
 
 ```{r copy LShareHHI.qs HHIAgriRows.qs to saveddata, eval = F}
