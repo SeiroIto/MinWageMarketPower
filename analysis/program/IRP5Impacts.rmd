@@ -497,30 +497,30 @@ for (Jb in c(2, 10)) {
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
     library(fixest)
-    esLfYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
-    esLfCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCYr)
-    esLfCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr)
     #### Subsample: High and low concentrated markets
-    esLfCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEaYr)
-    esLfCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     #### Subsample: FAclass
-    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("low", FAclass), ])
-    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("mid", FAclass), ])
-    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("hi", FAclass), ])
     library(ggfixest)
@@ -630,7 +630,12 @@ gFE201010FAclass
 
 ## Winsorizing
 
-Some entries show wild swings in the number of jobs between contiguous years at the order of a few thousands. This may be due to revision reporting that have not materialised. Therefore, we winsorize establishments more than doubling jobs or increasing jobs by more than 3000 at the establishment (Main Place) level.
+Some entries show wild swings in the number of jobs between contiguous years at the order of a few thousands. This may be due to revision reporting that have not materialised. Therefore, we winsorize establishments that match at least one condition that they increase the jobs: 
+
+* For more than 600% (mean of raw rate of change) with a condition that baseline job size is more than 500
+* By more than 3000
+
+This results in the sample size reduction from 70888 to 70171 in the 13 year period.
 
 
 ```{r select winsorized estimation sample}
@@ -986,30 +991,30 @@ for (Jb in c(2, 10)) {
     LfCEbYr <- qread(paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
     library(fixest)
-    esLfwYr <- feols(JobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
-    esLfwCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCYr)
-    esLfwCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr)
     #### Subsample: High and low concentrated markets
-    esLfwCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEaYr)
-    esLfwCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     #### Subsample: FAclass
-    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("low", FAclass), ])
-    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("mid", FAclass), ])
-    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfwCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("hi", FAclass), ])
     library(ggfixest)
@@ -1095,9 +1100,9 @@ for (Jb in c(2, 10)) {
       dpi = 300
      )
     lapply(eslistYrw, summary)
-    assign(paste0("eslist", Yr, Jb, "w"), eslistYrw)
-    assign(paste0("gFE",    Yr, Jb, "w"), gFEYrw)
-    assign(paste0("gFE",    Yr, Jb, "wLH"), gFEYrwLH)
+    assign(paste0("eslist", Yr, Jb, "w"),        eslistYrw)
+    assign(paste0("gFE",    Yr, Jb, "w"),        gFEYrw)
+    assign(paste0("gFE",    Yr, Jb, "wLH"),      gFEYrwLH)
     assign(paste0("gFE",    Yr, Jb, "wFAclass"), gFEYrwFAclass)
     qsave(estdfw, 
       paste0(pathresults, "est", Yr, Jb, "w.qs"))
