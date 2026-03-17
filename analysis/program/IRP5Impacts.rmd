@@ -80,6 +80,7 @@ We use the TWFE event sudy specification.
 ## Straight estimation
 
 ```{r select estimation sample}
+#| attr.source = '.r .line-numbers',
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -101,6 +102,11 @@ Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
 Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
 Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
+#### FAclass
+Lf[, FAclass := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+Lf[FAMP0 > .5, FAclass := "high"]
+Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 DESS <- vector(length = 2, mode = "list")
 names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
@@ -208,10 +214,6 @@ LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   taxyear, y=JobsMP, dy=dJobsMP, Share, FAMP)][1:50, ]
 ```
 ```{r examining estimation data}
-LfCYr[, FAclass := "low"]
-LfCYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
-LfCYr[FAMP0 > .5, FAclass := "high"]
-LfCYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, EstID, taxyear, 
   Crop, Animal, Forest,
@@ -220,6 +222,61 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 destatfactor(lfdata, IgnoreIfAbove = 8)
+#### desbytime <- lapply(1:10, function(yr) 
+####   data.table(t(c("time" = yr,  
+####     destat(x[time == yr, x1], prob = "odd"))))
+#### )
+#### desbyime <- rbindlist(desbytime)
+#### destat of rJobsMP by year
+desrJobsByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destat(ldfdata[taxyear == yr, rJobsMP], prob = "long"))))
+)
+desrJobsByYear <- rbindlist(desrJobsByYear)
+#### destat of HHI by year
+desHHIByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destat(ldfdata[taxyear == yr, HHI], prob = "long"))))
+)
+desHHIByYear <- rbindlist(desHHIByYear)
+#### destat of FAclass by year
+desFAclassByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destatfactor(ldfdata[taxyear == yr, FAclass], prob = "long"))))
+)
+desFAclassByYear <- rbindlist(desFAclassByYear)
+#### desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+#### deshby <- latextab.simple(
+####   as.matrix(rn=rownames(desHHIByYear), desHHIByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+#### desfby <- latextab.simple(as.matrix(desFAclassByYear), 
+####   hcenter = hcentre.long, unit = "cm")
+DesDTBy <- rbind(desrJobsByYear, desHHIByYear, desFAclassByYear)
+DesDTBy <- data.table(year = rep(2010:2022, 3), DesDTBy)
+hcentre.long <- c(3, rep(.8, 9), rep(.6, 2), .5, .3, .5)
+destblby <- latextab.simple(as.matrix(DesDTBy), 
+   hcenter = hcentre.long, unit = "cm")
+DesTblBy <- rbind(
+    destblby[1:2]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+        "}{l}{\\textit{\\footnotesize Rate of job change}}\\\\")
+  , destblby[3:15]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize HHI}}\\\\") 
+  , destblby[13+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: low}}\\\\") 
+  , destblby[13*2+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: mid}}\\\\") 
+  , destblby[13*3+(3:15)]
+  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+    "}{l}{\\textit{\\footnotesize FAclass: high}}\\\\") 
+  , destblby[(13*4+3):length(desfby)]
+)
+write.tablev(DesTblBy, paste0(pathresults, "rJobsHHIFAclassByYear.tex"))
+qsave(DesDTBy, paste0(pathresults, "rJobsHHIFAclassByYear.qs"))
 #### plot rJobsMP after dropping outliers
 lfdata.dropped <- lfdata[
   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
@@ -271,22 +328,28 @@ lfdata[, c("MeanJobsMP.lb"
         MeanrJobsMP - MeanrJobsMP.ci,
         MeanrJobsMP + MeanrJobsMP.ci)
 ]
-ggplot(data=
-  unique(lfdata[, .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
+gMean <- ggplot(data=
+  unique(lfdata[, 
+    .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-  position = position_jitter(width = .2), 
-  stat = "identity", width = .01) +
-scale_y_continuous() + 
-scale_x_continuous(breaks = 2010:2022) + 
-labs(title = "Mean job change rates by FA class") + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
-theme(
-  legend.text=element_text(size=9),
-  legend.position = "bottom"
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+    position = position_dodge(width = .1), 
+    stat = "identity", width = .01) +
+  scale_y_continuous() + 
+  scale_x_continuous(breaks = 2010:2022) + 
+  labs(title = "Mean job change rates by FA class") + 
+  guides(
+    colour = guide_legend(title = "FA classes", nrow = 1)
+    ) +
+  theme(
+    legend.text=element_text(size=9),
+    legend.position = "bottom"
+  )
+ggsave(
+  paste0(pathresults, "rJobsByFAClass.jpg")
+  , gMean, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
 )
 #### Sub-industry (imp_mic_sic7_3d) wise mean and CIs
 ####  Crop: ^Plant pro|crops
@@ -343,24 +406,38 @@ meanjbdat[[2]][, ind := "crop"]
 meanjbdat[[3]][, ind := "animal"]
 meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
-ggplot(data=mjb, 
-  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
-    fill = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-  position = position_jitter(width = .2), 
-  stat = "identity", width = .01) +
-scale_y_continuous() + 
-scale_x_continuous(breaks = 2010:2022) + 
-labs(title = "Mean job change rates by FA class and by industry") + 
-facet_grid(ind ~ .) + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
-theme(
-  legend.text=element_text(size=9),
-  legend.position = "bottom"
+gmjb <- ggplot(data=mjb, 
+    aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
+      fill = FAclass, colour = FAclass)) +
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+    position = position_dodge(width = .1), 
+    stat = "identity", width = .01) +
+  scale_y_continuous() + 
+  scale_x_continuous(breaks = 2010:2022) + 
+  labs(title = "Mean job change rates by FA class and by industry") + 
+  facet_grid(ind ~ .) + 
+  guides(
+    colour = guide_legend(title = "FA classes", nrow = 1)
+    ) +
+  theme(
+    legend.text=element_text(size=9),
+    legend.position = "bottom"
+  )
+ggsave(
+  paste0(pathresults, "rJobsBySubindustry.jpg")
+  , gmjb, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
 )
 ```
+
+::: {.fullwidth}
+```{r rjobs graphs by FAclass and by Subindustry}
+DesDTBy
+DesTblBy
+gMean
+gmjb
+```
+:::
 
 
 ```{r estimation with various Job0 and start year}
@@ -379,8 +456,10 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+
+
     library(fixest)
-    esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
     esLfCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
@@ -397,15 +476,15 @@ for (Jb in c(2, 10)) {
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEbYr)
     #### Subsample: FAclass
-    esLfCEaYrLow <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("low", FAclass), ])
-    esLfCEaYrMid <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      data = LfCEYr[grepl("low", FAclass), ])
+    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("mid", FAclass), ])
-    esLfCEaYrHigh <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+      data = LfCEYr[grepl("mid", FAclass), ])
+    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("hi", FAclass), ])
+      data = LfCEYr[grepl("hi", FAclass), ])
     library(ggfixest)
     eslistYr <-  list(
         "All sample"                               = esLfYr
@@ -413,9 +492,9 @@ for (Jb in c(2, 10)) {
       , "Existed firms, all sample"                = esLfCEYr
       , "Existed firms, high concentrated markets" = esLfCEaYr
       , "Existed firms, low concentrated markets"  = esLfCEbYr
-      , "Existed firms, low FA"                    = esLfCEbYrLow
-      , "Existed firms, mid FA"                    = esLfCEbYrMid
-      , "Existed firms, high FA"                    = esLfCEbYrHigh
+      , "Existed firms, low FA"                    = esLfCEYrLow
+      , "Existed firms, mid FA"                    = esLfCEYrMid
+      , "Existed firms, high FA"                   = esLfCEYrHigh
     )
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
@@ -448,6 +527,18 @@ for (Jb in c(2, 10)) {
         )
     ) + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+    gFEYr1 <- ggiplot(eslistYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
       paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
@@ -468,8 +559,13 @@ for (Jb in c(2, 10)) {
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
   }
 }
+```
+
+::: {.fullwidth}
+```{r 201002 results}
 gFE201002
 ```
+:::
 
 ## Winsorizing
 
@@ -488,6 +584,11 @@ Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
 print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
   order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
+#### FAclass
+Lf[, FAclass := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+Lf[FAMP0 > .5, FAclass := "high"]
+Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 #### Winsorization
 #### Establishments with abs(dJobsMP) > 2000 or 
 #### abs(rJobsMP) > 2 & JobsMP0 > 500 are dropped
