@@ -496,6 +496,8 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+
+
     library(fixest)
     esLfYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -586,6 +588,30 @@ for (Jb in c(2, 10)) {
         )
     ) + 
     ThisTheme + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+    gFEYrLH <- ggiplot(eslistYr[2:5],
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+    gFEYrFAclass <- ggiplot(eslistYr[c(3, 6:8)],
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
