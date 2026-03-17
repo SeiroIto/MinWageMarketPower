@@ -230,7 +230,7 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
   busmainplc_geo, taxrefno, EstID, taxyear, 
   Crop, Animal, Forest,
   rJobsMP, dJobsMP, JobsMP, JobsMP0, 
-  Share, FAMP, FAMP0, FAclass)])
+  HHI, Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 destatfactor(lfdata, IgnoreIfAbove = 8)
@@ -242,19 +242,19 @@ destatfactor(lfdata, IgnoreIfAbove = 8)
 #### destat of rJobsMP by year
 desrJobsByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destat(ldfdata[taxyear == yr, rJobsMP], prob = "long"))))
+    destat(lfdata[taxyear == yr, rJobsMP], prob = "long"))))
 )
 desrJobsByYear <- rbindlist(desrJobsByYear)
 #### destat of HHI by year
 desHHIByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destat(ldfdata[taxyear == yr, HHI], prob = "long"))))
+    destat(lfdata[taxyear == yr, HHI], prob = "long"))))
 )
 desHHIByYear <- rbindlist(desHHIByYear)
 #### destat of FAclass by year
 desFAclassByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destatfactor(ldfdata[taxyear == yr, FAclass], prob = "long"))))
+    destatfactor(lfdata[taxyear == yr, FAclass], prob = "long"))))
 )
 desFAclassByYear <- rbindlist(desFAclassByYear)
 #### desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
