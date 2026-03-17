@@ -433,6 +433,7 @@ ggsave(
 ::: {.fullwidth}
 ```{r rjobs graphs by FAclass and by Subindustry}
 DesDTBy
+DesTblBy
 gMean
 gmjb
 ```
