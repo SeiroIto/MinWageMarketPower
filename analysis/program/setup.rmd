@@ -13,6 +13,19 @@ options(htmltools.dir.version = FALSE, width = 100)
 MaxCores <- parallel::detectCores()
 setDTthreads(threads = MaxCores - 1)
 setFixest_nthreads(nthreads = MaxCores - 1, save = TRUE)
+#### ggplot theme
+ThisTheme <- ggplot2::theme(
+   axis.text.x = element_text(angle = 90, vjust = .5, hjust = .5), 
+   axis.text.y = element_text(size = 12), 
+   axis.title = element_text(size = 10), 
+   strip.text.x = element_text(color = "blue", size = 8, 
+     margin = margin(0, 1.25, 0, 1.25, "cm")), 
+   strip.text.y = element_text(color = "blue", size = 8, 
+     margin = margin(1.5, 0, 1.5, 0, "cm")),
+   panel.spacing.x = unit(c(.1), units = "cm"),
+   panel.spacing.y = unit(.1, units = "cm")
+)
+ThisThemeEnd <- ThisTheme + ggplot2::theme(legend.position="bottom")
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
