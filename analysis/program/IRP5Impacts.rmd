@@ -477,6 +477,8 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+
+
     library(fixest)
     esLfYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
