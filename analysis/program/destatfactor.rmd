@@ -1,7 +1,7 @@
 ```{r read functions}
 destat <- function(x, prob = "short", signif = 1, removezero = F)
 #  returns an array of descriptive statistics
-#  prob specifies quantiles, "short", "even", "odd", "very short"
+#  prob specifies quantiles, "short", "even", "odd", "very short", "long"
 {
   if (is.null(dim(x))) dim(x) <- c(length(x),1)
   if (is.null(colnames(x))) colnames(x) <- paste("v", 1:ncol(x), sepv = "")
@@ -25,6 +25,13 @@ destat <- function(x, prob = "short", signif = 1, removezero = F)
       y <- array(dim=c(ncol(x),12))
       dimnames(y) <- list(colnames(x), c("min","10\\%","25\\%","median","75\\%",
                              "90\\%","max","mean","std","0s","NAs","n"))
+    } else  if (prob=="long")
+    {
+      prob <- c(.025,.1,.25,.5,.75,.9,.975)
+      y <- array(dim=c(ncol(x),14))
+      dimnames(y) <- list(colnames(x), c("min","2.5\\%",
+        "10\\%","25\\%","median","75\\%","90\\%","97.5\\%",
+        "max","mean","std","0s","NAs","n"))
     } else  if (prob=="very short")
     {
       prob <- .5
@@ -54,7 +61,7 @@ destat <- function(x, prob = "short", signif = 1, removezero = F)
 destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIfAbove = 10)
 #  returns an array of descriptive statistics for factors/characters at all levels
 #  If gender = M, F is a factor, it gives 2 rows of gender: M, gender: F 
-#    prob: specifies quantiles, "short", "even", "odd", "very short"
+#    prob: specifies quantiles, "short", "even", "odd", "long","very short"
 #    IgnoreIfAbove: = 10, if length(levels(factor variable)) > 10, just skip
 {
   if (is.null(dim(x))) dim(x) <- c(length(x),1)
@@ -121,6 +128,13 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
       y <- array(dim=c(Nrows, 12))
       dimnames(y) <- list(AllNames,  c("min","10\\%","25\\%","median","75\\%",
                              "90\\%","max","mean","std","0s","NAs","n"))
+    } else  if (prob=="long")
+    {
+      prob <- c(.025,.1,.25,.5,.75,.9,.975)
+      y <- array(dim=c(ncol(x),14))
+      dimnames(y) <- list(colnames(x), c("min","2.5\\%",
+        "10\\%","25\\%","median","75\\%","90\\%","97.5\\%",
+        "max","mean","std","0s","NAs","n"))
     } else  if (prob=="very short")
     {
       prob <- .5

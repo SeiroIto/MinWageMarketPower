@@ -80,6 +80,7 @@ We use the TWFE event sudy specification.
 ## Straight estimation
 
 ```{r select estimation sample}
+#| attr.source = '.r .line-numbers',
 Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
@@ -220,6 +221,22 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 destatfactor(lfdata, IgnoreIfAbove = 8)
+#### desbytime <- lapply(1:10, function(yr) 
+####   data.table(t(c("time" = yr,  
+####     destat(x[time == yr, x1], prob = "odd"))))
+#### )
+#### desbyime <- rbindlist(desbytime)
+#### destat of rJobsMP by year
+desrJobsByYear <- lapply(2010:2022, function(yr) 
+  data.table(t(c(taxyear = yr,  
+    destat(ldfdata[taxyear == yr, rJobsMP], prob = "odd"))))
+)
+desrJobsByYear <- rbindlist(desrJobsByYear)
+desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
+  hcenter = c(3, rep(.8, 7), rep(.6, 2), .5, .3, .5), 
+  unit = "cm")
+write.tablev(desrjby, paste0(pathresults, "rJobsMPByYear.tex"))
+qsave(desrJobsByYear, paste0(pathresults, "rJobsMPByYear.qs"))
 #### plot rJobsMP after dropping outliers
 lfdata.dropped <- lfdata[
   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
@@ -271,22 +288,28 @@ lfdata[, c("MeanJobsMP.lb"
         MeanrJobsMP - MeanrJobsMP.ci,
         MeanrJobsMP + MeanrJobsMP.ci)
 ]
-ggplot(data=
-  unique(lfdata[, .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
+gMean <- ggplot(data=
+  unique(lfdata[, 
+    .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-  position = position_jitter(width = .2), 
-  stat = "identity", width = .01) +
-scale_y_continuous() + 
-scale_x_continuous(breaks = 2010:2022) + 
-labs(title = "Mean job change rates by FA class") + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
-theme(
-  legend.text=element_text(size=9),
-  legend.position = "bottom"
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+    position = position_dodge(width = .1), 
+    stat = "identity", width = .01) +
+  scale_y_continuous() + 
+  scale_x_continuous(breaks = 2010:2022) + 
+  labs(title = "Mean job change rates by FA class") + 
+  guides(
+    colour = guide_legend(title = "FA classes", nrow = 1)
+    ) +
+  theme(
+    legend.text=element_text(size=9),
+    legend.position = "bottom"
+  )
+ggsave(
+  paste0(pathresults, "rJobsByFAClass.jpg")
+  , gMean, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
 )
 #### Sub-industry (imp_mic_sic7_3d) wise mean and CIs
 ####  Crop: ^Plant pro|crops
@@ -343,24 +366,36 @@ meanjbdat[[2]][, ind := "crop"]
 meanjbdat[[3]][, ind := "animal"]
 meanjbdat[[4]][, ind := "forest"]
 mjb <- rbindlist(meanjbdat)
-ggplot(data=mjb, 
-  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
-    fill = FAclass, colour = FAclass)) +
-geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-  position = position_jitter(width = .2), 
-  stat = "identity", width = .01) +
-scale_y_continuous() + 
-scale_x_continuous(breaks = 2010:2022) + 
-labs(title = "Mean job change rates by FA class and by industry") + 
-facet_grid(ind ~ .) + 
-guides(
-  colour = guide_legend(title = "FA classes", nrow = 1)
-  ) +
-theme(
-  legend.text=element_text(size=9),
-  legend.position = "bottom"
+gmjb <- ggplot(data=mjb, 
+    aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
+      fill = FAclass, colour = FAclass)) +
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+    position = position_dodge(width = .1), 
+    stat = "identity", width = .01) +
+  scale_y_continuous() + 
+  scale_x_continuous(breaks = 2010:2022) + 
+  labs(title = "Mean job change rates by FA class and by industry") + 
+  facet_grid(ind ~ .) + 
+  guides(
+    colour = guide_legend(title = "FA classes", nrow = 1)
+    ) +
+  theme(
+    legend.text=element_text(size=9),
+    legend.position = "bottom"
+  )
+ggsave(
+  paste0(pathresults, "rJobsBySubindustry.jpg")
+  , gmjb, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
 )
 ```
+
+::: {.fullwidth}
+```{r rjobs graphs by FAclass and by Subindustry}
+gMean
+gmjb
+```
+:::
 
 
 ```{r estimation with various Job0 and start year}
@@ -474,8 +509,13 @@ LfCEYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
     qsave(eslistYr, paste0(pathresults, "eslist", Yr, Jb, ".qs"))
   }
 }
+```
+
+::: {.fullwidth}
+```{r 201002 results}
 gFE201002
 ```
+:::
 
 ## Winsorizing
 
