@@ -608,6 +608,7 @@ for (Jb in c(2, 10)) {
     #### eslistShort <- lapply(eslistYr
     #### scores, residuals, fitted.values, 
     assign(paste0("eslist", Yr, Jb),            eslistYr)
+    assign(paste0("gFE",    Yr, Jb),            gFEYr)
     assign(paste0("gFE",    Yr, Jb, "LH"),      gFEYrLH)
     assign(paste0("gFE",    Yr, Jb, "FAclass"), gFEYrFAclass)
     qsave(estdf, 
