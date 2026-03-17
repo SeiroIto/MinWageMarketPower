@@ -50,6 +50,18 @@ litedown::reactor(
   time = TRUE
 )
 options(htmltools.dir.version = FALSE, width = 100)
+ThisTheme <- ggplot2::theme(
+   axis.text.x = element_text(angle = 90, vjust = .5, hjust = .5), 
+   axis.text.y = element_text(size = 12), 
+   axis.title = element_text(size = 10), 
+   strip.text.x = element_text(color = "blue", size = 8, 
+     margin = margin(0, 1.25, 0, 1.25, "cm")), 
+   strip.text.y = element_text(color = "blue", size = 8, 
+     margin = margin(1.5, 0, 1.5, 0, "cm")),
+   panel.spacing.x = unit(c(.1), units = "cm"),
+   panel.spacing.y = unit(.1, units = "cm")
+)
+ThisThemeEnd <- ThisTheme + ggplot2::theme(legend.position="bottom")
 #### invalidate cache when the tufte version changes
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
@@ -456,8 +468,6 @@ for (Jb in c(2, 10)) {
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
-
-
     library(fixest)
     esLfYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -521,11 +531,9 @@ for (Jb in c(2, 10)) {
       xlab = "Tax year (March - Februray)",
       multi_style = "facet",
       geom_style = "ribbon",
-      theme = theme(
-        axis.text.x = element_text(angle = 90, vjust = .5),
-        legend.position = "none"
-        )
+      theme = theme(legend.position = "none")
     ) + 
+    ThisTheme + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     gFEYrLH <- ggiplot(eslistYr[2:5],
       ref.line = 2012, 
@@ -534,10 +542,10 @@ for (Jb in c(2, 10)) {
       multi_style = "facet",
       geom_style = "ribbon",
       theme = theme(
-        axis.text.x = element_text(angle = 90, vjust = .5),
         legend.position = "none"
         )
     ) + 
+    ThisTheme + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     gFEYrFAclass <- ggiplot(eslistYr[c(3, 6:8)],
       ref.line = 2012, 
@@ -546,10 +554,10 @@ for (Jb in c(2, 10)) {
       multi_style = "facet",
       geom_style = "ribbon",
       theme = theme(
-        axis.text.x = element_text(angle = 90, vjust = .5),
         legend.position = "none"
         )
     ) + 
+    ThisTheme + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
