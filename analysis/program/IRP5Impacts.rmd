@@ -102,6 +102,11 @@ Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
 Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
 Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
+#### FAclass
+Lf[, FAclass := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
+Lf[FAMP0 > .5, FAclass := "high"]
+Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 DESS <- vector(length = 2, mode = "list")
 names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
@@ -415,13 +420,9 @@ for (Jb in c(2, 10)) {
     LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
     LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
 
-LfCEYr[, FAclass := "low"]
-LfCEYr[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
-LfCEYr[FAMP0 > .5, FAclass := "high"]
-LfCEYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 
     library(fixest)
-    esLfYr <- feols(JobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
+    esLfYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfYr)
     esLfCYr <- feols(rJobsMP ~ i(taxyear, FAMP0, ref = 2013)|taxyear + taxrefno + busmainplc_geo, 
@@ -478,6 +479,18 @@ LfCEYr[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
       tex = TRUE
     )
     gFEYr <- ggiplot(eslistYr,
+      ref.line = 2012, 
+      main = "Job impacts: Low and high concentration",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        axis.text.x = element_text(angle = 90, vjust = .5),
+        legend.position = "none"
+        )
+    ) + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+    gFEYr1 <- ggiplot(eslistYr,
       ref.line = 2012, 
       main = "Job impacts: Low and high concentration",
       xlab = "Tax year (March - Februray)",
