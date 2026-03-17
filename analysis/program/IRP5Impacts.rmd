@@ -115,9 +115,30 @@ Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
 Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
 #### FAclass
+#### FAMP0 is first year FAMP of each establishment
+#### not necessarily pre 2013. Defined in IRP5MergeData.rmd
+#### faa[, c("FA0", "Jobs0", "FAMP0", "JobsMP0") := 
+####   list(
+####       FA[!is.na(FA) & FA != 0][1]             # FA0
+####     , Jobs[!is.na(Jobs) & Jobs != 0][1]       # Jobs0
+####     , FAMP[!is.na(FAMP) & FAMP != 0][1]      # FAMP0
+####     , JobsMP[!is.na(JobsMP) & JobsMP != 0][1] # JobsMP0
+####   ), by = 
+####   .(
+####     busprov_geo, busdistmuni_geo, 
+####     buslocmuni_geo, busmainplc_geo, taxrefno
+####   )]
+#### FAclass0: Initial year FA class (not necessarily pre-2013)
+Lf[, FAclass0 := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
+Lf[FAMP0 > .5, FAclass0 := "high"]
+Lf[, FAclass0 := factor(FAclass0, levels = c("low", "mid", "high"))]
+#### FAclass: Initial year FA class (pre-2013)
+Lf[, Pre2013FAMP := FAMP[taxyear < 2013 & !is.na(FAMP)][1], by = EstID]
 Lf[, FAclass := "low"]
-Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
-Lf[FAMP0 > .5, FAclass := "high"]
+Lf[.2 < Pre2013FAMP & Pre2013FAMP <= .5, FAclass := "mid"]
+Lf[Pre2013FAMP > .5, FAclass := "high"]
 Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 DESS <- vector(length = 2, mode = "list")
 names(DESS) <- c("02", "10")
@@ -242,21 +263,26 @@ destatfactor(lfdata, IgnoreIfAbove = 8)
 #### destat of rJobsMP by year
 desrJobsByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destat(lfdata[taxyear == yr, rJobsMP], prob = "long"))))
+    destat(lfdata[taxyear == yr, rJobsMP], prob = "odd"))))
 )
 desrJobsByYear <- rbindlist(desrJobsByYear)
 #### destat of HHI by year
 desHHIByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
-    destat(lfdata[taxyear == yr, HHI], prob = "long"))))
+    destat(lfdata[taxyear == yr, HHI], prob = "odd"))))
 )
 desHHIByYear <- rbindlist(desHHIByYear)
 #### destat of FAclass by year
 desFAclassByYear <- lapply(2010:2022, function(yr) 
-  data.table(t(c(taxyear = yr,  
-    destatfactor(lfdata[taxyear == yr, FAclass], prob = "long"))))
+  data.table(taxyear = yr,  
+    destatfactor(lfdata[taxyear == yr, FAclass], prob = "odd"))
 )
 desFAclassByYear <- rbindlist(desFAclassByYear)
+desFAclassByYear <- desFAclassByYear[c(
+      seq(1, nrow(desFAclassByYear), 3)
+    , seq(2, nrow(desFAclassByYear), 3)
+    , seq(3, nrow(desFAclassByYear), 3)
+  ), ]
 #### desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
 ####   hcenter = hcentre.long, unit = "cm")
 #### deshby <- latextab.simple(
@@ -264,28 +290,30 @@ desFAclassByYear <- rbindlist(desFAclassByYear)
 ####   hcenter = hcentre.long, unit = "cm")
 #### desfby <- latextab.simple(as.matrix(desFAclassByYear), 
 ####   hcenter = hcentre.long, unit = "cm")
-DesDTBy <- rbind(desrJobsByYear, desHHIByYear, desFAclassByYear)
-DesDTBy <- data.table(year = rep(2010:2022, 3), DesDTBy)
-hcentre.long <- c(3, rep(.8, 9), rep(.6, 2), .5, .3, .5)
+DesDTBy <- rbind(desrJobsByYear, desHHIByYear, desFAclassByYear, 
+  use.names = F)
+setnames(DesDTBy, colnames(desFAclassByYear))
+DesDTBy
+hcentre.long <- c(3, rep(.8, 7), rep(.6, 2), .5, .3, .5)
 destblby <- latextab.simple(as.matrix(DesDTBy), 
    hcenter = hcentre.long, unit = "cm")
-DesTblBy <- rbind(
+DesTblBy <- c(
     destblby[1:2]
-  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+  , paste0("\\multicolumn{", ncol(DesDTBy), 
         "}{l}{\\textit{\\footnotesize Rate of job change}}\\\\")
   , destblby[3:15]
-  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+  , paste0("\\multicolumn{", ncol(DesDTBy), 
     "}{l}{\\textit{\\footnotesize HHI}}\\\\") 
   , destblby[13+(3:15)]
-  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+  , paste0("\\multicolumn{", ncol(DesDTBy), 
     "}{l}{\\textit{\\footnotesize FAclass: low}}\\\\") 
   , destblby[13*2+(3:15)]
-  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+  , paste0("\\multicolumn{", ncol(DesDTBy), 
     "}{l}{\\textit{\\footnotesize FAclass: mid}}\\\\") 
   , destblby[13*3+(3:15)]
-  , paste0("\\multicolumn{", ncol(DesDTBy)+1, 
+  , paste0("\\multicolumn{", ncol(DesDTBy), 
     "}{l}{\\textit{\\footnotesize FAclass: high}}\\\\") 
-  , destblby[(13*4+3):length(desfby)]
+  , destblby[(13*4+3):length(destblby)]
 )
 write.tablev(DesTblBy, paste0(pathresults, "rJobsHHIFAclassByYear.tex"))
 qsave(DesDTBy, paste0(pathresults, "rJobsHHIFAclassByYear.qs"))
@@ -346,7 +374,7 @@ gMean <- ggplot(data=
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
   geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .1), 
+    position = position_dodge(width = .3), 
     stat = "identity", width = .01) +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
@@ -422,12 +450,12 @@ gmjb <- ggplot(data=mjb,
     aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
       fill = FAclass, colour = FAclass)) +
   geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .1), 
+    position = position_dodge(width = .3), 
     stat = "identity", width = .01) +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
   labs(title = "Mean job change rates by FA class and by industry") + 
-  facet_grid(ind ~ .) + 
+  facet_grid(ind ~ ., scales = "free_y") + 
   guides(
     colour = guide_legend(title = "FA classes", nrow = 1)
     ) +
@@ -616,10 +644,17 @@ Lf[EstID %in% EstID[DiffTY > 1 & taxyear <= 2020], GapInTY := 1L]
 print(Lf[Num == 1L, .(num = .N), by = .(GapInTY, taxyear)][
   order(GapInTY, taxyear), ])
 Lf[, num := 1:.N, by = .(EstID, taxyear)]
-#### FAclass
+#### FAclass0: Initial year FA class (not necessarily pre-2013)
+Lf[, FAclass0 := "low"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
+Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
+Lf[FAMP0 > .5, FAclass0 := "high"]
+Lf[, FAclass0 := factor(FAclass0, levels = c("low", "mid", "high"))]
+#### FAclass: Initial year FA class (pre-2013)
+Lf[, Pre2013FAMP := FAMP[taxyear < 2013 & !is.na(FAMP)][1], by = EstID]
 Lf[, FAclass := "low"]
-Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass := "mid"]
-Lf[FAMP0 > .5, FAclass := "high"]
+Lf[.2 < Pre2013FAMP & Pre2013FAMP <= .5, FAclass := "mid"]
+Lf[Pre2013FAMP > .5, FAclass := "high"]
 Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
 #### Winsorization
 #### Establishments with abs(dJobsMP) > 2000 or 
@@ -628,7 +663,9 @@ Lfw <- Lf[
  num == 1L & 
  !(EstID %in% EstID[
       abs(dJobsMP) > 2000 |
-     (abs(rJobsMP) > 2 & JobsMP0 > 500)])  # keep only small changes
+     (abs(rJobsMP) > 6 & JobsMP0 > 500)])  # keep only small changes
+     #### setting JobsMP0 > 200, JobsMP0 > 400 
+     #### gives the same selection as JobsMP0 > 500
  , ]
 rbind(Lf=dim(Lf), Lfw=dim(Lfw))
 Lfw[, 

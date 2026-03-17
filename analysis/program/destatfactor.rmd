@@ -154,13 +154,13 @@ destatfactor <- function(x, prob = "short", signif = 1, removezero = F, IgnoreIf
       Lvls <- levels(unlist(zn))
       #### number of rows by far = length of AllLvList[1:(ii-1)]
       rowsbyfar <- if (ii > 1)  length(unlist(AllLvList[1:(ii-1)])) else 0
-      #### number of rows to add = length(AllLvList[i])
+      #### number of rows to add = length(AllLvList[ii])
       rows2add <- length(unlist(AllLvList[[ii]]))
       for (ll in 1:rows2add) {
         znI <- as.integer(zn == Lvls[ll])
         y[rowsbyfar+ll, ] <- c(round(c(
            min(znI, na.rm=T), 
-           quantile(znI, probs=prob), 
+           quantile(znI, probs=prob, na.rm = T), 
            max(znI, na.rm=T),
            mean(znI, na.rm=T), 
            var(znI, na.rm=T)^(.5)), 
