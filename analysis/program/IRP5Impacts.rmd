@@ -255,12 +255,6 @@ lfdata <- unique(LfCYr[, .(busdistmuni_geo, buslocmuni_geo,
 rbind(Lf = dim(Lf), LfCYr = dim(LfCYr), lfdata = dim(lfdata))
 destat(lfdata)
 destatfactor(lfdata, IgnoreIfAbove = 8)
-#### desbytime <- lapply(1:10, function(yr) 
-####   data.table(t(c("time" = yr,  
-####     destat(x[time == yr, x1], prob = "odd"))))
-#### )
-#### desbyime <- rbindlist(desbytime)
-#### destat of rJobsMP by year
 desrJobsByYear <- lapply(2010:2022, function(yr) 
   data.table(t(c(taxyear = yr,  
     destat(lfdata[taxyear == yr, rJobsMP], prob = "odd"))))
@@ -283,17 +277,9 @@ desFAclassByYear <- desFAclassByYear[c(
     , seq(2, nrow(desFAclassByYear), 3)
     , seq(3, nrow(desFAclassByYear), 3)
   ), ]
-#### desrjby <- latextab.simple(as.matrix(desrJobsByYear), 
-####   hcenter = hcentre.long, unit = "cm")
-#### deshby <- latextab.simple(
-####   as.matrix(rn=rownames(desHHIByYear), desHHIByYear), 
-####   hcenter = hcentre.long, unit = "cm")
-#### desfby <- latextab.simple(as.matrix(desFAclassByYear), 
-####   hcenter = hcentre.long, unit = "cm")
 DesDTBy <- rbind(desrJobsByYear, desHHIByYear, desFAclassByYear, 
   use.names = F)
 setnames(DesDTBy, colnames(desFAclassByYear))
-DesDTBy
 hcentre.long <- c(3, rep(.8, 7), rep(.6, 2), .5, .3, .5)
 destblby <- latextab.simple(as.matrix(DesDTBy), 
    hcenter = hcentre.long, unit = "cm")
@@ -486,11 +472,6 @@ for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
 #### for (Yr in 2010) {
-####     LfYr    <- get(paste0("Lf",    Yr, Jb))
-####     LfCYr   <- get(paste0("LfC",   Yr, Jb))
-####     LfCEYr  <- get(paste0("LfCE",  Yr, Jb))
-####     LfCEbYr <- get(paste0("LfCEb", Yr, Jb))
-####     LfCEaYr <- get(paste0("LfCEa", Yr, Jb))
     LfYr    <- qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
     LfCYr   <- qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
     LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
@@ -1111,6 +1092,7 @@ for (Jb in c(2, 10)) {
     qsave(eslistYrw, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
+litedown::timing_data() 
 ```
 ::: {.fullwidth}
 ```{r 201002w results}

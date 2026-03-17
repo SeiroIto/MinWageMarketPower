@@ -15,6 +15,8 @@ output:
 ```{r, child='setup.Rmd', message = F, warning = F}
 #### setup.rmd sets eval, echo, time to T
 ```
+```{r read functions from child file, child='destatfactor.Rmd', message = F, warning = F}
+```
 
 ```{r setup, eval = F, echo = F}
 library(qs); library(data.table); library(ggplot2)
@@ -286,6 +288,7 @@ qsave(irp5pnl,
 ```
 
 ```{r merge industry code}
+#| attr.source = '.r .line-numbers',
 #### Merge industry code, taking irp5 as base
 irp5 <- qread(paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
   nthreads = 13)
@@ -319,7 +322,7 @@ for (ff in FilesToCopy)
 
 # Copy location information from other source: IRP5_Geo
 
-```{r Open the geolocation file and produce geoloc file}
+```{r Open the geolocation file and produce geoloc file, eval = F}
 library(readstata13)
 geodat <- read.dta13(paste0(path, "IRP5_Geo.dta"))
 geodat <- data.table(geodat)
@@ -371,7 +374,9 @@ for (ff in FilesToCopy)
 ```
 
 
-```{r merge irp5 GeoLF, eval = T}
+```{r merge irp5_WithRepetetiveUIDs GeoLF}
+#| attr.source = '.r .line-numbers',
+#### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
 irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
@@ -397,7 +402,8 @@ Copy from GeoLF if
 
 * `UID` and `taxrefno` are the keys
 
-```{r copy 2015 location info, eval = F, echo = F}
+```{r copy 2015 location info}
+#| attr.source = '.r .line-numbers',
 irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
   nthreads = 13))
 irp5gi[, uidtaxref := 0L]
@@ -456,7 +462,7 @@ qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
 ```
 
 
-```{r copy Bus_adr_Geo_Munic, eval = F}
+```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
 irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
   nthreads = 13))
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
@@ -478,7 +484,8 @@ If there are workers working for multiple establishments ... no problem
 * see example shown in codes, 8 entries in 2012, 2013
 
 
-```{r correcting information of IRP panel, eval = T}
+```{r correcting information of IRP panel}
+#| attr.source = '.r .line-numbers',
 #### case: taxyear = 2015, DateStart = Dec 01, 2013, DateEnd = Jan 10, 2014
 #### taxyear 2015: Mar 2014 - Feb 2015
 #### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
@@ -598,7 +605,8 @@ irp5gir[
 ]
 qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
 ```
-```{r dropping rows, eval = T}
+```{r dropping rows}
+#| attr.source = '.r .line-numbers',
 #### Note: Firms with anomalous repetetive uids (AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ) are dropped
 #### code "dropthese"
 #### Read data
@@ -679,6 +687,7 @@ qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
 Get observation pattern: IObPattern, EObPattern, FObPattern
 
 ```{r create ObPattern}
+#| attr.source = '.r .line-numbers',
 irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
 grepout <- function(str, x)
   # returns element of match (not numbers)
@@ -765,6 +774,7 @@ litedown::timing_data()
 
 
 ```{r MeanStdN of employment}
+#| attr.source = '.r .line-numbers',
 #### code: MeanStdN of employment
 #### For some reasons, it gives "cannot allocate a vector of size 36Gb..." error
 library(data.table)
@@ -782,6 +792,7 @@ fwrite(MeanStdN, paste0(pathdata, "MeanStdNOfEmployment.tsv"), sep = "\t")
 ```
 
 ```{r copy ipr5i irp5gi irp5gir irp5Clean to saveddata, eval = F}
+#| attr.source = '.r .line-numbers',
 FilesToCopy <- c(
   "irp5_MergedGeoLF.qs", 
   "irp5_CopiedLocMuniFromGeoLoc.qs", 
