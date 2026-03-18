@@ -395,7 +395,7 @@ irp5gi[, taxyear := NULL]
 if (any(grepl("i.taxyear", colnames(irp5gi)))) 
   setnames(irp5gi, "i.taxyear", "taxyear")
 qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 ```
 
 Copy from GeoLF if 
@@ -405,7 +405,7 @@ Copy from GeoLF if
 ```{r copy 2015 location info}
 #| attr.source = '.r .line-numbers',
 irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
 irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
@@ -458,15 +458,15 @@ setnames(irp5gi,
     c("buslocmuni_geo", "FillInLocMuni")
   , c("old_buslocmuni_geo", "buslocmuni_geo")) 
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 ```
 
 
 ```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
 irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 ```
 
 Copy location info
@@ -510,7 +510,7 @@ If there are workers working for multiple establishments ... no problem
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
 irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13))
+  nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
 irp5gi[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]

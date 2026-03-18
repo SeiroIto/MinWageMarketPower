@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
   margin_references = TRUE,
   #### remove leading hashes in html output
   comment = "", 
-  echo = T, cache = F, eval = T,
+  echo = F, cache = F, eval = T,
   class.source = "SeiroBenign", class.output = "SeiroLightGreen"
   )
 grepout <- function(str, x)
@@ -57,7 +57,7 @@ GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
 ```
-```{r path, echo = F}
+```{r path}
 path <- "W:/epguest/seiro_ito/"
 pathprogram <- paste0(path, "outfiles/")
 pathdata <- paste0(path, "data/")
