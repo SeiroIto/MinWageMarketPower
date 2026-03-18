@@ -140,6 +140,10 @@ Lf[, FAclass := "low"]
 Lf[.2 < Pre2013FAMP0 & Pre2013FAMP0 <= .5, FAclass := "mid"]
 Lf[Pre2013FAMP0 > .5, FAclass := "high"]
 Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
+#### Pre2013Size: Initial year Size (pre-2013)
+Lf[, Pre2013Size := Size[taxyear < 2013 & !is.na(Size)][1], by = EstID]
+Lf[, Pre2013Size := factor(Pre2013Size, 
+  levels = c("micro", "small", "medium", "large"))]
 DESS <- vector(length = 2, mode = "list")
 names(DESS) <- c("02", "10")
 DESS <- list("2010" = DESS, "2012" = DESS)
@@ -645,6 +649,10 @@ Lf[, FAclass := "low"]
 Lf[.2 < Pre2013FAMP0 & Pre2013FAMP0 <= .5, FAclass := "mid"]
 Lf[Pre2013FAMP0 > .5, FAclass := "high"]
 Lf[, FAclass := factor(FAclass, levels = c("low", "mid", "high"))]
+#### Pre2013Size: Initial year Size (pre-2013)
+Lf[, Pre2013Size := Size[taxyear < 2013 & !is.na(Size)][1], by = EstID]
+Lf[, Pre2013Size := factor(Pre2013Size, 
+  levels = c("micro", "small", "medium", "large"))]
 #### Winsorization
 #### Establishments with abs(dJobsMP) > 2000 or 
 #### abs(rJobsMP) > 2 & JobsMP0 > 500 are dropped
@@ -691,26 +699,42 @@ for (jj in 1:length(Jbs)) {
   LfwCE <- LfwC[ExistedBefore2013 == 1L, ]
   LfwCEb <- LfwCE[grepl("Be", HHILevel), ]
   LfwCEa <- LfwCE[grepl("Ab", HHILevel), ]
+  LfwCEmi <- LfwCE[grepl("mic", Pre2013Size), ]
+  LfwCEsm <- LfwCE[grepl("sma", Pre2013Size), ]
+  LfwCEme <- LfwCE[grepl("med", Pre2013Size), ]
+  LfwCEla <- LfwCE[grepl("lar", Pre2013Size), ]
   print(rbind(
       Lfw    = table(Lfw[, taxyear])
     , LfwC   = table(LfwC[, taxyear])
     , LfwCE  = table(LfwCE[, taxyear])
     , LfwCEb = table(LfwCEb[, taxyear])
     , LfwCEa = table(LfwCEa[, taxyear])
+    , LfwCEmi = table(LfwCEmi[, taxyear])
+    , LfwCEsm = table(LfwCEsm[, taxyear])
+    , LfwCEme = table(LfwCEme[, taxyear])
+    , LfwCEla = table(LfwCEla[, taxyear])
   ))
   for (yy in 1:length(Yrs)) {
     Yr <- Yrs[yy]
-    LfYr    <- Lfw[taxyear >= Yr, ]
-    LfCYr   <- LfwC[taxyear >= Yr, ]
-    LfCEYr  <- LfwCE[taxyear >= Yr, ]
-    LfCEbYr <- LfwCEb[taxyear >= Yr, ]
-    LfCEaYr <- LfwCEa[taxyear >= Yr, ]
+    LfYr      <- Lfw[taxyear >= Yr, ]
+    LfCYr     <- LfwC[taxyear >= Yr, ]
+    LfCEYr    <- LfwCE[taxyear >= Yr, ]
+    LfCEbYr   <- LfwCEb[taxyear >= Yr, ]
+    LfCEaYr   <- LfwCEa[taxyear >= Yr, ]
+    LfwCEmiYr <- LfwCEmi[taxyear >= Yr, ]
+    LfwCEsmYr <- LfwCEsm[taxyear >= Yr, ]
+    LfwCEmeYr <- LfwCEme[taxyear >= Yr, ]
+    LfwCElaYr <- LfwCEla[taxyear >= Yr, ]
     assign(paste0("Lfw",    Yr, Jb), LfYr)
-    qsave(LfYr,    paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
-    qsave(LfCYr,   paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
-    qsave(LfCEYr,  paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
-    qsave(LfCEbYr, paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
-    qsave(LfCEaYr, paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
+    qsave(LfYr,     paste0(pathdata, "Lfw",     Yr, Jb, ".qs"))
+    qsave(LfCYr,    paste0(pathdata, "LfwC",    Yr, Jb, ".qs"))
+    qsave(LfCEYr,   paste0(pathdata, "LfwCE",   Yr, Jb, ".qs"))
+    qsave(LfCEbYr,  paste0(pathdata, "LfwCEb",  Yr, Jb, ".qs"))
+    qsave(LfCEaYr,  paste0(pathdata, "LfwCEa",  Yr, Jb, ".qs"))
+    qsave(LfCEmiYr, paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"))
+    qsave(LfCEsmYr, paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"))
+    qsave(LfCEmeYr, paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"))
+    qsave(LfCElaYr, paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"))
     rm(LfCEaYr, LfCEbYr, LfCEYr)
     #### destat for each data
     #### To be specified using destat and destatfactor
@@ -963,16 +987,15 @@ ggsave(
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
-####     LfYr    <- get(paste0("Lfw",    Yr, Jb))
-####     LfCYr   <- get(paste0("LfwC",   Yr, Jb))
-####     LfCEYr  <- get(paste0("LfwCE",  Yr, Jb))
-####     LfCEbYr <- get(paste0("LfwCEb", Yr, Jb))
-####     LfCEaYr <- get(paste0("LfwCEa", Yr, Jb))
-    LfYr    <- qread(paste0(pathdata, "Lfw",    Yr, Jb, ".qs"))
-    LfCYr   <- qread(paste0(pathdata, "LfwC",   Yr, Jb, ".qs"))
-    LfCEYr  <- qread(paste0(pathdata, "LfwCE",  Yr, Jb, ".qs"))
-    LfCEbYr <- qread(paste0(pathdata, "LfwCEb", Yr, Jb, ".qs"))
-    LfCEaYr <- qread(paste0(pathdata, "LfwCEa", Yr, Jb, ".qs"))
+    LfYr     <- qread(paste0(pathdata, "Lfw",     Yr, Jb, ".qs"))
+    LfCYr    <- qread(paste0(pathdata, "LfwC",    Yr, Jb, ".qs"))
+    LfCEYr   <- qread(paste0(pathdata, "LfwCE",   Yr, Jb, ".qs"))
+    LfCEbYr  <- qread(paste0(pathdata, "LfwCEb",  Yr, Jb, ".qs"))
+    LfCEaYr  <- qread(paste0(pathdata, "LfwCEa",  Yr, Jb, ".qs"))
+    LfCEmiYr <- qread(paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"))
+    LfCEsmYr <- qread(paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"))
+    LfCEmeYr <- qread(paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"))
+    LfCElaYr <- qread(paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"))
     library(fixest)
     esLfwYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
@@ -1000,6 +1023,19 @@ for (Jb in c(2, 10)) {
     esLfwCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("hi", FAclass), ])
+    #### Subsample: Size
+    esLfwCEYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr[grepl("mi", Pre2013Size), ])
+    esLfwCEYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr[grepl("sm", Pre2013Size), ])
+    esLfwCEYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr[grepl("me", Pre2013Size), ])
+    esLfwCEYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEYr[grepl("la", Pre2013Size), ])
     library(ggfixest)
     eslistYrw <-  list(
         "All sample"                               = esLfwYr
@@ -1010,6 +1046,10 @@ for (Jb in c(2, 10)) {
       , "Existed firms, low FA"                    = esLfwCEYrLow
       , "Existed firms, mid FA"                    = esLfwCEYrMid
       , "Existed firms, high FA"                   = esLfwCEYrHigh
+      , "Existed firms, micro size"                = esLfwCEYrmi
+      , "Existed firms, small size"                = esLfwCEYrsm
+      , "Existed firms, medium size"               = esLfwCEYrme
+      , "Existed firms, large size"                = esLfwCEYrla
     )
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
@@ -1018,19 +1058,31 @@ for (Jb in c(2, 10)) {
       , "busmainplc_geo" = "Main Place"
     )
     setFixest_dict(dict = dictvec, reset = FALSE)
-    estdfw <- etable(eslistYrw, 
+    estdfw <- etable(eslistYrw[1:8], 
       style.df = style.df(
         depvar.title = "Number of jobs", 
         fixef.title = "Fixed effects", 
         fixef.suffix = " FEs", 
         yesNo = "yes")
     )
-    estltxw <- etable(eslistYrw, 
+    estdfwSize <- etable(eslistYrw[c(3, 9:12)], 
+      style.df = style.df(
+        depvar.title = "Number of jobs", 
+        fixef.title = "Fixed effects", 
+        fixef.suffix = " FEs", 
+        yesNo = "yes")
+    )
+    estltxw <- etable(eslistYrw[1:8], 
       style.tex = style.tex("aer"), 
       fitstat = ~ r2 + n, 
       tex = TRUE
     )
-    gFEYrw <- ggiplot(eslistYrw,
+    estltxwSize <- etable(eslistYrw[c(3, 9:12)], 
+      style.tex = style.tex("aer"), 
+      fitstat = ~ r2 + n, 
+      tex = TRUE
+    )
+    gFEYrw <- ggiplot(eslistYrw[1:8],
       ref.line = 2012, 
       main = "Job impacts: Low and high concentration, winsorized data",
       xlab = "Tax year (March - Februray)",
@@ -1066,6 +1118,18 @@ for (Jb in c(2, 10)) {
     ) + 
     ThisTheme + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
+    gFEYrwSize <- ggiplot(eslistYrw[c(3, 9:12)],
+      ref.line = 2012, 
+      main = "Job impacts: Size in pre-2013, winsorized data",
+      xlab = "Tax year (March - Februray)",
+      multi_style = "facet",
+      geom_style = "ribbon",
+      theme = theme(
+        legend.position = "none"
+        )
+    ) + 
+    ThisTheme + 
+    scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
     if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
     paste0(pathresults, "Results", Yr, "-2022Job", Jb, "w.jpg")
@@ -1082,15 +1146,25 @@ for (Jb in c(2, 10)) {
       , gFEYrwFAclass, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
+    ggsave(
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "Sizew.jpg")
+      , gFEYrwSize, width = 8*2, height = 4*2, units = "cm",
+      dpi = 300
+     )
     lapply(eslistYrw, summary)
     assign(paste0("eslist", Yr, Jb, "w"),        eslistYrw)
     assign(paste0("gFE",    Yr, Jb, "w"),        gFEYrw)
     assign(paste0("gFE",    Yr, Jb, "wLH"),      gFEYrwLH)
     assign(paste0("gFE",    Yr, Jb, "wFAclass"), gFEYrwFAclass)
+    assign(paste0("gFE",    Yr, Jb, "wSize"),    gFEYrwSize)
     qsave(estdfw, 
       paste0(pathresults, "est", Yr, Jb, "w.qs"))
+    qsave(estdfwSize, 
+      paste0(pathresults, "est", Yr, Jb, "wSize.qs"))
     write.tablev(estltxw, 
       paste0(pathresults, "est", Yr, Jb, "w.tex"))
+    write.tablev(estltxwSize, 
+      paste0(pathresults, "est", Yr, Jb, "wSize.tex"))
     qsave(eslistYrw, paste0(pathresults, "eslist", Yr, Jb, "w.qs"))
   }
 }
