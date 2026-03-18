@@ -109,10 +109,19 @@ print(Lf[num == 1L, ][,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear])
+#### HHI grouping (first year)
+Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel0 := "Below"]
+Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel0 := "Above"]
+Lf[, HHILevel0 := factor(HHILevel0)]
 #### HHI grouping (pre-2013)
-Lf[, HHI0 := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
-Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
-Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+Lf[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
+Lf[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel := "Below"]
+Lf[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
 #### FAclass
 #### FAMP0 is first year FAMP of each establishment
@@ -668,12 +677,19 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
-#### HHI grouping
-Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-HH0Median <- median(Lf[taxyear == 2012, HHI0], na.rm = T)
+#### HHI grouping (first year)
 Lfw[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lfw[HHI0 <= HH0Median, HHILevel := "Below"]
-Lfw[HHI0 >  HH0Median, HHILevel := "Above"]
+Lfw[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel0 := "Below"]
+Lfw[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel0 := "Above"]
+Lfw[, HHILevel0 := factor(HHILevel0)]
+#### HHI grouping (pre-2013)
+Lfw[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
+Lfw[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel := "Below"]
+Lfw[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel := "Above"]
 Lfw[, HHILevel := factor(HHILevel)]
 DESSw <- vector(length = 2, mode = "list")
 names(DESSw) <- c("02", "10")
@@ -979,35 +995,12 @@ ggsave(
   , gmjbw, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
 )
-#### HHI at main place level
-gMeanh <- ggplot(data=
-  unique(lfwdata[, 
-    .(taxyear, , MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
-  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
-    fill = FAclass, colour = FAclass)) +
-  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .3), 
-    stat = "identity", width = .01) +
-  scale_y_continuous() + 
-  scale_x_continuous(breaks = 2010:2022) + 
-  labs(title = "Mean job change rates by FA class") + 
-  guides(
-    colour = guide_legend(title = "FA classes", nrow = 1)
-    ) +
-  theme(
-    legend.text=element_text(size=9),
-    legend.position = "bottom"
-  )
-ggsave(
-  paste0(pathresults, "rJobsByFAClass_w.jpg")
-  , gMeanw, width = 8*2, height = 4*2, units = "cm",
-  dpi = 300
-)
 
 ```
 
 ```{r show job trends in winsorized data}
 gmjbw
+
 ```
 
 ```{r estimation with winsorized data}
