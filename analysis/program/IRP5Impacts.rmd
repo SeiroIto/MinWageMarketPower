@@ -109,10 +109,19 @@ print(Lf[num == 1L, ][,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear])
-#### HHI grouping
+#### HHI grouping (first year)
 Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
-Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
+Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel0 := "Below"]
+Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel0 := "Above"]
+Lf[, HHILevel0 := factor(HHILevel0)]
+#### HHI grouping (pre-2013)
+Lf[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
+Lf[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel := "Below"]
+Lf[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
 #### FAclass
 #### FAMP0 is first year FAMP of each establishment
@@ -670,12 +679,19 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
-#### HHI grouping
-Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-HH0Median <- median(Lf[taxyear == 2012, HHI0], na.rm = T)
+#### HHI grouping (first year)
 Lfw[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lfw[HHI0 <= HH0Median, HHILevel := "Below"]
-Lfw[HHI0 >  HH0Median, HHILevel := "Above"]
+Lfw[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel0 := "Below"]
+Lfw[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel0 := "Above"]
+Lfw[, HHILevel0 := factor(HHILevel0)]
+#### HHI grouping (pre-2013)
+Lfw[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
+Lfw[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
+  HHILevel := "Below"]
+Lfw[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
+  HHILevel := "Above"]
 Lfw[, HHILevel := factor(HHILevel)]
 DESSw <- vector(length = 2, mode = "list")
 names(DESSw) <- c("02", "10")
@@ -789,7 +805,7 @@ lfwdata <- unique(LfwC[taxyear >= 2010,
    busmainplc_geo, taxrefno, EstID, taxyear, 
    Crop, Animal, Forest,
    rJobsMP, dJobsMP, JobsMP, JobsMP0, 
-   HHI, Share, FAMP, FAMP0, FAclass)])
+   HHI, Pre2013HHI, Pre2013FAMP0, Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lfw), LfCYr = dim(LfwC), lfdata = dim(lfwdata))
 destat(lfwdata)
 destatfactor(lfwdata, IgnoreIfAbove = 8)
@@ -981,6 +997,12 @@ ggsave(
   , gmjbw, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
 )
+
+```
+
+```{r show job trends in winsorized data}
+gmjbw
+
 ```
 
 ```{r estimation with winsorized data}
@@ -1137,17 +1159,17 @@ for (Jb in c(2, 10)) {
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "LowHighw.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wLowHigh.jpg")
       , gFEYrwLH, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "FAclassw.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wFAclass.jpg")
       , gFEYrwFAclass, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "Sizew.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wSize.jpg")
       , gFEYrwSize, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
@@ -1175,6 +1197,7 @@ litedown::timing_data()
 gFE201002w
 gFE201010wLH
 gFE201010wFAclass
+gFE201010wSize
 ```
 :::
 
