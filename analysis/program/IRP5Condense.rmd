@@ -718,7 +718,7 @@ idyrW <- reshape(Idyr, direction = "wide",
     "FirmIDTx", "FirmID", "EstabIDTx", "EstabID", "IndID"),
   timevar = "taxyear", v.names= c("Ob"))
 for (jj in grep("Ob", colnames(idyrW)))
-  for (ii in which(is.na(idyrW[, jj])) 
+  for (ii in which(is.na(idyrW[, jj]))) 
     set(idyrW, i = ii, j = jj, value = 0L)
 cols <- grepout("Ob", colnames(idyrW))
 #### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
