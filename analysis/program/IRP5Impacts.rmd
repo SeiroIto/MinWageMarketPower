@@ -109,8 +109,8 @@ print(Lf[num == 1L, ][,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear])
-#### HHI grouping
-Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
+#### HHI grouping (pre-2013)
+Lf[, HHI0 := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
 Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Below"]
 Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T), HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
@@ -787,7 +787,7 @@ lfwdata <- unique(LfwC[taxyear >= 2010,
    busmainplc_geo, taxrefno, EstID, taxyear, 
    Crop, Animal, Forest,
    rJobsMP, dJobsMP, JobsMP, JobsMP0, 
-   HHI, Share, FAMP, FAMP0, FAclass)])
+   HHI, Pre2013HHI, Pre2013FAMP0, Share, FAMP, FAMP0, FAclass)])
 rbind(Lf = dim(Lfw), LfCYr = dim(LfwC), lfdata = dim(lfwdata))
 destat(lfwdata)
 destatfactor(lfwdata, IgnoreIfAbove = 8)
@@ -979,6 +979,35 @@ ggsave(
   , gmjbw, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
 )
+#### HHI at main place level
+gMeanh <- ggplot(data=
+  unique(lfwdata[, 
+    .(taxyear, , MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
+  aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
+    fill = FAclass, colour = FAclass)) +
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
+    position = position_dodge(width = .3), 
+    stat = "identity", width = .01) +
+  scale_y_continuous() + 
+  scale_x_continuous(breaks = 2010:2022) + 
+  labs(title = "Mean job change rates by FA class") + 
+  guides(
+    colour = guide_legend(title = "FA classes", nrow = 1)
+    ) +
+  theme(
+    legend.text=element_text(size=9),
+    legend.position = "bottom"
+  )
+ggsave(
+  paste0(pathresults, "rJobsByFAClass_w.jpg")
+  , gMeanw, width = 8*2, height = 4*2, units = "cm",
+  dpi = 300
+)
+
+```
+
+```{r show job trends in winsorized data}
+gmjbw
 ```
 
 ```{r estimation with winsorized data}
@@ -1135,17 +1164,17 @@ for (Jb in c(2, 10)) {
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "LowHighw.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wLowHigh.jpg")
       , gFEYrwLH, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "FAclassw.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wFAclass.jpg")
       , gFEYrwFAclass, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
     ggsave(
-      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "Sizew.jpg")
+      paste0(pathresults, "Results", Yr, "-2022Job", Jb, "wSize.jpg")
       , gFEYrwSize, width = 8*2, height = 4*2, units = "cm",
       dpi = 300
      )
@@ -1173,6 +1202,7 @@ litedown::timing_data()
 gFE201002w
 gFE201010wLH
 gFE201010wFAclass
+gFE201010wSize
 ```
 :::
 
