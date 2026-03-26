@@ -250,10 +250,126 @@ Three ways to proceed
 
 ## IRP5HHI.rmd
 
-## IRP5MwergeData.rmd
+1. Fraction affected
+   * Compute job duration and monthly income
+   
+       (DateEnd-DateStart2012)/30.5
+       a3601_income/DurationMonth
+       ipyrc[, DateStart20yr := DateStart]
+  #### If DateStart is before start of taxyear, March 1 
+  ####  ==> DateStart20yr = March 1 of taxyear-1
+
+  #### DateStart too old for some rows (typo for previous year or actual starting dates)  
+  ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
+  ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
+  #### DurationMonth == DurMonthMarch for these entries
+  #### Threshold is set to 20 because typo for prev Ma 1 will give DurationMonth==24
+  print(ipyrc[DurationMonth > 20, 
+      .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+  ipyrc[DurationMonth > 20, DurationMonth := DurMonthMarch]
+  ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
+
+```{normalcode, warning = F}
+  #### If job2 after job1 ends: 
+  #### Double work duration: DateEnd  - DateStart2
+  ####  Total work duration: DateEnd2 - DateStart20yr
+  ####  <----job1---->
+  ####           <----job2---->
+  ####  DateStart20yr < DateStart2
+  ####  DateEnd < DateEnd2
+  ####  DateEnd > DateStart2
+  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+    DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
+    #### Negative TDurationMonth for 35 entries for 2012 
+    #### because their reported DateEnd2 is before 2011/03/01
+  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+    TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
+  #### If job2 ends before job1 ends: 
+  #### Double work duration: DateEnd2 - DateStart2
+  ####  Total work duration: DateEnd  - DateStart20yr
+  ####  <----------job1---------->
+  ####           <----job2---->
+  ####  DateStart20yr < DateStart2
+  ####  DateEnd > DateEnd2
+  ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
+  ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
+  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+         DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
+  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+         TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
+  #### TDurationMonth = Total duration of jobs
+  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+    by = .(Txrf, taxyear, UID)]
+  ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+  ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
+  ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
+  #### TIncomeMonth = sum of monthly income across jobs
+  ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
+```
+
+* Find sub MW workers and define fraction affected
+   * Sums (Jobs, NumSubMW, etc.) counts total in two levels
+      a) Firm (Txrf):                good: more obs, bad: not granular
+      a) Establishment (Main Place): good: granular, bad: fewer obs
+
+PropToMW
+: Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
+
+SubMW
+: PropToMW < 1 & IncomeMonth > 0
+
+NumSubMW 
+: number of entries with SubMW == 1L
+
+NumSubMWe
+: number of unique UID entries with SubMW == 1L
+
+Jobs
+: number of entries with IncomeMonth > 0
+
+Employees
+: number of unique UID with IncomeMonth > 0
+
+FA
+: NumSubMW/Jobs (FA in jobs)
+
+FAe
+: NumSubMWe/Employees (FA in employment)
+
+
+1. HHI
+
+
+## IRP5MergeData.rmd
 
 ## IRP5Impacts.rmd
 
+1. Select (winsorized) sample
+
+1. Des stat of the sample
+
+1. Estimation and result plots
+   * All sample (esLfwYr), 
+   * Complete panel(esLfwCYr), 
+   * all sample (esLfwCEYr), 
+   * high concentrated market (esLfwCEaYr), 
+   * low concentrated market (esLfwCEbYr), 
+   * low F (esLfwCEYrLow), 
+   * mid F (esLfwCEYrMid), 
+   * high F (esLfwCEYrHigh), 
+   * micro size (esLfwCEYrmi), 
+   * small size (esLfwCEYrsm), 
+   * medium size (esLfwCEYrme), 
+   * large size (esLfwCEYrla), 
+   * high HHI and micro size (esLfwCEaYrmi), 
+   * high HHI and small size (esLfwCEaYrsm), 
+   * high HHI and medium size (esLfwCEaYrme), 
+   * high HHI and large size (esLfwCEaYrla), 
+   * low HHI and micro size (esLfwCEbYrmi), 
+   * low HHI and small size (esLfwCEbYrsm), 
+   * low HHI and medium size (esLfwCEbYrme), 
+   * low HHI and large size (esLfwCEbYrla
+   
 
 
 # Task sequence
