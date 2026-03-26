@@ -1,9 +1,17 @@
 ---
 title: "Read me for tasks using R"
 date: "`{r} format(Sys.time(), "%Y-%b-%d %R")`"
-output: html_document
+output: 
+  litedown::html_format:
+    meta:
+      css: ["MyCSS.css", "@default", "@tabsets", "@copy-button", "@callout"]
+      js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button", "@callout"]
+    options:
+      toc: true
 #### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/ReadMe.rmd"))
+#### setwd(path <- "c:/data/MinWageMarketPower/analysis/program/"); litedown::fuse(paste0(path, "ReadMe.rmd"))
 ---
+
 
 # Current challenge
 
@@ -16,6 +24,237 @@ Three ways to proceed
 1. Add location (Local Municipality) information from new version of firm panel
 1. Use HHI from later years (taxyear 2013, which is immediately before the increase in MW)
    * By doing this, 10.9M rows are saved from deletion
+
+::: {.side .side-left}
+**Anything** on the left.
+:::
+::: {.side .side-right}
+**Anything** on the right.
+:::
+
+
+# Tasks done 
+
+## IRP5Condense.rmd
+
+1. Read IRP5 data
+    * Stack up to form a panel (irp508, ..., irp522 &rarr; irp5pnl)
+    * Merge: irp5pnl + ind &rarr; irp5i
+    * Produce firm-establishment level entries: irp5i &rarr; smallirp5
+
+    <details><summary>Details</summary>
+
+    * Stack up to form a panel (irp508, ..., irp522 &rarr; irp5pnl)
+    * Merge: irp5pnl + ind &rarr; irp5i
+
+        > irp5i <- IndustryCode[irp5pnl, on = "taxrefno"]
+    * Produce firm-establishment level entries: irp5i &rarr; smallirp5
+
+        > smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)] 
+       * <span style="color: red;">Do not use payereferenceno,</span> because it has many errors (same value for different location when it is supoosed to be a branch ID)
+       * **Should be:** 
+   
+           > smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), c(geovars, "taxrerfno")])
+    </details> 
+
+2. Read geolocation file
+    * IRP5_Geo.dta &rarr; geodat
+    * geodat[taxyear==2015, ] &rarr; geoloc
+
+1. Construct firm-establishment-location data: Merge geolocation file + firm-establishment entries
+    * Merge: smallirp5[geoloc, on = "payereferenceno"] &rarr; GeoLF
+    * First entries by irp5it3aid in GeoLF &rarr; GeoLF.nodup
+       * irp5it3aid: Individual tax returns ID (changes by year for same individual)
+
+    <details><summary>Details</summary>
+
+    * Merge: smallirp5[geoloc, on = "payereferenceno"] &rarr; GeoLF
+ 
+       > GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
+
+        * <span style="color: red;">Do not use payereferenceno</span>
+       * **Should be:** 
+   
+           > GeoLF <- smallirp5[geoloc, on = c(geovars, "taxrerfno")]
+     * First entries by irp5it3aid in GeoLF &rarr; GeoLF.nodup
+       * irp5it3aid: Individual tax returns ID (changes by year for same individual)
+
+       > GeoLF[, dup := 1:.N, by = irp5it3aid]
+       > 
+       > GeoLF.nodup <- GeoLF[dup == 1L, ]
+    </details> 
+
+4. Copy geolocation info: GeoLF.nodup + irp5i &rarr; irp5gi
+
+    <details><summary>Details</summary>
+
+    * GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")] &rarr; irp5gi
+
+        > irp5gi <- GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
+
+       * <span style="color: red;">Do not use payereferenceno</span>
+       * **Should be:** 
+   
+           > GeoLF.nodup[irp5i, on = c(geovars, "irp5it3aid", "taxrerfno")]
+    * Fill geolocation info if: SouldFill == 1L & CanFill == 1L
+       * NoLocMuni: NA in local municipality info
+       * CanFill: NonNA in local municipality info copied from geolocation
+
+           > irp5gi[Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic), 
+           > CanFill := 1L]
+       * ShouldFill == 1L if NoLocMuni == 1L & CanFill == 1L
+       * Copy to FillInLocMuni: First entry of CanFill == 1L within same uidtaxref if SouldFill == 1L for years before 2015
+
+        > irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
+        > 
+        >   FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], by = uidtaxref]
+
+        ::: {.callout-note data-legend="Information"}
+        * Could have been taxyear == 2015 because we are copying the 2015 info in the next section
+        
+        > bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)
+        
+        But some entities may be missing in 2015 but present in 2014 so copy to 2008-2015
+        :::
+
+    </details>
+
+    * irp5gi is saved as irp5_CopiedLocMuniFromGeoLoc.qs
+
+
+5. Drop inconsistent entries, copy location info
+   * Keep revision reporting rows, drop original rows &rarr; irp5gir
+      * Flag/drop to-be-revised rows DropThisForRev == 1L
+      
+    <details><summary>Details</summary>
+      ::: {.side .side-right}
+      css is applied to normalcode code block inside `<details></details>` as long as start of the line space is set correctly   ]
+      :::
+
+    > irp5gir <- irp5gi[DropThisForRev == 0L, ]
+
+      * Revision reporting for previous years (job start/end dates are of previous years)
+      * So this typically comes in job durations with negative (job ended in a previous year) or too long (job started in a previous year) 
+      
+          ```{normalcode, warning = F}
+             TrueTaxYear taxyear
+           1       2010    2010
+           2       2011    2011 * need to drop this 1
+           3       2011    2012 
+           4       2012    2012 * need to drop this 2
+           5       2012    2013 
+          ```
+          taxyear == TrueTaxYear[TrueTaxYear != taxyear] &rArr; lines 2 and 4 are flagged as DropThisForRev
+          ```{normalcode, warning = F}
+             TrueTaxYear taxyear
+           1       2010    2010
+           2       2011    2011 ** flagged 1
+           3       2011    2012 
+           4       2012    2012 ** flagged 2
+           5       2012    2013 
+          ```
+          which now becomes
+          ```{normalcode, warning = F}
+             TrueTaxYear taxyear      rev
+           1       2010    2010  ==> 2010
+           3       2011    2012  ==> 2011
+           5       2012    2013  ==> 2012
+          ```
+          
+          Changed names as
+          
+          > setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+    </details>
+
+   * Copy: busprov_geo[taxyear 2015] &rarr; bprov15 &rarr; empty busprov_geo[<= 2014]
+      * Previous steps copied only local municipality info (2015 &rarr; 2014 and earlier)
+      * This step copies all levels of geolocation info (2015 &rarr; 2014 and earlier)
+
+    <details><summary>Details</summary>
+
+    * Save original entries in `orig.bprov`
+    
+    > irp5gir[, orig.bprov := busprov_geo]
+    * Within UID, copy: busprov_geo of 2015 &rarr; bprov15 &rarr; busprov_geo of 2014/earlier only if empty
+   
+    > irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+    
+    > irp5gir[
+    >   taxyear <= 2014 &
+    >   (busprov_geo == "" | is.na(busprov_geo) | busprov_geo == "EXCEPTION") & 
+    >   (bprov15 != "" & !is.na(bprov15) & bprov15 != "EXCEPTION"), 
+    >    c("busprov_geo", "ProvCopied", "LocInfoCopiedFrom") 
+    >    := .(bprov15, 1L, 2015L)]
+
+    * Copy location information of 2015 &rarr; 2008-2014 if local municipality info is NA before 2015 and nonNA in 2015 
+    
+    > irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+    
+    
+    > irp5gir[taxyear <= 2014 &
+    > 
+    >   (buslocmuni_geo == "" | is.na(buslocmuni_geo) | buslocmuni_geo == "EXCEPTION") & 
+    > 
+    > (bloc15 != "" & !is.na(bloc15) & bloc15 != "EXCEPTION"),
+    > 
+    > c("buslocmuni_geo",  "LocCopied", "LocInfoCopiedFrom") := .(bloc15,  1L, 2015L)]
+
+    </details>
+
+1. Drop entries with repetetive taxrefno: irp5gir &rarrl irp5Clean
+
+   * Repetetive: [A-Z]*8
+   * Add 15 year observation pattern: 111111111111111, 1110..0, 1011..1, 0111..1, etc.
+
+    <details><summary>Details</summary>
+
+    * Repetetive: [A-Z]*8
+
+    > repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]
+
+    Firms with repetetive uids and their counts
+    
+    > tb <- table(ipyr[uid %in% repetetive, taxrefno])
+    
+    Drop
+    
+    > dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & 
+    >   uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid],  ]
+    >
+    > irp5gir <- irp5gir[grepl("A", NatureOfPer), ]
+    >
+    > irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+
+    * Add 15 year observation pattern: 111111111111111, 1110..0, 1011..1, 0111..1, etc.
+
+    ```{normalcode, warning = F}
+    for (jj in grep("Ob", colnames(idyrW)))
+      for (ii in which(is.na(idyrW[, jj])))
+        set(idyrW, i = ii, j = jj, value = 0L)
+    cols <- grepout("Ob", colnames(idyrW))
+    idyrW[, IObPattern := paste(.SD, sep = "", collapse = ""), 
+     .SDcols = cols]
+    ```
+    </details>
+
+<!--
+```{normalcode, warning = F}
+ TrueTaxYear taxyear      rev
+1       2010    2010  ==> 2010
+3       2011    2012  ==> 2011
+5       2012    2013  ==> 2012
+```
+-->
+
+
+
+## IRP5HHI.rmd
+
+## IRP5MwergeData.rmd
+
+## IRP5Impacts.rmd
+
+
 
 # Task sequence
 
@@ -55,7 +294,7 @@ Process files in the following order
    * Decriptive statistics shows anomaly in number of jobs reported, too many and too few in 2009-2012
       * This is because we are selecting on firms with location information
       * Unconditional number of jobs looks good for all years
-         * Many NAs in location info in early years &rArr; loss of sample in early years
+         * Many NAs in location info in early years &rarr; loss of sample in early years
       * Computing FA does not require location information, so FA can serve as the base of estimation data
    * Three ways to proceed
       1. Use selective sample with location information for whole periods

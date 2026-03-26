@@ -343,7 +343,8 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 
 ```{r smallirp5, eval = F}
 irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
-smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
+#### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
+smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), c(geovars, "taxrerfno")])
 smallirp5 <- smallirp5[!duplicated(smallirp5), ]
 qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 ```
@@ -351,10 +352,13 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 ```{r GeoLF, eval = F}
 geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
 smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
-setkey(geoloc, payereferenceno)
-setkey(smallirp5, payereferenceno)
-GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
-qsave(GeoLF,paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+#### setkey(geoloc, payereferenceno)
+#### setkey(smallirp5, payereferenceno)
+#### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
+setkey(geoloc, c(geovars, "taxrefno"))
+setkey(smallirp5, c(geovars, "taxrefno"))
+GeoLF <- smallirp5[geoloc, on = c(geovars, "taxrefno")]
+qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
 
@@ -381,15 +385,16 @@ irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
-GeoLF <- GeoLF[dup == 1L, ]
-GeoLF[, dup := NULL]
-irp5gi <- GeoLF[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
-colnames(GeoLF)
-rbind(GeoLF=dim(GeoLF), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
+GeoLF.nodup <- GeoLF[dup == 1L, ]
+GeoLF.nodup[, dup := NULL]
+#### irp5gi <- GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
+irp5gi <- GeoLF.nodup[irp5i, on = c(geovars, "irp5it3aid", "taxrefno")]
+colnames(GeoLF.nodup)
+rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
 colnames(irp5gi)
 table(irp5gi[, taxyear], useNA = "ifany")
 table(irp5gi[, i.taxyear], useNA = "ifany")
-table(GeoLF[, taxyear], useNA = "ifany")
+table(GeoLF.nodup[, taxyear], useNA = "ifany")
 table(irp5i[, taxyear], useNA = "ifany")
 irp5gi[, taxyear := NULL]
 if (any(grepl("i.taxyear", colnames(irp5gi)))) 
