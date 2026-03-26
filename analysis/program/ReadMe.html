@@ -3,117 +3,87 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="generator" content="litedown 0.7">
+<meta name="generator" content="litedown 0.9.2">
 <title>Read me for tasks using R</title>
 <style type="text/css">
+main {
+  max-width: none;
+  margin-left: 80px;
+  margin-right: 40px;
+  background-color: pink;
+}
+/* 1. background color for the page */
 body {
-  font-family: sans-serif;
-  max-width: 800px;
-  margin: auto;
-  padding: 1em;
-  line-height: 1.5;
-  print-color-adjust: exact;
-  -webkit-print-color-adjust: exact;
-}
-body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
-li li { font-size: .95em; }
-ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
-*, :before, :after { box-sizing: border-box; }
-a { color: steelblue; }
-pre, img { max-width: 100%; }
-pre { white-space: pre-wrap; word-break: break-word; }
-pre code { display: block; padding: 1em; overflow-x: auto; }
-code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
-:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
-pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
-pre > code {
-  &.message { border-color: #9eeaf9; }
-  &.warning { background: #fff3cd; border-color: #fff3cd; }
-  &.error { background: #f8d7da; border-color: #f8d7da; }
-}
-.fenced-chunk { border-left: 1px solid #666; }
-.code-fence {
-  opacity: .4;
-  border: 1px dashed #666;
-  border-left: 2px solid;
-  &:hover { opacity: inherit; }
-}
-.box, .figure, .table, table { margin: 1em auto; }
-div > .caption { padding: 1px 1em; }
-.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
-.flex-col { display: flex; justify-content: space-between; }
-table {
-  &:only-child:not(.table > *) { margin: auto; }
-  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
-  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
-  thead th { border-bottom: 1px solid #ddd; }
-  &:not(.datatable-table) {
-    border-top: 1px solid #666;
-    border-bottom: 1px solid #666;
-  }
-}
-blockquote {
-  color: #666;
-  margin: 0;
-  padding: 1px 1em;
-  border-left: .5em solid #eee;
-}
-hr, .footnotes::before { border: 1px dashed #ddd; }
-.frontmatter { text-align: center; }
-#TOC {
-  a { text-decoration: none; }
-  ul { list-style: none; padding-left: 1em; }
-  & > ul { padding: 0; }
-  ul ul { border-left: 1px solid lightsteelblue; }
-}
-.body h2 { border-bottom: 1px solid #666; }
-.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
-.main-number::after { content: "."; }
-span[class^="ref-number-"] { font-weight: bold; }
-.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
-.cross-ref-chp::before { content: "Chapter "; }
-.cross-ref-sec::before { content: "Section "; }
-.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
-.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
-.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
-.abstract, #refs {
-  &::before { display: block; margin: 1em auto; font-weight: bold; }
-}
-.abstract::before { content: "Abstract"; text-align: center; }
-#refs::before { content: "Bibliography"; font-size: 1.5em; }
-.ref-paren-open::before { content: "("; }
-.ref-paren-close::after { content: ")"; }
-.ref-semicolon::after { content: "; "; }
-.ref-and::after { content: " and "; }
-.ref-et-al::after { content: " et al."; font-style: italic; }
-.footnote-ref a {
-  &::before { content: "["; }
-  &::after { content: "]"; }
-}
-section.footnotes {
-  margin-top: 2em;
-  &::before { content: ""; display: block; max-width: 20em; }
-}
-.fade {
-  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
-  opacity: 0.6;
+  margin-left: 80px;
+  background-color: #fff9e6; 
 }
 
-@media print {
-  body { max-width: 100%; }
-  tr, img { break-inside: avoid; }
+/* Default height of a block */
+pre {
+  max-height: 1000px;
+  overflow-y: auto;
 }
-@media only screen and (min-width: 992px) {
-  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+/* 2. Background color ONLY for the R Source Code blocks */
+pre code[class*="language-"] {
+  background-color: #fff9e6; /* A light brown box */
+  color: black;            /* Light text */
+  display: block;
+  padding: 1px;
+  border: 2px solid white;
+  border-radius: 1px;
 }
+/* 3. Background color ONLY for the R Output blocks */
+pre code:not([class*="language-"]) {
+  background-color: white; /* White background for the output */
+  color: black;            /* Dark text */
+  display: block;
+  padding: 10px;
+  border-left: 20px solid blue; /* Optional: A nice blue accent line on the left */
+  border-radius: 4px;
+}
+pre code[class*="language-normalcode"] {
+  background-color: white;
+  color: black;            /* Light text */
+  display: block;
+  padding: 1px;
+  border: 1px solid white;
+  border-radius: 15px;
+}
+table {
+  background-color: white;
+}
+.side-left {
+  width: 180px;
+  float: left;
+  margin-left: -180px
+}
+.side-right {
+  width: 180px;
+  float: right;
+  margin-right: -180px
+}
+
+
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/default.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/tabsets.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/copy-button.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/callout.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/css/prism-xcode.min.css">
 </head>
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Read me for tasks using R</h1></div>
-<div class="date"><h3>2026-Jan-23 17:28</h3></div>
+<div class="date"><h3>2026-3-26 09:29</h3></div>
 </div>
 <div class="body">
+<div id="TOC">
+<ul>
+<li><a href="#chp:current-challenge">Current challenge</a></li>
+<li><a href="#chp:tasks-done-in-irp5condense-rmd">Tasks done in IRP5Condense.rmd</a></li>
+<li><a href="#chp:task-sequence">Task sequence</a></li>
+</ul>
+</div>
 <h1 id="chp:current-challenge">Current challenge</h1>
 <p>Too many and too few entries in 2009-2012, if we drop establishments with no location information</p>
 <p>Three ways to proceed</p>
@@ -126,6 +96,300 @@ section.footnotes {
 </ul>
 </li>
 </ol>
+<div class="side side-left">
+<p><strong>Anything</strong> on the left.</p>
+</div>
+<div class="side side-right">
+<p><strong>Anything</strong> on the right.</p>
+</div>
+<h1 id="chp:tasks-done-in-irp5condense-rmd">Tasks done in IRP5Condense.rmd</h1>
+<ol>
+<li>
+<p>Read IRP5 data</p>
+<ul>
+<li>Stack up to form a panel (irp508, …, irp522 → irp5pnl)</li>
+<li>Merge: irp5pnl + ind → irp5i</li>
+<li>Produce firm-establishment level entries: irp5i → smallirp5</li>
+</ul>
+ <details><summary>Details</summary>
+<ul>
+<li>
+<p>Stack up to form a panel (irp508, …, irp522 → irp5pnl)</p>
+</li>
+<li>
+<p>Merge: irp5pnl + ind → irp5i</p>
+<blockquote>
+<p>irp5i &lt;- IndustryCode[irp5pnl, on = “taxrefno”]</p>
+</blockquote>
+</li>
+<li>
+<p>Produce firm-establishment level entries: irp5i → smallirp5</p>
+<blockquote>
+<p>smallirp5 &lt;- irp5i[grepl(“A”, NatureOfPer), .(taxrefno, payereferenceno)]</p>
+</blockquote>
+<ul>
+<li>
+<p><span style="color: red;">Do not use payereferenceno,</span> because it has many errors (same value for different location when it is supoosed to be a branch ID)</p>
+</li>
+<li>
+<p><strong>Should be:</strong></p>
+<blockquote>
+<p>smallirp5 &lt;- unique(irp5i[grepl(“A”, NatureOfPer), c(geovars, “taxrerfno”)])</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+ </details> 
+</li>
+<li>
+<p>Read geolocation file</p>
+<ul>
+<li>IRP5_Geo.dta → geodat</li>
+<li>geodat[taxyear==2015, ] → geoloc</li>
+</ul>
+</li>
+<li>
+<p>Construct firm-establishment-location data: Merge geolocation file + firm-establishment entries</p>
+<ul>
+<li>Merge: smallirp5[geoloc, on = “payereferenceno”] → GeoLF</li>
+<li>First entries by irp5it3aid in GeoLF → GeoLF.nodup
+<ul>
+<li>irp5it3aid: Individual tax returns ID (changes by year for same individual)</li>
+</ul>
+</li>
+</ul>
+ <details><summary>Details</summary>
+<ul>
+<li>
+<p>Merge: smallirp5[geoloc, on = “payereferenceno”] → GeoLF</p>
+<blockquote>
+<p>GeoLF &lt;- smallirp5[geoloc, on = “payereferenceno”]</p>
+</blockquote>
+<ul>
+<li>
+<p><span style="color: red;">Do not use payereferenceno</span></p>
+</li>
+<li>
+<p><strong>Should be:</strong></p>
+<blockquote>
+<p>GeoLF &lt;- smallirp5[geoloc, on = c(geovars, “taxrerfno”)]</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p>First entries by irp5it3aid in GeoLF → GeoLF.nodup</p>
+<ul>
+<li>irp5it3aid: Individual tax returns ID (changes by year for same individual)</li>
+</ul>
+<blockquote>
+<p>GeoLF[, dup := 1:.N, by = irp5it3aid]</p>
+<p>GeoLF.nodup &lt;- GeoLF[dup == 1L, ]</p>
+</blockquote>
+</li>
+</ul>
+ </details> 
+</li>
+<li>
+<p>Copy geolocation info: GeoLF.nodup + irp5i → irp5gi</p>
+ <details><summary>Details</summary>
+<ul>
+<li>
+<p>GeoLF.nodup[irp5i, on = c(“irp5it3aid”, “payereferenceno”, “taxrefno”)] → irp5gi</p>
+<blockquote>
+<p>irp5gi &lt;- GeoLF.nodup[irp5i, on = c(“irp5it3aid”, “payereferenceno”, “taxrefno”)]</p>
+</blockquote>
+<ul>
+<li>
+<p><span style="color: red;">Do not use payereferenceno</span></p>
+</li>
+<li>
+<p><strong>Should be:</strong></p>
+<blockquote>
+<p>GeoLF.nodup[irp5i, on = c(geovars, “irp5it3aid”, “taxrerfno”)]</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p>Fill geolocation info if: SouldFill == 1L &amp; CanFill == 1L</p>
+<ul>
+<li>
+<p>NoLocMuni: NA in local municipality info</p>
+</li>
+<li>
+<p>CanFill: NonNA in local municipality info copied from geolocation</p>
+<blockquote>
+<p>irp5gi[Bus_adr_Geo_Munic != “” &amp; !is.na(Bus_adr_Geo_Munic),
+CanFill := 1L]</p>
+</blockquote>
+</li>
+<li>
+<p>ShouldFill == 1L if NoLocMuni == 1L &amp; CanFill == 1L</p>
+</li>
+<li>
+<p>Copy to FillInLocMuni: First entry of CanFill == 1L within same uidtaxref if SouldFill == 1L for years before 2015</p>
+</li>
+</ul>
+<blockquote>
+<p>irp5gi[taxyear &lt;= 2015 &amp; uidtaxref %in% uidtaxref[ShouldFill == 1L],</p>
+<p>FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], by = uidtaxref]</p>
+</blockquote>
+<div class="callout-note" data-legend="Information">
+<ul>
+<li>Could have been taxyear == 2015 because we are copying the 2015 info in the next section</li>
+</ul>
+<blockquote>
+<p>bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)</p>
+</blockquote>
+<p>But some entities may be missing in 2015 but present in 2014 so copy to 2008-2015</p>
+</div>
+</li>
+</ul>
+ </details>
+<ul>
+<li>irp5gi is saved as irp5_CopiedLocMuniFromGeoLoc.qs</li>
+</ul>
+</li>
+<li>
+<p>Drop inconsistent entries, copy location info</p>
+<ul>
+<li>Keep revision reporting rows, drop original rows → irp5gir
+<ul>
+<li>Flag/drop to-be-revised rows DropThisForRev == 1L</li>
+</ul>
+</li>
+</ul>
+ <details><summary>Details</summary>
+<div class="side side-right">
+<p>css is applied to normalcode code block inside <code>&lt;details&gt;&lt;/details&gt;</code> as long as start of the line space is set correctly   ]</p>
+</div>
+<blockquote>
+<p>irp5gir &lt;- irp5gi[DropThisForRev == 0L, ]</p>
+</blockquote>
+<ul>
+<li>
+<p>Revision reporting for previous years (job start/end dates are of previous years)</p>
+</li>
+<li>
+<p>So this typically comes in job durations with negative (job ended in a previous year) or too long (job started in a previous year)</p>
+<pre><code class="language-normalcode">   TrueTaxYear taxyear
+ 1       2010    2010
+ 2       2011    2011 * need to drop this 1
+ 3       2011    2012 
+ 4       2012    2012 * need to drop this 2
+ 5       2012    2013 
+</code></pre>
+<p>taxyear == TrueTaxYear[TrueTaxYear != taxyear] ⇒ lines 2 and 4 are flagged as DropThisForRev</p>
+<pre><code class="language-normalcode">   TrueTaxYear taxyear
+ 1       2010    2010
+ 2       2011    2011 ** flagged 1
+ 3       2011    2012 
+ 4       2012    2012 ** flagged 2
+ 5       2012    2013 
+</code></pre>
+<p>which now becomes</p>
+<pre><code class="language-normalcode">   TrueTaxYear taxyear      rev
+ 1       2010    2010  ==&gt; 2010
+ 3       2011    2012  ==&gt; 2011
+ 5       2012    2013  ==&gt; 2012
+</code></pre>
+<p>Changed names as</p>
+<blockquote>
+<p>setnames(irp5gir, c(“TrueTaxYear”, “taxyear”), c(“taxyear”, “Old.taxyear”))</p>
+</blockquote>
+</li>
+</ul>
+ </details>
+<ul>
+<li>Copy: busprov_geo[taxyear 2015] → bprov15 → empty busprov_geo[&lt;= 2014]
+<ul>
+<li>Previous steps copied only local municipality info (2015 → 2014 and earlier)</li>
+<li>This step copies all levels of geolocation info (2015 → 2014 and earlier)</li>
+</ul>
+</li>
+</ul>
+ <details><summary>Details</summary>
+<ul>
+<li>Save original entries in <code>orig.bprov</code></li>
+</ul>
+<blockquote>
+<p>irp5gir[, orig.bprov := busprov_geo]</p>
+</blockquote>
+<ul>
+<li>Within UID, copy: busprov_geo of 2015 → bprov15 → busprov_geo of 2014/earlier only if empty</li>
+</ul>
+<blockquote>
+<p>irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]</p>
+</blockquote>
+<blockquote>
+<p>irp5gir[
+taxyear &lt;= 2014 &amp;
+(busprov_geo == “” | is.na(busprov_geo) | busprov_geo == “EXCEPTION”) &amp;
+(bprov15 != “” &amp; !is.na(bprov15) &amp; bprov15 != “EXCEPTION”),
+c(“busprov_geo”, “ProvCopied”, “LocInfoCopiedFrom”)
+:= .(bprov15, 1L, 2015L)]</p>
+</blockquote>
+<ul>
+<li>Copy location information of 2015 → 2008-2014 if local municipality info is NA before 2015 and nonNA in 2015</li>
+</ul>
+<blockquote>
+<p>irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]</p>
+</blockquote>
+<blockquote>
+<p>irp5gir[taxyear &lt;= 2014 &amp;</p>
+<p>(buslocmuni_geo == “” | is.na(buslocmuni_geo) | buslocmuni_geo == “EXCEPTION”) &amp;</p>
+<p>(bloc15 != “” &amp; !is.na(bloc15) &amp; bloc15 != “EXCEPTION”),</p>
+<p>c(“buslocmuni_geo”,  “LocCopied”, “LocInfoCopiedFrom”) := .(bloc15,  1L, 2015L)]</p>
+</blockquote>
+ </details>
+</li>
+<li>
+<p>Drop entries with repetetive taxrefno: irp5gir &amp;rarrl irp5Clean</p>
+<ul>
+<li>Repetetive: [A-Z]*8</li>
+<li>Add 15 year observation pattern: 111111111111111, 1110..0, 1011..1, 0111..1, etc.</li>
+</ul>
+ <details><summary>Details</summary>
+<ul>
+<li>Repetetive: [A-Z]*8</li>
+</ul>
+<blockquote>
+<p>repetetive &lt;- dupuid[grepl(”(.)\1{7,}”, uid), uid]</p>
+</blockquote>
+<p>Firms with repetetive uids and their counts</p>
+<blockquote>
+<p>tb &lt;- table(ipyr[uid %in% repetetive, taxrefno])</p>
+</blockquote>
+<p>Drop</p>
+<blockquote>
+<p>dropthese &lt;- ipyr[taxrefno %in% names(tb)[tb&gt;10] &amp;
+uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid],  ]</p>
+<p>irp5gir &lt;- irp5gir[grepl(“A”, NatureOfPer), ]</p>
+<p>irp5Clean &lt;- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]</p>
+</blockquote>
+<ul>
+<li>Add 15 year observation pattern: 111111111111111, 1110..0, 1011..1, 0111..1, etc.</li>
+</ul>
+<pre><code class="language-normalcode">for (jj in grep(&quot;Ob&quot;, colnames(idyrW)))
+  for (ii in which(is.na(idyrW[, jj])))
+    set(idyrW, i = ii, j = jj, value = 0L)
+cols &lt;- grepout(&quot;Ob&quot;, colnames(idyrW))
+idyrW[, IObPattern := paste(.SD, sep = &quot;&quot;, collapse = &quot;&quot;), 
+ .SDcols = cols]
+</code></pre>
+ </details>
+</li>
+</ol>
+<!--
+```{normalcode, warning = F}
+ TrueTaxYear taxyear      rev
+1       2010    2010  ==> 2010
+3       2011    2012  ==> 2011
+5       2012    2013  ==> 2012
+```
+-->
 <h1 id="chp:task-sequence">Task sequence</h1>
 <p>Process files in the following order</p>
 <ol>
@@ -201,7 +465,7 @@ section.footnotes {
 <li>This is because we are selecting on firms with location information</li>
 <li>Unconditional number of jobs looks good for all years
 <ul>
-<li>Many NAs in location info in early years ⇒ loss of sample in early years</li>
+<li>Many NAs in location info in early years → loss of sample in early years</li>
 </ul>
 </li>
 <li>Computing FA does not require location information, so FA can serve as the base of estimation data</li>
@@ -225,5 +489,12 @@ section.footnotes {
 </li>
 </ol>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/sidenotes.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/appendix.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/tabsets.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/copy-button.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.21/js/callout.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </body>
 </html>

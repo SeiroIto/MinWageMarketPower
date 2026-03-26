@@ -7,33 +7,52 @@ main {
 /* 1. background color for the page */
 body {
   margin-left: 80px;
-  background-color: #f0f8ff; 
+  background-color: #fff9e6; 
 }
 
 /* Default height of a block */
 pre {
-  max-height: 700px;
+  max-height: 1000px;
   overflow-y: auto;
 }
 /* 2. Background color ONLY for the R Source Code blocks */
 pre code[class*="language-"] {
-  background-color: #FAEDEA; /* A light brown box */
+  background-color: #fff9e6; /* A light brown box */
   color: black;            /* Light text */
   display: block;
   padding: 1px;
+  border: 2px solid white;
   border-radius: 1px;
 }
 /* 3. Background color ONLY for the R Output blocks */
 pre code:not([class*="language-"]) {
-  background-color: #ffffff; /* White background for the output */
-  color: #333333;            /* Dark text */
+  background-color: white; /* White background for the output */
+  color: black;            /* Dark text */
   display: block;
   padding: 10px;
-  border-left: 1px solid #007acc; /* Optional: A nice blue accent line on the left */
+  border-left: 20px solid blue; /* Optional: A nice blue accent line on the left */
   border-radius: 4px;
+}
+pre code[class*="language-normalcode"] {
+  background-color: white;
+  color: black;            /* Light text */
+  display: block;
+  padding: 1px;
+  border: 1px solid white;
+  border-radius: 15px;
 }
 table {
   background-color: white;
+}
+.side-left {
+  width: 180px;
+  float: left;
+  margin-left: -180px
+}
+.side-right {
+  width: 180px;
+  float: right;
+  margin-right: -180px
 }
 
 
