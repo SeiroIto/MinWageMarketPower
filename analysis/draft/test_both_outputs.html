@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Display LaTeX tables in html and pdf at a one go</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="test_both_outputs_files/libs/clipboard/clipboard.min.js"></script>
+<script src="test_both_outputs_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="test_both_outputs_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="test_both_outputs_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="test_both_outputs_files/libs/quarto-html/popper.min.js"></script>
+<script src="test_both_outputs_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="test_both_outputs_files/libs/quarto-html/anchor.min.js"></script>
+<link href="test_both_outputs_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="test_both_outputs_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="test_both_outputs_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="test_both_outputs_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="test_both_outputs_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="test_both_outputs_files/libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="test_both_outputs_files/libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="test_both_outputs_files/libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="test_both_outputs.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></div>
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Display LaTeX tables in html and pdf at a one go</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- LaTeX math shortcode -->
+<div class="hidden">
+<!--
+%  Math Symbols
+%  if we use amsthm we don't need this.  \newcommand{\qed}{$\Box $} % Follwing is for blacking the box: {\rule[-2pt]{3pt}{6pt}}
+-->
+<!--%  Romans-->
+<!--%   Latins (?)-->
+<!--%  Greeks-->
+<!--%  alphabets-->
+<!--%  New Operators-->
+<!--%  Convenience definitions-->
+<!-- % New macros-->
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(qs); <span class="fu">library</span>(data.table); <span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rmarkdown); <span class="fu">library</span>(fixest)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr); <span class="fu">library</span>(tufte)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(litedown)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>litedown<span class="sc">::</span><span class="fu">reactor</span>(</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">eval =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">echo =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">time =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">htmltools.dir.version =</span> <span class="cn">FALSE</span>, <span class="at">width =</span> <span class="dv">100</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="do">#### threads</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>MaxCores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>()</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">setDTthreads</span>(<span class="at">threads =</span> MaxCores <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">setFixest_nthreads</span>(<span class="at">nthreads =</span> MaxCores <span class="sc">-</span> <span class="dv">1</span>, <span class="at">save =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="do">#### ggplot theme</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>ThisTheme <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>   <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> .<span class="dv">5</span>, <span class="at">hjust =</span> .<span class="dv">5</span>), </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>   <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>), </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>   <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>), </span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>   <span class="at">strip.text.x =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">size =</span> <span class="dv">8</span>, </span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>     <span class="at">margin =</span> <span class="fu">margin</span>(<span class="dv">0</span>, <span class="fl">1.25</span>, <span class="dv">0</span>, <span class="fl">1.25</span>, <span class="st">"cm"</span>)), </span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>   <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">size =</span> <span class="dv">8</span>, </span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">margin =</span> <span class="fu">margin</span>(<span class="fl">1.5</span>, <span class="dv">0</span>, <span class="fl">1.5</span>, <span class="dv">0</span>, <span class="st">"cm"</span>)),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>   <span class="at">panel.spacing.x =</span> <span class="fu">unit</span>(<span class="fu">c</span>(.<span class="dv">1</span>), <span class="at">units =</span> <span class="st">"cm"</span>),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>   <span class="at">panel.spacing.y =</span> <span class="fu">unit</span>(.<span class="dv">1</span>, <span class="at">units =</span> <span class="st">"cm"</span>)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>ThisThemeEnd <span class="ot">&lt;-</span> ThisTheme <span class="sc">+</span> ggplot2<span class="sc">::</span><span class="fu">theme</span>(<span class="at">legend.position=</span><span class="st">"bottom"</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="do">#### invalidate cache when the tufte version changes</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">tidy =</span> <span class="cn">FALSE</span>, <span class="at">cache.extra =</span> <span class="fu">packageVersion</span>(<span class="st">'tufte'</span>), </span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">margin_references =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="do">#### remove leading hashes in html output</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">comment =</span> <span class="st">""</span>, </span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">echo =</span> T, <span class="at">cache =</span> F, <span class="at">eval =</span> T,</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">class.source =</span> <span class="st">"SeiroBenign"</span>, <span class="at">class.output =</span> <span class="st">"SeiroLightGreen"</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>grepout <span class="ot">&lt;-</span> <span class="cf">function</span>(str, x)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># returns element of match (not numbers)</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  x[<span class="fu">grep</span>(str, x, <span class="at">perl =</span> T)]</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>table0 <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">table</span>(x, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>read.tablev <span class="ot">&lt;-</span> <span class="cf">function</span>(fn, <span class="at">quotemark =</span> <span class="st">""</span>, <span class="at">headertrue =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">blskip =</span> <span class="cn">TRUE</span>, <span class="at">mat =</span> F, ...) </span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">read.table</span>(fn, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>, <span class="at">header =</span> headertrue, <span class="at">blank.lines.skip =</span> blskip, </span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        <span class="at">quote =</span> quotemark, <span class="at">na.strings =</span> <span class="st">""</span>, ...)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">dim</span>(x)) <span class="sc">|</span> <span class="fu">nrow</span>(x) <span class="sc">==</span> <span class="dv">1</span>) </span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    cn <span class="ot">&lt;-</span> <span class="fu">names</span>(x)</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dim</span>(x) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">length</span>(x))</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(x) <span class="ot">&lt;-</span> cn</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (mat) x <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(x)</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(x)</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>GeoLevel <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Prv"</span>, <span class="st">"Dis"</span>, <span class="st">"Loc"</span>, <span class="st">"Mai"</span>)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>geovars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"busprov_geo"</span>, <span class="st">"busdistmuni_geo"</span>, </span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="st">"buslocmuni_geo"</span>, <span class="st">"busmainplc_geo"</span>)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r path}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>path <span class="ot">&lt;-</span> <span class="st">"W:/epguest/seiro_ito/"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>pathprogram <span class="ot">&lt;-</span> <span class="fu">paste0</span>(path, <span class="st">"outfiles/"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>pathdata <span class="ot">&lt;-</span> <span class="fu">paste0</span>(path, <span class="st">"data/"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>pathsaveddata <span class="ot">&lt;-</span> <span class="fu">paste0</span>(path, <span class="st">"saveddata/"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>pathresults <span class="ot">&lt;-</span> <span class="fu">paste0</span>(path, <span class="st">"results/"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>pathdataCITIRP <span class="ot">&lt;-</span> <span class="st">"U:/CIT-IRP5 Panel/"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>pathdataIRP <span class="ot">&lt;-</span> <span class="st">"U:/IRP5/Job level/v5/beta/"</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r read functions}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>destat <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">prob =</span> <span class="st">"short"</span>, <span class="at">signif =</span> <span class="dv">1</span>, <span class="at">removezero =</span> F)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  returns an array of descriptive statistics</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  prob specifies quantiles, "short", "even", "odd", "very short", "long"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">dim</span>(x))) <span class="fu">dim</span>(x) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">length</span>(x),<span class="dv">1</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">colnames</span>(x))) <span class="fu">colnames</span>(x) <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"v"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(x), <span class="at">sepv =</span> <span class="st">""</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.data.frame</span>(<span class="fu">dim</span>(x))) x <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.character</span>(prob))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"short"</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>); y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">10</span>))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x),<span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>                                <span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"even"</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">2</span>,.<span class="dv">4</span>,.<span class="dv">5</span>,.<span class="dv">6</span>,.<span class="dv">8</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">12</span>))</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x),<span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"20</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"40</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"60</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"80</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"odd"</span>)</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">1</span>,.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>,.<span class="dv">9</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">12</span>))</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x), <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"10</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"90</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"long"</span>)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">025</span>,.<span class="dv">1</span>,.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>,.<span class="dv">9</span>,.<span class="dv">975</span>)</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">14</span>))</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x), <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"2.5</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">"10</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"90</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"97.5</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"very short"</span>)</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> .<span class="dv">5</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">8</span>))</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x),<span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"median"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  logical <span class="ot">&lt;-</span> <span class="fu">sapply</span>(x, is.logical)</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(logical)) x[logical] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(x[logical], as.numeric)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  char <span class="ot">&lt;-</span> <span class="fu">sapply</span>(x, is.character)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(char)) x[char] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(x[char], as.factor)</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(x))</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> x[ ,<span class="fu">colnames</span>(x)[i]]</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    zn <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(z)</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (removezero) zn <span class="ot">&lt;-</span> z[<span class="sc">!</span>(<span class="fu">is.na</span>(z) <span class="sc">|</span> (<span class="sc">!</span><span class="fu">is.na</span>(z) <span class="sc">&amp;</span> z <span class="sc">==</span> <span class="dv">0</span>))]</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    NAs <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(z))</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">any</span>(<span class="fu">grepl</span>(<span class="st">"POSIX|Date"</span>, <span class="fu">class</span>(z))) <span class="sc">|</span> <span class="fu">is.factor</span>(z)) </span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>      y[i, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span> <span class="sc">+</span> <span class="fu">length</span>(prob)), NAs, <span class="fu">length</span>(z))  <span class="cf">else</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>      y[i, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">round</span>(<span class="fu">c</span>(<span class="fu">min</span>(zn, <span class="at">na.rm=</span>T), <span class="fu">quantile</span>(zn, <span class="at">probs=</span>prob), <span class="fu">max</span>(zn, <span class="at">na.rm=</span>T),</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">mean</span>(zn, <span class="at">na.rm=</span>T), <span class="fu">var</span>(zn, <span class="at">na.rm=</span>T)<span class="sc">^</span>(.<span class="dv">5</span>)), signif),</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">sum</span>(z<span class="sc">==</span><span class="dv">0</span>, <span class="at">na.rm=</span>T), NAs, <span class="fu">length</span>(z))</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>destatfactor <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">prob =</span> <span class="st">"short"</span>, <span class="at">signif =</span> <span class="dv">1</span>, <span class="at">removezero =</span> F, <span class="at">IgnoreIfAbove =</span> <span class="dv">10</span>)</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="co">#  returns an array of descriptive statistics for factors/characters at all levels</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co">#  If gender = M, F is a factor, it gives 2 rows of gender: M, gender: F </span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="co">#    prob: specifies quantiles, "short", "even", "odd", "long","very short"</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="co">#    IgnoreIfAbove: = 10, if length(levels(factor variable)) &gt; 10, just skip</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">dim</span>(x))) <span class="fu">dim</span>(x) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">length</span>(x),<span class="dv">1</span>)</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">colnames</span>(x))) <span class="fu">colnames</span>(x) <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"v"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(x), <span class="at">sepv =</span> <span class="st">""</span>)</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.data.table</span>(x)) x <span class="ot">&lt;-</span> <span class="fu">data.table</span>(x)</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>  <span class="do">#### if (!is.data.frame(dim(x))) x &lt;- data.frame(x)</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>  iilogical <span class="ot">&lt;-</span> <span class="fu">sapply</span>(x, is.logical)</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(iilogical)) <span class="fu">stop</span>(<span class="st">"Use destat for logical variables"</span>)</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>  iinum <span class="ot">&lt;-</span> <span class="fu">sapply</span>(x, is.numeric)</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>  iiInt <span class="ot">&lt;-</span> <span class="fu">sapply</span>(x, is.integer)</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(iinum<span class="sc">|</span>iiInt)) {</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>      <span class="fu">paste</span>(<span class="st">"Use destat for integer/numeric variables. Dropped:"</span>, </span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>        <span class="fu">paste</span>(<span class="fu">colnames</span>(x)[iinum<span class="sc">|</span>iiInt], <span class="at">collapse =</span> <span class="st">", "</span>)</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    xd <span class="ot">&lt;-</span> x[, <span class="sc">!</span>(iinum<span class="sc">|</span>iiInt), with <span class="ot">=</span> F]</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> xd <span class="ot">&lt;-</span> x</span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>  iic <span class="ot">&lt;-</span> <span class="fu">sapply</span>(xd, is.character)</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>  iif <span class="ot">&lt;-</span> <span class="fu">sapply</span>(xd, is.factor)</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>  iifc <span class="ot">&lt;-</span> iic<span class="sc">|</span>iif</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>  <span class="do">#### Drop characters/factors with too many elements (&gt; IgnoreIfAbove)</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(iifc)) {</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    Numunq <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(xd[, ..iifc], <span class="cf">function</span>(z) <span class="fu">length</span>(<span class="fu">unique</span>(z))))</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(Numunq)) ii100 <span class="ot">&lt;-</span> Numunq <span class="sc">&gt;</span> IgnoreIfAbove <span class="cf">else</span> ii100 <span class="ot">&lt;-</span> F</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">any</span>(ii100)) {</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>      <span class="fu">message</span>(<span class="fu">paste</span>(<span class="fu">names</span>(xd[, ..iifc])[ii100], <span class="cf">if</span> (<span class="fu">length</span>(ii100)<span class="sc">==</span><span class="dv">1</span>) <span class="st">"has"</span> <span class="cf">else</span> <span class="st">"have"</span>,  </span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>        <span class="st">"more than"</span>, IgnoreIfAbove, <span class="st">"unique entries, dropped.</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>      <span class="do">#### drop iifc[ii100] columns, turn the rest to factors</span></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>      xf <span class="ot">&lt;-</span> xd[, <span class="sc">-</span><span class="fu">which</span>(iifc[ii100]), with <span class="ot">=</span> F]</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>      iic2 <span class="ot">&lt;-</span> <span class="fu">sapply</span>(xf, is.character)</span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>      xf[, (<span class="fu">names</span>(xf)[iic2]) <span class="sc">:</span><span class="er">=</span> </span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>        <span class="fu">lapply</span>(.SD, as.factor), .SDcols <span class="ot">=</span> <span class="fu">names</span>(xf)[iic2]</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>      ]</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {  <span class="co"># if number of all character/factor element &lt;= IgnoreIfAbove</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>      xf <span class="ot">&lt;-</span> xd</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>      xf[, (<span class="fu">names</span>(xf)[iifc]) <span class="sc">:</span><span class="er">=</span> </span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>        <span class="fu">lapply</span>(.SD, as.factor), .SDcols <span class="ot">=</span> <span class="fu">names</span>(xf)[iifc]</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>      ]</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> xf <span class="ot">&lt;-</span> xd</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>  <span class="do">#### list all levels</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>  iif2 <span class="ot">&lt;-</span> <span class="fu">sapply</span>(xf, is.factor)</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>  AllLvList <span class="ot">&lt;-</span> <span class="fu">lapply</span>(xf[, ..iif2], levels)</span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>  AllLvls <span class="ot">&lt;-</span> <span class="fu">unlist</span>(AllLvList)</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>  AllNames <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(AllLvList), </span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(i) <span class="fu">paste0</span>(<span class="fu">names</span>(AllLvList)[i], <span class="st">": "</span>, AllLvList[[i]])))</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>  Nrows <span class="ot">&lt;-</span> <span class="fu">length</span>(AllLvls)</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.character</span>(prob)) {</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"short"</span>)</span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>); y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(Nrows, <span class="dv">10</span>))</span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(AllNames, <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>                                <span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"even"</span>)</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">2</span>,.<span class="dv">4</span>,.<span class="dv">5</span>,.<span class="dv">6</span>,.<span class="dv">8</span>)</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(Nrows, <span class="dv">12</span>))</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(AllNames, <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"20</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"40</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"60</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"80</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"odd"</span>)</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">1</span>,.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>,.<span class="dv">9</span>)</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(Nrows, <span class="dv">12</span>))</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(AllNames,  <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"10</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"90</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"long"</span>)</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> <span class="fu">c</span>(.<span class="dv">025</span>,.<span class="dv">1</span>,.<span class="dv">25</span>,.<span class="dv">5</span>,.<span class="dv">75</span>,.<span class="dv">9</span>,.<span class="dv">975</span>)</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(<span class="fu">ncol</span>(x),<span class="dv">14</span>))</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">colnames</span>(x), <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"2.5</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>        <span class="st">"10</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"25</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"median"</span>,<span class="st">"75</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"90</span><span class="sc">\\</span><span class="st">%"</span>,<span class="st">"97.5</span><span class="sc">\\</span><span class="st">%"</span>,</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>        <span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span>  <span class="cf">if</span> (prob<span class="sc">==</span><span class="st">"very short"</span>)</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>      prob <span class="ot">&lt;-</span> .<span class="dv">5</span></span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="at">dim=</span><span class="fu">c</span>(Nrows, <span class="dv">8</span>))</span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dimnames</span>(y) <span class="ot">&lt;-</span> <span class="fu">list</span>(AllNames, <span class="fu">c</span>(<span class="st">"min"</span>,<span class="st">"median"</span>,<span class="st">"max"</span>,<span class="st">"mean"</span>,<span class="st">"std"</span>,<span class="st">"0s"</span>,<span class="st">"NAs"</span>,<span class="st">"n"</span>))</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>  <span class="do">#### ..prefix allows data.table to search global environ, a level up from function</span></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (ii <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(xf[, ..iif2])) {</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    z <span class="ot">&lt;-</span> xf[ , <span class="fu">colnames</span>(xf[, ..iif2])[ii], with <span class="ot">=</span> F]</span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    zn <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(z)</span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (removezero) zn <span class="ot">&lt;-</span> z[<span class="sc">!</span>(<span class="fu">is.na</span>(z) <span class="sc">|</span> (<span class="sc">!</span><span class="fu">is.na</span>(z) <span class="sc">&amp;</span> z <span class="sc">==</span> <span class="dv">0</span>))]</span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    NAs <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(z))</span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">any</span>(<span class="fu">grepl</span>(<span class="st">"POSIX|Date"</span>, <span class="fu">class</span>(z)))) </span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>      y[ii, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">5</span> <span class="sc">+</span> <span class="fu">length</span>(prob)), NAs, <span class="fu">length</span>(z)) <span class="cf">else</span> </span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>      Lvls <span class="ot">&lt;-</span> <span class="fu">levels</span>(<span class="fu">unlist</span>(zn))</span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>      <span class="do">#### number of rows by far = length of AllLvList[1:(ii-1)]</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>      rowsbyfar <span class="ot">&lt;-</span> <span class="cf">if</span> (ii <span class="sc">&gt;</span> <span class="dv">1</span>)  <span class="fu">length</span>(<span class="fu">unlist</span>(AllLvList[<span class="dv">1</span><span class="sc">:</span>(ii<span class="dv">-1</span>)])) <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>      <span class="do">#### number of rows to add = length(AllLvList[ii])</span></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>      rows2add <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unlist</span>(AllLvList[[ii]]))</span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (ll <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>rows2add) {</span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>        znI <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(zn <span class="sc">==</span> Lvls[ll])</span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>        y[rowsbyfar<span class="sc">+</span>ll, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">round</span>(<span class="fu">c</span>(</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>           <span class="fu">min</span>(znI, <span class="at">na.rm=</span>T), </span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a>           <span class="fu">quantile</span>(znI, <span class="at">probs=</span>prob, <span class="at">na.rm =</span> T), </span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>           <span class="fu">max</span>(znI, <span class="at">na.rm=</span>T),</span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>           <span class="fu">mean</span>(znI, <span class="at">na.rm=</span>T), </span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>           <span class="fu">var</span>(znI, <span class="at">na.rm=</span>T)<span class="sc">^</span>(.<span class="dv">5</span>)), </span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>             signif),</span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>           <span class="fu">sum</span>(znI<span class="sc">==</span><span class="dv">0</span>L, <span class="at">na.rm=</span>T), </span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>           NAs, </span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>           <span class="fu">sum</span>(znI))</span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>       }</span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(y) <span class="ot">&lt;-</span> AllNames</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>latextab.simple <span class="ot">&lt;-</span> <span class="cf">function</span>(tab, <span class="at">hleft =</span> <span class="cn">NULL</span>, <span class="at">hcenter =</span> <span class="cn">NULL</span>, <span class="at">unit =</span> <span class="st">"cm"</span>, </span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a>   <span class="at">hright =</span> <span class="cn">NULL</span>, <span class="at">hline =</span> <span class="cn">NULL</span>, <span class="at">cline =</span> F, </span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>   <span class="at">longtable =</span> F, <span class="at">delimiterline =</span> <span class="cn">NULL</span>, </span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>   <span class="at">headercolor =</span> <span class="cn">NULL</span>, <span class="at">alternatecolor =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>   <span class="at">alternatecolor2 =</span> <span class="cn">NULL</span>, <span class="at">alternatestart2 =</span> <span class="dv">3</span>, </span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a>   <span class="at">alternatecolor4 =</span> <span class="cn">NULL</span>, <span class="at">alternatestart4 =</span> <span class="dv">5</span>, </span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>   <span class="at">adjustlineskip =</span> <span class="cn">NULL</span>)</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a><span class="co">#  produces a LaTeX table.</span></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a><span class="co">#    hleft = header left: &gt;{ "here" }</span></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a><span class="co">#    hcenter = header center length: p{ "here" lengthunit}, need for </span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a><span class="co">#    unit = header center length unit: p{ length "here" }</span></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a><span class="co">#    hright = header right: &lt;{ "here" }</span></span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a><span class="co">#    hline = T: inserts "\hline" after each line</span></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="co">#             = numeric vector: inserts "\hline" at specified rows</span></span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a><span class="co">#    cline = matrix(row, from, to) that gives "\cline{from-to}" at specified rows</span></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a><span class="co">#    longtable: if T, produce header/footer for longtable</span></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a><span class="co">#    delimterline: if needed, set delimiterline = T which gives vertical lines</span></span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a><span class="co">#    headercolor: if not NULL, specify color of the header row</span></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a><span class="co">#    alternatecolor: if not NULL, specify color of the alternating rows (1, 3, ...)</span></span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a><span class="co">#    alternatecolor2: if not NULL, specify color of the alternating 2 rows (3:4, 6:7, ...)</span></span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a><span class="co">#    alternatecolor4: if not NULL, specify color of the alternating 4 rows (5:8, 13:16, ...)</span></span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a><span class="co">#    adjustlineskip: insert specified string to every second ""\\[here]""</span></span>
+<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>  tab0 <span class="ot">=</span> <span class="fu">copy</span>(tab)</span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.matrix</span>(tab)) tab <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tab)</span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a>  ltab <span class="ot">&lt;-</span> coln <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(hcenter)) hcenter <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">2</span>, <span class="fu">ncol</span>(tab))</span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(hcenter) <span class="sc">==</span> <span class="dv">1</span>) hcenter <span class="ot">&lt;-</span> <span class="fu">rep</span>(hcenter, <span class="fu">ncol</span>(tab))</span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(tab)) </span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>    ltab <span class="ot">&lt;-</span> <span class="fu">cbind</span>(ltab, tab[, i], <span class="st">" &amp; "</span>)</span>
+<span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a>    coln <span class="ot">&lt;-</span> <span class="fu">c</span>(coln, </span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a>      <span class="fu">paste</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">makebox["</span>, hcenter[i], unit, <span class="st">"]{"</span>, <span class="fu">colnames</span>(tab)[i], <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>, <span class="at">collapse =</span> <span class="st">""</span>)</span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a>      , <span class="st">" &amp; "</span>)</span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a>  ltab <span class="ot">&lt;-</span> <span class="fu">rbind</span>(coln, ltab)</span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>  linebreak <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">"</span><span class="sc">\\\\</span><span class="st">"</span>, <span class="fu">nrow</span>(ltab))</span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(adjustlineskip))</span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a>    linebreak[<span class="fu">seq</span>(<span class="dv">2</span>, <span class="fu">nrow</span>(ltab), <span class="dv">2</span>)] <span class="ot">&lt;-</span> </span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a>      <span class="fu">paste</span>(linebreak[<span class="fu">seq</span>(<span class="dv">2</span>, <span class="fu">nrow</span>(ltab), <span class="dv">2</span>)], <span class="st">"["</span>, adjustlineskip, <span class="st">"]"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(alternatecolor))</span>
+<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a>      linebreak[<span class="fu">seq</span>(<span class="dv">2</span>, <span class="fu">nrow</span>(ltab), <span class="dv">2</span>)] <span class="ot">&lt;-</span> </span>
+<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a>        <span class="fu">paste</span>(linebreak[<span class="fu">seq</span>(<span class="dv">2</span>, <span class="fu">nrow</span>(ltab), <span class="dv">2</span>)], <span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, alternatecolor, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(alternatecolor2))</span>
+<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a>    <span class="co">#  block sequence:  4, 5, 8, 9, ..., nrow(ltab)</span></span>
+<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a>    seqby2 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq</span>(alternatestart2, <span class="fu">nrow</span>(ltab), <span class="dv">4</span>), <span class="at">each=</span><span class="dv">2</span>)</span>
+<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a>    seqby2[<span class="fu">seq</span>(<span class="dv">2</span>, <span class="fu">length</span>(seqby2), <span class="dv">2</span>)] <span class="ot">&lt;-</span> seqby2[<span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">length</span>(seqby2), <span class="dv">2</span>)] <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (seqby2[<span class="fu">length</span>(seqby2)] <span class="sc">&gt;</span> <span class="fu">nrow</span>(ltab)) seqby2 <span class="ot">&lt;-</span> seqby2[<span class="sc">-</span><span class="fu">length</span>(seqby2)] </span>
+<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a>      linebreak[seqby2] <span class="ot">&lt;-</span> </span>
+<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a>        <span class="fu">paste</span>(linebreak[seqby2], <span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, alternatecolor2, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a>   }</span>
+<span id="cb3-230"><a href="#cb3-230" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(alternatecolor4))</span>
+<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a>    <span class="co">#  block sequence:  5:8, 13:16, ..., nrow(ltab)</span></span>
+<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a>    seqby4 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq</span>(alternatestart4, <span class="fu">nrow</span>(ltab), <span class="dv">8</span>), <span class="at">each =</span> <span class="dv">4</span>)</span>
+<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>)</span>
+<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a>      seqby4[<span class="fu">seq</span>(k, <span class="fu">length</span>(seqby4), <span class="dv">4</span>)] <span class="ot">&lt;-</span> seqby4[<span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">length</span>(seqby4), <span class="dv">4</span>)] <span class="sc">+</span> k<span class="dv">-1</span></span>
+<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> (seqby4[<span class="fu">length</span>(seqby4)] <span class="sc">&gt;</span> <span class="fu">nrow</span>(ltab)) seqby4 <span class="ot">&lt;-</span> seqby4[<span class="sc">-</span><span class="fu">length</span>(seqby4)] </span>
+<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a>      linebreak[seqby4] <span class="ot">&lt;-</span> </span>
+<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a>        <span class="fu">paste</span>(linebreak[seqby4], <span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, alternatecolor4, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(hline)) holine <span class="ot">&lt;-</span> <span class="st">""</span> <span class="cf">else</span> holine <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">hline"</span></span>
+<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a>  linebreak <span class="ot">&lt;-</span> <span class="fu">paste</span>(linebreak, holine, <span class="at">sep =</span><span class="st">""</span>) </span>
+<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a>  ltab[, <span class="fu">ncol</span>(ltab)] <span class="ot">&lt;-</span> linebreak</span>
+<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a>  <span class="co"># cline[, 1] + 1 because of the header line</span></span>
+<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(<span class="fu">dim</span>(cline)))</span>
+<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">nrow</span>(ltab) <span class="sc">==</span> cline[<span class="fu">nrow</span>(cline), <span class="dv">1</span>])</span>
+<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">cline cannot be added at the bottom row...ignored."</span>)</span>
+<span id="cb3-249"><a href="#cb3-249" aria-hidden="true" tabindex="-1"></a>      cline <span class="ot">&lt;-</span> cline[<span class="sc">-</span><span class="fu">nrow</span>(cline), , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a>    clineadd <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">nrow</span>(ltab))</span>
+<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a>    clineadd[cline[, <span class="dv">1</span>] <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">cline{"</span>, cline[, <span class="dv">2</span>], <span class="st">"-"</span>, cline[, <span class="dv">3</span>], <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a>    <span class="co"># cline[, 1] + 1 because of the header line</span></span>
+<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a>    ltab[, <span class="fu">ncol</span>(ltab)] <span class="ot">&lt;-</span> <span class="fu">paste</span>(ltab[, <span class="fu">ncol</span>(ltab)], clineadd, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-256"><a href="#cb3-256" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(hline)) ltab[<span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(ltab)), <span class="fu">ncol</span>(ltab)] <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\\\\\</span><span class="st">hline"</span></span>
+<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a>  ltab2 <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(ltab)) ltab2 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(ltab2, <span class="fu">paste</span>(ltab[i, ], <span class="at">collapse =</span> <span class="st">""</span>))</span>
+<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(delimiterline)) delim <span class="ot">&lt;-</span> <span class="st">""</span> <span class="cf">else</span> delim <span class="ot">&lt;-</span> <span class="st">"|"</span></span>
+<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(longtable)) </span>
+<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(hleft))</span>
+<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a>      head <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">begin{tabular}{"</span>, </span>
+<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a>            <span class="fu">t</span>(<span class="fu">cbind</span>(<span class="fu">paste</span>(delim, <span class="st">"&gt;{"</span>, hleft, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"p{"</span>, hcenter, unit, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"&lt;{"</span>, hright, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)))</span>
+<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a>          , <span class="fu">paste0</span>(delim, <span class="st">"}"</span>))</span>
+<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a>        , <span class="at">collapse =</span> <span class="st">""</span>) <span class="cf">else</span></span>
+<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a>      head <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">begin{tabular}{"</span>, </span>
+<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>          <span class="fu">t</span>(<span class="fu">cbind</span>(<span class="fu">paste</span>(delim, <span class="st">"&gt;{</span><span class="sc">\\</span><span class="st">scriptsize</span><span class="sc">\\</span><span class="st">hfil"</span>, <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">ncol</span>(tab)), <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"p{"</span>, hcenter, unit, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"&lt;{"</span>, <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">ncol</span>(tab)), <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)))</span>
+<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a>          , <span class="fu">paste0</span>(delim, <span class="st">"}"</span>))</span>
+<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>        , <span class="at">collapse =</span> <span class="st">""</span>)</span>
+<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>    foot <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">end{tabular}"</span></span>
+<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(headercolor)) head <span class="ot">&lt;-</span> <span class="fu">paste0</span>(head, <span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, headercolor, <span class="st">"}"</span>)</span>
+<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(hleft))</span>
+<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a>      head1 <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">begin{longtable}{"</span>,</span>
+<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a>          <span class="fu">t</span>(<span class="fu">cbind</span>(<span class="fu">paste</span>(delim, <span class="st">"&gt;{"</span>, hleft, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"p{"</span>, hcenter, unit, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"&lt;{"</span>, <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">ncol</span>(tab)), <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)))</span>
+<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>          , <span class="fu">paste0</span>(delim, <span class="st">"}"</span>))</span>
+<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a>        , <span class="at">collapse =</span> <span class="st">""</span>) <span class="cf">else</span></span>
+<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>      head1 <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a>        <span class="fu">c</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">begin{longtable}{"</span>,</span>
+<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>          <span class="fu">t</span>(<span class="fu">cbind</span>(<span class="fu">paste</span>(delim, <span class="st">"&gt;{</span><span class="sc">\\</span><span class="st">scriptsize</span><span class="sc">\\</span><span class="st">hfil"</span>, <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">ncol</span>(tab)), <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"p{"</span>, hcenter, unit, <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>            , <span class="fu">paste</span>(<span class="st">"&lt;{"</span>, <span class="fu">rep</span>(<span class="st">""</span>, <span class="fu">ncol</span>(tab)), <span class="st">"}"</span>, <span class="at">sep =</span> <span class="st">""</span>)))</span>
+<span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a>          , <span class="fu">paste0</span>(delim, <span class="st">"}"</span>))</span>
+<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>        , <span class="at">collapse =</span> <span class="st">""</span>)</span>
+<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>    head2 <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">paste</span>(ltab[<span class="dv">1</span>, ], <span class="at">collapse =</span> <span class="st">""</span>), <span class="st">"</span><span class="sc">\\</span><span class="st">endfirsthead"</span>)</span>
+<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a>    head3 <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">paste</span>(ltab[<span class="dv">1</span>, ], <span class="at">collapse =</span> <span class="st">""</span>), <span class="st">"</span><span class="sc">\\</span><span class="st">endhead"</span>)</span>
+<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(headercolor)) {</span>
+<span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a>      head2 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, headercolor, <span class="st">"}"</span>, head2)</span>
+<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>      head3 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">rowcolor{"</span>, headercolor, <span class="st">"}"</span>, head3)</span>
+<span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>    ltab2 <span class="ot">&lt;-</span> ltab2[<span class="sc">-</span><span class="dv">1</span>, ]</span>
+<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>    head <span class="ot">&lt;-</span> <span class="fu">rbind</span>(head1, head2, head3)</span>
+<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>    foot <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">end{longtable}"</span></span>
+<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(hline)) </span>
+<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>    ltab3 <span class="ot">&lt;-</span> <span class="fu">rbind</span>(head, <span class="st">"</span><span class="sc">\\</span><span class="st">hline"</span>, ltab2, foot) <span class="cf">else</span></span>
+<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a>    ltab3 <span class="ot">&lt;-</span> <span class="fu">c</span>(head, ltab2, foot)</span>
+<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">any</span>(iidrop <span class="ot">&lt;-</span> <span class="fu">which</span>(ltab3 <span class="sc">==</span> <span class="st">""</span>))) ltab3 <span class="ot">&lt;-</span> ltab3[<span class="sc">-</span>iidrop, , drop <span class="ot">=</span> F]</span>
+<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(ltab3) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(ltab3)</span>
+<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>write.tablev <span class="ot">&lt;-</span> <span class="cf">function</span>(x, fn, </span>
+<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>  <span class="at">colnamestrue =</span> <span class="cn">TRUE</span>, <span class="at">rownamestrue =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>  <span class="at">nastrings =</span> <span class="st">""</span>, ...) </span>
+<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write.table</span>(x, fn, <span class="at">sep =</span> <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>, <span class="at">quote =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a>        <span class="at">row.names =</span> rownamestrue, <span class="at">col.names =</span> colnamestrue, <span class="at">na =</span> nastrings, ...)</span>
+<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="method-1-define-once-tex_preview-for-html-catltx-under-results-asis-for-pdf" class="level2">
+<h2 class="anchored" data-anchor-id="method-1-define-once-tex_preview-for-html-catltx-under-results-asis-for-pdf">Method 1: define once, tex_preview for html, cat(ltx) under results = asis for pdf</h2>
+<p>By saving the LaTeX to an R variable, you only have to write it once. Then you use two different code chunks to conditionally output for HTML vs PDF.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r define_table}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>tab_string<span class="ot">=</span><span class="st">"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">begin{tabular}{llr}</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">hline</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">multicolumn{2}{c}{Item} </span><span class="sc">\\\\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">cline{1-2}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">Animal    &amp; Description &amp; Price (</span><span class="sc">\\</span><span class="st">$) </span><span class="sc">\\\\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">hline</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">Gnat      &amp; per gram    &amp; 13.65      </span><span class="sc">\\\\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">          &amp; each        &amp; 0.01       </span><span class="sc">\\\\</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="st">Gnu       &amp; stuffed     &amp; 92.50      </span><span class="sc">\\\\</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="st">Emu       &amp; stuffed     &amp; 33.33      </span><span class="sc">\\\\</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="st">Armadillo &amp; frozen      &amp; 8.99       </span><span class="sc">\\\\</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">hline</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">end{tabular}"</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r render_html, results="asis", warning=FALSE, message=FALSE}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: !expr knitr::is_html_output()</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(texPreview)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tex_preview</span>(tab_string, <span class="at">returnType =</span> <span class="st">"html"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="test_both_outputs_files/figure-html/render_html-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="test_both_outputs_files/figure-html/render_html-1.png" class="img-fluid" width="379"></a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r render_pdf, results="asis"}</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: !expr knitr::is_latex_output()</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># For PDF, we just dump the raw LaTeX string into the document</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(tab_string)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="method-2-produce-image-file-with-tex_preview-for-html-use-raw-latex-contents-for-pdf" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="method-2-produce-image-file-with-tex_preview-for-html-use-raw-latex-contents-for-pdf">Method 2: Produce image file with tex_Preview for html, use raw LaTeX contents for pdf</h2>
+<p>If you prefer to write the raw LaTeX block directly into the document instead of an R string, you must wrap it in <code>```{=latex}</code> so that Quarto knows to completely hide it from the HTML version.</p>
+<!--  & All sample & Complete panel & \\mpage{2.5cm}{Existed firms,\\\\ all sample} & \\mpage{2.5cm}{Existed firms,\\\\ high concentrated markets} & \\mpage{2.5cm}{Existed firms,\\\\ low concentrated markets} & \\mpage{2.5cm}{Existed firms,\\\\ low FA} & \\mpage{2.5cm}{Existed firms,\\\\ mid FA} & \\mpage{2.5cm}{Existed firms,\\\\ high FA} \\\\
+-->
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r evaluate latex in html}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: !expr knitr::is_html_output() </span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| out.width: "800px"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: "hide"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tex_preview</span>(latex_code, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">usrPackages =</span> <span class="fu">c</span>(<span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{booktabs}'</span>, <span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{amssymb}'</span>), </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">returnType =</span> <span class="st">'html'</span>, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">density =</span> <span class="dv">300</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">fileDir =</span> <span class="st">"c:/data/MinWageMarketPower/analysis/draft/"</span>, </span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="do">####fileDir = getwd(), </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep_pdf =</span> T,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">imgFormat =</span> <span class="st">"jpg"</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">stem =</span> <span class="st">"est201002w"</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="page-columns page-full">
+<div class="quarto-figure quarto-figure-center page-columns page-full">
+<figure class="figure page-columns page-full">
+<figcaption>Results: 2010-2022, baseline number of Jobs greater than 2</figcaption>
+<p class="page-columns page-full"><a href="est201002w.jpg" class="lightbox page-columns page-full" data-gallery="quarto-lightbox-gallery-2" title="Results: 2010-2022, baseline number of Jobs greater than 2"><img src="est201002w.jpg" class="img-fluid figure-img column-page" alt="Results: 2010-2022, baseline number of Jobs greater than 2"></a></p>
+</figure>
+</div>
+</div>
+<div class="fullwidth">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Results: 2010-2022, baseline number of Jobs greater than 2, low and high HHI markets</figcaption>
+<p><a href="../program/figures/2026Mar17/Results2010-2022Job02LowHighw.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Results: 2010-2022, baseline number of Jobs greater than 2, low and high HHI markets"><img src="../program/figures/2026Mar17/Results2010-2022Job02LowHighw.jpg" class="img-fluid figure-img" alt="Results: 2010-2022, baseline number of Jobs greater than 2, low and high HHI markets"></a></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<figcaption>Results: 2010-2022, baseline number of Jobs greater than 2, by fraction affected</figcaption>
+<p><a href="../program/figures/2026Mar17/Results2010-2022Job02FAclassw.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Results: 2010-2022, baseline number of Jobs greater than 2, by fraction affected"><img src="../program/figures/2026Mar17/Results2010-2022Job02FAclassw.jpg" class="img-fluid figure-img" alt="Results: 2010-2022, baseline number of Jobs greater than 2, by fraction affected"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r getwd}</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">getwd</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre class="seirolightgreen"><code>[1] "C:/data/MinWageMarketPower/analysis/draft"</code></pre>
+</div>
+</div>
+<div class="fullwidth">
+
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r ltx}</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ltx <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">begin{tabular}{lcccccccc}</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="st">   </span><span class="sc">\\</span><span class="st">toprule</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="st">    &amp; </span><span class="sc">\\</span><span class="st">multicolumn{8}{c}{rJobsMP}</span><span class="sc">\\\\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (1)           &amp; (2)            &amp; (3)            &amp; (4)            &amp; (5)            &amp; (6)           &amp; (7)           &amp; (8)</span><span class="sc">\\\\</span><span class="st">  </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="st">   </span><span class="sc">\\</span><span class="st">midrule </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2010  &amp; 8.835$^{***}$ &amp; 6.125$^{***}$  &amp; 6.125$^{***}$  &amp; 7.933$^{***}$  &amp; 3.331$^{***}$  &amp; 61.77         &amp; -9.496        &amp; 2.233</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.305)       &amp; (1.014)        &amp; (1.014)        &amp; (1.465)        &amp; (0.7629)       &amp; (36.79)       &amp; (9.815)       &amp; (1.522)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2011  &amp; 4.114$^{*}$   &amp; 2.626$^{**}$   &amp; 2.626$^{**}$   &amp; 2.640$^{***}$  &amp; 1.565$^{*}$    &amp; 46.25         &amp; -5.413        &amp; -3.065</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.178)       &amp; (1.004)        &amp; (1.004)        &amp; (0.6336)       &amp; (0.8186)       &amp; (36.86)       &amp; (7.235)       &amp; (2.836)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2013  &amp; -1.644        &amp; -1.991         &amp; -1.991         &amp; -3.966         &amp; -1.096$^{**}$  &amp; 10.62         &amp; -8.058        &amp; 3.173$^{***}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.281)       &amp; (1.528)        &amp; (1.528)        &amp; (2.503)        &amp; (0.4457)       &amp; (38.76)       &amp; (5.557)       &amp; (0.6645)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2014  &amp; -1.412        &amp; -2.473         &amp; -2.473         &amp; -3.497         &amp; -2.835$^{***}$ &amp; 4.518         &amp; -8.976        &amp; 4.396$^{***}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.706)       &amp; (1.484)        &amp; (1.484)        &amp; (2.318)        &amp; (0.6657)       &amp; (38.97)       &amp; (5.240)       &amp; (0.2432)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2015  &amp; -3.204        &amp; -2.402         &amp; -2.402         &amp; -2.951         &amp; -2.720$^{**}$  &amp; 1.289         &amp; 0.9528        &amp; 7.759$^{***}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.829)       &amp; (1.499)        &amp; (1.499)        &amp; (2.143)        &amp; (0.9053)       &amp; (37.87)       &amp; (15.17)       &amp; (2.463)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2016  &amp; -1.461        &amp; -3.244$^{**}$  &amp; -3.244$^{**}$  &amp; -3.213         &amp; -4.064$^{***}$ &amp; -6.806        &amp; 9.241         &amp; 10.31$^{*}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (2.958)       &amp; (1.410)        &amp; (1.410)        &amp; (1.898)        &amp; (0.9671)       &amp; (38.37)       &amp; (18.61)       &amp; (5.535)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2017  &amp; -3.638        &amp; -3.978$^{**}$  &amp; -3.978$^{**}$  &amp; -5.195$^{*}$   &amp; -3.697$^{***}$ &amp; -4.660        &amp; 11.04         &amp; 7.980$^{*}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.125)       &amp; (1.679)        &amp; (1.679)        &amp; (2.609)        &amp; (0.9420)       &amp; (38.83)       &amp; (21.16)       &amp; (4.402)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2018  &amp; -3.565        &amp; -5.049$^{**}$  &amp; -5.049$^{**}$  &amp; -6.661$^{**}$  &amp; -4.161$^{***}$ &amp; -12.78        &amp; -14.77$^{**}$ &amp; 6.244$^{*}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.205)       &amp; (1.669)        &amp; (1.669)        &amp; (2.388)        &amp; (1.129)        &amp; (39.72)       &amp; (5.680)       &amp; (3.090)</span><span class="sc">\\\\</span><span class="st">\   </span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2019  &amp; -3.219        &amp; -5.254$^{**}$  &amp; -5.254$^{**}$  &amp; -6.501$^{*}$   &amp; -4.906$^{***}$ &amp; -19.34        &amp; -10.56        &amp; 6.772$^{*}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.166)       &amp; (1.897)        &amp; (1.897)        &amp; (3.070)        &amp; (1.273)        &amp; (41.92)       &amp; (10.17)       &amp; (3.171)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2020  &amp; -1.202        &amp; -4.676$^{**}$  &amp; -4.676$^{**}$  &amp; -4.516$^{*}$   &amp; -5.776$^{***}$ &amp; -26.91        &amp; -8.365        &amp; 13.87$^{**}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.521)       &amp; (1.861)        &amp; (1.861)        &amp; (2.529)        &amp; (1.827)        &amp; (41.10)       &amp; (9.151)       &amp; (6.224)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2021  &amp; -3.925        &amp; -8.523$^{***}$ &amp; -8.523$^{***}$ &amp; -9.746$^{***}$ &amp; -7.855$^{***}$ &amp; -51.35        &amp; -1.057        &amp; 13.22$^{**}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.838)       &amp; (2.023)        &amp; (2.023)        &amp; (2.804)        &amp; (2.298)        &amp; (42.94)       &amp; (7.283)       &amp; (6.021)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="st">   Pre2013FAMP0 $</span><span class="sc">\\</span><span class="st">times$ taxyear $=$ 2022  &amp; -1.845        &amp; -5.480$^{***}$ &amp; -5.480$^{***}$ &amp; -7.077$^{***}$ &amp; -5.082$^{**}$  &amp; -24.78        &amp; 0.4629        &amp; 8.661$^{*}$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="st">                                           &amp; (3.716)       &amp; (1.766)        &amp; (1.766)        &amp; (2.074)        &amp; (1.920)        &amp; (41.99)       &amp; (7.979)       &amp; (4.384)</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\\\\</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="st">   R$^2$                                   &amp; 0.61821       &amp; 0.63593        &amp; 0.63593        &amp; 0.67566        &amp; 0.61562        &amp; 0.63219       &amp; 0.59962       &amp; 0.69126</span><span class="sc">\\\\</span><span class="st">  </span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="st">   Observations                            &amp; 40,873        &amp; 26,292         &amp; 26,292         &amp; 13,009         &amp; 12,511         &amp; 7,827         &amp; 3,729         &amp; 14,695</span><span class="sc">\\\\</span><span class="st">  </span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="sc">\\\\</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="st">   taxyear fixed effects                   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="st">   Firm ID fixed effects                   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="st">   Main Place fixed effects                &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$   &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$  &amp; $</span><span class="sc">\\</span><span class="st">checkmark$</span><span class="sc">\\\\</span><span class="st">   </span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="st">   </span><span class="sc">\\</span><span class="st">bottomrule</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="sc">\\</span><span class="st">end{tabular}</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r headerrows}</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>headerrows <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"&amp;  All sample &amp; Complete panel &amp; </span><span class="sc">\\</span><span class="st">multicolumn{6}{c}{Incumbent firms} </span><span class="sc">\\\\</span><span class="st">"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">cline{4-9}"</span>, <span class="st">"&amp; </span><span class="sc">\\</span><span class="st">multicolumn{8}{c}{}</span><span class="sc">\\\\</span><span class="st">[-1ex]"</span>, <span class="st">"&amp;   &amp;  &amp; all sample &amp; high HHI &amp; low HHI &amp; low FA &amp; mid FA &amp; high FA </span><span class="sc">\\\\</span><span class="st">"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">cline{2-9}"</span>, <span class="st">"&amp; </span><span class="sc">\\</span><span class="st">multicolumn{8}{c}{}</span><span class="sc">\\\\</span><span class="st">[-1ex]"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r evaluate latex in html2}</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: !expr knitr::is_html_output() </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| out.width: "800px"</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: "hide"</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(texPreview)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tex_preview</span>(ltx, </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">usrPackages =</span> <span class="fu">c</span>(<span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{booktabs}'</span>, <span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{amssymb}'</span>), </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">returnType =</span> <span class="st">'html'</span>, </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">density =</span> <span class="dv">300</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">resizebox =</span> T,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">fileDir =</span> <span class="st">"c:/data/MinWageMarketPower/analysis/draft/"</span>, </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep_pdf =</span> T,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">imgFormat =</span> <span class="st">"jpg"</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">stem =</span> <span class="st">"est201002w2"</span>)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="page-columns page-full">
+<div class="quarto-figure quarto-figure-center page-columns page-full">
+<figure class="figure page-columns page-full">
+<figcaption>Results: 2010-2022, baseline number of Jobs greater than 2</figcaption>
+<p class="page-columns page-full"><a href="est201002w2.jpg" class="lightbox page-columns page-full" data-gallery="quarto-lightbox-gallery-5" title="Results: 2010-2022, baseline number of Jobs greater than 2"><img src="est201002w2.jpg" class="img-fluid figure-img column-page" alt="Results: 2010-2022, baseline number of Jobs greater than 2"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode markdown SeiroBenign code-with-copy"><code class="sourceCode markdown"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r evaluate latex in html3, eval= F}</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| out.width: "800px"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: "hide"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(texPreview)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tex_preview</span>(ltx, </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">usrPackages =</span> <span class="fu">c</span>(<span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{booktabs}'</span>, <span class="st">'</span><span class="sc">\\</span><span class="st">usepackage{amssymb}'</span>), </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">returnType =</span> <span class="st">'html'</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">density =</span> <span class="dv">300</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">resizebox =</span> F,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">fileDir =</span> <span class="st">"c:/data/MinWageMarketPower/analysis/draft/"</span>, </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep_pdf =</span> T,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">imgFormat =</span> <span class="st">"jpg"</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">stem =</span> <span class="st">"est201002w_2"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
