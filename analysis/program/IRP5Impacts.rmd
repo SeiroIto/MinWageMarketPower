@@ -75,6 +75,24 @@ grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
+read.tablev <- function(fn, quotemark = "", headertrue = TRUE, 
+  blskip = TRUE, mat = F, ...) 
+{
+  x <- read.table(fn, sep = "\t", header = headertrue, blank.lines.skip = blskip, 
+        quote = quotemark, na.strings = "", ...)
+  if (is.null(dim(x)) | nrow(x) == 1) 
+  {
+    cn <- names(x)
+    dim(x) <- c(1, length(x))
+    colnames(x) <- cn
+  }
+  if (mat) x <- as.matrix(x)
+  return(x)
+}
+write.tablev <- function(x, fn, colnamestrue = TRUE, rownamestrue = FALSE, 
+nastrings = "", ...) 
+  write.table(x, fn, sep = "\t", quote = FALSE, 
+        row.names = rownamestrue, col.names = colnamestrue, na = nastrings, ...)
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
@@ -1136,7 +1154,7 @@ for (Jb in c(2, 10)) {
     setFixest_dict(dict = dictvec, reset = FALSE)
     #### estimation
     EstSpecs <- list(
-      , All     = 1:8
+        All     = 1:8
       , HHI     = 3:5
       , FAclass = c(3, 6:8)
       , Size    = c(3, 9:12)
