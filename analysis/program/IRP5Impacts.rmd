@@ -1075,6 +1075,34 @@ for (Jb in c(2, 10)) {
     esLfwCEYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("la", Pre2013Size), ])
+
+    #### Subsample: Size*HHI
+    #### low HHI*Size
+    esLfwCEaYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("mi", Pre2013Size), ])
+    esLfwCEaYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("sm", Pre2013Size), ])
+    esLfwCEaYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("me", Pre2013Size), ])
+    esLfwCEaYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEaYr[grepl("la", Pre2013Size), ])
+    #### high HHI*Size
+    esLfwCEbYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr[grepl("mi", Pre2013Size), ])
+    esLfwCEbYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr[grepl("sm", Pre2013Size), ])
+    esLfwCEbYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr[grepl("me", Pre2013Size), ])
+    esLfwCEbYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
+      vcov = ~ taxyear + busmainplc_geo,
+      data = LfCEbYr[grepl("la", Pre2013Size), ])
     library(ggfixest)
     #### List all estimation variations
     eslistYrw <-  list(
@@ -1119,7 +1147,7 @@ for (Jb in c(2, 10)) {
       , "Low and high concentration"
       , "FA class in pre-2013"
       , "Size in pre-2013"
-      , "Size and HHI in pre-2013"
+      , "Size and concentration in pre-2013"
     )
     names(TitleSpecs) <- names(EstSpecs)
     for (ii in 1:length(EstSpecs)) {
@@ -1136,7 +1164,7 @@ for (Jb in c(2, 10)) {
         fitstat = ~ r2 + n, 
         tex = TRUE
       )
-      gFEYrw <- ggiplot(ests,
+      gw <- ggiplot(ests,
         ref.line = 2012, 
         main = paste0("Job impacts: ", TitleSpecs[ii], ", winsorized data"),
         xlab = "Tax year (March - Februray)",
@@ -1150,13 +1178,13 @@ for (Jb in c(2, 10)) {
       scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
       if (Jb == 2) Jb <- paste0("0", Jb)
       ggsave(
-      paste0(pathresults, 
-        "Results", names(EstSpecs)[ii], Yr, "-2022Job", Jb, "w.jpg")
-        , gFEYrw, width = 8*2, height = 4*2, units = "cm",
-        dpi = 300
-       )
-      assign(paste0("eslist", names(EstSpecs)[ii], Yr, Jb, "w"), eslistYrw)
-      assign(paste0("gFE",    names(EstSpecs)[ii], Yr, Jb, "w"), gFEYrw)
+        paste0(pathresults, 
+          "Results", names(EstSpecs)[ii], Yr, "-2022Job", Jb, "w.jpg")
+          , gw, width = 8*2, height = 4*2, units = "cm",
+          dpi = 300
+      )
+      assign(paste0("est", names(EstSpecs)[ii], Yr, Jb, "w"), estdfw)
+      assign(paste0("g",   names(EstSpecs)[ii], Yr, Jb, "w"), gw)
       qsave(estdfw, 
         paste0(pathresults, "est", names(EstSpecs)[ii], Yr, Jb, "w.qs"))
       write.tablev(estltxw, 

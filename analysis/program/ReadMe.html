@@ -74,13 +74,20 @@ table {
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Read me for tasks using R</h1></div>
-<div class="date"><h3>2026-3-26 09:29</h3></div>
+<div class="date"><h3>2026-3-26 17:28</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
 <ul>
 <li><a href="#chp:current-challenge">Current challenge</a></li>
-<li><a href="#chp:tasks-done-in-irp5condense-rmd">Tasks done in IRP5Condense.rmd</a></li>
+<li><a href="#chp:tasks-done">Tasks done</a>
+<ul>
+<li><a href="#sec:irp5condense-rmd">IRP5Condense.rmd</a></li>
+<li><a href="#sec:irp5hhi-rmd">IRP5HHI.rmd</a></li>
+<li><a href="#sec:irp5mergedata-rmd">IRP5MergeData.rmd</a></li>
+<li><a href="#sec:irp5impacts-rmd">IRP5Impacts.rmd</a></li>
+</ul>
+</li>
 <li><a href="#chp:task-sequence">Task sequence</a></li>
 </ul>
 </div>
@@ -102,7 +109,8 @@ table {
 <div class="side side-right">
 <p><strong>Anything</strong> on the right.</p>
 </div>
-<h1 id="chp:tasks-done-in-irp5condense-rmd">Tasks done in IRP5Condense.rmd</h1>
+<h1 id="chp:tasks-done">Tasks done</h1>
+<h2 id="sec:irp5condense-rmd">IRP5Condense.rmd</h2>
 <ol>
 <li>
 <p>Read IRP5 data</p>
@@ -390,6 +398,129 @@ idyrW[, IObPattern := paste(.SD, sep = &quot;&quot;, collapse = &quot;&quot;),
 5       2012    2013  ==> 2012
 ```
 -->
+<h2 id="sec:irp5hhi-rmd">IRP5HHI.rmd</h2>
+<ol>
+<li>Fraction affected
+<ul>
+<li>
+<p>Compute job duration and monthly income</p>
+<p>(DateEnd-DateStart2012)/30.5
+a3601_income/DurationMonth
+ipyrc[, DateStart20yr := DateStart]</p>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="sec:if-datestart-is-before-start-of-taxyear-march-1">If DateStart is before start of taxyear, March 1</h4>
+<h4 id="sec:gt-datestart20yr-march-1-of-taxyear-1">==&gt; DateStart20yr = March 1 of taxyear-1</h4>
+<h4 id="sec:datestart-too-old-for-some-rows-typo-for-previous-year-or-actual-starting-dates">DateStart too old for some rows (typo for previous year or actual starting dates)</h4>
+<p>ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
+ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]</p>
+<h4 id="sec:durationmonth-durmonthmarch-for-these-entries">DurationMonth == DurMonthMarch for these entries</h4>
+<h4 id="sec:threshold-is-set-to-20-because-typo-for-prev-ma-1-will-give-durationmonth-24">Threshold is set to 20 because typo for prev Ma 1 will give DurationMonth==24</h4>
+<p>print(ipyrc[DurationMonth &gt; 20,
+.(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
+ipyrc[DurationMonth &gt; 20, DurationMonth := DurMonthMarch]
+ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]</p>
+<pre><code class="language-normalcode">  #### If job2 after job1 ends: 
+  #### Double work duration: DateEnd  - DateStart2
+  ####  Total work duration: DateEnd2 - DateStart20yr
+  ####  &lt;----job1----&gt;
+  ####           &lt;----job2----&gt;
+  ####  DateStart20yr &lt; DateStart2
+  ####  DateEnd &lt; DateEnd2
+  ####  DateEnd &gt; DateStart2
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &lt; DateEnd2 &amp; DateEnd &gt; DateStart2, 
+    DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
+    #### Negative TDurationMonth for 35 entries for 2012 
+    #### because their reported DateEnd2 is before 2011/03/01
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &lt; DateEnd2 &amp; DateEnd &gt; DateStart2, 
+    TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
+  #### If job2 ends before job1 ends: 
+  #### Double work duration: DateEnd2 - DateStart2
+  ####  Total work duration: DateEnd  - DateStart20yr
+  ####  &lt;----------job1----------&gt;
+  ####           &lt;----job2----&gt;
+  ####  DateStart20yr &lt; DateStart2
+  ####  DateEnd &gt; DateEnd2
+  ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
+  ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &gt; DateEnd2, 
+         DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
+  ipyrc[DateStart20yr &lt; DateStart2 &amp; DateEnd &gt; DateEnd2, 
+         TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
+  #### TDurationMonth = Total duration of jobs
+  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+    by = .(Txrf, taxyear, UID)]
+  ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+  ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
+  ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
+  #### TIncomeMonth = sum of monthly income across jobs
+  ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
+</code></pre>
+<ul>
+<li>Find sub MW workers and define fraction affected
+<ul>
+<li>Sums (Jobs, NumSubMW, etc.) counts total in two levels
+a) Firm (Txrf):                good: more obs, bad: not granular
+a) Establishment (Main Place): good: granular, bad: fewer obs</li>
+</ul>
+</li>
+</ul>
+<p>PropToMW
+:Proportion to MW line = IncomeMonth/2274 ==&gt; SubMW is wage per job</p>
+<p>SubMW
+: PropToMW &lt; 1 &amp; IncomeMonth &gt; 0</p>
+<p>NumSubMW
+: number of entries with SubMW == 1L</p>
+<p>NumSubMWe
+: number of unique UID entries with SubMW == 1L</p>
+<p>Jobs
+: number of entries with IncomeMonth &gt; 0</p>
+<p>Employees
+: number of unique UID with IncomeMonth &gt; 0</p>
+<p>FA
+: NumSubMW/Jobs (FA in jobs)</p>
+<p>FAe
+: NumSubMWe/Employees (FA in employment)</p>
+<ol>
+<li>HHI</li>
+</ol>
+<h2 id="sec:irp5mergedata-rmd">IRP5MergeData.rmd</h2>
+<h2 id="sec:irp5impacts-rmd">IRP5Impacts.rmd</h2>
+<ol>
+<li>
+<p>Select (winsorized) sample</p>
+</li>
+<li>
+<p>Des stat of the sample</p>
+</li>
+<li>
+<p>Estimation and result plots</p>
+<ul>
+<li>All sample (esLfwYr),</li>
+<li>Complete panel(esLfwCYr),</li>
+<li>all sample (esLfwCEYr),</li>
+<li>high concentrated market (esLfwCEaYr),</li>
+<li>low concentrated market (esLfwCEbYr),</li>
+<li>low F (esLfwCEYrLow),</li>
+<li>mid F (esLfwCEYrMid),</li>
+<li>high F (esLfwCEYrHigh),</li>
+<li>micro size (esLfwCEYrmi),</li>
+<li>small size (esLfwCEYrsm),</li>
+<li>medium size (esLfwCEYrme),</li>
+<li>large size (esLfwCEYrla),</li>
+<li>high HHI and micro size (esLfwCEaYrmi),</li>
+<li>high HHI and small size (esLfwCEaYrsm),</li>
+<li>high HHI and medium size (esLfwCEaYrme),</li>
+<li>high HHI and large size (esLfwCEaYrla),</li>
+<li>low HHI and micro size (esLfwCEbYrmi),</li>
+<li>low HHI and small size (esLfwCEbYrsm),</li>
+<li>low HHI and medium size (esLfwCEbYrme),</li>
+<li>low HHI and large size (esLfwCEbYrla</li>
+</ul>
+</li>
+</ol>
 <h1 id="chp:task-sequence">Task sequence</h1>
 <p>Process files in the following order</p>
 <ol>
