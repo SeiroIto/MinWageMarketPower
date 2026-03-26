@@ -1,0 +1,40 @@
+---
+title: "Sample Document with References"
+author: "Your Name"
+format: 
+  pdf:
+    header-includes:
+      - \usepackage{etoolbox}
+      - \makeatletter
+      - \patchcmd{\thebibliography}{\itemsep \baselineskip}{\itemsep 2pt}{}{}
+      - \makeatother
+---
+
+# Introduction
+
+This is a sample document demonstrating margin notes with citations.
+
+Some text here.\marginpar{\footnotesize Reference: \cite{ref1}, \cite{ref2}.}
+
+More text with additional content.
+
+# Conclusion
+
+Let's summarize the key points.
+
+# References
+
+```{=bib}
+@article{ref1,
+  author = {Doe, John},
+  title = {Understanding Example References},
+  journal = {Journal of Examples},
+  year = {2022}
+}
+
+@article{ref2,
+  author = {Smith, Jane},
+  title = {Another Example Reference},
+  journal = {Journal of Further Examples},
+  year = {2023}
+}
