@@ -256,6 +256,9 @@ Three ways to proceed
       * Duration in months = (DateEnd-DateStart20yr)/30.5 for each year
       * Monthly income = a3601_income/DurationMonth
 
+
+    <details><summary>Details</summary>
+
     ```{normalcode, warning = F}
        #### If DateStart is before start of taxyear, March 1 
        ####  ==> DateStart20yr = March 1 of taxyear-1
@@ -271,7 +274,9 @@ Three ways to proceed
     
     If there are more than one job for a worker, get total duration and total incomes
     
-       * But, we did not make use of it
+    * But, we did not make use of it
+    
+        To understand the extent of jobs per worker, we examine it in "create FA panel" chunk of IRP5HHI.rmd
     ```{normalcode, warning = F}
     #### If job2 after job1 ends: 
       
@@ -310,10 +315,54 @@ Three ways to proceed
     #### TIncomeMonth = sum of monthly income across jobs
     ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
     ```
+    </details>
 
+
+   * Find sub MW jobs/workers and define fraction affected
+      * PropToMW  := round(IncomeMonth/2274, 6)
+      * SubMW := PropToMW < 1 & IncomeMonth > 0
+   * Workers, sub MW workers, jobs, sub MW jobs
+      * Firm level
+      * Establishment (Main Place) level
+   * Fraction affected
+      * FA     := NumSubMW/Jobs
+      * FAe    := NumSubMWe/Employees
+      * FAMP   := NumSubMWMP/JobsMP
+      * FAeMP  := NumSubMWeMP/EmployeesMP
+
+       ```{=latex}
+       $$
+       \begin{aligned}
+       FA     &= NumSubMW/Jobs\\
+       FAe    &= NumSubMWe/Employees\\
+       FAMP   &= NumSubMWMP/JobsMP\\
+       FAeMP  &= NumSubMWeMP/EmployeesMP
+       \end{aligned}      
+       $$
+       ```
+
+    <details><summary>Details</summary>
+    
    * Find sub MW workers and define fraction affected
       * PropToMW  := round(IncomeMonth/2274, 6)
       * SubMW := PropToMW < 1 & IncomeMonth > 0
+   * Workers, sub MW workers, jobs, sub MW jobs
+      * Firm level: by = .(Txrf, taxyear) 
+         * NumSubMW := as.integer(sum(SubMW==1L))
+         * Jobs := as.integer(sum(IncomeMonth > 0))
+         * NumSubMWe := as.integer(uniqueN(UID[SubMW==1L]))
+         * Employees := as.integer(uniqueN(UID[IncomeMonth > 0]))
+      * Establishment (Main Place) level: by = .(Txrf, busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxyear)
+         * NumSubMWMP := as.integer(sum(SubMW==1L))
+         * JobsMP := as.integer(sum(IncomeMonth > 0))
+         * NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L]))
+         * EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0]))
+   * Fraction affected
+      * FA     := NumSubMW/Jobs
+      * FAe    := NumSubMWe/Employees
+      * FAMP   := NumSubMWMP/JobsMP
+      * FAeMP  := NumSubMWeMP/EmployeesMP
 
     ```{normalcode, warning = F}
     ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
@@ -345,11 +394,14 @@ Three ways to proceed
     ipyrc[, FAMP   := round(NumSubMWMP/JobsMP, 6)]
     ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
     ```
+    </details>
 
 
    * Sums (Jobs, NumSubMW, etc.) counts total in two levels
-      a) Firm (Txrf):                good: more obs, bad: not granular
-      a) Establishment (Main Place): good: granular, bad: fewer obs
+      * Firm (Txrf):                
+         * good: more obs, bad: not granular
+      * Establishment (Main Place): 
+         * good: granular, bad: fewer obs
 
 PropToMW
 : Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
@@ -376,7 +428,7 @@ FAe
 : NumSubMWe/Employees (FA in employment)
 
 
-1. HHI
+2. HHI
 
 
 ## IRP5MergeData.rmd

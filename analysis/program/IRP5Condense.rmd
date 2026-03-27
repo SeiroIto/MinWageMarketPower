@@ -134,7 +134,7 @@ qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
 
 Appending all annual files
 
-```{r create long format of irp5, eval = F}
+```{r create long format of irp5}
 library(qs)
 library(data.table)
 irp5pnl <- NULL

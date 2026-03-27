@@ -74,7 +74,7 @@ table {
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Read me for tasks using R</h1></div>
-<div class="date"><h3>2026-3-27 04:40</h3></div>
+<div class="date"><h3>2026-3-27 13:36</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -407,6 +407,7 @@ idyrW[, IObPattern := paste(.SD, sep = &quot;&quot;, collapse = &quot;&quot;),
 <li>Duration in months = (DateEnd-DateStart20yr)/30.5 for each year</li>
 <li>Monthly income = a3601_income/DurationMonth</li>
 </ul>
+ <details><summary>Details</summary>
 <pre><code class="language-normalcode">   #### If DateStart is before start of taxyear, March 1 
    ####  ==&gt; DateStart20yr = March 1 of taxyear-1
    #### 20yr = 2008, ..., 2022
@@ -419,6 +420,12 @@ idyrW[, IObPattern := paste(.SD, sep = &quot;&quot;, collapse = &quot;&quot;),
    ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
 </code></pre>
 <p>If there are more than one job for a worker, get total duration and total incomes</p>
+<ul>
+<li>
+<p>But, we did not make use of it</p>
+<p>To understand the extent of jobs per worker, we examine it in “create FA panel” chunk of IRP5HHI.rmd</p>
+</li>
+</ul>
 <pre><code class="language-normalcode">#### If job2 after job1 ends: 
   
 #### Double work duration: DateEnd  - DateStart2
@@ -456,11 +463,67 @@ ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
 #### TIncomeMonth = sum of monthly income across jobs
 ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
 </code></pre>
+ </details>
+<ul>
+<li>
+<p>Find sub MW jobs/workers and define fraction affected</p>
+<ul>
+<li>PropToMW  := round(IncomeMonth/2274, 6)</li>
+<li>SubMW := PropToMW &lt; 1 &amp; IncomeMonth &gt; 0</li>
+</ul>
+</li>
+<li>
+<p>Workers, sub MW workers, jobs, sub MW jobs</p>
+<ul>
+<li>Firm level</li>
+<li>Establishment (Main Place) level</li>
+</ul>
+</li>
+<li>
+<p>Fraction affected</p>
+<ul>
+<li>FA     := NumSubMW/Jobs</li>
+<li>FAe    := NumSubMWe/Employees</li>
+<li>FAMP   := NumSubMWMP/JobsMP</li>
+<li>FAeMP  := NumSubMWeMP/EmployeesMP</li>
+</ul>
+</li>
+</ul>
+ <details><summary>Details</summary>
 <ul>
 <li>Find sub MW workers and define fraction affected
 <ul>
 <li>PropToMW  := round(IncomeMonth/2274, 6)</li>
 <li>SubMW := PropToMW &lt; 1 &amp; IncomeMonth &gt; 0</li>
+</ul>
+</li>
+<li>Workers, sub MW workers, jobs, sub MW jobs
+<ul>
+<li>Firm level: by = .(Txrf, taxyear)
+<ul>
+<li>NumSubMW := as.integer(sum(SubMW==1L))</li>
+<li>Jobs := as.integer(sum(IncomeMonth &gt; 0))</li>
+<li>NumSubMWe := as.integer(uniqueN(UID[SubMW==1L]))</li>
+<li>Employees := as.integer(uniqueN(UID[IncomeMonth &gt; 0]))</li>
+</ul>
+</li>
+<li>Establishment (Main Place) level: by = .(Txrf, busprov_geo, busdistmuni_geo,
+buslocmuni_geo, busmainplc_geo, taxyear)
+<ul>
+<li>NumSubMWMP := as.integer(sum(SubMW==1L))</li>
+<li>JobsMP := as.integer(sum(IncomeMonth &gt; 0))</li>
+<li>NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L]))</li>
+<li>EmployeesMP := as.integer(uniqueN(UID[IncomeMonth &gt; 0]))</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Fraction affected
+<ul>
+<li>FA     := NumSubMW/Jobs</li>
+<li>FAe    := NumSubMWe/Employees</li>
+<li>FAMP   := NumSubMWMP/JobsMP</li>
+<li>FAeMP  := NumSubMWeMP/EmployeesMP</li>
 </ul>
 </li>
 </ul>
@@ -493,10 +556,22 @@ ipyrc[, FAe    := round(NumSubMWe/Employees, 6)]
 ipyrc[, FAMP   := round(NumSubMWMP/JobsMP, 6)]
 ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
 </code></pre>
+ </details>
 <ul>
 <li>Sums (Jobs, NumSubMW, etc.) counts total in two levels
-a) Firm (Txrf):                good: more obs, bad: not granular
-a) Establishment (Main Place): good: granular, bad: fewer obs</li>
+<ul>
+<li>Firm (Txrf):
+<ul>
+<li>good: more obs, bad: not granular</li>
+</ul>
+</li>
+<li>Establishment (Main Place):
+<ul>
+<li>good: granular, bad: fewer obs</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
