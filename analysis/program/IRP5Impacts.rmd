@@ -1093,7 +1093,6 @@ for (Jb in c(2, 10)) {
     esLfwCEYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,
       data = LfCEYr[grepl("la", Pre2013Size), ])
-
     #### Subsample: Size*HHI
     #### low HHI*Size
     esLfwCEaYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
@@ -1326,10 +1325,11 @@ litedown::timing_data()
 ```
 ::: {.fullwidth}
 ```{r 201002w results}
-gFE201002w
-gFE201010wLH
-gFE201010wFAclass
-gFE201010wSize
+gAll201002w
+gHHI201010w
+gFAclass201010w
+gSize201010w
+gSizeHHI201010w
 ```
 :::
 

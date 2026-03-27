@@ -251,63 +251,102 @@ Three ways to proceed
 ## IRP5HHI.rmd
 
 1. Fraction affected
-   * Compute job duration and monthly income
-   
-       (DateEnd-DateStart2012)/30.5
-       a3601_income/DurationMonth
-       ipyrc[, DateStart20yr := DateStart]
-  #### If DateStart is before start of taxyear, March 1 
-  ####  ==> DateStart20yr = March 1 of taxyear-1
 
-  #### DateStart too old for some rows (typo for previous year or actual starting dates)  
-  ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
-  ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
-  #### DurationMonth == DurMonthMarch for these entries
-  #### Threshold is set to 20 because typo for prev Ma 1 will give DurationMonth==24
-  print(ipyrc[DurationMonth > 20, 
-      .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
-  ipyrc[DurationMonth > 20, DurationMonth := DurMonthMarch]
-  ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
+    Get job duration and compute monthly income to define affected jobs 
+      * Duration in months = (DateEnd-DateStart20yr)/30.5 for each year
+      * Monthly income = a3601_income/DurationMonth
 
-```{normalcode, warning = F}
-  #### If job2 after job1 ends: 
-  #### Double work duration: DateEnd  - DateStart2
-  ####  Total work duration: DateEnd2 - DateStart20yr
-  ####  <----job1---->
-  ####           <----job2---->
-  ####  DateStart20yr < DateStart2
-  ####  DateEnd < DateEnd2
-  ####  DateEnd > DateStart2
-  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
-    DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
-    #### Negative TDurationMonth for 35 entries for 2012 
-    #### because their reported DateEnd2 is before 2011/03/01
-  ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
-    TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
-  #### If job2 ends before job1 ends: 
-  #### Double work duration: DateEnd2 - DateStart2
-  ####  Total work duration: DateEnd  - DateStart20yr
-  ####  <----------job1---------->
-  ####           <----job2---->
-  ####  DateStart20yr < DateStart2
-  ####  DateEnd > DateEnd2
-  ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
-  ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
-  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
-         DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
-  ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
-         TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
-  #### TDurationMonth = Total duration of jobs
-  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
-    by = .(Txrf, taxyear, UID)]
-  ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
-  ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
-  ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
-  #### TIncomeMonth = sum of monthly income across jobs
-  ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
-```
+    ```{normalcode, warning = F}
+       #### If DateStart is before start of taxyear, March 1 
+       ####  ==> DateStart20yr = March 1 of taxyear-1
+       #### 20yr = 2008, ..., 2022
+       #### DateStart too old for some rows (typo for previous year or actual starting dates)  
+       ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
+       ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
+       #### DurationMonth == DurMonthMarch for these entries
+       #### Threshold is set to 20 because typo for prev Ma 1 will give DurationMonth==24
+       ipyrc[DurationMonth > 20, DurationMonth := DurMonthMarch]
+       ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
+    ```
+    
+    If there are more than one job for a worker, get total duration and total incomes
+    
+       * But, we did not make use of it
+    ```{normalcode, warning = F}
+    #### If job2 after job1 ends: 
+      
+    #### Double work duration: DateEnd  - DateStart2
+    ####  Total work duration: DateEnd2 - DateStart20yr
+    ####  <----job1---->
+    ####           <----job2---->
+    ####  DateStart20yr < DateStart2
+    ####  DateEnd < DateEnd2
+    ####  DateEnd > DateStart2
+    ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+      DJobDurationMonth := round(as.numeric((DateEnd - DateStart2)/30.5), 3)]
+      #### Negative TDurationMonth for 35 entries for 2012 
+      #### because their reported DateEnd2 is before 2011/03/01
+    ipyrc[DateStart20yr < DateStart2 & DateEnd < DateEnd2 & DateEnd > DateStart2, 
+      TDurationMonth := round(as.numeric((DateEnd2 - DateStart20yr)/30.5), 3)]
+    #### If job2 ends before job1 ends: 
+    #### Double work duration: DateEnd2 - DateStart2
+    ####  Total work duration: DateEnd  - DateStart20yr
+    ####  <----------job1---------->
+    ####           <----job2---->
+    ####  DateStart20yr < DateStart2
+    ####  DateEnd > DateEnd2
+    ####     (DateEnd2 - DateStart2   )/30.5 (double work duration)
+    ####     (DateEnd  - DateStart20yr)/30.5 (job1+job2 duration)
+    ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+           DJobDurationMonth := round(as.numeric((DateEnd2 - DateStart2)/30.5), 3)]
+    ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
+           TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
+    #### TDurationMonth = Total duration of jobs
+    ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+      by = .(Txrf, taxyear, UID)]
+    ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
+    ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
+    ipyrc[, NumJobsPerWorker := as.integer(.N), by = .(Txrf, taxyear, UID)]
+    #### TIncomeMonth = sum of monthly income across jobs
+    ipyrc[, TIncomeMonth     := sum(IncomeMonth, na.rm = T), by = .(Txrf, taxyear, UID)]
+    ```
 
-* Find sub MW workers and define fraction affected
+   * Find sub MW workers and define fraction affected
+      * PropToMW  := round(IncomeMonth/2274, 6)
+      * SubMW := PropToMW < 1 & IncomeMonth > 0
+
+    ```{normalcode, warning = F}
+    ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
+    ipyrc[, SubMW     := as.integer(PropToMW < 1 & IncomeMonth > 0)]
+    #### a. Firm level
+    ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), 
+      by = .(Txrf, taxyear)]
+    ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), 
+      by = .(Txrf, taxyear)]
+    ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), 
+      by = .(Txrf, taxyear)]
+    ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), 
+      by = .(Txrf, taxyear)]
+    #### b. Establishment (Main Place) level
+    ipyrc[, NumSubMWMP  := as.integer(sum(SubMW==1L)), 
+      by = .(Txrf, busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxyear)]
+    ipyrc[, JobsMP      := as.integer(sum(IncomeMonth > 0)), 
+      by = .(Txrf, busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxyear)]
+    ipyrc[, NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L])), 
+      by = .(Txrf, busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxyear)]
+    ipyrc[, EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0])), 
+      by = .(Txrf, busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxyear)]
+    ipyrc[, FA     := round(NumSubMW/Jobs, 6)]
+    ipyrc[, FAe    := round(NumSubMWe/Employees, 6)]
+    ipyrc[, FAMP   := round(NumSubMWMP/JobsMP, 6)]
+    ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
+    ```
+
+
    * Sums (Jobs, NumSubMW, etc.) counts total in two levels
       a) Firm (Txrf):                good: more obs, bad: not granular
       a) Establishment (Main Place): good: granular, bad: fewer obs

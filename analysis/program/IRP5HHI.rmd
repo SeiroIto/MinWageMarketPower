@@ -282,15 +282,17 @@ for (yr in 8:22) {
   FAdata[Employees >= 250, Size := "large"]
   FAdata[is.na(Employees) | Employees == 0, Size := NA]
   FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
+  FAdata[, JobsPerWorker := .N, by = c(geovars, taxrefno, uid)]
   #### Number of affected workers in aggregates
   ag1 <- ipyrc[, .(
-      TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
+      JobsPerWorker
+    , TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
     , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
     , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
     , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
     )
     ][, .(
-      TotalEmployees, TotalSubMWWorkers, 
+      JobsPerWorker, TotalEmployees, TotalSubMWWorkers, 
       AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       TotalFirmsWithEmployees, TotalAffectedFirms,
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
@@ -355,6 +357,15 @@ qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = 13)
 table(FAD[,taxyear])
 #### 2009     2010     2011     2012     2013     2014     2015     2016     2017     2018     2019     2020     2021     2022 
 ####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
+options(datatable.print.nrows = 200, datatable.print.topn = 20)
+print(round(
+  FAD[, .(JobsPerWorker, num := 1:.N), 
+    by = c(geovars, taxrefno, UID, taxyear)][, 
+    .(
+      MeanJobsPerWorker = mean(JobsPerWorker, na.rm = T)
+    , StdJobsPerWorker  = var(JobsPerWorker, na.rm = T)^(.5)
+    , NumberOfObs       = length(JobsPerWorker[!is.na(JobsPerWorker)])
+    ), by = taxyear], 4))
 ```
 
 ```{r industry code for ag, eval = F}
