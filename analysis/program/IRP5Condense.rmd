@@ -345,7 +345,7 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
 smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
-  c(geovars, "taxrefno"), with = F])
+  c(geovars, "taxrefno", "irp5it3aid"), with = F])
 smallirp5 <- smallirp5[!duplicated(smallirp5), ]
 qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 ```
