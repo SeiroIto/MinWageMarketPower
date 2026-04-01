@@ -134,7 +134,7 @@ qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
 
 Appending all annual files
 
-```{r create long format of irp5, eval = F}
+```{r create long format of irp5}
 library(qs)
 library(data.table)
 irp5pnl <- NULL
@@ -341,23 +341,24 @@ table(geodat[, .(HaveInfo, taxyear)], useNA = "ifany")
 qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 ```
 
-```{r smallirp5, eval = F}
+```{r smallirp5}
 irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
-smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), c(geovars, "taxrerfno")])
+smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
+  c(geovars, "taxrefno"), with = F])
 smallirp5 <- smallirp5[!duplicated(smallirp5), ]
 qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 ```
 
-```{r GeoLF, eval = F}
+```{r GeoLF}
 geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
 smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 #### setkey(geoloc, payereferenceno)
 #### setkey(smallirp5, payereferenceno)
 #### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
-setkey(geoloc, c(geovars, "taxrefno"))
-setkey(smallirp5, c(geovars, "taxrefno"))
-GeoLF <- smallirp5[geoloc, on = c(geovars, "taxrefno")]
+setkey(geoloc, c("taxrefno", "irp5it3aid"))
+setkey(smallirp5, c("taxrefno", "irp5it3aid"))
+GeoLF <- smallirp5[geoloc, on = c("taxrefno", "irp5it3aid")]
 qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
