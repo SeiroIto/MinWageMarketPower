@@ -403,6 +403,7 @@ Three ways to proceed
       * Establishment (Main Place): 
          * good: granular, bad: fewer obs
 
+<details><summary>Definitions of created variables</summary>
 PropToMW
 : Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
 
@@ -426,12 +427,78 @@ FA
 
 FAe
 : NumSubMWe/Employees (FA in employment)
+</details>
 
 
 2. HHI
 
+    * Define share/HHI at each level of location granularity for each taxyear
+    
+    > byvar <- 	c("busprov_geo", "busdistmuni_geo", 
+    >   "buslocmuni_geo", "busmainplc_geo")[1:g]
+
+    * WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")
+    * WorkersInMarket := as.integer(.N), by = byvar
+    * Share := WorkersAtEstab/WorkersInMarket
+
+    <details><summary>Details</summary>
+    
+    > ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]
+    >
+    > ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]
+    >
+    > ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
+    </details>
+
+    * Saved as `LShareHHI.qs`
+
+
 
 ## IRP5MergeData.rmd
+
+* `faa` (FAOfAgri.qs): Collection of first rows of FAD (establishment-taxyear)
+
+    * by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)
+      * FA0 := FA[!is.na(FA) & FA != 0][1]
+      * Jobs0 := Jobs[!is.na(Jobs) & Jobs != 0][1]
+      * FAMP0 := FAMP[!is.na(FAMP) & FAMP != 0][1]
+      * JobsMP0 := JobsMP[!is.na(JobsMP) & JobsMP != 0][1]
+    * dJobs := Jobs - Jobs0
+    * rJobs := dJobs/Jobs0
+    * dJobsMP := JobsMP - JobsMP0
+    * rJobsMP := dJobsMP/JobsMP0
+
+    ```{normalcodes, warning = F}
+    faa[, c("FA0", "Jobs0", "FAMP0", "JobsMP0") := 
+      list(
+          FA[!is.na(FA) & FA != 0][1]             # FA0
+        , Jobs[!is.na(Jobs) & Jobs != 0][1]       # Jobs0
+        , FAMP[!is.na(FAMP) & FAMP != 0][1]      # FAMP0
+        , JobsMP[!is.na(JobsMP) & JobsMP != 0][1] # JobsMP0
+      ), by = 
+      .(
+        busprov_geo, busdistmuni_geo, 
+        buslocmuni_geo, busmainplc_geo, taxrefno
+      )]
+    faa[, dJobs := Jobs - Jobs0]
+    faa[, rJobs := dJobs/Jobs0]
+    faa[, dJobsMP := JobsMP - JobsMP0]
+    faa[, rJobsMP := dJobsMP/JobsMP0]
+    ```
+
+* `LSa` (HHIAgriRows.qs) &rarr; Main Place &rarr; `LSMa` (HHIAgriRowsMainPlaceLevel.qs)
+   * taxyear < 2013, ExistedBefore2013 := 1L
+   * LSMa <- LSa[grepl("Mai", AreaLevel), ]
+
+* irp5Ma (IRP5), only agriculture
+   * All background information at worker level + establishment information
+
+LSa(HHIAgriRows.qs)
+LSMa <- LSa[grepl("Mai", AreaLevel), ]
+
+LSMa is saved as HHIAgriRowsMainPlaceLevel.qs
+
+
 
 ## IRP5Impacts.rmd
 

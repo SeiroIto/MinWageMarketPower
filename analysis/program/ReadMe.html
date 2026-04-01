@@ -74,7 +74,7 @@ table {
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Read me for tasks using R</h1></div>
-<div class="date"><h3>2026-3-27 13:36</h3></div>
+<div class="date"><h3>2026-3-30 11:11</h3></div>
 </div>
 <div class="body">
 <div id="TOC">
@@ -575,8 +575,9 @@ ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
 </ul>
 </li>
 </ol>
-<p>PropToMW
-: Proportion to MW line = IncomeMonth/2274 ==&gt; SubMW is wage per job</p>
+<details><summary>Definitions of created variables</summary>
+PropToMW
+: Proportion to MW line = IncomeMonth/2274 ==> SubMW is wage per job
 <p>SubMW
 : PropToMW &lt; 1 &amp; IncomeMonth &gt; 0</p>
 <p>NumSubMW
@@ -591,10 +592,86 @@ ipyrc[, FAeMP  := round(NumSubMWeMP/EmployeesMP, 6)]
 : NumSubMW/Jobs (FA in jobs)</p>
 <p>FAe
 : NumSubMWe/Employees (FA in employment)</p>
-<ol>
-<li>HHI</li>
+</details>
+<ol start="2">
+<li>
+<p>HHI</p>
+<ul>
+<li>Define share/HHI at each level of location granularity for each taxyear</li>
+</ul>
+<blockquote>
+<p>byvar &lt;- 	c(“busprov_geo”, “busdistmuni_geo”,
+“buslocmuni_geo”, “busmainplc_geo”)[1:g]</p>
+</blockquote>
+<ul>
+<li>WorkersAtEstab := as.integer(.N), by = c(byvar, “Txrf”)</li>
+<li>WorkersInMarket := as.integer(.N), by = byvar</li>
+<li>Share := WorkersAtEstab/WorkersInMarket</li>
+</ul>
+ <details><summary>Details</summary>
+<blockquote>
+<p>ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, “Txrf”)]</p>
+<p>ipGeo[, WorkersInMarket := as.integer(.N), by = byvar]</p>
+<p>ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]</p>
+</blockquote>
+ </details>
+<ul>
+<li>Saved as <code>LShareHHI.qs</code></li>
+</ul>
+</li>
 </ol>
 <h2 id="sec:irp5mergedata-rmd">IRP5MergeData.rmd</h2>
+<ul>
+<li>
+<p><code>faa</code> (FAOfAgri.qs): Collection of first rows of FAD (establishment-taxyear)</p>
+<ul>
+<li>by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)
+<ul>
+<li>FA0 := FA[!is.na(FA) &amp; FA != 0][1]</li>
+<li>Jobs0 := Jobs[!is.na(Jobs) &amp; Jobs != 0][1]</li>
+<li>FAMP0 := FAMP[!is.na(FAMP) &amp; FAMP != 0][1]</li>
+<li>JobsMP0 := JobsMP[!is.na(JobsMP) &amp; JobsMP != 0][1]</li>
+</ul>
+</li>
+<li>dJobs := Jobs - Jobs0</li>
+<li>rJobs := dJobs/Jobs0</li>
+<li>dJobsMP := JobsMP - JobsMP0</li>
+<li>rJobsMP := dJobsMP/JobsMP0</li>
+</ul>
+<pre><code class="language-normalcodes">faa[, c(&quot;FA0&quot;, &quot;Jobs0&quot;, &quot;FAMP0&quot;, &quot;JobsMP0&quot;) := 
+  list(
+      FA[!is.na(FA) &amp; FA != 0][1]             # FA0
+    , Jobs[!is.na(Jobs) &amp; Jobs != 0][1]       # Jobs0
+    , FAMP[!is.na(FAMP) &amp; FAMP != 0][1]      # FAMP0
+    , JobsMP[!is.na(JobsMP) &amp; JobsMP != 0][1] # JobsMP0
+  ), by = 
+  .(
+    busprov_geo, busdistmuni_geo, 
+    buslocmuni_geo, busmainplc_geo, taxrefno
+  )]
+faa[, dJobs := Jobs - Jobs0]
+faa[, rJobs := dJobs/Jobs0]
+faa[, dJobsMP := JobsMP - JobsMP0]
+faa[, rJobsMP := dJobsMP/JobsMP0]
+</code></pre>
+</li>
+<li>
+<p><code>LSa</code> (HHIAgriRows.qs) → Main Place → <code>LSMa</code> (HHIAgriRowsMainPlaceLevel.qs)</p>
+<ul>
+<li>taxyear &lt; 2013, ExistedBefore2013 := 1L</li>
+<li>LSMa &lt;- LSa[grepl(“Mai”, AreaLevel), ]</li>
+</ul>
+</li>
+<li>
+<p>irp5Ma (IRP5), only agriculture</p>
+<ul>
+<li>All background information at worker level + establishment information</li>
+</ul>
+</li>
+</ul>
+<p>LSa(HHIAgriRows.qs)
+LSMa &lt;- LSa[grepl(“Mai”, AreaLevel), ]</p>
+<p>LSMa is saved as HHIAgriRowsMainPlaceLevel.qs</p>
 <h2 id="sec:irp5impacts-rmd">IRP5Impacts.rmd</h2>
 <ol>
 <li>
