@@ -372,7 +372,7 @@ smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 #### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
 setkey(geoloc, irp5it3aid)
 setkey(smallirp5, irp5it3aid)
-GeoLF <- smallirp5[geoloc, on = c("taxyear", "irp5it3aid")]
+GeoLF <- smallirp5[geoloc, on = "irp5it3aid"]
 qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 rm(geoloc)
 ```
