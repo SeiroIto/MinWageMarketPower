@@ -396,7 +396,8 @@ for (ff in FilesToCopy)
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
-irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+  nthreads = 13)
 GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
@@ -705,6 +706,14 @@ qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
 ```
 
 Get observation pattern: IObPattern, EObPattern, FObPattern
+
+Also create 
+
+* `EstabIDTx` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(Txrf)
+* `EstabID` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(taxrefno)
+* `FirmIDTx` (Txrf)
+* `FirmID` (taxrefno)
+* `IndID` (EstabIDTx)(uid)
 
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
