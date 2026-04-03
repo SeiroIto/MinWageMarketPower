@@ -3,10 +3,11 @@ library(qs); library(data.table); library(ggplot2)
 library(rmarkdown); library(fixest)
 library(knitr); library(tufte)
 library(litedown)
+#### Set chunk options in litedown
 litedown::reactor(
-  eval = TRUE, 
-  echo = TRUE,
-  time = TRUE
+    eval = TRUE
+  , echo = TRUE
+  , time = TRUE   # record elapsed time of execution
 )
 options(htmltools.dir.version = FALSE, width = 100)
 #### threads
