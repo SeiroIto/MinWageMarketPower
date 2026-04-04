@@ -705,7 +705,7 @@ c(nrow(irp5gir), nrow(irp5Clean))
 qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
 ```
 
-Get observation pattern: IObPattern, EObPattern, FObPattern
+Get observation pattern for individuals, establishments, firms: IObPattern, EObPattern, FObPattern
 
 Also create 
 
@@ -742,49 +742,86 @@ idyr[, IndID := paste(EstabIDTx, uid, sep = "-")]
 #### Individual observation pattern in a given establishment
 idyr[, Ob := 1L]
 idyrW <- reshape(Idyr, direction = "wide", 
-  idvar = c("busprov_geo", "busdistmuni_geo", 
+  idvar = c(
+    "busprov_geo", "busdistmuni_geo", 
     "buslocmuni_geo", "busmainplc_geo", 
-    "FirmIDTx", "FirmID", "EstabIDTx", "EstabID", "IndID"),
+    "FirmIDTx", "FirmID", 
+    "EstabIDTx", "EstabID", 
+    "IndID"),
   timevar = "taxyear", v.names= c("Ob"))
-for (jj in grep("Ob", colnames(idyrW)))
+for (jj in grep("^Ob", colnames(idyrW)))
   for (ii in which(is.na(idyrW[, jj]))) 
     set(idyrW, i = ii, j = jj, value = 0L)
-cols <- grepout("Ob", colnames(idyrW))
+cols <- grepout("^Ob", colnames(idyrW))
 #### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
 ####   .SDcols = cols]
 idyrW[, IObPattern := paste(.SD, sep = "", collapse = ""), 
   .SDcols = cols]
 idyrW[, IObPattern := factor(IObPattern)]
 #### Establishment observation pattern
-#### Find any individual with 1L in a given establishment
+#### Method: Find any individual with 1L in taxyear-establishment
+####         and copy within an establishment
+#### EstabObYYYY: Establishment observed in YYYY 
+#### FirmObYYYY: Establishment observed in YYYY 
 idyrW[, list(paste0("Estab", cols), paste0("Firm", cols)) := 0L]
 estabid <- unique(idyrW[, EstabID])
 firmid  <- unique(idyrW[, FirmID])
 for (jj in grepout("^Ob", colnames(idyrW)))
+  #### Estab"jj" with jj = ObYYYY
   jjj <- grep(paste0("Estab", jj), colnames(idyrW))
   for (ii in 1:length(estabid)) 
+    #### i: ii-th estbid (establishment ID)
+    #### j: Estab"jj" ((2008:2022)[jj])
+    #### if a worker of an establishment is observed, 
+    #### ObYYYY is nonNA
     set(idyrW, 
-          i = which(idyrW[, EstabID] == estabid[ii]), 
+          i = which(
+                idyrW[, EstabID] == estabid[ii] & 
+                is.na(idyrW[, jj]) 
+              ), 
           j = jjj, 
       value = 1L)
+#### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
+for (yy in 2008:2022)
+  jjname <- paste0("EstabOb", yy)
+  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+    by = .(EstabID)]
+estabcols <- grepout("EstabOb", colnames(idyrW))
+idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = estabcols]
+idyrW[, EObPattern := factor(EObPattern)]
+
 #### Firm observation pattern
 #### Find any individual with 1L in a given firm
 for (jj in grepout("^Ob", colnames(idyrW)))
   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
   for (ii in 1:length(firmbid)) 
     set(idyrW, 
-          i = which(idyrW[, FirmID] == firmid[ii]), 
+          i = which(
+                idyrW[, FirmID] == firmid[ii] & 
+                is.na(idyrW[, jj]) 
+              ), 
           j = jjj, 
       value = 1L)
-estabcols <- grepout("EstabOb", colnames(idyrW))
-idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
-  .SDcols = cols]
-idyrW[, EObPattern := factor(EObPattern)]
+for (yy in 2008:2022)
+  jjname <- paste0("FirmOb", yy)
+  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+    by = .(FirmID)]
 firmcols <- grepout("FirmOb", colnames(idyrW))
 idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
-  .SDcols = cols]
+  .SDcols = firmcols]
 idyrW[, FObPattern := factor(FObPattern)]
-qsave(idyrW, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+#### ObPattern: FirmIDTx, FirmID, EstabIDTx, EstabID, IndID, 
+####            FObPattern, EObPattern, IObPattern
+ObPattern <- idyrW[, c(
+    "busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo", 
+    "FirmIDTx", "FirmID", 
+    "EstabIDTx", "EstabID", 
+    "IndID", 
+    "FObPattern", "EObPattern", "IObPattern"), with = F]
+qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+#### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
 irp5Clean[, EstabIDTx := factor(as.numeric(factor(paste0(
     busdistmuni_geo
   , buslocmuni_geo
@@ -792,11 +829,11 @@ irp5Clean[, EstabIDTx := factor(as.numeric(factor(paste0(
   , Txrf))))
 ]
 irp5Clean[, IndID := paste(EstabIDTx, uid, sep = "-")]
-setkey(irp5Clean, IndID); setkey(idyrW, IndID)
-irp5 <- idyrW[irp5Clean, on = "TxUID"]
+setkey(irp5Clean, IndID); setkey(ObPattern, IndID)
+irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "IndID")]
 qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
 #### Agriculture panel
-irp5a <- irp5Clean[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+irp5a <- irp5[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
 qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = 13)
 litedown::timing_data() 
 ```
