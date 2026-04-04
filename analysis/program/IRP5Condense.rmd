@@ -715,14 +715,6 @@ Also create
 * `FirmID` (taxrefno)
 * `IndID` (EstabIDTx)(uid)
 
-Also create 
-
-* `EstabIDTx` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(Txrf)
-* `EstabID` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(taxrefno)
-* `FirmIDTx` (Txrf)
-* `FirmID` (taxrefno)
-* `IndID` (EstabIDTx)(uid)
-
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
 irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
