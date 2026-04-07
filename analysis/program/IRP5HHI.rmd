@@ -1080,6 +1080,7 @@ for (ff in FilesToCopy)
 ```
 
 ```{r further checks on shares, eval = F}
+#| attr.source = '.r .line-numbers',
 #### further checks
 LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
 LShare[, Nums := .N, by = Txrf]

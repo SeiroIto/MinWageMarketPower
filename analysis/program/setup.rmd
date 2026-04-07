@@ -31,6 +31,7 @@ ThisThemeEnd <- ThisTheme + ggplot2::theme(legend.position="bottom")
 knitr::opts_chunk$set(
   tidy = FALSE, cache.extra = packageVersion('tufte'), 
   margin_references = TRUE,
+  attr.source = ".r .line-numbers",
   #### remove leading hashes in html output
   comment = "", 
   echo = T, cache = F, eval = T,

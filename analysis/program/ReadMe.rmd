@@ -246,8 +246,6 @@ Three ways to proceed
 ```
 -->
 
-
-
 ## IRP5HHI.rmd
 
 1. Fraction affected
