@@ -60,6 +60,7 @@ Read irp5 data by year
 
 
 ```{r read irp5v5beta best geo and create irp5yr files, eval = F}
+#| attr.source = '.r .line-numbers',
 library(qs)
 library(data.table)
 library(readstata13)
@@ -115,6 +116,7 @@ for (yr in 8:22) {
 
 
 ```{r read industry code data}
+#| attr.source = '.r .line-numbers',
 library(readstata13)
 ind <- read.dta13(paste0(pathdata, "IndustryCodeFromCITv5.dta"))
 ind <- data.table(ind)
@@ -135,6 +137,7 @@ qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
 Appending all annual files
 
 ```{r create long format of irp5}
+#| attr.source = '.r .line-numbers',
 library(qs)
 library(data.table)
 irp5pnl <- NULL
@@ -171,6 +174,7 @@ irp5pnl[, DateBirth := as.IDate(dateofbirth)]
 ```
 
 ```{r checking 2009 2010 2014, eval = F}
+#| attr.source = '.r .line-numbers',
 irp09 <- qread(paste0(pathdata, "irp509.qs"), nthreads = 13)
 irp09[, c("Num", "num") := list(.N, 1:.N), 
   by = c(geovars, "taxrefno", "taxyear")]
@@ -247,6 +251,7 @@ irp14[num == 1L & grepl("A", NatureOfPer),
 ```
 
 ```{r correcting information of IRP panel}
+#| attr.source = '.r .line-numbers',
 irp5pnl[UID %in% UID[grepl("^A$", natureofperson)], 
   NatureOfPer := "A"]
 irp5pnl[, num := 1:.N, by = c(geovars, "taxrefno", "taxyear")]
@@ -334,9 +339,8 @@ Geo location file has following variables for each jobs:
 
 We can uniquely (one-to-one match) merge the geo location file with IRP5 data on `irp5it3aid`
 
-* Just to be safe, we merge on c("taxyear", "irp5it3aid")
-
 ```{r Open the geolocation file and produce geoloc file, eval = F}
+#| attr.source = '.r .line-numbers',
 library(readstata13)
 geodat <- read.dta13(paste0(path, "IRP5_Geo.dta"))
 geodat <- data.table(geodat)
@@ -356,7 +360,12 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 ```
 
 ```{r smallirp5}
-irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+#| attr.source = '.r .line-numbers',
+if (length(ls(pattern="geodat"))==1) rm(geodat) 
+if (length(ls(pattern="geoloc"))==1) rm(geoloc) 
+if (length(ls(pattern="^irp5i"))==1) rm(irp5i) # read afresh
+irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+  nthreads = 13)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
 smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
   c(geovars, "taxrefno", "irp5it3aid"), with = F])
@@ -365,6 +374,9 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 ```
 
 ```{r GeoLF}
+#| attr.source = '.r .line-numbers',
+if (length(ls(pattern="geoloc"))==1) rm(geoloc) 
+if (length(ls(pattern="smalli"))==1) rm(smallirp5) 
 geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
 smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 #### setkey(geoloc, payereferenceno)
@@ -374,7 +386,6 @@ setkey(geoloc, irp5it3aid)
 setkey(smallirp5, irp5it3aid)
 GeoLF <- smallirp5[geoloc, on = "irp5it3aid"]
 qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
-rm(geoloc)
 ```
 
 ```{r copy GeoXX and derived files to saveddata, eval = F}
@@ -392,10 +403,15 @@ for (ff in FilesToCopy)
     )
 ```
 
+Copy from GeoLF if 
+
+* `UID` and `taxrefno` are the keys
 
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
+if (length(ls(pattern="geoLF"))==1) rm(geoLF) 
+if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
 irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
   nthreads = 13)
 GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
@@ -406,7 +422,7 @@ GeoLF.nodup[, dup := NULL]
 #### irp5gi <- GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
 irp5gi <- GeoLF.nodup[irp5i, on = c(geovars, "irp5it3aid", "taxrefno")]
 colnames(GeoLF.nodup)
-rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
+rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5gi=dim(irp5gi	))
 colnames(irp5gi)
 table(irp5gi[, taxyear], useNA = "ifany")
 table(irp5gi[, i.taxyear], useNA = "ifany")
@@ -415,18 +431,12 @@ table(irp5i[, taxyear], useNA = "ifany")
 irp5gi[, taxyear := NULL]
 if (any(grepl("i.taxyear", colnames(irp5gi)))) 
   setnames(irp5gi, "i.taxyear", "taxyear")
-qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-  nthreads = 13)
-```
-
-Copy from GeoLF if 
-
-* `UID` and `taxrefno` are the keys
-
-```{r copy 2015 location info}
-#| attr.source = '.r .line-numbers',
-irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-  nthreads = 13)
+#### qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
+####  nthreads = 13)
+#### irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
+####  nthreads = 13)
+rm(GeoLF, GeoLF.nodup)
+#### r copy 2015 location info
 irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
 irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
@@ -530,6 +540,8 @@ If there are workers working for multiple establishments ... no problem
 #### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
+if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
+if (length(ls(pattern="irp5gi"))==1) rm(irp5gi) 
 irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
   nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
@@ -625,6 +637,7 @@ irp5gir[
   c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain15, 1L, 2015L)
 ]
 qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+rm(irp5gi)
 ```
 ```{r dropping rows}
 #| attr.source = '.r .line-numbers',
@@ -717,6 +730,8 @@ Also create
 
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
+if (length(ls(pattern="irp5gir"))==1) rm(irp5gir) 
+if (length(ls(pattern="irp5Clean"))==1) rm(irp5Clean) 
 irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
 grepout <- function(str, x)
   # returns element of match (not numbers)
@@ -741,7 +756,7 @@ idyr[, FirmID := factor(as.numeric(taxrefno))]
 idyr[, IndID := paste(EstabIDTx, uid, sep = "-")]
 #### Individual observation pattern in a given establishment
 idyr[, Ob := 1L]
-idyrW <- reshape(Idyr, direction = "wide", 
+idyrW <- reshape(idyr, direction = "wide", 
   idvar = c(
     "busprov_geo", "busdistmuni_geo", 
     "buslocmuni_geo", "busmainplc_geo", 
@@ -845,7 +860,10 @@ litedown::timing_data()
 #### For some reasons, it gives "cannot allocate a vector of size 36Gb..." error
 library(data.table)
 library(qs)
-irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+if (length(ls(pattern="irp5C"))==1) rm(irp5Clean) 
+if (length(ls(pattern="ObP"))==1) rm(ObPattern)
+if (length(ls(pattern="irp5$"))==0) # do not read if in memory
+  irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
 irp5[, c("num", "Num") := list(as.integer(1:.N), as.integer(.N)), 
   by = EstabIDTx]
 MeanStdN <- irp5[num == 1L, .(
@@ -860,7 +878,7 @@ fwrite(MeanStdN, paste0(pathdata, "MeanStdNOfEmployment.tsv"), sep = "\t")
 ```{r copy ipr5i irp5gi irp5gir irp5Clean to saveddata, eval = F}
 #| attr.source = '.r .line-numbers',
 FilesToCopy <- c(
-  "irp5_MergedGeoLF.qs", 
+####  "irp5_MergedGeoLF.qs", 
   "irp5_CopiedLocMuniFromGeoLoc.qs", 
   "irp5_RevReports.qs", 
   "ObPattern.qs",
