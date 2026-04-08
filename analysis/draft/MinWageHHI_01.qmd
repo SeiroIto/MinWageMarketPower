@@ -117,7 +117,6 @@ Red {
 {{< include ../../../MathShorthandUsingNewcommand.qmd >}}
 
 
-
 ```{r read setup from child file, child='../program/setupNoEcho.Rmd', message = F, warning = F}
 ```
 ```{r read functions from child file, child='../program/destatfactor.Rmd', message = F, warning = F}
@@ -250,6 +249,9 @@ We use TWFE event study estimator. The event study estimator requires time-varyi
 
 <!--
 In a matrix form, I need Group $$
+=======
+We use TWFE event study estimator. The event study estimator requires time-varying estimates on treatment assignment. In a matrix form, I need Group $$
+>>>>>>> 3b58cec (edited est strategy section)
 G=\left(
 \begin{array}{cccc}
 1 & 0 & \dots & 0\\
@@ -300,7 +302,6 @@ as.matrix(G)
 Interact <- function(x, group) {
 ####     x: matrix to be divided over groups
 #### group: 1, 1, ..., 1, 2, 2, ..., 2, 3, ...
-
 }
 
 ```
