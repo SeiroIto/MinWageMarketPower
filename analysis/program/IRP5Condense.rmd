@@ -381,12 +381,12 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 #| attr.source = '.r .line-numbers',
 #### If not fusing and running by chunk, set RunSep <- T to avoid an error
 if (length(ls(pattern="RunSep"))==0) RunSep <- T
-#### If running continuously (!RunSep) and object exists, do nothing, 
-#### otherwise read from file
-if (!(!RunCnt & length(ls(pattern="geoloc"))==0))
+#### If running continuously (!RunSep) and object exists length == 1, 
+#### do nothing, otherwise read from file
+if (!(!RunSep & length(ls(pattern="geoloc"))==1))
   geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), 
     nthreads = 13)
-if (!(!RunCnt & length(ls(pattern="smalli"))==0)) 
+if (!(!RunSep & length(ls(pattern="smalli"))==1)) 
   smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), 
     nthreads = 13)
 #### setkey(geoloc, payereferenceno)
@@ -420,10 +420,11 @@ Copy from GeoLF if
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
-if (!(!RunSep & length(ls(pattern="irp5i"))==0)) 
+if (!RunSep & length(ls(pattern="geoloc"))==1) rm(geoloc)
+if (!(!RunSep & length(ls(pattern="irp5i"))==1)) 
   irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
     nthreads = 13)
-if (!(!RunSep & length(ls(pattern="GeoLF"))==0)) 
+if (!(!RunSep & length(ls(pattern="GeoLF"))==1)) 
   GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
@@ -445,7 +446,6 @@ if (any(grepl("i.taxyear", colnames(irp5gi))))
 ####  nthreads = 13)
 #### irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
 ####  nthreads = 13)
-rm(GeoLF, GeoLF.nodup)
 #### r copy 2015 location info
 irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
@@ -550,8 +550,11 @@ If there are workers working for multiple establishments ... no problem
 #### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
-if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
-if (!(!RunSep & length(ls(pattern="irp5gi"))==0))
+if (length(ls(pattern="geoloc"  ))==1) rm(geoloc)
+if (length(ls(pattern="irp5i"   ))==1) rm(irp5i) 
+if (length(ls(pattern="GeoLF$"  ))==1) rm(GeoLF) 
+if (length(ls(pattern="GeoLF.no"))==1) rm(GeoLF.nodup) 
+if (!(!RunSep & length(ls(pattern="irp5gi"))==1))
   irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
     nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
@@ -741,7 +744,7 @@ Also create
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
 if (length(ls(pattern="irp5gir"))==1) rm(irp5gir) 
-if (!(!RunSep & length(ls(pattern="irp5Clean"))==0)) 
+if (!(!RunSep & length(ls(pattern="irp5Clean"))==1)) 
   irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), 
     nthreads = 13)
 grepout <- function(str, x)
