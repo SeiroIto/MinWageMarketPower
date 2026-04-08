@@ -57,7 +57,7 @@ git push -u origin work/EstImpacts2024Apr
 git add .
 git commit -m "..."
 
-git pull --rebase   # © add this before pushing (important)
+git pull --rebase   # ï¿½ï¿½ add this before pushing (important)
 git push
 
 #### squash & merge on GitHub
