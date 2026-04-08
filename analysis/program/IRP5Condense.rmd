@@ -47,6 +47,29 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
   "buslocmuni_geo", "busmainplc_geo")
 ```
 
+<!--
+Git workflow:
+----
+git checkout -b work/EstImpacts2024Apr
+git push -u origin work/EstImpacts2024Apr
+
+#### many small commits
+git add .
+git commit -m "..."
+
+git pull --rebase   # �� add this before pushing (important)
+git push
+
+#### squash & merge on GitHub
+
+git checkout main
+git pull --rebase
+git branch -d work/EstImpacts2024Apr
+----
+-->
+
+
+
 Read irp5 data by year
 
 * read from stata dta
@@ -381,12 +404,12 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 #| attr.source = '.r .line-numbers',
 #### If not fusing and running by chunk, set RunSep <- T to avoid an error
 if (length(ls(pattern="RunSep"))==0) RunSep <- T
-#### If running continuously (!RunSep) and object exists, do nothing, 
-#### otherwise read from file
-if (!(!RunCnt & length(ls(pattern="geoloc"))==0))
+#### If running continuously (!RunSep) and object exists length == 1, 
+#### do nothing, otherwise read from file
+if (!(!RunSep & length(ls(pattern="geoloc"))==1))
   geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), 
     nthreads = 13)
-if (!(!RunCnt & length(ls(pattern="smalli"))==0)) 
+if (!(!RunSep & length(ls(pattern="smalli"))==1)) 
   smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), 
     nthreads = 13)
 #### setkey(geoloc, payereferenceno)
@@ -420,10 +443,11 @@ Copy from GeoLF if
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
-if (!(!RunSep & length(ls(pattern="irp5i"))==0)) 
+if (!RunSep & length(ls(pattern="geoloc"))==1) rm(geoloc)
+if (!(!RunSep & length(ls(pattern="irp5i"))==1)) 
   irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
     nthreads = 13)
-if (!(!RunSep & length(ls(pattern="GeoLF"))==0)) 
+if (!(!RunSep & length(ls(pattern="GeoLF"))==1)) 
   GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
@@ -445,7 +469,6 @@ if (any(grepl("i.taxyear", colnames(irp5gi))))
 ####  nthreads = 13)
 #### irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
 ####  nthreads = 13)
-rm(GeoLF, GeoLF.nodup)
 #### r copy 2015 location info
 irp5gi[, uidtaxref := 0L]
 irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
@@ -550,8 +573,11 @@ If there are workers working for multiple establishments ... no problem
 #### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
-if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
-if (!(!RunSep & length(ls(pattern="irp5gi"))==0))
+if (length(ls(pattern="geoloc"  ))==1) rm(geoloc)
+if (length(ls(pattern="irp5i"   ))==1) rm(irp5i) 
+if (length(ls(pattern="GeoLF$"  ))==1) rm(GeoLF) 
+if (length(ls(pattern="GeoLF.no"))==1) rm(GeoLF.nodup) 
+if (!(!RunSep & length(ls(pattern="irp5gi"))==1))
   irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
     nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
@@ -741,7 +767,7 @@ Also create
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
 if (length(ls(pattern="irp5gir"))==1) rm(irp5gir) 
-if (!(!RunSep & length(ls(pattern="irp5Clean"))==0)) 
+if (!(!RunSep & length(ls(pattern="irp5Clean"))==1)) 
   irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), 
     nthreads = 13)
 grepout <- function(str, x)
@@ -776,7 +802,7 @@ idyrW <- reshape(idyr, direction = "wide",
     "IndID"),
   timevar = "taxyear", v.names= c("Ob"))
 for (jj in grep("^Ob", colnames(idyrW)))
-  for (ii in which(is.na(idyrW[, jj]))) 
+  for (ii in which(is.na(idyrW[, jj, with = F]))) 
     set(idyrW, i = ii, j = jj, value = 0L)
 cols <- grepout("^Ob", colnames(idyrW))
 #### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
@@ -789,10 +815,10 @@ idyrW[, IObPattern := factor(IObPattern)]
 ####         and copy within an establishment
 #### EstabObYYYY: Establishment observed in YYYY 
 #### FirmObYYYY: Establishment observed in YYYY 
-idyrW[, list(paste0("Estab", cols), paste0("Firm", cols)) := 0L]
+idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 estabid <- unique(idyrW[, EstabID])
 firmid  <- unique(idyrW[, FirmID])
-for (jj in grepout("^Ob", colnames(idyrW)))
+for (jj in grepout("^Ob", colnames(idyrW))) {
   #### Estab"jj" with jj = ObYYYY
   jjj <- grep(paste0("Estab", jj), colnames(idyrW))
   for (ii in 1:length(estabid)) 
@@ -803,14 +829,16 @@ for (jj in grepout("^Ob", colnames(idyrW)))
     set(idyrW, 
           i = which(
                 idyrW[, EstabID] == estabid[ii] & 
-                is.na(idyrW[, jj]) 
+                is.na(idyrW[, jj, with = F]) 
               ), 
           j = jjj, 
       value = 1L)
 #### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
+}
+setnames(idyrW, "time", "taxyear")
 for (yy in 2008:2022)
-  jjname <- paste0("EstabOb", yy)
-  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  jjname <- paste0("EstabOb.", yy)
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(EstabID)]
 estabcols <- grepout("EstabOb", colnames(idyrW))
 idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
@@ -819,19 +847,20 @@ idyrW[, EObPattern := factor(EObPattern)]
 
 #### Firm observation pattern
 #### Find any individual with 1L in a given firm
-for (jj in grepout("^Ob", colnames(idyrW)))
+for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
-  for (ii in 1:length(firmbid)) 
+  for (ii in 1:length(firmid)) 
     set(idyrW, 
           i = which(
                 idyrW[, FirmID] == firmid[ii] & 
-                is.na(idyrW[, jj]) 
+                is.na(idyrW[, jj, with = F]) 
               ), 
           j = jjj, 
       value = 1L)
+}
 for (yy in 2008:2022)
-  jjname <- paste0("FirmOb", yy)
-  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  jjname <- paste0("FirmOb.", yy)
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(FirmID)]
 firmcols <- grepout("FirmOb", colnames(idyrW))
 idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
