@@ -837,7 +837,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 }
 setnames(idyrW, "time", "taxyear")
 for (yy in 2008:2022)
-  jjname <- paste0("EstabOb", yy)
+  jjname <- paste0("EstabOb.", yy)
   idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(EstabID)]
 estabcols <- grepout("EstabOb", colnames(idyrW))
@@ -849,7 +849,7 @@ idyrW[, EObPattern := factor(EObPattern)]
 #### Find any individual with 1L in a given firm
 for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
-  for (ii in 1:length(firmbid)) 
+  for (ii in 1:length(firmid)) 
     set(idyrW, 
           i = which(
                 idyrW[, FirmID] == firmid[ii] & 
@@ -859,7 +859,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
       value = 1L)
 }
 for (yy in 2008:2022)
-  jjname <- paste0("FirmOb", yy)
+  jjname <- paste0("FirmOb.", yy)
   idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(FirmID)]
 firmcols <- grepout("FirmOb", colnames(idyrW))
