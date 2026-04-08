@@ -835,9 +835,10 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
       value = 1L)
 #### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
 }
+setnames(idyrW, "time", "taxyear")
 for (yy in 2008:2022)
   jjname <- paste0("EstabOb", yy)
-  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(EstabID)]
 estabcols <- grepout("EstabOb", colnames(idyrW))
 idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
@@ -859,7 +860,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 }
 for (yy in 2008:2022)
   jjname <- paste0("FirmOb", yy)
-  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
     by = .(FirmID)]
 firmcols <- grepout("FirmOb", colnames(idyrW))
 idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
