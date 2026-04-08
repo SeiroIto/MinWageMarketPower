@@ -7,7 +7,7 @@ output:
       css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
-#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5Condense.rmd"))
+#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5Condense.rmd"))
 ---
 
 #  Read IRP5_20yr_cleaned.dta (ver 5 beta) and save by year
@@ -362,10 +362,14 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 ```{r smallirp5}
 #| attr.source = '.r .line-numbers',
 if (length(ls(pattern="geodat"))==1) rm(geodat) 
-if (length(ls(pattern="geoloc"))==1) rm(geoloc) 
-if (length(ls(pattern="^irp5i"))==1) rm(irp5i) # read afresh
-irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
-  nthreads = 13)
+#### If not fusing and running by chunk, set RunSep <- T to avoid an error
+if (length(ls(pattern="RunSep"))==0) RunSep <- T
+if (RunSep & length(ls(pattern="geoloc"))==1) rm(geoloc) 
+#### If running continuously (!RunSep) and irp5i exists, do nothing, 
+#### otherwise read from file
+if (!(!RunSep & length(ls(pattern="^irp5i"))==1))
+  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+    nthreads = 13)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
 smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
   c(geovars, "taxrefno", "irp5it3aid"), with = F])
@@ -375,10 +379,16 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 
 ```{r GeoLF}
 #| attr.source = '.r .line-numbers',
-if (length(ls(pattern="geoloc"))==1) rm(geoloc) 
-if (length(ls(pattern="smalli"))==1) rm(smallirp5) 
-geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
-smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
+#### If not fusing and running by chunk, set RunSep <- T to avoid an error
+if (length(ls(pattern="RunSep"))==0) RunSep <- T
+#### If running continuously (!RunSep) and object exists, do nothing, 
+#### otherwise read from file
+if (!(!RunCnt & length(ls(pattern="geoloc"))==0))
+  geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), 
+    nthreads = 13)
+if (!(!RunCnt & length(ls(pattern="smalli"))==0)) 
+  smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), 
+    nthreads = 13)
 #### setkey(geoloc, payereferenceno)
 #### setkey(smallirp5, payereferenceno)
 #### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
@@ -410,11 +420,11 @@ Copy from GeoLF if
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
-if (length(ls(pattern="geoLF"))==1) rm(geoLF) 
-if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
-irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
-  nthreads = 13)
-GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+if (!(!RunSep & length(ls(pattern="irp5i"))==0)) 
+  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+    nthreads = 13)
+if (!(!RunSep & length(ls(pattern="GeoLF"))==0)) 
+  GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
 GeoLF.nodup <- GeoLF[dup == 1L, ]
@@ -541,9 +551,9 @@ If there are workers working for multiple establishments ... no problem
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
 if (length(ls(pattern="irp5i"))==1) rm(irp5i) 
-if (length(ls(pattern="irp5gi"))==1) rm(irp5gi) 
-irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13)
+if (!(!RunSep & length(ls(pattern="irp5gi"))==0))
+  irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+    nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
 irp5gi[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]
@@ -731,8 +741,9 @@ Also create
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
 if (length(ls(pattern="irp5gir"))==1) rm(irp5gir) 
-if (length(ls(pattern="irp5Clean"))==1) rm(irp5Clean) 
-irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+if (!(!RunSep & length(ls(pattern="irp5Clean"))==0)) 
+  irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), 
+    nthreads = 13)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
