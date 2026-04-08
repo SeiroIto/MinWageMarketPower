@@ -47,6 +47,29 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
   "buslocmuni_geo", "busmainplc_geo")
 ```
 
+<!--
+Git workflow:
+----
+git checkout -b work/EstImpacts2024Apr
+git push -u origin work/EstImpacts2024Apr
+
+#### many small commits
+git add .
+git commit -m "..."
+
+git pull --rebase   # © add this before pushing (important)
+git push
+
+#### squash & merge on GitHub
+
+git checkout main
+git pull --rebase
+git branch -d work/EstImpacts2024Apr
+----
+-->
+
+
+
 Read irp5 data by year
 
 * read from stata dta
@@ -779,7 +802,7 @@ idyrW <- reshape(idyr, direction = "wide",
     "IndID"),
   timevar = "taxyear", v.names= c("Ob"))
 for (jj in grep("^Ob", colnames(idyrW)))
-  for (ii in which(is.na(idyrW[, jj]))) 
+  for (ii in which(is.na(idyrW[, jj, with = F]))) 
     set(idyrW, i = ii, j = jj, value = 0L)
 cols <- grepout("^Ob", colnames(idyrW))
 #### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
@@ -792,10 +815,10 @@ idyrW[, IObPattern := factor(IObPattern)]
 ####         and copy within an establishment
 #### EstabObYYYY: Establishment observed in YYYY 
 #### FirmObYYYY: Establishment observed in YYYY 
-idyrW[, list(paste0("Estab", cols), paste0("Firm", cols)) := 0L]
+idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 estabid <- unique(idyrW[, EstabID])
 firmid  <- unique(idyrW[, FirmID])
-for (jj in grepout("^Ob", colnames(idyrW)))
+for (jj in grepout("^Ob", colnames(idyrW))) {
   #### Estab"jj" with jj = ObYYYY
   jjj <- grep(paste0("Estab", jj), colnames(idyrW))
   for (ii in 1:length(estabid)) 
@@ -806,11 +829,12 @@ for (jj in grepout("^Ob", colnames(idyrW)))
     set(idyrW, 
           i = which(
                 idyrW[, EstabID] == estabid[ii] & 
-                is.na(idyrW[, jj]) 
+                is.na(idyrW[, jj, with = F]) 
               ), 
           j = jjj, 
       value = 1L)
 #### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
+}
 for (yy in 2008:2022)
   jjname <- paste0("EstabOb", yy)
   idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
@@ -822,16 +846,17 @@ idyrW[, EObPattern := factor(EObPattern)]
 
 #### Firm observation pattern
 #### Find any individual with 1L in a given firm
-for (jj in grepout("^Ob", colnames(idyrW)))
+for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
   for (ii in 1:length(firmbid)) 
     set(idyrW, 
           i = which(
                 idyrW[, FirmID] == firmid[ii] & 
-                is.na(idyrW[, jj]) 
+                is.na(idyrW[, jj, with = F]) 
               ), 
           j = jjj, 
       value = 1L)
+}
 for (yy in 2008:2022)
   jjname <- paste0("FirmOb", yy)
   idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
