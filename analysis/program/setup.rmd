@@ -41,6 +41,18 @@ grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
+#### mask_dots: replace every char except positions in `keep` with ".".
+#### Used to anonymise taxrefno / uid in display-only prints (not in keys or joins).
+mask_dots <- function(x, keep = c(3, 6, 7, 8, 11)) {
+  x <- as.character(x)
+  n <- nchar(x)
+  out <- strrep(".", n)
+  for (k in keep) {
+    m <- !is.na(x) & n >= k
+    substr(out[m], k, k) <- substr(x[m], k, k)
+  }
+  out
+}
 read.tablev <- function(fn, quotemark = "", headertrue = TRUE, 
   blskip = TRUE, mat = F, ...) 
 {
