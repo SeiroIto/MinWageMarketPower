@@ -893,8 +893,8 @@ idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 ####   Used downstream to define complete-panel establishments.
 ####
 #### CLAUDE: Original double loop broken in two ways:
-####   1. is.na() always FALSE ·ﬂ«ÅOb cols filled with 0L at L806-808.
-####   2. Logic inverted ·ﬂ«Åtargeted NA rows (unobserved workers)
+####   1. is.na() always FALSE ‚Äî Ob cols filled with 0L at L806-808.
+####   2. Logic inverted ‚Äî targeted NA rows (unobserved workers)
 ####      to set EstabOb=1L, but intent is to target Ob==1L rows.
 ####   estabid/firmid no longer needed after replacement.
 ####   Replaced with data.table by= (correct and faster).
@@ -922,7 +922,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 ####   reshape() with timevar="taxyear" uses taxyear values as
 ####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
 ####   Commented out to avoid "Items to rename must exist: time".
-#### CLAUDE: Missing {} ·ﬂ«Åwithout braces only jjname <- ... is in
+#### CLAUDE: Missing {} ‚Äî without braces only jjname <- ... is in
 ####   the loop body. idyrW[...] ran once after loop with yy=2022.
 ####   Years 2008-2021 were never processed. Added {}.
 for (yy in 2008:2022) {
@@ -956,7 +956,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- paste0("Firm", jj)
   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
 }
-#### CLAUDE: Missing {} ·ﬂ«Åsame issue as EstabOb loop above.
+#### CLAUDE: Missing {} ‚Äî same issue as EstabOb loop above.
 ####   Added {}.
 for (yy in 2008:2022) {
   jjname <- paste0("FirmOb.", yy)
