@@ -493,8 +493,10 @@ irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
 summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
   .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
-irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
-  .(taxrefno, uid, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD, 
+  function(x) gsub("....$", "....", gsub("^....", "....", x)))][
+  taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
+  .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
 #### Number of NAs in loc muni info
