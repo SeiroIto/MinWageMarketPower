@@ -17,7 +17,6 @@ All files are in `analysis/program/`. Outputs go to `pathdata` and `pathsaveddat
 
 > **Bugs**: see `CLAUDE_StandingIssues.md` (unresolved) and `CLAUDE_LOG.md` Session 0 (historical FIXED items).
 
-
 ## Key Variables
 
 | Variable | Definition |

@@ -42,6 +42,18 @@ grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
 table0 <- function(x) table(x, useNA = "ifany")
+#### mask_dots: replace every char except positions in `keep` with ".".
+#### Used to anonymise taxrefno / uid in display-only prints (not in keys or joins).
+mask_dots <- function(x, keep = c(3, 6, 7, 8, 11)) {
+  x <- as.character(x)
+  n <- nchar(x)
+  out <- strrep(".", n)
+  for (k in keep) {
+    m <- !is.na(x) & n >= k
+    substr(out[m], k, k) <- substr(x[m], k, k)
+  }
+  out
+}
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- c("busprov_geo", "busdistmuni_geo", 
   "buslocmuni_geo", "busmainplc_geo")
@@ -493,11 +505,17 @@ irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
 summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
   .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
-irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD, 
-  function(x) gsub("....$", "....", gsub("^....", "....", x))), 
-  .SDcols = c("taxrefno", "uid")][
-  taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
-  .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+#### CLAUDE mask: replace raw taxrefno/uid display with mask_dots(...) to anonymise printed identifiers; raw values preserved in keys/joins/filters.
+#### CLAUDE tpo: original used `=` instead of `:=` in data.table j (invalid syntax); removed entirely, masking now done inline in the select.
+#### irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD,
+####   function(x) gsub("....$", "....", gsub("^....", "....", x))),
+####   .SDcols = c("taxrefno", "uid")][
+####   taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10],
+####   .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
+####     FillInLocMuni, buslocmuni_geo)]
+irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10],
+  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
     FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
 #### Number of NAs in loc muni info
@@ -646,9 +664,17 @@ irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
 irp5gir[, bdist15 := busdistmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
 irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
 irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
-irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
-irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, 
-  bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
+#### CLAUDE mask:
+#### irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
+irp5gir[orig.bloc  == "" & bloc15  != "",
+  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    taxyear, bloc15, buslocmuni_geo)]
+#### CLAUDE mask:
+#### irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear,
+####   bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
+irp5gir[orig.bloc  == "" & bloc15  != "",
+  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), taxyear,
+    bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
 irp5gir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
 #### Copy from bXXXX15 
 irp5gir[
@@ -699,8 +725,11 @@ dupuid <- ipyr[
   ]
 dupuid[, n := .N, by = .(taxrefno, uid)]
 dupuid <- unique(dupuid[order(n, decreasing = T), ])
-dupuid[n > 10, ]
-print(unique(dupuid[, uid])[1:30], quote = F)
+#### CLAUDE mask:
+#### dupuid[n > 10, ]
+#### print(unique(dupuid[, uid])[1:30], quote = F)
+dupuid[n > 10, .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
+print(mask_dots(unique(dupuid[, uid])[1:30]), quote = F)
 #### repetitive: [A-Z]*8
 repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]
 tbr <- table(repetetive)
@@ -713,27 +742,62 @@ repetetive <- unique(repetetive)
 #### firms with repetetive uids and their counts
 tb <- table(ipyr[uid %in% repetetive, taxrefno])
 tb <- tb[order(tb, decreasing=T)]
-tb[1:20]
+#### CLAUDE mask: taxrefno values leak via table names; wrap names() before printing.
+#### tb[1:20]
+{ t <- tb[1:20]; names(t) <- mask_dots(names(t)); t }
 #### repetetive entries are concentrated in 3 firms
-dupuid[1:20, ]
-dupuid[taxrefno %in% names(tb)[1:3], ][1:20, ]
+#### CLAUDE mask:
+#### dupuid[1:20, ]
+dupuid[1:20, .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
+#### CLAUDE mask:
+#### dupuid[taxrefno %in% names(tb)[1:3], ][1:20, ]
+dupuid[taxrefno %in% names(tb)[1:3], ][1:20,
+  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
 #### firms with 800 same uids: using same uid for all workers
-ipyr[uid %in% dupuid[1, uid],  
-  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)]
+#### CLAUDE mask:
+#### ipyr[uid %in% dupuid[1, uid],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)]
+ipyr[uid %in% dupuid[1, uid],
+  .(busprov_geo, busmainplc_geo,
+    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    periodemployedfrom, periodemployedto, kerr_income)]
 #### same repetetive entries (AAAAA...) are found across firms
-ipyr[uid %in% names(tbr)[1:20],  
-  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+#### CLAUDE mask:
+#### ipyr[uid %in% names(tbr)[1:20],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+####   order(uid, taxrefno), ]
+ipyr[uid %in% names(tbr)[1:20],
+  .(busprov_geo, busmainplc_geo,
+    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    periodemployedfrom, periodemployedto, kerr_income)][
   order(uid, taxrefno), ]
 #### Drop firms with repetetive entries if they are above 10
 ii <- 10
-ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
+#### CLAUDE mask:
+#### ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+####   order(uid, taxrefno), ]
+ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+  .(busprov_geo, busmainplc_geo,
+    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ]
+#### CLAUDE mask: original wrapped the assignment in `(...)` to print as a side-effect;
+####   `dropthese` is needed raw at the qsave below, so split into raw assign + masked display.
+#### (dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+####   order(uid, taxrefno), ])
+#### table(dropthese[, .(uid, taxrefno)])
+#### table(dropthese[, uid])
+dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
   order(uid, taxrefno), ]
-(dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
-  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
-  order(uid, taxrefno), ])
-table(dropthese[, .(uid, taxrefno)])
-table(dropthese[, uid])
+dropthese[,
+  .(busprov_geo, busmainplc_geo,
+    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+    periodemployedfrom, periodemployedto, kerr_income)]
+table(dropthese[, .(uid = mask_dots(uid), taxrefno = mask_dots(taxrefno))])
+table(mask_dots(dropthese[, uid]))
 ####      CCCCCCCC CCCCCCCCCCCCC 
 ####           191          2341 
 qsave(dropthese, 
@@ -829,8 +893,8 @@ idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 ####   Used downstream to define complete-panel establishments.
 ####
 #### CLAUDE: Original double loop broken in two ways:
-####   1. is.na() always FALSE ·ﬂ«ÅOb cols filled with 0L at L806-808.
-####   2. Logic inverted ·ﬂ«Åtargeted NA rows (unobserved workers)
+####   1. is.na() always FALSE ‚Äî Ob cols filled with 0L at L806-808.
+####   2. Logic inverted ‚Äî targeted NA rows (unobserved workers)
 ####      to set EstabOb=1L, but intent is to target Ob==1L rows.
 ####   estabid/firmid no longer needed after replacement.
 ####   Replaced with data.table by= (correct and faster).
@@ -858,7 +922,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 ####   reshape() with timevar="taxyear" uses taxyear values as
 ####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
 ####   Commented out to avoid "Items to rename must exist: time".
-#### CLAUDE: Missing {} ·ﬂ«Åwithout braces only jjname <- ... is in
+#### CLAUDE: Missing {} ‚Äî without braces only jjname <- ... is in
 ####   the loop body. idyrW[...] ran once after loop with yy=2022.
 ####   Years 2008-2021 were never processed. Added {}.
 for (yy in 2008:2022) {
@@ -892,7 +956,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- paste0("Firm", jj)
   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
 }
-#### CLAUDE: Missing {} ·ﬂ«Åsame issue as EstabOb loop above.
+#### CLAUDE: Missing {} ‚Äî same issue as EstabOb loop above.
 ####   Added {}.
 for (yy in 2008:2022) {
   jjname <- paste0("FirmOb.", yy)
