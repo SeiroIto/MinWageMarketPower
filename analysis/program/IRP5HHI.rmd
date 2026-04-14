@@ -30,6 +30,32 @@ pre {
 }
 ```
 
+# What this file does (chunk summary)
+
+1. {setup} — Load libraries, define helpers (grepout, geovars, GeoLevel)
+1. {read irp5 file} — Load irp5.qs
+1. {fraction affected for all years} — Loop yr 8–22: compute duration, monthly income, SubMW, FA/FAe/FAMP/FAeMP at firm and establishment levels. Save FA{yr}.qs, AggregateSummary.qs
+1. {create FA panel} — Stack yearly FA → FAD.qs
+1. {industry code for ag} (eval=F) — One-time: classify agriculture firms → TaxrefnoOfAgri.qs
+1. {faa and Fadata are first lines of FAD in each year} — Collapse to establishment-year, filter duration and agriculture → FAOfAgri.qs, fadataUniqueEntries.qs
+1. {copy FAD and derived files to saveddata} (eval=F) — Copy outputs
+1. {descriptive stats FA and jobs} — Tables of aggregate FA (all industries + agriculture)
+1. {plot FAs by size} — Density of FA by firm size
+1. {plot FAs by jobs employment} — Density of FA in jobs vs employment
+1. {plot number of agri jobs taxyear 2012-2020} — Histogram of ag establishment size
+1. {agri Jobs by firm age} (eval=F) — Bar chart: ag jobs by incumbents vs entrants
+1. {plot FA in agri 2012-2020} — Density of FA by tax year
+1. {plot FA of agri} — Boxplot of FA by tax year, Exposed/Unexposed
+1. {define irp5M by location granularity} — Classify location completeness, create irp5M/L/D/P panels, filter agriculture → irp5Ma.qs
+1. {copy irp5M and derived files to saveddata} (eval=F) — Copy outputs
+1. {hhi} — Compute labour market shares, HHI, nHHI at 4 geo levels. Save ShareHHI{yr}.qs. Plot HHI 2012 vs 2013
+1. {create LShare panel} — Stack yearly HHI → LShareHHI.qs
+1. {LSa is LS of agri only} — Filter HHI to agriculture → HHIAgriRows.qs
+1. {copy LShareHHI.qs HHIAgriRows.qs to saveddata} (eval=F) — Copy outputs
+1. {further checks on shares} (eval=F) — Ad hoc checks (stale column names)
+1. {plot HHI by year} (eval=F) — Density of HHI by year
+
+
 # What we do in the project
 
 1. Create merged panel using stata: "Data file" 
@@ -103,9 +129,9 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 
 ```{r read irp5 file}
 #| attr.source = '.r .line-numbers',
-if (exists(irp5gi))    rm(irp5gi)
-if (exists(irp5gir))   rm(irp5gir)
-if (exists(irp5Clean)) rm(irp5Clean)
+if (exists("irp5gi"))    rm(irp5gi)    #### CLAUDE exi: exists() for exact names, ls(pattern=) for partial/regex
+if (exists("irp5gir"))   rm(irp5gir)  #### CLAUDE exi:
+if (exists("irp5Clean")) rm(irp5Clean) #### CLAUDE exi:
 #### irp5.qs is created in IRP5Condense.rmd
 library(qs)
 library(data.table)
@@ -282,7 +308,7 @@ for (yr in 8:22) {
   FAdata[Employees >= 250, Size := "large"]
   FAdata[is.na(Employees) | Employees == 0, Size := NA]
   FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
-  FAdata[, JobsPerWorker := .N, by = c(geovars, taxrefno, uid)]
+  FAdata[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")] #### CLAUDE tpo:
   #### Number of affected workers in aggregates
   ag1 <- ipyrc[, .(
       JobsPerWorker
@@ -360,7 +386,7 @@ table(FAD[,taxyear])
 options(datatable.print.nrows = 200, datatable.print.topn = 20)
 print(round(
   FAD[, .(JobsPerWorker, num := 1:.N), 
-    by = c(geovars, taxrefno, UID, taxyear)][, 
+    by = c(geovars, "taxrefno", "UID", "taxyear")][, #### CLAUDE tpo:
     .(
       MeanJobsPerWorker = mean(JobsPerWorker, na.rm = T)
     , StdJobsPerWorker  = var(JobsPerWorker, na.rm = T)^(.5)
@@ -478,20 +504,33 @@ aggsum <-
   ]
 tb <- tt(aggsum, width = 0.8, caption = "Jobs and sub-MW jobs, all industries")
 options(tinytable_format_digits = 2)
-tb.agg <- format_tt(tb
+tb.agg <- format_tt(tb, #### CLAUDE tpo:
     j = 1:4,
     num_mark_big = " "
   )
 tb.agg
 #### Agriculture
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs""), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13) #### CLAUDE tpo:
 agsum <- faa[, .(
-      TotalJobs          = sum(Jobs[IncomeMonth > 0]) 
-    , TotalSubMWJobs     = uniqueN(Jobs[IncomeMonth > 0 & SubMW==1L]) 
-    , TotalEmployees     = uniqueN(UID[IncomeMonth > 0]) 
-    , TotalSubMWWorkers  = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
-    , TotalFirmsWithEmp  = uniqueN(taxrefno[IncomeMonth > 0]) 
-    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+      TotalJobs          = sum(JobsMP)
+                         #### CLAUDE agg: wrong aggregation level
+                         #### (firm vs establishment, row-level vs
+                         #### pre-computed). Was sum(Jobs[...]),
+                         #### firm-level overcounts
+    , TotalSubMWJobs     = sum(NumSubMWMP)
+                         #### CLAUDE agg: was uniqueN(Jobs[...]),
+                         #### wrong aggregation
+    , TotalEmployees     = sum(EmployeesMP)
+                         #### CLAUDE agg: was uniqueN(UID[...]),
+                         #### one UID per row
+    , TotalSubMWWorkers  = sum(NumSubMWeMP)
+                         #### CLAUDE agg: was uniqueN(UID[...]),
+                         #### one UID per row
+    , TotalFirmsWithEmp  = uniqueN(taxrefno[JobsMP > 0])
+                         #### CLAUDE agg: was IncomeMonth > 0
+    , TotalAffectedFirms = uniqueN(taxrefno[NumSubMWMP > 0])
+                         #### CLAUDE agg: was SubMW==1L
+                         #### (one worker's status) 
     ), 
     by = .(taxyear)
     ][, .(
@@ -546,8 +585,12 @@ library(cowplot)
 ####     "Txrf", "payereferenceno"), 
 ####   varying = grepout("^FA", colnames(fadatai))
 #### )
-gsz <- ggplot(data = fadatai[ii0 & !ii1 & !is.na(Size), ], 
-  aes(x = FA.orig)) +
+#### MEMO: FA robustness to XThreshold (double-job month cutoff) was checked
+#### visually via density plots of FA.orig, FA.25, FA.50, FA.75 in
+#### CITIRP5BranchLevel.rmd L1300-1350. Conclusion to be confirmed.
+#### IRP5HHI.rmd uses FA directly (no XThreshold loop applied here).
+gsz <- ggplot(data = fadatai[ii0 & !ii1 & !is.na(Size), ],
+  aes(x = FA)) + #### CLAUDE tpo:
   geom_density(alpha = .1, fill = "blue") + 
   xlim(0, 1) +
   scale_color_manual(values = c("red", "blue"))
@@ -576,14 +619,14 @@ table(duplicated(fadatai[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
 library(ggplot2)
 library(cowplot)
-g1 <- ggplot(data = fadatai[ii0 & !ii1, ], 
-  aes(x = FA.orig)) +
+g1 <- ggplot(data = fadatai[ii0 & !ii1, ],
+  aes(x = FA)) + #### CLAUDE tpo:
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected jobs")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
   scale_color_manual(values = "blue")
-g2 <- ggplot(data = fadatai[ii0 & !ii1, ], 
-  aes(x = FAe.orig)) +
+g2 <- ggplot(data = fadatai[ii0 & !ii1, ],
+  aes(x = FAe)) + #### CLAUDE tpo:
   geom_density(alpha = .1, fill = "blue") + 
   ggtitle("Fraction of affected workers")+
   scale_x_continuous(name = "fraction per firm", limits=c(0, 1)) +
@@ -609,7 +652,7 @@ library(ggplot2)
 #### irp5Ma is created in 
 #### Location information granularity checks (next section)
 #### irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs""), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13) #### CLAUDE tpo:
 #### Below is resolved. Negative duration reflects 
 #### "revision reporting to SARS" by firms.
 #### To Michael, 2026 Jan 21, negative duration entries
@@ -618,7 +661,7 @@ faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs""), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(faa))
 faa[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
 irp5ForPlot <- unique(faa[taxyear >= 2010 & taxyear <= 2020, 
-  c(geovars, "taxyear", "taxrefno", "Num", "FA.orig"), with = F])
+  c(geovars, "taxyear", "taxrefno", "Num", "FA"), with = F]) #### CLAUDE tpo:
 irp5ForPlot[, taxyear := as.character(taxyear)]
 g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
     aes(x = Num, group = taxyear, colour = taxyear, fill = taxyear)) +
@@ -627,7 +670,7 @@ g1 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ],
   scale_fill_viridis_d() +
   scale_x_continuous(trans = "log10") +
   theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+  theme(axis.text.x = element_text(angle = 90, vjust = .5)) + #### CLAUDE tpo:
   facet_wrap(taxyear ~ ., ncol = 2)
 ggsave(
   paste0(pathresults, "NumberOfAgEmployees2010-2020.jpg")
@@ -675,7 +718,7 @@ g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ],
   scale_fill_viridis_d() +
   scale_x_continuous(limits = c(1, 100)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+  theme(axis.text.x = element_text(angle = 90, vjust = .5)) + #### CLAUDE tpo:
   facet_wrap(taxyear ~ ., ncol = 2)
 ggsave(
   paste0(pathresults, "FAOfAg2010-2022.jpg")
@@ -1100,8 +1143,8 @@ ipyr[, Txrf := taxrefno]
 ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
 LShare[Txrf %in% c(ipyr[1:5, Txrf], 
   "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ", 
-  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
-  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo, 
+  "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ"), #### CLAUDE tpo:
+  .(Txrf, AreaLevel, busprov_geo, busmainplc_geo,
     irp5_kerr_iweight_b, Newgt.kerr,
     EachNeEmp, TotalNeEmp, ShareEmp, HHI)]
 print(LShare[TotalNeEmp <= 1000,
@@ -1124,7 +1167,7 @@ print(LShare[!is.na(Newgt.kerr),
 
 # Plot HHI
 
-``{r plot HHI by year, eval = F}
+```{r plot HHI by year, eval = F}
 library(ggplot2)
 LS <- qread(paste0(pathsaveddata, "LShareHHI.qs"), nthreads = 13)
 gsh <- ggplot(data = LS, 

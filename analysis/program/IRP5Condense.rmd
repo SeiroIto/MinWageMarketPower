@@ -384,14 +384,14 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 
 ```{r smallirp5}
 #| attr.source = '.r .line-numbers',
-if (length(ls(pattern="geodat"))==1) rm(geodat) 
-#### If not fusing and running by chunk, set RunSep <- T to avoid an error
-if (length(ls(pattern="RunSep"))==0) RunSep <- T
-if (RunSep & length(ls(pattern="geoloc"))==1) rm(geoloc) 
-#### If running continuously (!RunSep) and irp5i exists, do nothing, 
-#### otherwise read from file
-if (!(!RunSep & length(ls(pattern="^irp5i"))==1))
-  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+#### CLAUDE: exists() for exact names, ls(pattern=) for partial/regex.
+####   && / || for scalar short-circuit. Double negation -> positive logic.
+if (exists("geodat")) rm(geodat)
+if (!exists("RunSep")) RunSep <- T
+if (RunSep && exists("geoloc")) rm(geoloc)
+#### Read from disk if running separately OR object not in memory
+if (RunSep || length(ls(pattern="^irp5i"))==0)
+  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"),
     nthreads = 13)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
 smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
@@ -402,15 +402,13 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 
 ```{r GeoLF}
 #| attr.source = '.r .line-numbers',
-#### If not fusing and running by chunk, set RunSep <- T to avoid an error
-if (length(ls(pattern="RunSep"))==0) RunSep <- T
-#### If running continuously (!RunSep) and object exists length == 1, 
-#### do nothing, otherwise read from file
-if (!(!RunSep & length(ls(pattern="geoloc"))==1))
-  geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), 
+#### CLAUDE exi, sca, pos:
+if (!exists("RunSep")) RunSep <- T
+if (RunSep || !exists("geoloc"))
+  geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"),
     nthreads = 13)
-if (!(!RunSep & length(ls(pattern="smalli"))==1)) 
-  smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), 
+if (RunSep || length(ls(pattern="smalli"))==0)
+  smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"),
     nthreads = 13)
 #### setkey(geoloc, payereferenceno)
 #### setkey(smallirp5, payereferenceno)
@@ -443,11 +441,12 @@ Copy from GeoLF if
 ```{r merge irp5_WithRepetetiveUIDs GeoLF}
 #| attr.source = '.r .line-numbers',
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
-if (!RunSep & length(ls(pattern="geoloc"))==1) rm(geoloc)
-if (!(!RunSep & length(ls(pattern="irp5i"))==1)) 
-  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+#### CLAUDE exi, sca, pos:
+if (!RunSep && exists("geoloc")) rm(geoloc)
+if (RunSep || length(ls(pattern="irp5i"))==0)
+  irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"),
     nthreads = 13)
-if (!(!RunSep & length(ls(pattern="GeoLF"))==1)) 
+if (RunSep || length(ls(pattern="GeoLF"))==0)
   GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
@@ -494,8 +493,10 @@ irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
 summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
   .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
-irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
-  .(taxrefno, uid, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD, 
+  function(x) gsub("....$", "....", gsub("^....", "....", x)))][
+  taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
+  .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
 #### Number of NAs in loc muni info
@@ -573,12 +574,13 @@ If there are workers working for multiple establishments ... no problem
 #### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
 ####    user  system elapsed 
 ####    0.02    0.00    0.02 
-if (length(ls(pattern="geoloc"  ))==1) rm(geoloc)
-if (length(ls(pattern="irp5i"   ))==1) rm(irp5i) 
-if (length(ls(pattern="GeoLF$"  ))==1) rm(GeoLF) 
-if (length(ls(pattern="GeoLF.no"))==1) rm(GeoLF.nodup) 
-if (!(!RunSep & length(ls(pattern="irp5gi"))==1))
-  irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+#### CLAUDE exi, sca, pos:
+if (exists("geoloc"))      rm(geoloc)
+if (exists("irp5i"))       rm(irp5i)
+if (exists("GeoLF"))       rm(GeoLF)
+if (exists("GeoLF.nodup")) rm(GeoLF.nodup)
+if (RunSep || length(ls(pattern="^irp5gi$"))==0)
+  irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
     nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
 irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
@@ -683,7 +685,9 @@ rm(irp5gi)
 #### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
 ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
 ipyr[, uid := gsub(" +$", "", UID)]
-rm(ipyrs)
+#### rm(ipyrs)
+#### CLAUDE: ipyrs never defined; only ipyr exists here.
+####   Commented out to avoid "object not found" error.
 #### uid anomalous entries: AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ
 #### these are 0.035% of total number of rows
 #### one large employer (with 4632 jobs) contributes 
@@ -766,9 +770,10 @@ Also create
 
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
-if (length(ls(pattern="irp5gir"))==1) rm(irp5gir) 
-if (!(!RunSep & length(ls(pattern="irp5Clean"))==1)) 
-  irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), 
+#### CLAUDE exi, sca, pos:
+if (exists("irp5gir")) rm(irp5gir)
+if (RunSep || !exists("irp5Clean"))
+  irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"),
     nthreads = 13)
 grepout <- function(str, x)
   # returns element of match (not numbers)
@@ -816,52 +821,83 @@ idyrW[, IObPattern := factor(IObPattern)]
 #### EstabObYYYY: Establishment observed in YYYY 
 #### FirmObYYYY: Establishment observed in YYYY 
 idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
-estabid <- unique(idyrW[, EstabID])
-firmid  <- unique(idyrW[, FirmID])
+#### Goal: EstabOb.YYYY = 1L if any worker in the establishment
+####   has Ob.YYYY == 1L, for each year YYYY.
+####   Marks an establishment as "active" in a given year
+####   regardless of which specific workers were present.
+####   Used downstream to define complete-panel establishments.
+####
+#### CLAUDE: Original double loop broken in two ways:
+####   1. is.na() always FALSE — Ob cols filled with 0L at L806-808.
+####   2. Logic inverted — targeted NA rows (unobserved workers)
+####      to set EstabOb=1L, but intent is to target Ob==1L rows.
+####   estabid/firmid no longer needed after replacement.
+####   Replaced with data.table by= (correct and faster).
+####   Ref: github.com/Rdatatable/data.table/wiki/Benchmarks-:-Grouping
+####
+#### estabid <- unique(idyrW[, EstabID])
+#### firmid  <- unique(idyrW[, FirmID])
+#### for (jj in grepout("^Ob", colnames(idyrW))) {
+####   jjj <- grep(paste0("Estab", jj), colnames(idyrW))
+####   for (ii in 1:length(estabid))
+####     set(idyrW,
+####           i = which(
+####                 idyrW[, EstabID] == estabid[ii] &
+####                 is.na(idyrW[, jj, with = F])
+####               ),
+####           j = jjj,
+####       value = 1L)
+#### }
 for (jj in grepout("^Ob", colnames(idyrW))) {
-  #### Estab"jj" with jj = ObYYYY
-  jjj <- grep(paste0("Estab", jj), colnames(idyrW))
-  for (ii in 1:length(estabid)) 
-    #### i: ii-th estbid (establishment ID)
-    #### j: Estab"jj" ((2008:2022)[jj])
-    #### if a worker of an establishment is observed, 
-    #### ObYYYY is nonNA
-    set(idyrW, 
-          i = which(
-                idyrW[, EstabID] == estabid[ii] & 
-                is.na(idyrW[, jj, with = F]) 
-              ), 
-          j = jjj, 
-      value = 1L)
-#### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
+  jjj <- paste0("Estab", jj)
+  idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = EstabID]
 }
-setnames(idyrW, "time", "taxyear")
-for (yy in 2008:2022)
+#### setnames(idyrW, "time", "taxyear")
+#### CLAUDE: "time" column does not exist in wide reshape output.
+####   reshape() with timevar="taxyear" uses taxyear values as
+####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
+####   Commented out to avoid "Items to rename must exist: time".
+#### CLAUDE: Missing {} — without braces only jjname <- ... is in
+####   the loop body. idyrW[...] ran once after loop with yy=2022.
+####   Years 2008-2021 were never processed. Added {}.
+for (yy in 2008:2022) {
   jjname <- paste0("EstabOb.", yy)
-  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
     by = .(EstabID)]
+}
 estabcols <- grepout("EstabOb", colnames(idyrW))
-idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
+idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""),
   .SDcols = estabcols]
 idyrW[, EObPattern := factor(EObPattern)]
 
 #### Firm observation pattern
 #### Find any individual with 1L in a given firm
+####
+#### CLAUDE: Same is.na() bug as EstabOb loop (Bug 3).
+####   Ob cols have no NAs (filled with 0L above). Loop never fired.
+####   Logic also inverted. Replaced with data.table by=.
+#### for (jj in grepout("^Ob", colnames(idyrW))) {
+####   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
+####   for (ii in 1:length(firmid))
+####     set(idyrW,
+####           i = which(
+####                 idyrW[, FirmID] == firmid[ii] &
+####                 is.na(idyrW[, jj, with = F])
+####               ),
+####           j = jjj,
+####       value = 1L)
+#### }
 for (jj in grepout("^Ob", colnames(idyrW))) {
-  jjj <- grep(paste0("Firm", jj), colnames(idyrW))
-  for (ii in 1:length(firmid)) 
-    set(idyrW, 
-          i = which(
-                idyrW[, FirmID] == firmid[ii] & 
-                is.na(idyrW[, jj, with = F]) 
-              ), 
-          j = jjj, 
-      value = 1L)
+  jjj <- paste0("Firm", jj)
+  idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
 }
-for (yy in 2008:2022)
+#### CLAUDE: Missing {} — same issue as EstabOb loop above.
+####   Added {}.
+for (yy in 2008:2022) {
   jjname <- paste0("FirmOb.", yy)
-  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
     by = .(FirmID)]
+}
 firmcols <- grepout("FirmOb", colnames(idyrW))
 idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
   .SDcols = firmcols]
