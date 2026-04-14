@@ -48,13 +48,13 @@ number-sections: true
 ```{css CSS setting, echo=FALSE, results = "hide"}
 .SeiroBenign {
   background-color: #FFEBCD;
-  padding: 0.5em; /*•¶š‚Ü‚í‚èiã‰º¶‰Ej‚Ì—]”’*/
+  padding: 0.5em; /*æ–‡å­—ã¾ã‚ã‚Šï¼ˆä¸Šä¸‹å·¦å³ï¼‰ã®ä½™ç™½*/
   /* border: 1px solid yellow; */
   /* font-weight: bold; */
 }
 .SeiroLightWreen {
   background-color: #D0F0C0; /* Tea green */
-  padding: 0.5em; /*•¶š‚Ü‚í‚èiã‰º¶‰Ej‚Ì—]”’*/
+  padding: 0.5em; /*æ–‡å­—ã¾ã‚ã‚Šï¼ˆä¸Šä¸‹å·¦å³ï¼‰ã®ä½™ç™½*/
   font-family: Noto Sans;
   /* border: 1px solid yellow; */
   /* font-weight: bold; */
@@ -63,17 +63,17 @@ number-sections: true
 h1  {
   margin-top: 3ex;
   margin-bottom: 3ex;
-  /* background: #c2edff; */ /*”wŒiF*/
-  padding: 0.5em;/*•¶š‚Ü‚í‚èiã‰º¶‰Ej‚Ì—]”’*/
+  /* background: #c2edff; */ /*èƒŒæ™¯è‰²*/
+  padding: 0.5em;/*æ–‡å­—ã¾ã‚ã‚Šï¼ˆä¸Šä¸‹å·¦å³ï¼‰ã®ä½™ç™½*/
 }
 h2  {
   margin-top: 2ex;
   margin-bottom: 2ex;
-  padding: 0.5em;/*•¶šü‚è‚Ì—]”’*/
-  ####color: #010101;/*•¶šF*/
+  padding: 0.5em;/*æ–‡å­—å‘¨ã‚Šã®ä½™ç™½*/
+  ####color: #010101;/*æ–‡å­—è‰²*/
   color: #87a5f2;
-  /* background: #eaf3ff; */ /*”wŒiF*/
-  /* border-bottom: solid 3px #516ab6; */ /*‰ºü*/
+  /* background: #eaf3ff; */ /*èƒŒæ™¯è‰²*/
+  /* border-bottom: solid 3px #516ab6; */ /*ä¸‹ç·š*/
 }
 DBlue {
   color: dodgerblue;

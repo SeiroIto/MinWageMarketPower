@@ -29,3 +29,13 @@ Note
   → Explained the bugs live in project CLAUDE.md L18–73, not in a standing-issues file, because no such file existed. Per global convention they belong in CLAUDE_StandingIssues.md.
 * 2
   → Created CLAUDE_StandingIssues.md, CLAUDE_LOG.md, CLAUDE_CHANGES.md scaffolds under shared session codename Blue Heron (mirrors current GUK session).
+
+# Sandbox
+
+<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
+* 2026-04-14 | IRP5Condense.rmd: added mask_dots(x, keep=c(3,6,7,8,11)) helper in setup chunk; replaces every char except the kept positions with "."; vectorised via strrep + substr. Applied at 13 display sites (L496, L649, L650-651, L702, L703, L716, L718, L719, L721, L724, L729, L732, L735, L736) to anonymise taxrefno/uid in .() selects, print(), and table(names=...). Raw values untouched in by=/on=/setkey/:=/filter predicates. L732-734 split: built dropthese raw (needed at L754 for filter), then printed a masked copy. L496 cleanup also removed a latent bug: the original `(c("taxrefno.","uid.")) = lapply(...)` uses `=` instead of `:=` which is invalid data.table j syntax.
+* 2026-04-14 | sandbox rollout: user requested crash-safe incremental logging; saved feedback_sandbox_logging.md + feedback_read_settings_freely.md, appended Sandbox section to log trios of all 4 projects (scaffolded NameRight and SHLectures), first sandbox entry recorded in MinWageMarketPower (top of mtime list).
+* 2026-04-14 | user: sandbox writes must be automatic, no confirmation, no announcement → added clause to feedback_sandbox_logging.md.
+* 2026-04-14 | saved feedback_xref_db.md (build/query conventions + Rscript.exe Windows-path gotchas + worked debugging snippets). Built MinWageMarketPower xref DB: 126,468 rows, 49 files → C:/data/MinWageMarketPower/analysis/xref.sqlite. 15 R warnings during build (not inspected — likely encoding/line-ending noise on .Rmd files).
+* 2026-04-14 | user flagged missing #### CLAUDE tag rule (edit_preferences.md L34) on the 13 mask_dots edits. Root cause: rule is auto-loaded via feedback_edit_preferences.md symlink but I let it fall out of working context across a long session. User reordered edit_preferences.md themselves. Retrofitted IRP5Condense.rmd: added `#### CLAUDE mask` first-occurrence explanation at L508 site (+ `#### CLAUDE tpo` for the latent `=` vs `:=` bug); commented-out originals + repeated `#### CLAUDE mask:` tags at all 12 remaining sites (L659/662, L715/716, L729, L731, L732-733, L735-738, L740-744, L747-751, L752-761 dropthese split).
+

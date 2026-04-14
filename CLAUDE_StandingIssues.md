@@ -102,3 +102,7 @@ Problem
 
 Fix
 :   Remove this line.
+
+# Sandbox
+
+<!-- Raw notes on new issues as they surface. Promoted to canonical sections at orderly sign-off. Append-only. -->
