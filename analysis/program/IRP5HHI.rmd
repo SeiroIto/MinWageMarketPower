@@ -288,6 +288,7 @@ for (yr in 8:22) {
     DateEnd    < as.IDate(paste0(2000+(yr-1), "/03/01")) |
     DateStart >= as.IDate(paste0(2000+yr,     "/03/01")), 
     FinYr20yr := 0L]
+  ipyrc[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")]
   #### Select variables to keep
   FAdata <- ipyrc[, .(
       busprov_geo, 
@@ -298,6 +299,7 @@ for (yr in 8:22) {
       PropToMW, SubMW, 
       Jobs, NumSubMW, Employees, NumSubMWe,  
       JobsMP, NumSubMWMP, EmployeesMP, NumSubMWeMP,  
+      JobsPerWorker,
       FA, FAe, FAMP, FAeMP
     )]
   #### summary(FAdata)
@@ -308,7 +310,6 @@ for (yr in 8:22) {
   FAdata[Employees >= 250, Size := "large"]
   FAdata[is.na(Employees) | Employees == 0, Size := NA]
   FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
-  FAdata[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")] #### CLAUDE tpo:
   #### Number of affected workers in aggregates
   ag1 <- ipyrc[, .(
       JobsPerWorker
@@ -385,8 +386,8 @@ table(FAD[,taxyear])
 ####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
 options(datatable.print.nrows = 200, datatable.print.topn = 20)
 print(round(
-  FAD[, .(JobsPerWorker, num := 1:.N), 
-    by = c(geovars, "taxrefno", "UID", "taxyear")][, #### CLAUDE tpo:
+  FAD[, .(JobsPerWorker, num = 1:.N), 
+    by = c(geovars, "taxrefno", "UID", "taxyear")][num == 1L, 
     .(
       MeanJobsPerWorker = mean(JobsPerWorker, na.rm = T)
     , StdJobsPerWorker  = var(JobsPerWorker, na.rm = T)^(.5)
@@ -753,58 +754,49 @@ We need to know how granular the location information is. Based on granularity, 
 ```{r define irp5M by location granularity}
 #| attr.source = '.r .line-numbers',
 rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
-rm(fadata2); rm(fadata3); rm(faa)
+rm(faa)
 irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 #### Location granularity indicator
-irp5[, LocGranular := "none"]
-for (yr in 8:22) {
-  irp5[Txrf %in% Txrf
-    #### Granular down to Main Place
-    [
-      busprov_geo     != "" & 
-      busdistmuni_geo != "" & 
-      buslocmuni_geo  != "" & 
-      busmainplc_geo  != "" & 
-      taxyear == 2000 + yr
-    ] &
-    taxyear == 2000 + yr, 
-    LocGranular := GeoLevel[4]]
-  irp5[Txrf %in% Txrf
-    #### Granular down to Loc muni
-    [
-      busprov_geo     != "" & 
-      busdistmuni_geo != "" & 
-      buslocmuni_geo  != "" & 
-      busmainplc_geo  == "" &
-      taxyear == 2000 + yr
-    ] &
-    taxyear == 2000 + yr, 
-    LocGranular := GeoLevel[3]]
-  irp5[Txrf %in% Txrf
-    #### Granular down to Dist muni
-    [
-      busprov_geo     != "" & 
-      busdistmuni_geo != "" & 
-      buslocmuni_geo  == "" & 
-      busmainplc_geo  == "" &
-      taxyear == 2000 + yr
-    ] &
-    taxyear == 2000 + yr, 
-    LocGranular := GeoLevel[2]]
-  irp5[Txrf %in% Txrf
-    #### Granular down to Province
-    [
-      busprov_geo     != "" & 
-      busdistmuni_geo == "" & 
-      buslocmuni_geo  == "" & 
-      busmainplc_geo  == "" &
-      taxyear == 2000 + yr
-    ] &
-    taxyear == 2000 + yr, 
-    LocGranular := GeoLevel[1]]
-}
+#### irp5[, LocGranular := "none"]
+#### CLAUDE opt: replaced 15-year × 4-level loop (60 full-table scans) with a single
+####   fcase() pass grouped by (Txrf, taxyear). any() evaluates group-wide and fcase()
+####   short-circuits; semantics identical — all rows of a qualifying (Txrf, yr) group
+####   get the same level as before.
+#### for (yr in 8:22) {
+####   irp5[Txrf %in% Txrf
+####     [busprov_geo != "" & busdistmuni_geo != "" &
+####      buslocmuni_geo != "" & busmainplc_geo != "" & taxyear == 2000 + yr] &
+####     taxyear == 2000 + yr, LocGranular := GeoLevel[4]]
+####   irp5[Txrf %in% Txrf
+####     [busprov_geo != "" & busdistmuni_geo != "" &
+####      buslocmuni_geo != "" & busmainplc_geo == "" & taxyear == 2000 + yr] &
+####     taxyear == 2000 + yr, LocGranular := GeoLevel[3]]
+####   irp5[Txrf %in% Txrf
+####     [busprov_geo != "" & busdistmuni_geo != "" &
+####      buslocmuni_geo == "" & busmainplc_geo == "" & taxyear == 2000 + yr] &
+####     taxyear == 2000 + yr, LocGranular := GeoLevel[2]]
+####   irp5[Txrf %in% Txrf
+####     [busprov_geo != "" & busdistmuni_geo == "" &
+####      buslocmuni_geo == "" & busmainplc_geo == "" & taxyear == 2000 + yr] &
+####     taxyear == 2000 + yr, LocGranular := GeoLevel[1]]
+#### }
+irp5[, LocGranular := fcase(
+  #### Granular down to Main Place
+  any(busprov_geo != "" & busdistmuni_geo != "" &
+      buslocmuni_geo != "" & busmainplc_geo != ""), GeoLevel[4],
+  #### Granular down to Loc muni
+  any(busprov_geo != "" & busdistmuni_geo != "" &
+      buslocmuni_geo != "" & busmainplc_geo == ""), GeoLevel[3],
+  #### Granular down to Dist muni
+  any(busprov_geo != "" & busdistmuni_geo != "" &
+      buslocmuni_geo == "" & busmainplc_geo == ""), GeoLevel[2],
+  #### Granular down to Province
+  any(busprov_geo != "" & busdistmuni_geo == "" &
+      buslocmuni_geo == "" & busmainplc_geo == ""), GeoLevel[1],
+  default = "none"
+), by = .(Txrf, taxyear)]
 irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, "none"))]
 #### LocGranularFirm: Most granular location info (order sensitive)
 #### LocGranularJob: Most granular location info (order insensitive)
@@ -824,10 +816,20 @@ for (mm in 1:length(GeoLevel)) {
 }
 #### Number of unique entries at each level 
 #### Subtract 1 because NA is counted as 1 (all NA entries are MainPlNum == 1L)
-irp5[, MainPlNum := as.integer(length(unique(Mai)))-1L, by = .(Txrf, taxyear)]
-irp5[, LocMunNum := as.integer(length(unique(Loc)))-1L, by = .(Txrf, taxyear)]
-irp5[, DisMunNum := as.integer(length(unique(Dis)))-1L, by = .(Txrf, taxyear)]
-irp5[, ProvNum   := as.integer(length(unique(Prv)))-1L, by = .(Txrf, taxyear)]
+#### irp5[, MainPlNum := as.integer(length(unique(Mai)))-1L, by = .(Txrf, taxyear)]
+#### CLAUDE opt: uniqueN() is data.table-native; avoids length(unique()) overhead;
+####   returns integer already so as.integer() wrapper dropped. -1L correction
+####   unchanged: NA counts as 1 distinct value in both uniqueN() and unique().
+irp5[, MainPlNum := uniqueN(Mai)-1L, by = .(Txrf, taxyear)]
+#### irp5[, LocMunNum := as.integer(length(unique(Loc)))-1L, by = .(Txrf, taxyear)]
+#### CLAUDE opt:
+irp5[, LocMunNum := uniqueN(Loc)-1L, by = .(Txrf, taxyear)]
+#### irp5[, DisMunNum := as.integer(length(unique(Dis)))-1L, by = .(Txrf, taxyear)]
+#### CLAUDE opt:
+irp5[, DisMunNum := uniqueN(Dis)-1L, by = .(Txrf, taxyear)]
+#### irp5[, ProvNum   := as.integer(length(unique(Prv)))-1L, by = .(Txrf, taxyear)]
+#### CLAUDE opt:
+irp5[, ProvNum   := uniqueN(Prv)-1L, by = .(Txrf, taxyear)]
 irp5[, MainPlNA := as.integer(all(is.na(Mai))), by = .(Txrf, taxyear)]
 irp5[, LocMunNA := as.integer(all(is.na(Loc))), by = .(Txrf, taxyear)]
 irp5[, DisMunNA := as.integer(all(is.na(Dis))), by = .(Txrf, taxyear)]
@@ -993,9 +995,13 @@ for (yr in 8:22) {
     print(GeoLevel[g])
     byvar <- 	c("busprov_geo", "busdistmuni_geo", 
                 "buslocmuni_geo", "busmainplc_geo")[1:g]
-    ipGeo = copy(ipyr)
+    #### ipGeo = copy(ipyr)
+    #### CLAUDE rdn: copy() redundant — ipyr is already a copy from irp5[taxyear==yr];
+    ####   the filter below creates another new table via <-; no := ever touches ipyr.
+    #### ipGeo <- ipGeo[get(byvar[g]) != "" & !is.na(get(byvar[g])) & get(byvar[g]) != "EXCEPTION", ]
+    #### CLAUDE rdn:
     #### Drop rows with no location info and location is "EXCEPTION"
-    ipGeo <- ipGeo[get(byvar[g]) != "" & !is.na(get(byvar[g])) & get(byvar[g]) != "EXCEPTION", ]
+    ipGeo <- ipyr[get(byvar[g]) != "" & !is.na(get(byvar[g])) & get(byvar[g]) != "EXCEPTION", ]
     #### ipGeo <- ipGeo[!grepl("none", LocGranularJob) & get(byvar[g]) != "EXCEPTION", ]
     print(summary(ipGeo[, grepout("NARows", colnames(ipGeo)), with = F]))
     ipGeo[, WorkersAtEstab := as.integer(.N), by = c(byvar, "Txrf")]

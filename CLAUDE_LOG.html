@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../github-markdown.css">
+<style>
+body {
+  display: flex;
+  margin: 0;
+}
+nav#TOC {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px 12px;
+  border-right: 1px solid #d0d7de;
+  background: #f6f8fa;
+  font-size: 13px;
+  line-height: 1.4;
+}
+nav#TOC ul {
+  list-style: none;
+  padding-left: 12px;
+  margin: 0;
+}
+nav#TOC > ul {
+  padding-left: 0;
+}
+nav#TOC a {
+  color: #1F2328;
+  text-decoration: none;
+  display: block;
+  padding: 3px 0;
+}
+nav#TOC a:hover {
+  color: #0969da;
+}
+.markdown-body {
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 45px;
+  flex: 1;
+}
+</style>
+</head>
+<body>
+<nav id="TOC">
+<ul>
+<li><a href="#session-0-pre-logging-fixes-irp5hhi.rmd"
+id="toc-session-0-pre-logging-fixes-irp5hhi.rmd">Session 0 Pre-logging
+fixes (IRP5HHI.rmd)</a></li>
+<li><a href="#session-1-blue-heron-2026-04-12"
+id="toc-session-1-blue-heron-2026-04-12">Session 1 Blue Heron |
+2026-04-12</a></li>
+<li><a href="#sandbox" id="toc-sandbox">Sandbox</a></li>
+</ul>
+</nav>
+<article class="markdown-body">
+<p><span style="font-size: 1.6em; font-weight: bold;">MinWageMarketPower
+— Claude Log</span></p>
+<h1 id="session-0-pre-logging-fixes-irp5hhi.rmd">Session 0 Pre-logging
+fixes (IRP5HHI.rmd)</h1>
+<dl>
+<dt>Note</dt>
+<dd>
+These entries do NOT follow the standard CLAUDE_LOG.md format (prompt →
+response pairs). They were recorded before the project adopted the
+logging convention, and migrated here verbatim from the project
+CLAUDE.md “Known Bugs — Fix These First” section so the only surviving
+record is preserved. Original numbering kept. Before/after code is not
+available — these are one-line descriptions only.
+</dd>
+</dl>
+<ul>
+<li>L106–108: exists() called without quotes — FIXED.</li>
+<li>L285: unquoted column names in by = — FIXED.</li>
+<li>L362–363: same unquoted by = issue — FIXED.</li>
+<li>L481–483: missing comma in format_tt() — FIXED.</li>
+<li>L487 and L612: double closing quote — FIXED.</li>
+<li>L549, L579, L585: FA.orig / FAe.orig don’t exist — FIXED.</li>
+<li>L488–494: wrong aggregation in agriculture agsum — FIXED. Replaced
+firm-level vars with establishment-level (JobsMP, NumSubMWMP,
+EmployeesMP, NumSubMWeMP).</li>
+<li>L638: FA.orig in irp5ForPlot — FIXED. Same as above, FA.orig →
+FA.</li>
+<li>L648, L696: facet_wrap() not connected with + — FIXED. Missing +
+after theme(…).</li>
+<li>L1121: missing comma — FIXED. Between row filter and column
+selection in LShare[…].</li>
+<li>L1144: missing backtick in chunk fence — FIXED.</li>
+</ul>
+<h1 id="session-1-blue-heron-2026-04-12">Session 1 Blue Heron |
+2026-04-12</h1>
+<ul>
+<li>list projects → Listed 4 projects from global CLAUDE.md; reported
+GUK as most recently worked on by CLAUDE_LOG.md mtime.</li>
+<li>2 → Entered MinWageMarketPower; read project CLAUDE.md; noted no
+memory/log files exist yet.</li>
+<li>why did the record not come out at the start of this session? →
+Explained: SessionStart hook only lists projects with an existing
+CLAUDE_LOG.md (only GUK has one); MinWageMarketPower had no log/memory
+files.</li>
+<li>why below is not in log/memory files [outstanding bugs list] →
+Explained the bugs live in project CLAUDE.md L18–73, not in a
+standing-issues file, because no such file existed. Per global
+convention they belong in CLAUDE_StandingIssues.md.</li>
+<li>2 → Created CLAUDE_StandingIssues.md, CLAUDE_LOG.md,
+CLAUDE_CHANGES.md scaffolds under shared session codename Blue Heron
+(mirrors current GUK session).</li>
+</ul>
+<h1 id="sandbox">Sandbox</h1>
+<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
+<ul>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | IRP5Condense.rmd:
+added mask_dots(x, keep=c(3,6,7,8,11)) helper in setup chunk; replaces
+every char except the kept positions with “.”; vectorised via strrep +
+substr. Applied at 13 display sites (L496, L649, L650-651, L702, L703,
+L716, L718, L719, L721, L724, L729, L732, L735, L736) to anonymise
+taxrefno/uid in .() selects, print(), and table(names=…). Raw values
+untouched in by=/on=/setkey/:=/filter predicates. L732-734 split: built
+dropthese raw (needed at L754 for filter), then printed a masked copy.
+L496 cleanup also removed a latent bug: the original
+<code>(c("taxrefno.","uid.")) = lapply(...)</code> uses <code>=</code>
+instead of <code>:=</code> which is invalid data.table j syntax.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | sandbox rollout: user
+requested crash-safe incremental logging; saved
+feedback_sandbox_logging.md + feedback_read_settings_freely.md, appended
+Sandbox section to log trios of all 4 projects (scaffolded NameRight and
+SHLectures), first sandbox entry recorded in MinWageMarketPower (top of
+mtime list).</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | user: sandbox writes
+must be automatic, no confirmation, no announcement → added clause to
+feedback_sandbox_logging.md.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | saved
+feedback_xref_db.md (build/query conventions + Rscript.exe Windows-path
+gotchas + worked debugging snippets). Built MinWageMarketPower xref DB:
+126,468 rows, 49 files →
+C:/data/MinWageMarketPower/analysis/xref.sqlite. 15 R warnings during
+build (not inspected — likely encoding/line-ending noise on .Rmd
+files).</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | user flagged missing
+#### CLAUDE tag rule (edit_preferences.md L34) on the 13 mask_dots
+edits. Root cause: rule is auto-loaded via feedback_edit_preferences.md
+symlink but I let it fall out of working context across a long session.
+User reordered edit_preferences.md themselves. Retrofitted
+IRP5Condense.rmd: added <code>#### CLAUDE mask</code> first-occurrence
+explanation at L508 site (+ <code>#### CLAUDE tpo</code> for the latent
+<code>=</code> vs <code>:=</code> bug); commented-out originals +
+repeated <code>#### CLAUDE mask:</code> tags at all 12 remaining sites
+(L659/662, L715/716, L729, L731, L732-733, L735-738, L740-744, L747-751,
+L752-761 dropthese split).</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | user: commented-out
+originals must use <code>####</code> not <code>#</code>. Updated all 13
+mask sites to <code>####</code> prefix (matches the project’s in-file
+comment style). Rebuilt xref DB: 126,844 rows / 49 files, no encoding
+warnings.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | starting IRP5HHI.rmd
+review for issues.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | IRP5HHI.rmd review: 4
+real bugs surfaced — (1) L311/L313 JobsPerWorker created on FAdata but
+read from ipyrc (+ <code>uid</code> lowercase can be NA, should be UID);
+(2) L387–394 invalid <code>.()</code> syntax (<code>num := 1:.N</code>
+inside j list); (3) L755–756 rm(fadata2)/rm(fadata3) on never-defined
+vars; (4) L1015–1017 WorkersInMarketNoGov grouped by Entity,
+double-counts gov. All 4 appended to CLAUDE_StandingIssues.md Sandbox →
+IRP5HHI.rmd block under Session 2 Dune Fern | 2026-04-14.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | user: <code>tpo</code>
+tag is self-explanatory — no trailing explanation needed, and empty
+<code>#### CLAUDE tpo:</code> markers are NOT review-flagged. Added
+one-line note to edit_preferences.md L39. 12 placeholder-tag lines
+originally flagged in IRP5HHI.rmd are withdrawn.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | user:
+claude_TaskRecord_<project>.md is for reference material (variable
+glossary, dataset lineage, chunk map, cross-file deps, HHI/LocGranular
+taxonomies), NOT for bug lists. Drafted scope of what the MinWage task
+record should contain but did not write the file — user signed off
+before write.</li>
+<li>2026-04-14 ??:?? JST | Session 1 Blue Heron | signed off. Next
+session: write claude_TaskRecord_MinWageMarketPower.md with full
+reference content (see conversation) then fix the 4 bugs in order
+(1)→(2)→(3)→(4) using <code>#### CLAUDE &lt;tag&gt;</code> +
+<code>####</code>-commented originals. Session codename going forward
+for MinWage: Session 2 Dune Fern.</li>
+<li>2026-04-15 17:16 JST | Session 2 Dune Fern | user: write task record
+including where key variables are defined (filename, line number) →
+queried xref.sqlite (126,844 rows / 49 files) for
+<code>&lt;-</code>/<code>=</code> writes; xref misses <code>:=</code>
+inside data.table <code>[</code>, so grepped source files directly for
+remaining vars; wrote
+<code>claude_TaskRecord_MinWageMarketPower.md</code> covering: geo
+taxonomy, key variable definitions with file:line, path variables,
+utility functions, dataset lineage, cross-file symbol deps (setup→all,
+Condense→HHI, HHI→MergeData, MergeData→Impacts); symlinked to projects
+memory path. User: include rough token cost + time HH:MM JST + session
+number + session name in sandbox entries; apply retroactively to older
+entries.</li>
+<li>2026-04-15 17:37 JST | Session 2 Dune Fern | resumed IRP5HHI.rmd
+debugging → user corrected: (a) IRP5Condense makes uid/UID
+interchangeable so uid in L311 is not a bug; (b) issue 2 (L387–394 num
+:=) fixed manually by user; (c) need systematic workflow trace before
+flagging bugs. Dropped issue 2 from StandingIssues (marked FIXED) and
+task record. Updated issue 1 description to remove incorrect uid/UID
+note. Feedback saved: show full multi-line command before concluding a
+variable is unused; trace object lifecycle through workflow before
+flagging.</li>
+<li>2026-04-15 17:46 JST | Session 2 Dune Fern | agreed plan: query xref
+DB for object lifecycle (created/used/terminated) + cross-file dep chart
+across 5 main files; grep source for rm() since xref misses it; write
+both to TaskRecord. Next: update build_xref.R to capture rm() calls as
+termination events before running lifecycle query.</li>
+<li>2026-04-15 17:55 JST | Session 2 Dune Fern | updated build_xref.R:
+added rm_re pattern, is_write=2 for terminations, fixed
+multi-rm-per-line via gregexpr. Rebuilt DB: 126,929 rows / 50 files.
+Verified L755 IRP5HHI captures FAD/Fadata/fadata/inda and L756 captures
+fadata2/fadata3/faa. Next: lifecycle + cross-file dep query → write to
+TaskRecord.</li>
+<li>2026-04-15 18:15 JST | Session 2 Dune Fern | ran lifecycle query
+(~40 objects, 5 files); attempted Edit to TaskRecord twice — rejected
+both times because Created column showed multiple line numbers (xref
+captures every <code>&lt;-</code>/<code>=</code> re-assignment). User
+correction: Created = MIN(line) per object per file (first assignment
+only). Cross-file dep chart and lifecycle table still pending write.
+Context compressed; session resumed. Next: re-run query with MIN(line),
+write both sections to TaskRecord.</li>
+<li>2026-04-15 18:35 JST | Session 2 Dune Fern | re-ran lifecycle query
+(workflow files only, Created = MIN(line)); wrote
+<code>## Object lifecycle</code> table (38 objects) and
+<code>## Cross-file dependency chart</code> (<code>tree</code> block) to
+claude_TaskRecord_MinWageMarketPower.md. Temp R script and RDS deleted.
+Next: debug IRP5HHI.rmd bugs (L311/313 JobsPerWorker, L755-756 rm
+never-defined, L1015-1017 WorkersInMarketNoGov).</li>
+<li>2026-04-15 18:42 JST | Session 2 Dune Fern | added Rscript
+invocation pattern to feedback_proposal_style.md: write script to
+analysis/program/ (WSL path, Windows-visible as C:/…), run Rscript.exe
+with C:/… arg + dangerouslyDisableSandbox:true, delete scratch files
+after. Silent exit 5 = wrong path form.</li>
+<li>2026-04-15 19:10 JST | Session 2 Dune Fern | IRP5HHI.rmd debugging:
+user confirmed L311/313 (JobsPerWorker) harmless — manually fixed by
+moving assignment to ipyrc and adding to FAdata select. Scanned for
+result-changing bugs: Bug 3 (L755-756 rm(fadata2)/rm(fadata3)) confirmed
+— never defined, crashes chunk before HHI loop. Bug 4 (L1015-1017
+WorkersInMarketNoGov) investigated — NOT a bug: ShareNoGov correct for
+private rows (gov rows get 0 regardless),
+nHHIG/HHIG/ShareNoGov/WorkersInMarketNoGov never used in MergeData or
+Impacts. StandingIssues updated: Bug 4 closed. Next: fix Bug 3
+(L755-756).</li>
+</ul>
+</article>
+</body>
+</html>

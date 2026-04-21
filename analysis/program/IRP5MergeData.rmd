@@ -1,6 +1,6 @@
 ---
 title: "Merge IRP5, industry code, HHI, FA files"
-date: "r format(Sys.time(), "%Y%m%d %R")"
+date: "`r format(Sys.time(), '%Y%m%d %R')`"
 output: 
   litedown::html_format:
     meta:

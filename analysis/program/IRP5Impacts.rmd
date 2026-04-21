@@ -1,6 +1,6 @@
 ---
 title: "Minimum wage impacts on employment using IRP5 files"
-date: "r format(Sys.time(), "%Y%m%d %R")"
+date: "`r format(Sys.time(), '%Y%m%d %R')`"
 output: 
   litedown::html_format:
     meta:
@@ -155,7 +155,6 @@ Lf[, HHILevel := factor(HHILevel)]
 ####   )]
 #### FAclass0: Initial year FA class (not necessarily pre-2013)
 Lf[, FAclass0 := "low"]
-Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
 Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
 Lf[FAMP0 > .5, FAclass0 := "high"]
 Lf[, FAclass0 := factor(FAclass0, levels = c("low", "mid", "high"))]
@@ -599,7 +598,8 @@ for (Jb in c(2, 10)) {
     ) + 
     ThisTheme + 
     scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
-    if (Jb == 2) Jb <- paste0("0", Jb)
+    #### CLAUDE tpo: dead code — Jb already "02" (character) from paste0(0,Jb) at L500.
+    #### if (Jb == 2) Jb <- paste0("0", Jb)
     ggsave(
       paste0(pathresults, "Results", Yr, "-2022Job", Jb, ".jpg")
       , gFEYr, width = 8*2, height = 4*2, units = "cm",
@@ -668,7 +668,7 @@ Lf[, num := 1:.N, by = .(EstID, taxyear)]
 #### FAclass0: Initial year FA class (not necessarily pre-2013)
 Lf[, FAclass0 := "low"]
 Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
-Lf[.2 < FAMP0 & FAMP0 <= .5, FAclass0 := "mid"]
+#### CLAUDE tpo: duplicate line removed.
 Lf[FAMP0 > .5, FAclass0 := "high"]
 Lf[, FAclass0 := factor(FAclass0, levels = c("low", "mid", "high"))]
 #### FAclass: Initial year FA class (pre-2013)
@@ -1193,7 +1193,8 @@ for (Jb in c(2, 10)) {
       ) + 
       ThisTheme +
       scale_x_continuous(limits = c(Yr, 2022), breaks = Yr:2022)
-      if (Jb == 2) Jb <- paste0("0", Jb)
+      #### CLAUDE tpo: dead code — Jb already "02" (character) from paste0(0,Jb) at L1044.
+      #### if (Jb == 2) Jb <- paste0("0", Jb)
       ggsave(
         paste0(pathresults, 
           "Results", names(EstSpecs)[ii], Yr, "-2022Job", Jb, "w.jpg")

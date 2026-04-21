@@ -505,7 +505,17 @@ irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
 summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
   .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
-#### CLAUDE mask: replace raw taxrefno/uid display with mask_dots(...) to anonymise printed identifiers; raw values preserved in keys/joins/filters.
+#### CLAUDE msk: define anonymous ID columns; Corp/UInd used in all html display; taxrefno/uid retained for joins/filters only.
+irp5gi[, EstabIDTx := as.integer(as.numeric(factor(paste0(
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
+irp5gi[, EstabID   := as.integer(as.numeric(factor(paste0(
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
+irp5gi[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
+irp5gi[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
+irp5gi[, UIndID    := as.integer(as.numeric(factor(uid)))]
+irp5gi[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
+irp5gi[, Corp      := FirmID]
+irp5gi[, UInd      := UIndID]
 #### CLAUDE tpo: original used `=` instead of `:=` in data.table j (invalid syntax); removed entirely, masking now done inline in the select.
 #### irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD,
 ####   function(x) gsub("....$", "....", gsub("^....", "....", x))),
@@ -514,8 +524,7 @@ summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L],
 ####   .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
 ####     FillInLocMuni, buslocmuni_geo)]
 irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10],
-  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
-    taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
+  .(Corp, UInd, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
     FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
 #### Number of NAs in loc muni info
@@ -657,24 +666,32 @@ irp5gir[, orig.bprov := busprov_geo]
 irp5gir[, orig.bdist := busdistmuni_geo]
 irp5gir[, orig.bloc  := buslocmuni_geo]
 irp5gir[, orig.bmain := busmainplc_geo]
-#### If we do not condition on first row "[1]", we wind up 
+#### If we do not condition on first row "[1]", we wind up
 #### having multiple cases ==> error
 #### If there are multiple matches, we have no idea which to pick, so pick first
-irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
-irp5gir[, bdist15 := busdistmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
-irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
-irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
-#### CLAUDE mask:
+#### irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+#### irp5gir[, bdist15 := busdistmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+#### irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+#### irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+#### CLAUDE tpo: [1] could select ""/NA before filtering; conflicting non-missing
+####   values now set to NA (not copied). Loop uses geovars from setup.rmd.
+geo15vars <- c("bprov15", "bdist15", "bloc15", "bmain15")
+for (k in seq_along(geovars)) {
+  irp5gir[, (geo15vars[k]) := {
+    x <- get(geovars[k])
+    x <- x[taxyear == 2015 & !is.na(x) & x != ""]
+    if (uniqueN(x) == 1L) x[1L] else NA_character_
+  }, by = .(taxrefno, uid)]
+}
+#### CLAUDE msk:
 #### irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
 irp5gir[orig.bloc  == "" & bloc15  != "",
-  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
-    taxyear, bloc15, buslocmuni_geo)]
-#### CLAUDE mask:
+  .(Corp, UInd, taxyear, bloc15, buslocmuni_geo)]
+#### CLAUDE msk:
 #### irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear,
 ####   bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
 irp5gir[orig.bloc  == "" & bloc15  != "",
-  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), taxyear,
-    bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
+  .(Corp, UInd, taxyear, bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
 irp5gir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
 #### Copy from bXXXX15 
 irp5gir[
@@ -712,6 +729,11 @@ rm(irp5gi)
 #### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
 ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
 ipyr[, uid := gsub(" +$", "", UID)]
+#### CLAUDE msk: define Corp/UInd on ipyr (separate dataset; no Txrf-based IDs needed here).
+ipyr[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
+ipyr[, UIndID    := as.integer(as.numeric(factor(uid)))]
+ipyr[, Corp      := FirmID]
+ipyr[, UInd      := UIndID]
 #### rm(ipyrs)
 #### CLAUDE: ipyrs never defined; only ipyr exists here.
 ####   Commented out to avoid "object not found" error.
@@ -720,16 +742,16 @@ ipyr[, uid := gsub(" +$", "", UID)]
 #### one large employer (with 4632 jobs) contributes 
 #### DO NOT use these uids when copying location from future data
 dupuid <- ipyr[
-    duplicated(uid) | duplicated(uid, fromLast=T), 
-    .(taxrefno, uid=uid)
+    duplicated(uid) | duplicated(uid, fromLast=T),
+    .(taxrefno, uid, Corp, UInd)
   ]
 dupuid[, n := .N, by = .(taxrefno, uid)]
 dupuid <- unique(dupuid[order(n, decreasing = T), ])
-#### CLAUDE mask:
+#### CLAUDE msk:
 #### dupuid[n > 10, ]
 #### print(unique(dupuid[, uid])[1:30], quote = F)
-dupuid[n > 10, .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
-print(mask_dots(unique(dupuid[, uid])[1:30]), quote = F)
+dupuid[n > 10, .(Corp, UInd, n)]
+print(unique(dupuid[, UInd])[1:30])
 #### repetitive: [A-Z]*8
 repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]
 tbr <- table(repetetive)
@@ -742,47 +764,43 @@ repetetive <- unique(repetetive)
 #### firms with repetetive uids and their counts
 tb <- table(ipyr[uid %in% repetetive, taxrefno])
 tb <- tb[order(tb, decreasing=T)]
-#### CLAUDE mask: taxrefno values leak via table names; wrap names() before printing.
+#### CLAUDE msk: taxrefno values leak via table names; wrap names() before printing.
 #### tb[1:20]
-{ t <- tb[1:20]; names(t) <- mask_dots(names(t)); t }
+{ t <- tb[1:20]; names(t) <- ipyr[match(names(t), ipyr[["taxrefno"]]), Corp]; t }
 #### repetetive entries are concentrated in 3 firms
-#### CLAUDE mask:
+#### CLAUDE msk:
 #### dupuid[1:20, ]
-dupuid[1:20, .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
-#### CLAUDE mask:
+dupuid[1:20, .(Corp, UInd, n)]
+#### CLAUDE msk:
 #### dupuid[taxrefno %in% names(tb)[1:3], ][1:20, ]
-dupuid[taxrefno %in% names(tb)[1:3], ][1:20,
-  .(taxrefno = mask_dots(taxrefno), uid = mask_dots(uid), n)]
+dupuid[taxrefno %in% names(tb)[1:3], ][1:20, .(Corp, UInd, n)]
 #### firms with 800 same uids: using same uid for all workers
-#### CLAUDE mask:
+#### CLAUDE msk:
 #### ipyr[uid %in% dupuid[1, uid],
 ####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)]
 ipyr[uid %in% dupuid[1, uid],
-  .(busprov_geo, busmainplc_geo,
-    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+  .(busprov_geo, busmainplc_geo, Corp, UInd,
     periodemployedfrom, periodemployedto, kerr_income)]
 #### same repetetive entries (AAAAA...) are found across firms
-#### CLAUDE mask:
+#### CLAUDE msk:
 #### ipyr[uid %in% names(tbr)[1:20],
 ####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
 ####   order(uid, taxrefno), ]
 ipyr[uid %in% names(tbr)[1:20],
-  .(busprov_geo, busmainplc_geo,
-    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+  .(busprov_geo, busmainplc_geo, Corp, UInd,
     periodemployedfrom, periodemployedto, kerr_income)][
-  order(uid, taxrefno), ]
+  order(UInd, Corp), ]
 #### Drop firms with repetetive entries if they are above 10
 ii <- 10
-#### CLAUDE mask:
+#### CLAUDE msk:
 #### ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
 ####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
 ####   order(uid, taxrefno), ]
 ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
-  .(busprov_geo, busmainplc_geo,
-    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+  .(busprov_geo, busmainplc_geo, Corp, UInd,
     periodemployedfrom, periodemployedto, kerr_income)][
-  order(uid, taxrefno), ]
-#### CLAUDE mask: original wrapped the assignment in `(...)` to print as a side-effect;
+  order(UInd, Corp), ]
+#### CLAUDE msk: original wrapped the assignment in `(...)` to print as a side-effect;
 ####   `dropthese` is needed raw at the qsave below, so split into raw assign + masked display.
 #### (dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
 ####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
@@ -790,14 +808,13 @@ ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[t
 #### table(dropthese[, .(uid, taxrefno)])
 #### table(dropthese[, uid])
 dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
-  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
-  order(uid, taxrefno), ]
-dropthese[,
-  .(busprov_geo, busmainplc_geo,
-    taxrefno = mask_dots(taxrefno), uid = mask_dots(uid),
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
+    periodemployedfrom, periodemployedto, kerr_income)][
+  order(UInd, Corp), ]
+dropthese[, .(busprov_geo, busmainplc_geo, Corp, UInd,
     periodemployedfrom, periodemployedto, kerr_income)]
-table(dropthese[, .(uid = mask_dots(uid), taxrefno = mask_dots(taxrefno))])
-table(mask_dots(dropthese[, uid]))
+table(dropthese[, .(UInd, Corp)])
+table(dropthese[, UInd])
 ####      CCCCCCCC CCCCCCCCCCCCC 
 ####           191          2341 
 qsave(dropthese, 
@@ -831,7 +848,10 @@ Also create
 * `EstabID` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(taxrefno)
 * `FirmIDTx` (Txrf)
 * `FirmID` (taxrefno)
-* `IndID` (EstabIDTx)(uid)
+* `UIndID` (uid)
+* `IndID` (EstabIDTx)(UIndID)
+* `Corp` (= FirmID; display alias)
+* `UInd` (= UIndID; display alias)
 
 ```{r create ObPattern}
 #| attr.source = '.r .line-numbers',
@@ -843,24 +863,23 @@ if (RunSep || !exists("irp5Clean"))
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
-idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid)]
+idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo,
+  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid,
+  EstabIDTx, EstabID, FirmIDTx, FirmID, IndID, UIndID, Corp, UInd)]
 if (all(idyr[, uid == UID])) idyr[, UID := NULL]
-idyr[, EstabIDTx := factor(as.numeric(factor(paste0(
-    busdistmuni_geo
-  , buslocmuni_geo
-  , busmainplc_geo
-  , Txrf))))
-]
-idyr[, EstabID := factor(as.numeric(factor(paste0(
-    busdistmuni_geo
-  , buslocmuni_geo
-  , busmainplc_geo
-  , taxrefno))))
-]
-idyr[, FirmIDTx := factor(as.numeric(Txrf))]
-idyr[, FirmID := factor(as.numeric(taxrefno))]
-idyr[, IndID := paste(EstabIDTx, uid, sep = "-")]
+#### CLAUDE exi: guard for standalone chunk execution before irp5Clean.qs rebuild.
+if (!"EstabIDTx" %in% colnames(idyr)) {
+  idyr[, EstabIDTx := as.integer(as.numeric(factor(paste0(
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
+  idyr[, EstabID   := as.integer(as.numeric(factor(paste0(
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
+  idyr[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
+  idyr[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
+  idyr[, UIndID    := as.integer(as.numeric(factor(uid)))]
+  idyr[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
+  idyr[, Corp      := FirmID]
+  idyr[, UInd      := UIndID]
+}
 #### Individual observation pattern in a given establishment
 idyr[, Ob := 1L]
 idyrW <- reshape(idyr, direction = "wide", 
@@ -893,8 +912,8 @@ idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 ####   Used downstream to define complete-panel establishments.
 ####
 #### CLAUDE: Original double loop broken in two ways:
-####   1. is.na() always FALSE — Ob cols filled with 0L at L806-808.
-####   2. Logic inverted — targeted NA rows (unobserved workers)
+####   1. is.na() always FALSE cols filled with 0L at L806-808.
+####   2. Logic inverted targeted NA rows (unobserved workers)
 ####      to set EstabOb=1L, but intent is to target Ob==1L rows.
 ####   estabid/firmid no longer needed after replacement.
 ####   Replaced with data.table by= (correct and faster).
@@ -922,7 +941,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 ####   reshape() with timevar="taxyear" uses taxyear values as
 ####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
 ####   Commented out to avoid "Items to rename must exist: time".
-#### CLAUDE: Missing {} — without braces only jjname <- ... is in
+#### CLAUDE: Missing {} 矚ǁwithout braces only jjname <- ... is in
 ####   the loop body. idyrW[...] ran once after loop with yy=2022.
 ####   Years 2008-2021 were never processed. Added {}.
 for (yy in 2008:2022) {
@@ -956,7 +975,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- paste0("Firm", jj)
   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
 }
-#### CLAUDE: Missing {} — same issue as EstabOb loop above.
+#### CLAUDE: Missing {} 矚ǁsame issue as EstabOb loop above.
 ####   Added {}.
 for (yy in 2008:2022) {
   jjname <- paste0("FirmOb.", yy)
@@ -978,13 +997,19 @@ ObPattern <- idyrW[, c(
     "FObPattern", "EObPattern", "IObPattern"), with = F]
 qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
 #### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
-irp5Clean[, EstabIDTx := factor(as.numeric(factor(paste0(
-    busdistmuni_geo
-  , buslocmuni_geo
-  , busmainplc_geo
-  , Txrf))))
-]
-irp5Clean[, IndID := paste(EstabIDTx, uid, sep = "-")]
+#### CLAUDE exi: guard for standalone chunk execution before irp5Clean.qs rebuild.
+if (!"EstabIDTx" %in% colnames(irp5Clean)) {
+  irp5Clean[, EstabIDTx := as.integer(as.numeric(factor(paste0(
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
+  irp5Clean[, EstabID   := as.integer(as.numeric(factor(paste0(
+      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
+  irp5Clean[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
+  irp5Clean[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
+  irp5Clean[, UIndID    := as.integer(as.numeric(factor(uid)))]
+  irp5Clean[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
+  irp5Clean[, Corp      := FirmID]
+  irp5Clean[, UInd      := UIndID]
+}
 setkey(irp5Clean, IndID); setkey(ObPattern, IndID)
 irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "IndID")]
 qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
