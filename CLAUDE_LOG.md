@@ -399,3 +399,4 @@ Note
 * 2026-04-25 20:50 JST | Session 11 | startup after reinstall → full startup complete; xref rebuilt (124339 rows/48 files); Sessions 9+10 sandbox promoted to canonical
 * 2026-04-26 05:55 JST | Session 11 | tempforCC.txt deduplicated and appended to CLAUDE_CC.md (lines 7431-7516 only → CC now 2372 lines)
 * 2026-04-26 06:24 JST | Session 11 | feedback_edit_preferences.md symlink created; feedback_global_claude_md_authoritative.md updated; PreToolUse+Stop hooks added to settings.local.json; Session 11 turns appended to CC
+* 2026-04-28 17:31 JST | Session 12 | IRP5HHI.rmd: as.IDate → fastPOSIXct (L177-178, L305-306); library(fasttime) added to chunk L159

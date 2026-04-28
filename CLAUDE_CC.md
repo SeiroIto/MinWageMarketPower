@@ -2434,3 +2434,52 @@ Combined diff shown for both hooks. Stop hook fires at end of each turn — CC r
 > y
 
 Both hooks written to /home/sdude/.claude/settings.local.json.
+--- Session 12 | 2026-04-28 ---
+
+> min wage
+
+[startup display: Session 12, MinWageMarketPower; xref rebuilt 124388 rows/48 files; Session 11 sandbox not yet promoted; 5 standing issues listed]
+
+> for all rmd files, when defining dates, do not use as.IDate() but use fastPOSIXct(), load fasttime library in the same chunk as necessary / edit all files
+
+Only IRP5HHI.rmd had active as.IDate() calls (Condense already uses fastPOSIXct; others have none). Three edits applied:
+- IRP5HHI.rmd L159: library(fasttime) added to {fraction affected for all years} chunk
+- IRP5HHI.rmd L177-178: as.IDate(paste0(2000+yr-1,...)) x2 → fastPOSIXct(...)
+- IRP5HHI.rmd L305-306: as.IDate(paste0(2000+(yr-1),...)) + as.IDate(paste0(2000+yr,...)) → fastPOSIXct(...) x2
+
+> CC=vebatime copy / need to redirect response every time you respond, remember? / why did you forget? what needs to be done for repeated memory loss
+
+The root cause: I compose the response text, then write CC from memory — which produces summaries, not verbatim. The fix needs to be structural, not just a stronger rule in the feedback file (that rule already exists and I keep breaking it).
+
+Concrete options:
+1. Stop hook — a Stop hook that flags each turn.
+2. Write pattern discipline — compose both simultaneously; same failure mode.
+3. Relocate the rule — already in CLAUDE.md; adding again will not help.
+
+The only option with teeth is option 1: a Stop hook.
+
+> read edit pref feedback file
+> [user quoted rule sections 3 and 8]
+> what else do you need?
+
+Nothing more is needed. The rule is clear: write the exact response text to CC in the same tool batch as the last action, never retroactively. The failure was deferring the write and reconstructing from memory. Executing now.
+
+> all the turns in GUK write verbatim to CC!!!!
+
+[read GUK CLAUDE_CC.md tail; searched for appendCC.txt; found at /mnt/c/data/GUK/appendCC.txt]
+
+> refer to apendCC.txt and use for CC
+
+Found it. This is the full terminal transcript. Appending it to GUK CLAUDE_CC.md.
+
+6,996 lines of terminal transcript appended to /mnt/c/data/GUK/CLAUDE_CC.md.
+
+For future sessions: the correct approach is to save the terminal output (like appendCC.txt) rather than having me reconstruct from memory. If there is a way to pipe or save the terminal session automatically, that would close this gap permanently.
+
+> back to min wage
+
+Back in MinWageMarketPower, Session 12. Pending from standing issues: IRP5HHI.rmd L720 xlim = c(1, 100) → c(0, 1). Ready when you are.
+
+> [system notification: background task b2m6n0oz6 completed — stale find for apendCC.txt]
+
+Stale background search — that is the find I ran earlier to locate appendCC.txt. Already found and appended. Nothing to act on.

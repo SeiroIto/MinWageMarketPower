@@ -88,3 +88,6 @@ Note
 # Sandbox
 
 <!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->
+* IRP5HHI.rmd L159 | (absent) → library(fasttime) in {fraction affected for all years} chunk | fastPOSIXct used below; fasttime not in setup | CLAUDE tpo
+* IRP5HHI.rmd L177-178 | as.IDate(paste0(2000+yr-1,...)) ×2 → fastPOSIXct(...) | DateStart/DateEnd are POSIXct from Condense; type consistency | CLAUDE tpo
+* IRP5HHI.rmd L305-306 | as.IDate(paste0(2000+(yr-1),...)) + as.IDate(paste0(2000+yr,...)) → fastPOSIXct(...) ×2 | same | CLAUDE tpo

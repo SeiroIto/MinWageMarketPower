@@ -156,6 +156,7 @@ irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 
 ```{r fraction affected for all years}
 #| attr.source = '.r .line-numbers',
+library(fasttime)
 #### Takes 20-30 mins: Start  ####
 #### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
 #### ipyrc0 <- irp5M[
@@ -173,8 +174,8 @@ for (yr in 8:22) {
   ipyrc[, DateStart20yr := DateStart]
   #### If DateStart is before start of taxyear, March 1 
   ####  ==> DateStart20yr = March 1 of taxyear-1
-  ipyrc[DateStart < as.IDate(paste0(2000+yr-1, "/03/01")), 
-          DateStart20yr := as.IDate(paste0(2000+yr-1,"/03/01"))]
+  ipyrc[DateStart < fastPOSIXct(paste0(2000+yr-1, "/03/01")),
+          DateStart20yr := fastPOSIXct(paste0(2000+yr-1,"/03/01"))]
   #### IncomeMonth = monthly income, duration is measured as the same taxyear
   ipyrc[, DurationMonth := round(as.numeric((DateEnd-DateStart)/30.5), 3)]
   ipyrc[, DurMonthMarch := round(as.numeric((DateEnd-DateStart20yr)/30.5), 3)]
@@ -301,8 +302,8 @@ for (yr in 8:22) {
   #### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
   ipyrc[, FinYr20yr := 1L]
   ipyrc[
-    DateEnd    < as.IDate(paste0(2000+(yr-1), "/03/01")) |
-    DateStart >= as.IDate(paste0(2000+yr,     "/03/01")), 
+    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
     FinYr20yr := 0L]
   ipyrc[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")]
   #### Select variables to keep
