@@ -175,6 +175,7 @@ Appending all annual files
 #| attr.source = '.r .line-numbers',
 library(qs)
 library(data.table)
+library(fasttime)
 irp5pnl <- NULL
 for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
@@ -201,10 +202,11 @@ irp5pnl[, Entity := "private"]
 irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
 irp5pnl[, Entity := factor(Entity, levels = c("private", "gov"))]
 geovars <- grepout("^bus.*geo$", colnames(irp5pnl))
-#### Below takes about 2 hours!!!: Start  ###
-irp5pnl[, DateStart := as.IDate(periodemployedfrom)]
-irp5pnl[, DateEnd   := as.IDate(periodemployedto)]
-irp5pnl[, DateBirth := as.IDate(dateofbirth)]
+#### Below takes about 2 hours (with as.IDate)!!!: Start  ###
+library(fasttime)
+irp5pnl[, DateStart := fastPOSIXct(periodemployedfrom)]
+irp5pnl[, DateEnd   := fastPOSIXct(periodemployedto)]
+irp5pnl[, DateBirth := fastPOSIXct(dateofbirth)]
 #### Below takes about 2 hours!!!: End  ###
 ```
 
@@ -585,6 +587,7 @@ If there are workers working for multiple establishments ... no problem
 #### use this row for 2014
 #### paste0 operation is not slow
 #### library(data.table)
+#### library(fasttime)
 #### n <- 1e5
 #### dt <- data.table(
 ####   x1 = sample(1000:2000, n, replace= T),
@@ -593,6 +596,18 @@ If there are workers working for multiple establishments ... no problem
 #### dt[, date1 := as.Date(x1, origin = "1990/01/01")]
 #### dt[, date2 := as.Date(x2, origin = "1990/01/01")]
 #### dt[, taxyear := year(date1)]
+#### system.time(dt[, date := paste0(taxyear, "/03/01")])
+####   user system elapsed 
+####   0.00   0.01    0.02 
+#### system.time(dt[, posix := as.POSIXct(date)])
+####  user system elapsed 
+####  1.21   0.00    1.22
+#### system.time(dt[, idate := as.IDate(date)])
+####  user system elapsed 
+####  0.36   0.00    0.37 
+#### system.time(dt[, fdate := fastPOSIXct(date)])
+####  user system elapsed 
+####     0      0       0 
 #### system.time(dt[, posix1 := as.POSIXct(paste0(taxyear, "/03/01"))])
 ####    user  system elapsed 
 ####    1.24    0.01    1.25 
@@ -611,8 +626,8 @@ if (RunSep || length(ls(pattern="^irp5gi$"))==0)
   irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
     nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
-irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
-irp5gi[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]
+irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
 irp5gi[, TrueTaxYear := taxyear]
 #### Entries of earlier jobs
 irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5) , 

@@ -196,40 +196,206 @@ Note
 
    Promoted Sessions 3–4 sandbox to canonical; updated CLAUDE_CHANGES.md + TaskRecord; cleared sandboxes.
 
-# Sandbox
-
-<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
-
 1. *bugs 4, 5, 6 in IRP5HHI.rmd; nop→rdn tag rename*
 
-   Bug 3: confirmed fixed.
-   Bug 5 (L828-831): `length(unique())` → `uniqueN()` × 4; tag CLAUDE opt.
-   Bug 6 (L997-999): `copy(ipyr)` + redundant filter line → combined `ipyr[condition,]`; tag CLAUDE rdn.
-   Bug 4 (L762-808): 60-scan year×geo loop → single `fcase()` pass by .(Txrf,taxyear); tag CLAUDE opt.
-   All `#### CLAUDE nop:` → `#### CLAUDE rdn:` in IRP5HHI.rmd (2 occurrences).
+   Fixes applied to `IRP5HHI.rmd`.
+   * Bug 5 (L828-831): `length(unique())` → `uniqueN()` × 4; tag `CLAUDE opt`
+   * Bug 6 (L997-999): `copy(ipyr)` + redundant filter → `ipyr[condition,]`; tag `CLAUDE rdn`
+   * Bug 4 (L762-808): 60-scan year×geo loop → single `fcase()` pass by `.(Txrf, taxyear)`; tag `CLAUDE opt`
+   * `#### CLAUDE nop:` → `#### CLAUDE rdn:` file-wide (2 occurrences)
 
 1. *fix CC file format; update claude.md and edit_preferences.md*
 
-   CLAUDE_CC.md rewritten: verbatim format with `> ` prefixed prompts, full responses, session header
-   `--- Session N Codename | YYYY-MM-DD HH:MM JST ---`. Pre-crash content marked reconstructed.
-   claude.md: verbatim requirement added to Mid session recording rule.
-   edit_preferences.md §8: expanded with explicit per-turn format spec and header format.
+   Verbatim CC convention established across three files.
+   * `CLAUDE_CC.md`: rewritten to verbatim format; pre-crash content marked reconstructed
+   * `claude.md`: verbatim requirement added to Mid session recording
+   * `edit_preferences.md §8`: explicit per-turn format spec + session header format
 
 1. *fix L672-675 in IRP5Condense.rmd: 2015 location copy guards*
 
-   Replaced 4 separate `[taxyear==2015][1]` assignments with loop over `geovars`.
-   New logic: strip NA/"", if uniqueN==1 copy else NA_character_.
-   Tag: CLAUDE tpo.
+   Replaced 4 `[taxyear==2015][1]` assignments with loop over `geovars`.
+   * New logic: strip NA/""; copy only if `uniqueN==1`, else `NA_character_`; tag `CLAUDE tpo`
 
 1. *fix CC format; update TaskRecord, StandingIssues; update edit_preferences.md*
 
-   edit_preferences.md §8: added rule — Update() diff blocks must appear in CC verbatim.
-   TaskRecord: "Where to pick up" updated; IRP5HHI bugs 3/4/5/6 fixed, 1/2 open; Condense L672-675 fixed.
-   StandingIssues: Session 4 Stone Reed section added with all fixed/open items.
-   CC: current turn appended with diff block; retroactive note added for earlier missing diffs.
+   All log files updated for this session's changes.
+   * `edit_preferences.md §8`: Write() diff blocks must appear in CC verbatim
+   * TaskRecord: `### Where to pick up` updated; bugs 3/4/5/6 fixed, 1/2 open; Condense L672-675 fixed
+   * StandingIssues: Session 4 section added with all fixed/open items
 
-* why below is not recorded in CC file? / refer to tempforCC.txt
-  → Read tempforCC.txt: contains Write() diff block (227 lines added, 66 removed) from CLAUDE_CC.md rewrite — appeared on screen but never appended to CC. Appended retroactively with marker. edit_preferences.md §8 already updated last turn to cover Write() tool output.
+1. *why is this not recorded in CC file? / refer to tempforCC.txt*
 
-* write to logs
-  → CLAUDE_LOG.md updated (this entry).
+   Retroactively appended Write() diff block from `CLAUDE_CC.md` rewrite to CC.
+   * `edit_preferences.md §8` already updated to cover Write() tool output
+
+1. *write to logs*
+
+   `CLAUDE_LOG.md` updated (this entry).
+
+1. *explain issue 2*
+
+   `ag1` chunk: bare `JobsPerWorker` in aggregate `j` — data.table returns full vector; scalars recycled; `ag1` gets N rows/year instead of 1, inflating `aggsummary`.
+
+1. *mean, edit without asking / is JobsPerWorker used below these lines? if not, edit the file without confirmation*
+
+   `IRP5HHI.rmd` L314-326: `JobsPerWorker` → `MeanJobsPerWorker = mean(JobsPerWorker, na.rm=TRUE)` in both `ag1` passes; tag `CLAUDE tpo`.
+
+1. *end of session*
+
+   Sign-off: StandingIssues ag1/JobsPerWorker marked FIXED; TaskRecord bug 2 struck; next = `IRP5HHI.rmd` L720 xlim fix; CC session-end marker appended.
+
+## Session 5 Chalk Kite | April 22, 2026, 06:43–07:35 (0 hours 52 minutes)
+
+1. *startup (symlink CLAUDE.md; read feedback files; project list)*
+
+   Linked `~/.claude/CLAUDE.md` → repo; created 11 memory symlinks; ran full startup.
+   * Stranded Session 4 sandbox flagged; xref.sqlite stale flagged
+   * MinWageMarketPower most recent (2026-04-21 19:02 JST); next task = `IRP5HHI.rmd` L720 xlim fix
+
+1. *scan Condense and HHI rmds; advise on FA/irp5M switch*
+
+   Advised against switching FA to irp5M; confirmed irp5M is correct for HHI.
+   * L141-143 explicitly requires unfiltered data for FA (year balance)
+   * `irp5M` is firm-level filter; `irp5[busmainplc_geo != ""]` is row-level — biases HHI `WorkersAtEstab`/`WorkersInMarket`
+   * HHI fix: uncomment L1006 (`irp5M` qread), remove L1007, uncomment L1011
+
+1. *analyse LocGranularity chunk; explain irp5M/L/D/P selection; check HHI mixing*
+
+   Sample selection explained; HHI mixing confirmed as known temporary approximation.
+   * irp5M/L/D/P: mutually exclusive firm-level subsets, each using complete + imputed cases
+   * L998 documents the approximation; intended fix is to wire in `irp5M`
+
+1. *write to CC file*
+
+   Rewrote CC append as verbatim; corrected error of writing summaries instead.
+   * Root cause: failed to re-read CLAUDE.md Mid session recording section
+   * Session named Chalk Kite
+
+1. *irp5/M/L/D/P comparison list — 3 styles for L774 insert*
+
+   Proposed 3 formats (recursive nested, compact tree, tree+conditions).
+   * Revised with `else` prefix on each branch to show mutual exclusivity
+   * Awaiting user choice before insert
+
+1. *write to cc*
+
+   Appended verbatim CC for turns 4–6.
+
+1. *sign off*
+
+   Sign-off: no code edits this session; promoted stranded Session 4 + Session 5 sandbox to canonical; updated TaskRecord; CC session-end marker appended.
+
+## Session 6 Marsh Owl | April 22, 2026, 08:40–11:25
+
+1. *update (project startup)*
+
+   Loaded MinWageMarketPower; read all 8 feedback files + memory files 1-5,7; xref.sqlite current; sandboxes empty.
+   * Projects newest-first: MinWageMarketPower 2026-04-22 07:36, GUK 2026-04-15, SHLectures/NameRight 2026-04-14
+   * Next tasks: IRP5HHI.rmd L720 xlim fix; L1006-1011 irp5M wiring; L774 comment insert
+
+1. *why do you keep asking for files that are allowed in global claude.md / what else to behave as written*
+
+   Identified root cause: `settings.local.json` had only 2 Bash entries; no `Read` or startup `Bash` allowances.
+   * Every `Read` tool call and `stat`/`date` Bash command during startup triggered a prompt
+   * Fix: rewrite `settings.local.json` with corrected Rscript entries (Windows paths, wildcard projects) + `stat`/`date`/`ls`/`Read` allowances
+
+1. *do not use skill, hard code in settings.json or primary setting file / Rscript needs Windows paths / why settings.local.json not settings.json*
+
+   Explained difference: `settings.json` requires explicit permission per `edit_preferences.md §1`; `settings.local.json` does not.
+   * At `~/.claude/` neither file is committed to git — distinction is mainly the permission rule
+   * Proposed CC no-confirmation rule as one-liner in `edit_preferences.md §8` (user rejected separate `feedback_cc_writes.md`)
+   * Both approved; written
+
+1. *propose LocGranular refactor with EXCEP/NA guards*
+
+   Proposed 2-step refactor for `IRP5HHI.rmd` L807-821.
+   * Step 1: 4 existence flags per `.(Txrf, taxyear)` with `!is.na` + `!grepl("EXCEP")` guards
+   * Step 2: `fcase()` on flags without `by=`; delete flag cols
+   * User asked whether `fcase()` in step 1 gives speed gain — answered no (no short-circuit); explained `if/else {}` alternative
+   * User chose 2-step; edited without confirmation
+
+## Session 7 Dusk Teal | 2026-04-22 (11:21–)
+
+1. *update (project startup)*
+
+   settings.local.json TZ-quotes mismatch caused startup Bash commands to trigger prompts.
+   * Fixed: `TZ=Asia/Tokyo date *` → `TZ='Asia/Tokyo' date *`; added `for *`, `while *`, `find *` entries
+   * Projects newest-first: MinWageMarketPower 2026-04-22 11:21, GUK 2026-04-15, others 2026-04-14
+   * Sandboxes empty; xref stale (HHI edit in Session 6 not rebuilt)
+
+1. *task 2, explain — promote sandbox — write to CC*
+
+   Sandboxes empty; nothing to promote. Explained irp5M wiring:
+   * Current: irp5M load commented out; row-level filter `irp5[busmainplc_geo != ""]` used as approximation (Jan 2026 shortcut, L1009 comment)
+   * Bias: row-level filter keeps partial-location firms → WorkersAtEstab undercount inconsistent → HHI biased
+   * Fix: 5 line changes (uncomment L1017/1022, comment L1018/1023, fix colnames L1019)
+   * Awaiting approval
+
+## Session 8 Iron Tern | 2026-04-23 (~18:00–05:55 JST)
+
+1. *apply 5 edits without asking permission, comeback with list proposal on M/D/L/P*
+
+   Applied all 5 irp5M wiring edits to `IRP5HHI.rmd`:
+   * L1017: uncommented `irp5M <- qread(...)`
+   * L1018: commented out `irp5 <- qread(...)`
+   * L1019: `colnames(irp5)` → `colnames(irp5M)`
+   * L1022: uncommented `ipyr <- irp5M[taxyear == 2000+yr, ]`
+   * L1023: commented out `ipyr <- irp5[taxyear == 2000+yr, ]`
+   * Proposed irp5/M/L/D/P list (plain bullets with complete/imputed per level)
+
+1. *Option 2 tree, incorporate mutual exclusivity, write to file / wrap up / new session / scan MergeData*
+
+   Inserted Option 2 ASCII tree at IRP5HHI.rmd L772–L776 (between prose and chunk):
+   * 5-branch tree: irp5M/L/D/P + remainder; `(not M)`, `(not M/L)`, `(not M/L/D)` labels make exclusion explicit
+   * Promoted Sessions 7+8 sandbox to canonical; updated TaskRecord
+   * Scanned IRP5MergeData.rmd for debugging points (see log entry below)
+
+1. *CC must be exact carbon copy / 1. correct / 2. explain+propose / 3. not sure / 4. delete*
+
+   Applied IRP5MergeData.rmd fixes:
+   * L196: added `!is.na()` + `!grepl("EXCEP", ...)` guards to location filter (CLAUDE fix)
+   * L257: deleted stray diagnostic print `Lf[, .(Num=.N), by=(taxyear)]` — `results=F` chunk, printed nothing
+   * Explained L206 silent-drop bug; proposed Option B (two-step flag)
+   * Confirmed L221–222 `by=taxrefno` is intentional firm-level definition, not a bug
+
+1. *Op B for 2, keep issue 3 alive, sign off*
+
+   Applied Option B to IRP5MergeData.rmd L206: `has2013` flag + corrected LSMa2 filter (CLAUDE fix)
+   Added L221–222 ExistedBefore2013 note to CLAUDE_StandingIssues.md for monitoring
+   Session sign-off: all log files updated, CC written verbatim, session-end marker appended
+
+## Session 9 Tide Wren | 2026-04-23
+
+1. *update (project startup)*
+
+   Startup complete; xref rebuilt (124,262 rows / 48 files); open "keep alive" items clarified as monitoring, not fixes.
+   * Explained `create LSMa` and `merge faa→Lf` chunk structures in hierarchical bullets
+
+1. *FA0/Jobs0 baseline year concern + HHI contamination review*
+
+   Full structural analysis: sort-chain vulnerability in baseline assignment; HHI classification risk.
+   * Sort chain: `FAD` rbindlist → ascending `taxyear`, but `setkey(faa, taxrefno)` at HHI L460 is radix-only (unstable within `taxrefno` ties) → `[1]` picks for FA0/Jobs0/FAMP0/JobsMP0 in MergeData L178–188 may not be earliest year
+   * Approved fix: `setorder(faa, taxyear)` after MergeData L177 — deferred to Session 10
+   * Pre-2013 restriction on Jobs0/FAMP0: not needed — regression sample uses `ExistedBefore2013==1L`; incumbents' earliest year is pre-2013 after sort fix
+   * `HHILevel` (all feols regressions): `Pre2013HHI = HHI[!is.na(HHI) & taxyear < 2013][1]` — strictly pre-2013 → clean for identification
+   * `HHILevel0` (no feols calls): `HHI0 = HHI[!is.na(HHI)][1]` — no year restriction → potential post-2013 contamination; currently dead code
+   * Threshold `median(HHI0[taxyear==2012])` uses base-year HHI constants (mostly 2013 HHI), not actual 2012 HHI
+   * Four fixes proposed; #1 approved for Session 10; #2–4 logged as low priority
+
+## Session 10 Flint Dove | 2026-04-24
+
+1. *apply setorder fix; clarify HHI structure; review Issues 3 and 4*
+
+   Structural clarification: HHI in `Lf` is constant per establishment (LSMa2 single-row join) → HHILevel0 ≡ HHILevel within `LfCE`; two edits applied.
+   * HHI0 = Pre2013HHI = HHI for all incumbents (LfCE = ExistedBefore2013==1) → HHILevel0 subset identical to HHILevel; sensitivity regressions add zero information
+   * `setorder(faa, taxyear)` applied at MergeData L178 — CLAUDE fix; sort issue closed in StandingIssues
+   * `!is.na()` inside `any()` confirmed correct: all-NA group → `any(NA)=NA` (not `FALSE`), breaking `fcase()`; 8-line comment block inserted at HHI L819 — CLAUDE fix
+   * Issue 3 (HHILevel0 dead code): recommend deleting L130–134 and L703–707; added to StandingIssues
+   * Issue 4 (threshold): `HHI0`/`HHI` swap is numerically a no-op (constant per estab); true fix = load panel in Impacts, compute `thr2012 <- median(LSMa[taxyear==2012,HHI],na.rm=T)`, replace inline `median()` at 8 lines; low priority; added to StandingIssues
+
+# Sandbox
+
+<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
+* 2026-04-25 20:50 JST | Session 11 | startup after reinstall → full startup complete; xref rebuilt (124339 rows/48 files); Sessions 9+10 sandbox promoted to canonical
+* 2026-04-26 05:55 JST | Session 11 | tempforCC.txt deduplicated and appended to CLAUDE_CC.md (lines 7431-7516 only → CC now 2372 lines)
+* 2026-04-26 06:24 JST | Session 11 | feedback_edit_preferences.md symlink created; feedback_global_claude_md_authoritative.md updated; PreToolUse+Stop hooks added to settings.local.json; Session 11 turns appended to CC

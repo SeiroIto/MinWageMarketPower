@@ -347,8 +347,31 @@ IRP5HHI.rmd — session-3 sandbox bugs, all resolved:
 
 IRP5HHI.rmd — still open:
 * Bug 1: xlim `c(1,100)` on FA density plot (should be `c(0,1)`)
-* Bug 2: `ag1` chunk — `JobsPerWorker` in `.()` inflates `sum(TotalEmployees)`
+\* ~~Bug 2: `ag1` chunk — `JobsPerWorker` in `.()` inflates `sum(TotalEmployees)` — FIXED CLAUDE tpo~~
 
 IRP5Condense.rmd L672-675: 2015 location copy guard — FIXED CLAUDE tpo
 
-**Next:** address IRP5HHI.rmd bugs 1 and 2, then continue IRP5Condense.rmd review.
+**Session 8 Iron Tern | 2026-04-23**
+
+Completed:
+* IRP5HHI.rmd L1017–1023: irp5M wiring — 5 edits applied, HHI now uses firm-level filter
+* IRP5HHI.rmd L772: irp5/M/L/D/P ASCII tree inserted
+
+Open in IRP5HHI.rmd:
+* Bug 1: `xlim = c(1, 100)` on FA density plot (L720) — should be `c(0, 1)`
+
+**Next:** IRP5HHI.rmd L720 xlim fix (`c(1,100)` → `c(0,1)`). Then continue IRP5MergeData.rmd review — item 2 (L206) fixed; item 3 (L221–222 ExistedBefore2013 firm-level propagation) kept alive in StandingIssues for monitoring.
+
+**Session 10 (continuation) | 2026-04-24**
+
+Completed:
+* HHI structural finding: HHI in Lf is a constant per establishment (LSMa2 single-row right join); HHI0 = Pre2013HHI = HHI for incumbents; HHILevel = HHILevel0 for regression sample
+* HHILevel/HHILevel0 corrected definitions established (see LOG Session 10)
+* setorder(faa, taxyear) applied at MergeData L178 — StandingIssues item closed
+* !is.na() in any() confirmed correct; comment block added at HHI L816 with trace example
+
+Open:
+* IRP5HHI.rmd L720: xlim `c(1,100)` → `c(0,1)` on FA density plot — still open
+* StandingIssues: Lf sort before qsave (low priority); HHILevel0 dead code; threshold year consistency; ExistedBefore2013 firm-level propagation (monitoring)
+
+**Next:** IRP5HHI.rmd L720 xlim fix.

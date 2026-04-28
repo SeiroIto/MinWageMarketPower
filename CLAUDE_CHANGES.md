@@ -49,13 +49,42 @@ Note
 * `~/.claude/CLAUDE.md` L119–121 | *(absent)* → per-turn + 15-min idle `CLAUDE_CC.md` append rule | time-based logging gap; crash recovery
 * `~/.claude/CLAUDE.md` L136–139 | duplicate `4.` + `CLAUDE_CC_<Project>.md` → numbered 5/6/7 + `CLAUDE_CC.md` + session-end marker | numbering error + wrong filename
 
-# Sandbox
-
-<!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->
+# Session 4 Stone Reed (continued) | 2026-04-21
 
 * `IRP5HHI.rmd` L828-831 | `as.integer(length(unique(X)))-1L` ×4 → `uniqueN(X)-1L` ×4 | performance: data.table-native, returns integer; -1L NA correction unchanged
 * `IRP5HHI.rmd` L997-999 | `copy(ipyr)` + `ipGeo<-ipGeo[cond]` → `ipGeo<-ipyr[cond]` | redundant deep copy; ipyr already independent; 60 wasted allocations per session
 * `IRP5HHI.rmd` L762-808 | 15-yr×4-level loop (60 scans) → `fcase(any(...))` by .(Txrf,taxyear) single pass | 3-5x speedup; semantics identical
 * `IRP5HHI.rmd` file-wide | `#### CLAUDE nop:` → `#### CLAUDE rdn:` (2 occurrences) | tag rename: nop unclear, rdn = redundancy
-
 * `IRP5Condense.rmd` L672-675 | `geo[taxyear==2015][1]` ×4 → loop over geovars with `{}` guard: strip NA/"", copy only if uniqueN==1 else NA_character_ | [1] could select ""/NA; conflicting values previously copied arbitrarily
+* `IRP5HHI.rmd` L314-326 | bare `JobsPerWorker` in `ag1 .()` — no aggregation fn → `MeanJobsPerWorker = mean(JobsPerWorker, na.rm=TRUE)` in both passes | bare column in aggregate j without by= returns full vector; ag1 had N rows/year instead of 1; aggsummary inflated | CLAUDE tpo
+
+# Session 6 Marsh Owl | 2026-04-22
+
+* `/home/sdude/.claude/settings.local.json` | 2 stale Bash entries (WSL paths, MinWageMarketPower-specific) → 10 entries: Rscript with Windows C:/... paths + wildcards for C:/data/* and C:/seiro/docs/*; stat/date/ls/Read allowances for all config+project paths | startup prompts on every Read and Bash call
+* `/mnt/c/seiro/languages/claude/.claude/edit_preferences.md` §8 | (absent) → `* No confirmation needed to append — do it silently as part of each turn` | CC appends were triggering confirmation
+* `IRP5HHI.rmd` L807-821 | single `fcase()` with 4× `any(geo!="")` → 2-step: (1) 4 existence flags per `.(Txrf,taxyear)` with `!is.na`+`!grepl("EXCEP")` guards, (2) `fcase()` on flags without `by=`, (3) delete flag cols | avoids repeating full condition 4×; adds NA/EXCEP guards; `fcase` no longer needs `by=` | CLAUDE opt
+
+# Session 7 Dusk Teal | 2026-04-22
+
+* `/home/sdude/.claude/settings.local.json` | `TZ=Asia/Tokyo date *` → `TZ='Asia/Tokyo' date *`; added `Bash(for *)`, `Bash(while *)`, `Bash(find *)` | TZ-quotes mismatch caused startup Bash commands to prompt despite being in allowlist
+
+# Session 8 Iron Tern | 2026-04-23
+
+* `IRP5HHI.rmd` L1017 | `#### irp5M <- qread(...)` → `irp5M <- qread(...)` | activate irp5M load (was approximated with row-level irp5 filter) | CLAUDE fix
+* `IRP5HHI.rmd` L1018 | `irp5 <- qread(...)` → `#### irp5 <- qread(...)` | comment out row-level approximation | CLAUDE fix
+* `IRP5HHI.rmd` L1019 | `colnames(irp5)` → `colnames(irp5M)` | irp5 no longer in scope after L1018 change | CLAUDE fix
+* `IRP5HHI.rmd` L1022 | `####  ipyr <- irp5M[taxyear == 2000+yr, ]` → `  ipyr <- irp5M[taxyear == 2000+yr, ]` | uncomment correct firm-filtered source | CLAUDE fix
+* `IRP5HHI.rmd` L1023 | `  ipyr <- irp5[taxyear == 2000+yr, ]` → `####  ipyr <- irp5[taxyear == 2000+yr, ]` | comment out row-level approximation | CLAUDE fix
+* `IRP5HHI.rmd` L772–L779 (insert) | (absent) → 5-branch ASCII tree documenting irp5/M/L/D/P selection criteria with complete/imputed conditions and `(not M)/(not M/L)/(not M/L/D)` exclusion labels | no documentation of firm-level selection hierarchy existed
+* `IRP5MergeData.rmd` L196 | `LSMa[busmainplc_geo != "", ]` → added `& !is.na(busmainplc_geo) & !grepl("EXCEP", busmainplc_geo)` | missing NA/EXCEP guards; inconsistent with HHI LocGranular pattern | CLAUDE fix
+* `IRP5MergeData.rmd` L257 | `Lf[, .(Num = .N), by = (taxyear)]` → deleted | stray diagnostic; chunk has `results=F`, never printed | CLAUDE fix
+* `IRP5MergeData.rmd` L201–206 | `LSMa2 <- LSMa1[taxyear!=2013 & num==1L | taxyear==2013 & num!=1L, ]` → two-step `has2013` flag + `(has2013 & taxyear==2013) | (!has2013 & num==1L)` | original silently dropped establishments whose first-ever row was in 2013 (matched neither branch) | CLAUDE fix
+
+# Session 10 | 2026-04-24
+
+* `IRP5MergeData.rmd` L177 (insert) | *(absent)* → `setorder(faa, taxyear)` | faa keyed by taxrefno only in HHI; radix sort not stable within groups; [1] baseline picks may not be earliest year | CLAUDE fix
+* `IRP5HHI.rmd` L816 (insert) | *(absent)* → 8-line comment block explaining why `!is.na()` is required inside `any()`: without it, group with only NA/empty geo gives `any(NA)=NA` not `FALSE`, breaking `fcase()`; trace for `x <- c(NA,"","")` included | CLAUDE fix
+
+# Sandbox
+
+<!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->

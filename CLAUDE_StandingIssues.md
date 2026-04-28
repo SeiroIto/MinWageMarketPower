@@ -160,12 +160,14 @@ Lines
 
 Problem: `xlim = c(1, 100)` on FA density plot. FA := NumSubMW/Jobs ∈ [0,1]; axis should be `c(0, 1)`.
 
-### ag1 chunk: JobsPerWorker inflates sum(TotalEmployees)
+### ~~ag1 chunk: JobsPerWorker inflates sum(TotalEmployees)~~
 
 Lines
 :   ag1 chunk
 
-Problem: `JobsPerWorker` placed inside `.()` without aggregation — inflates `sum(TotalEmployees)` in descriptive stats because each row carries the un-aggregated value before summing.
+~~Problem: `JobsPerWorker` placed inside `.()` without aggregation — inflates `sum(TotalEmployees)` in descriptive stats because each row carries the un-aggregated value before summing.~~
+
+**FIXED** 2026-04-21 — replaced bare `JobsPerWorker` with `MeanJobsPerWorker = mean(JobsPerWorker, na.rm=TRUE)` in both passes of `ag1`; tag `CLAUDE tpo`.
 
 ## IRP5Condense.rmd
 
@@ -178,6 +180,65 @@ Lines
 
 **FIXED** 2026-04-21 — loop over `geovars` with `{}` guard: strips `NA`/`""`, copies only if `uniqueN==1`, else `NA_character_`; tag `CLAUDE tpo`.
 
+## IRP5MergeData.rmd
+
+### L221–222: ExistedBefore2013 propagated by taxrefno only
+
+Lines
+:   221–222
+
+Note: `Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1], by = taxrefno]` uses firm-level grouping (`taxrefno` only), not establishment-level (`geovars + taxrefno`). A firm with one establishment existing before 2013 and another not will have both marked `1L`. This is intentional — `ExistedBefore2013` is a firm-level concept used for the DiD sample split in Impacts.rmd. Keep alive for verification when checking estimation results.
+
+# Session 9 | 2026-04-24
+
+## IRP5MergeData.rmd
+
+### ~~faa sort order not guaranteed before baseline assignment~~
+
+Lines
+:   177–188
+
+~~Problem: `faa` inherits ascending taxyear from `FAD` rbindlist construction, but `setkey(faa, taxrefno)` in IRP5HHI.rmd L460 uses radix sort that may not be stable within taxrefno groups. `[1]` picks in the baseline assignment (FA0, Jobs0, FAMP0, JobsMP0) may not pick the earliest year.~~
+
+**FIXED** 2026-04-24 — `setorder(faa, taxyear)` inserted after L177 (now L178); tag `CLAUDE fix`.
+
+### Lf not sorted by taxyear before saving
+
+Lines
+:   ~L263 (qsave)
+
+Problem
+:   `Lf` inherits `faa`'s key order (taxrefno only). `HHI0[1]` and `Pre2013HHI[1]` in Impacts pick arbitrary rows within each EstID, not necessarily the earliest or earliest pre-2013 year. Fix: `setorder(Lf, EstID, taxyear)` before L263 qsave. Low priority (Pre2013HHI is pre-2013-restricted anyway; HHILevel0 not used in regressions).
+
+## IRP5Impacts.rmd
+
+### HHILevel0 dead code — structurally redundant with HHILevel
+
+Lines
+:   L130–134 (Lf), L703–707 (Lfw)
+
+Problem
+:   `HHILevel0` is defined for both `Lf` and `Lfw` but never used in any `feols` call. More critically: within the regression sample (`LfCE = ExistedBefore2013==1L`), HHILevel0 = HHILevel identically. Reason: HHI in Lf is a constant per establishment (LSMa2 single-row join); HHI0 = Pre2013HHI = HHI for all incumbents; so any `LfCE[grepl("Be"/"Ab", HHILevel0)]` subset would produce identical observations and identical coefficients to `LfCE[grepl("Be"/"Ab", HHILevel)]`. Adding sensitivity regressions using HHILevel0 adds no information.
+
+Recommendation: delete L130–134 and L703–707. Safe — zero impact on any result.
+
+### Threshold uses base-year HHI constant, not actual 2012 HHI
+
+Lines
+:   L130, L132, L137, L139 (Lf); L703, L705, L710, L712 (Lfw)
+
+Problem
+:   HHI in Lf is a constant per establishment (base-year from LSMa2 single-row join: 2013 for most incumbents, earliest available year otherwise). So `median(HHI0[taxyear == 2012])` does not compute the median of actual 2012 HHI values — it computes the median of base-year HHI constants evaluated at 2012 cross-section rows (mostly 2013 HHI). Changing `HHI0` to `HHI` or adding `!is.na()` makes no difference numerically (HHI is constant; na.rm=T already handles NAs).
+
+True 2012 threshold requires loading `HHIAgriRowsMainPlaceLevel.qs` (panel) in Impacts.rmd and computing:
+```r
+thr2012 <- median(LSMa[taxyear == 2012, HHI], na.rm = TRUE)
+```
+then using `thr2012` in place of the inline `median(...)` at all 8 lines. This uses actual per-market HHI computed from 2012 workers, not the base-year constant. Lf structure unchanged; only the scalar cutoff differs.
+
+Low priority: 2013 HHI ≈ pre-policy HHI in practice (market structure adjusts slowly), but relevant for strict referee exogeneity argument.
+
 # Sandbox
 
 <!-- Raw notes on new issues as they surface. Promoted to canonical sections at orderly sign-off. Append-only. -->
+* 2026-04-24 05:00 JST | Session 9 | HHI contamination check + study-objective review → HHILevel0 dead code; threshold inconsistency; sort issues for HHI0 and Pre2013HHI; main regressions clean (HHILevel=Pre2013HHI, pre-policy)

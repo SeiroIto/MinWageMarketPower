@@ -112,8 +112,10 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 ```
 
 
-* FA does not require location info
-   * We use FA data that have jobs and employment as the base
+* FA does not require location info in theory, but it does in practice
+   * If the establishment ID `payereferenceno` is not corrupt, location info is not necessary
+   * But we cannot rely on `payereferenceno`, because establishments at different locations share the same `payereferenceno`, probably firms and SARS did not care to assign unique values for each establishments
+   * So we must rely on location info to aggregate employees/jobs at the establishment level of a specific location
 * HHI requires location info, so we use `irp5M` that have information of Main Place
    * Whenever location information is updated, we need to compute HHI
    * To update location information, need to update irp5.qs &rarr; irp5M.qs &rarr; LShareHHI.qs
@@ -123,9 +125,23 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 # Fraction affected
 
 1. Use IRP5 to count total number of workers, number of affected, FA = affected/total for all years
+    * PropToMW  := IncomeMonth/2274: income/MW ratio
+    * SubMW     := as.integer(PropToMW < 1 & IncomeMonth > 0)
+
+    Firm level: by = .(Txrf, taxyear)
+
+    Establishment level: by = c("Txrf", geovars, "taxyear")
+
+    * NumSubMW, NumSubMWMP := as.integer(sum(SubMW==1L)) 
+    * Jobs, JobsMP      := as.integer(sum(IncomeMonth > 0))
+    * NumSubMWe, NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L]))
+    * Employees, EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0]))
+    * FA, FAMP := round(NumSubMW/Jobs, 6)]
+    * FAe, FAeMP := round(NumSubMWe/Employees, 6)]
 1. Need to use unfiltered data like `irp5.qs` (except for NatureOfPer == A and empty taxrefno) 
    * Entries of irp5 look naturally balanced across years
    * Many NAs in location info in early years &rArr; loss of sample in early years
+
 
 ```{r read irp5 file}
 #| attr.source = '.r .line-numbers',
@@ -311,15 +327,19 @@ for (yr in 8:22) {
   FAdata[is.na(Employees) | Employees == 0, Size := NA]
   FAdata[, Size := factor(Size, levels = c("micro", "small", "medium", "large"))]
   #### Number of affected workers in aggregates
+  #### ag1 <- ipyrc[, .(
+  ####     JobsPerWorker
+  #### CLAUDE tpo: bare column in aggregate j (no by=) — data.table returns full vector,
+  ####   scalars recycled to match; ag1 gets N rows/year instead of 1, inflating aggsummary.
   ag1 <- ipyrc[, .(
-      JobsPerWorker
-    , TotalEmployees = uniqueN(UID[IncomeMonth > 0]) 
-    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L]) 
-    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0]) 
-    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L]) 
+      MeanJobsPerWorker = mean(JobsPerWorker, na.rm = TRUE)
+    , TotalEmployees = uniqueN(UID[IncomeMonth > 0])
+    , TotalSubMWWorkers = uniqueN(UID[IncomeMonth > 0 & SubMW==1L])
+    , TotalFirmsWithEmployees = uniqueN(taxrefno[IncomeMonth > 0])
+    , TotalAffectedFirms = uniqueN(taxrefno[IncomeMonth > 0 & SubMW==1L])
     )
     ][, .(
-      JobsPerWorker, TotalEmployees, TotalSubMWWorkers, 
+      MeanJobsPerWorker, TotalEmployees, TotalSubMWWorkers,
       AggFA = round((TotalSubMWWorkers/TotalEmployees)*100, 2),
       TotalFirmsWithEmployees, TotalAffectedFirms,
       AggFirmFA = round((TotalAffectedFirms/TotalFirmsWithEmployees)*100, 2)
@@ -731,10 +751,10 @@ ggsave(
 #| attr.source = '.r .line-numbers',
 #### FA of agri
 g2 <- ggplot(data = faa, aes(x = as.factor(taxyear), y = FA)) +
-#  geom_point(size = .1, position = position_jitterdodge()) +
-#  geom_point(data = faama, size = 1, fill = "blue")
+####  geom_point(size = .1, position = position_jitterdodge()) +
+####  geom_point(data = faama, size = 1, fill = "blue")
   geom_boxplot(fill = "white", colour = "blue", outlier.alpha = 0) + 
-#  geom_jitter(width = .2) +
+####  geom_jitter(width = .2) +
   scale_x_discrete(name = "Tax year") +
   facet_grid(~ Sample) +
   theme(axis.text.x = element_text(angle = 90, vjust = .5))
@@ -750,6 +770,17 @@ ggsave(
 
 
 We need to know how granular the location information is. Based on granularity, we decide at what level one can use the sampled firm.
+
+```
+irp5 (all firms, no filter; used for FA)
+├── irp5M             Main Place    NARowsMai==0 & LocGranularFirm==Mai  |  NARowsMai>0 & MainPlNum==1
+├── irp5L  (not M)    Local Muni    NARowsLoc==0 & LocGranularFirm==Loc  |  NARowsLoc>0 & LocMunNum==1
+├── irp5D  (not M/L)  Dist Muni     NARowsDis==0 & LocGranularFirm==Dis  |  NARowsDis>0 & DisMunNum==1
+├── irp5P  (not M/L/D) Province     NARowsPrv==0 & LocGranularFirm==Prv  |  NARowsPrv>0 & ProvNum==1
+└── (remainder)                     location ambiguous or absent at all levels
+```
+
+Mutually exclusive by construction; firm-level (all rows travel together). `irp5` → FA; `irp5M` → HHI.
 
 ```{r define irp5M by location granularity}
 #| attr.source = '.r .line-numbers',
@@ -782,21 +813,39 @@ geovars <- grepout("^bus.*geo$", colnames(irp5))
 ####      buslocmuni_geo == "" & busmainplc_geo == "" & taxyear == 2000 + yr] &
 ####     taxyear == 2000 + yr, LocGranular := GeoLevel[1]]
 #### }
+#### CLAUDE opt: pre-compute existence flags per (Txrf, taxyear); avoids
+####   repeating the full any() condition 4x per level; fcase() then uses
+####   simple logical ops with no by= (flags already per-row constants)
+#### !is.na() is required: without it, a group with only NA/empty geo values
+####   gives any(NA) = NA instead of FALSE, breaking fcase() assignment.
+####   Trace for x <- c(NA, "", "") (no valid entry in group):
+####   x != ""           → c(NA,    FALSE, FALSE)
+####   !is.na(x)         → c(FALSE, TRUE,  TRUE)
+####   so far            → c(FALSE, FALSE, FALSE)
+####   !grepl("EXCEP",x) → c(NA,    TRUE,  TRUE)
+####   element-wise &    → c(FALSE, FALSE, FALSE)
+####   any(...)          → FALSE  ← CORRECT; without !is.na(): any(c(NA,F,F)) = NA
+irp5[, c("provexists", "distexists", "locexists", "mainexists") := .(
+  any(busprov_geo     != "" & !is.na(busprov_geo)     & !grepl("EXCEP", busprov_geo)),
+  any(busdistmuni_geo != "" & !is.na(busdistmuni_geo) & !grepl("EXCEP", busdistmuni_geo)),
+  any(buslocmuni_geo  != "" & !is.na(buslocmuni_geo)  & !grepl("EXCEP", buslocmuni_geo)),
+  any(busmainplc_geo  != "" & !is.na(busmainplc_geo)  & !grepl("EXCEP", busmainplc_geo))
+), by = .(Txrf, taxyear)]
 irp5[, LocGranular := fcase(
   #### Granular down to Main Place
-  any(busprov_geo != "" & busdistmuni_geo != "" &
-      buslocmuni_geo != "" & busmainplc_geo != ""), GeoLevel[4],
-  #### Granular down to Loc muni
-  any(busprov_geo != "" & busdistmuni_geo != "" &
-      buslocmuni_geo != "" & busmainplc_geo == ""), GeoLevel[3],
-  #### Granular down to Dist muni
-  any(busprov_geo != "" & busdistmuni_geo != "" &
-      buslocmuni_geo == "" & busmainplc_geo == ""), GeoLevel[2],
-  #### Granular down to Province
-  any(busprov_geo != "" & busdistmuni_geo == "" &
-      buslocmuni_geo == "" & busmainplc_geo == ""), GeoLevel[1],
+   provexists &  distexists &  locexists &  mainexists, GeoLevel[4],
+  #### Granular down only to Loc muni
+   provexists &  distexists &  locexists & !mainexists, GeoLevel[3],
+  #### Granular down only to Dist muni
+   provexists &  distexists & !locexists & !mainexists, GeoLevel[2],
+  #### Granular down only to Province
+   provexists & !distexists & !locexists & !mainexists, GeoLevel[1],
   default = "none"
-), by = .(Txrf, taxyear)]
+)]
+#### LocGranular = Main, Loc, Dist, Prov are all exclusive
+####   LocGranular == Main group has info of Prov 
+####   but is not included in LocGranular = Prov group
+irp5[, c("provexists", "distexists", "locexists", "mainexists") := NULL]
 irp5[, LocGranular := factor(LocGranular, levels = c(GeoLevel, "none"))]
 #### LocGranularFirm: Most granular location info (order sensitive)
 #### LocGranularJob: Most granular location info (order insensitive)
@@ -983,13 +1032,13 @@ For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5
 #### code "hhi"
 library(qs)
 library(data.table)
-#### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
-irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
-geovars <- grepout("^bus.*geo$", colnames(irp5))
+irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+#### irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
+geovars <- grepout("^bus.*geo$", colnames(irp5M))
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
 for (yr in 8:22) {
-####  ipyr <- irp5M[taxyear == 2000+yr, ]
-  ipyr <- irp5[taxyear == 2000+yr, ]
+  ipyr <- irp5M[taxyear == 2000+yr, ]
+####  ipyr <- irp5[taxyear == 2000+yr, ]
   LShare <- NULL
   for (g in 1:length(GeoLevel)) {
     print(GeoLevel[g])

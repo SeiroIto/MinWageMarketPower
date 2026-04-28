@@ -175,6 +175,7 @@ Key variables defined at the establishment level:
 #| attr.source = '.r .line-numbers',
 #### faa (base) + LSMa1
 faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13)
+setorder(faa, taxyear)  #### CLAUDE fix: ensure [1] = earliest year (faa keyed by taxrefno only in HHI)
 faa[, c("FA0", "Jobs0", "FAMP0", "JobsMP0") := 
   list(
       FA[!is.na(FA) & FA != 0][1]             # FA0
@@ -193,17 +194,23 @@ faa[, rJobsMP := dJobsMP/JobsMP0]
 LSMa <- qread(paste0(pathsaveddata, "HHIAgriRowsMainPlaceLevel.qs"), 
   nthreads = 13)
 #### Drop rows with no location info
-LSMa1 <- LSMa[busmainplc_geo != "", ]
+LSMa1 <- LSMa[busmainplc_geo != "" & !is.na(busmainplc_geo) & !grepl("EXCEP", busmainplc_geo), ]
 #### Keep only first row of each establishment
 #### Pick 2013 value of establishments for more sample size
 #### Keep either 2013 or first entry
 #### But if there are two rows, drop the first entry
-LSMa1[, num := 1:.N, by = 
+LSMa1[, num := 1:.N, by =
   .(
-    busprov_geo, busdistmuni_geo, 
+    busprov_geo, busdistmuni_geo,
     buslocmuni_geo, busmainplc_geo, taxrefno
   )]
-LSMa2 <- LSMa1[taxyear != 2013 & num == 1L | taxyear == 2013 & num != 1L, ]
+#### CLAUDE fix: original [taxyear!=2013 & num==1L | taxyear==2013 & num!=1L] silently dropped
+####   establishments whose first-ever row was in 2013 (num==1L & taxyear==2013 matched neither branch).
+####   Two-step flag: if establishment appeared in 2013, keep 2013 row; else keep earliest row.
+LSMa1[, has2013 := any(taxyear == 2013),
+  by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+LSMa2 <- LSMa1[(has2013 & taxyear == 2013) | (!has2013 & num == 1L), ]
+LSMa1[, has2013 := NULL]
 setnames(LSMa2, "taxyear", "HHIBaseYear")
 #### Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
 Lf0 <- LSMa2[faa, on = c("taxrefno", grepout("bus", colnames(LSMa2)))]
@@ -254,7 +261,6 @@ Lf[, EstID := factor(as.numeric(factor(paste0(
   , busmainplc_geo
   , taxrefno))))
 ]
-Lf[, .(Num = .N), by = (taxyear)]
 qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
 litedown::timing_data() 
 ```
