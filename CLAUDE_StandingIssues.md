@@ -241,3 +241,25 @@ Low priority: 2013 HHI ≈ pre-policy HHI in practice (market structure adjusts 
 # Sandbox
 
 <!-- Raw notes on new issues as they surface. Promoted to canonical sections at orderly sign-off. Append-only. -->
+
+### IRP5Condense.rmd L949 — scalar `||` breaks NA→0L fill for Ob.YYYY
+
+File
+:   IRP5Condense.rmd
+
+Lines
+:   L948–950
+
+Problem
+:   `||` is scalar OR; collapses column to one TRUE/FALSE before `is.na()`. `which(...)` returns at most index 1 or integer(0). The intended NA→0L fill across all rows never fires — nearly all NAs in Ob.YYYY survive into EstabOb initialisation at L1002. Fix: replace with the already-commented-out `lapply(.SD, ...)` pattern at L952–953.
+
+### IRP5Condense.rmd L1014 — `EestabWith1` typo causes runtime error
+
+File
+:   IRP5Condense.rmd
+
+Lines
+:   L1009, L1014
+
+Problem
+:   Variable assigned as `EstabWith1` (L1009) but referenced as `EestabWith1` (L1014). On a clean run: `Error: object 'EestabWith1' not found`. The EstabOb.YYYY fill loop never executes; EstabOb.YYYY remains a copy of individual Ob.YYYY (NA-heavy), not the intended establishment-level indicator. EstabOb.YYYY is therefore NOT uniform within EstabID. Fix: rename `EestabWith1` → `EstabWith1` on L1014.

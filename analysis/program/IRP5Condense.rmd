@@ -830,7 +830,7 @@ repetetive <- unique(repetetive)
 #### firms with repetetive uids and their counts
 tb <- table(ipyr[uid %in% repetetive, taxrefno])
 tb <- tb[order(tb, decreasing=T)]
-#### CLAUDE msk: taxrefno values leak via table names; wrap names() before printing.
+#### CLAUDE msk: taxrefno should not appear in a table; wrap names() before printing.
 #### tb[1:20]
 { t <- tb[1:20]; names(t) <- ipyr[match(names(t), ipyr[["taxrefno"]]), Corp]; t }
 #### repetetive entries are concentrated in 3 firms
@@ -933,20 +933,8 @@ idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo,
   buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid,
   EstabIDTx, EstabID, FirmIDTx, FirmID, IndID, UIndID, Corp, UInd)]
 if (all(idyr[, uid == UID])) idyr[, UID := NULL]
-#### CLAUDE exi: guard for standalone chunk execution before irp5Clean.qs rebuild.
-if (!"EstabIDTx" %in% colnames(idyr)) {
-  idyr[, EstabIDTx := as.integer(as.numeric(factor(paste0(
-      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
-  idyr[, EstabID   := as.integer(as.numeric(factor(paste0(
-      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
-  idyr[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
-  idyr[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
-  idyr[, UIndID    := as.integer(as.numeric(factor(uid)))]
-  idyr[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
-  idyr[, Corp      := FirmID]
-  idyr[, UInd      := UIndID]
-}
 #### Individual observation pattern in a given establishment
+#### Reshape wide gives Ob2008, Ob2009, ..., Ob2022
 idyr[, Ob := 1L]
 idyrW <- reshape(idyr, direction = "wide", 
   idvar = c(
@@ -956,8 +944,9 @@ idyrW <- reshape(idyr, direction = "wide",
     "EstabIDTx", "EstabID", 
     "IndID"),
   timevar = "taxyear", v.names= c("Ob"))
+#### ObYYYY = 0L if NA (if obs does not exist in long format data)
 for (jj in grep("^Ob", colnames(idyrW)))
-  for (ii in which(is.na(idyrW[, jj, with = F]))) 
+  for (ii in which(is.na(idyrW[, jj, with = F] | idyrW[, jj, with = F] != "")) 
     set(idyrW, i = ii, j = jj, value = 0L)
 cols <- grepout("^Ob", colnames(idyrW))
 #### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
@@ -970,13 +959,17 @@ idyrW[, IObPattern := factor(IObPattern)]
 ####         and copy within an establishment
 #### EstabObYYYY: Establishment observed in YYYY 
 #### FirmObYYYY: Establishment observed in YYYY 
-idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 #### Goal: EstabOb.YYYY = 1L if any worker in the establishment
 ####   has Ob.YYYY == 1L, for each year YYYY.
 ####   Marks an establishment as "active" in a given year
 ####   regardless of which specific workers were present.
-####   Used downstream to define complete-panel establishments.
-####
+####   EstabOb.YYYY = NA for rows of uid[is.na(uid)] in YYYY
+####   But EstabOb.YYYY = 0L/1L for rows of uid[!is.na(uid)] in YYYY
+####   This is fine because there is no generic corporate income tax (CIT)
+####   variable in irp5 and the only indication of operation is
+####   variables like a3601_income or uid.
+####   Used in downstream to define complete-panel establishments.
+#### 
 #### CLAUDE: Original double loop broken in two ways:
 ####   1. is.na() always FALSE cols filled with 0L at L806-808.
 ####   2. Logic inverted targeted NA rows (unobserved workers)
@@ -984,7 +977,7 @@ idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 ####   estabid/firmid no longer needed after replacement.
 ####   Replaced with data.table by= (correct and faster).
 ####   Ref: github.com/Rdatatable/data.table/wiki/Benchmarks-:-Grouping
-####
+#### 
 #### estabid <- unique(idyrW[, EstabID])
 #### firmid  <- unique(idyrW[, FirmID])
 #### for (jj in grepout("^Ob", colnames(idyrW))) {
@@ -998,84 +991,69 @@ idyrW[, (c(paste0("Estab", cols), paste0("Firm", cols))) := 0L]
 ####           j = jjj,
 ####       value = 1L)
 #### }
-for (jj in grepout("^Ob", colnames(idyrW))) {
-  jjj <- paste0("Estab", jj)
-  idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = EstabID]
+#### Below is not efficient ("by=" and "get")
+#### for (jj in grepout("^Ob", colnames(idyrW))) {
+####   jjj <- paste0("Estab", jj)
+####   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = EstabID]
+#### }
+ColsOb <- grepout("^Ob", colnames(idyrW))
+estabcols <- paste0("Estab", ColsOb)
+#### 1. Initialize the new columns as exact copies
+idyrW[, (estabcols) := .SD, .SDcols = ColsOb]
+#### 2. Single Loop: Find singletons, update the missing rows
+
+for (k in seq_along(ColsOb)) {
+  ov <- ColsOb[k]
+  jjj <- estabcols[k]
+  #### a) Get estab with 1s
+  EstabWith1 <- unique(idyrW[get(ov) %in% c("1", 1, 1L), EstabID])
+  #### b) Filter non-NA and non-empty records for this variable
+  col_data <- idyrW[[ov]]
+  ii.NA0 <- is.na(col_data) | col_data %in% c("", "0", 0)
+  #### c) Update ONLY the missing rows in idyrW directly 
+  idyrW[ii.NA0 & (EstabID %in% EstabWith1), (jjj) := 1L]
 }
-#### setnames(idyrW, "time", "taxyear")
-#### CLAUDE: "time" column does not exist in wide reshape output.
-####   reshape() with timevar="taxyear" uses taxyear values as
-####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
-####   Commented out to avoid "Items to rename must exist: time".
-#### CLAUDE: Missing {} without braces only jjname <- ... is in
-####   the loop body. idyrW[...] ran once after loop with yy=2022.
-####   Years 2008-2021 were never processed. Added {}.
-for (yy in 2008:2022) {
-  jjname <- paste0("EstabOb.", yy)
-  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
-    by = .(EstabID)]
-}
-estabcols <- grepout("EstabOb", colnames(idyrW))
 idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""),
   .SDcols = estabcols]
 idyrW[, EObPattern := factor(EObPattern)]
 
 #### Firm observation pattern
 #### Find any individual with 1L in a given firm
-####
-#### CLAUDE: Same is.na() bug as EstabOb loop (Bug 3).
-####   Ob cols have no NAs (filled with 0L above). Loop never fired.
-####   Logic also inverted. Replaced with data.table by=.
-#### for (jj in grepout("^Ob", colnames(idyrW))) {
-####   jjj <- grep(paste0("Firm", jj), colnames(idyrW))
-####   for (ii in 1:length(firmid))
-####     set(idyrW,
-####           i = which(
-####                 idyrW[, FirmID] == firmid[ii] &
-####                 is.na(idyrW[, jj, with = F])
-####               ),
-####           j = jjj,
-####       value = 1L)
-#### }
-for (jj in grepout("^Ob", colnames(idyrW))) {
-  jjj <- paste0("Firm", jj)
-  idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
+firmcols <- paste0("Firm", ColsOb)
+idyrW[, (firmcols) := .SD, .SDcols = ColsOb]
+for (k in seq_along(ColsOb)) {
+  ov <- ColsOb[k]
+  jjj <- firmcols[k]
+  #### a) Get firms with 1s
+  FirmWith1 <- unique(idyrW[get(ov) %in% c("1", 1, 1L), FirmID])
+  #### b) Filter non-NA and non-empty records for this variable
+  col_data <- idyrW[[ov]]
+  ii.NA0 <- is.na(col_data) | col_data %in% c("", "0", 0)
+  #### c) Update ONLY the missing rows in idyrW directly 
+  idyrW[ii.NA0 & (FirmID %in% FirmWith1), (jjj) := 1L]
 }
-#### CLAUDE: Missing {} ・囈 same issue as EstabOb loop above.
-####   Added {}.
-for (yy in 2008:2022) {
-  jjname <- paste0("FirmOb.", yy)
-  idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
-    by = .(FirmID)]
-}
-firmcols <- grepout("FirmOb", colnames(idyrW))
-idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
+idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""),
   .SDcols = firmcols]
 idyrW[, FObPattern := factor(FObPattern)]
+#### for (jj in grepout("^Ob", colnames(idyrW))) {
+####   jjj <- paste0("Firm", jj)
+####   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
+#### }
+#### for (yy in 2008:2022) {
+####   jjname <- paste0("FirmOb.", yy)
+####   idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
+####     by = .(FirmID)]
+#### }
 #### ObPattern: FirmIDTx, FirmID, EstabIDTx, EstabID, IndID, 
 ####            FObPattern, EObPattern, IObPattern
 ObPattern <- idyrW[, c(
-    "busprov_geo", "busdistmuni_geo", 
-    "buslocmuni_geo", "busmainplc_geo", 
+    geovars,
     "FirmIDTx", "FirmID", 
     "EstabIDTx", "EstabID", 
     "IndID", 
     "FObPattern", "EObPattern", "IObPattern"), with = F]
 qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
 #### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
-#### CLAUDE exi: guard for standalone chunk execution before irp5Clean.qs rebuild.
-if (!"EstabIDTx" %in% colnames(irp5Clean)) {
-  irp5Clean[, EstabIDTx := as.integer(as.numeric(factor(paste0(
-      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
-  irp5Clean[, EstabID   := as.integer(as.numeric(factor(paste0(
-      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
-  irp5Clean[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
-  irp5Clean[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
-  irp5Clean[, UIndID    := as.integer(as.numeric(factor(uid)))]
-  irp5Clean[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
-  irp5Clean[, Corp      := FirmID]
-  irp5Clean[, UInd      := UIndID]
-}
 setkey(irp5Clean, IndID); setkey(ObPattern, IndID)
 irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "IndID")]
 qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)

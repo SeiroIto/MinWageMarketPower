@@ -441,3 +441,6 @@ Note
 # Sandbox
 
 <!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
+
+* 2026-05-07 19:16 JST | Session 13 Slate Gull | check EstabOb.YYYY uniqueness for a given EstabID in IRP5Condense.rmd → two bugs found: (1) scalar `||` on L949 — NA→0L fill for Ob.YYYY never fires; (2) `EestabWith1` typo on L1014 (variable is `EstabWith1`) — EstabOb fill loop errors on first iteration; EstabOb.YYYY NOT uniform within EstabID
+* 2026-05-07 19:16 JST | Session 13 Slate Gull | git commit staged: IRP5Condense.rmd + 4 log files on Condense2026Apr branch
