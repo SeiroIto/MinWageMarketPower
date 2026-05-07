@@ -69,7 +69,7 @@ git push -u origin work/EstImpacts2024Apr
 git add .
 git commit -m "..."
 
-git pull --rebase   # �� add this before pushing (important)
+git pull --rebase   # 鐃緒申 add this before pushing (important)
 git push
 
 #### squash & merge on GitHub
@@ -203,10 +203,14 @@ irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "g
 irp5pnl[, Entity := factor(Entity, levels = c("private", "gov"))]
 geovars <- grepout("^bus.*geo$", colnames(irp5pnl))
 #### Below takes about 2 hours (with as.IDate)!!!: Start  ###
-library(fasttime)
-irp5pnl[, DateStart := fastPOSIXct(periodemployedfrom)]
-irp5pnl[, DateEnd   := fastPOSIXct(periodemployedto)]
-irp5pnl[, DateBirth := fastPOSIXct(dateofbirth)]
+library(fasttime) 
+#### library(anytime)  #### for DOB, fasttime works only for year > 1970
+irp5pnl[, DateStart := fastPOSIXct(periodemployedfrom, NULL, 3L)]
+irp5pnl[, DateEnd   := fastPOSIXct(periodemployedto,   NULL, 3L)]
+irp5pnl[, DateBirth := as.IDate(dateofbirth)]
+irp5pnl[!is.na(DateStart), 
+  .(DateStart, periodemployedfrom, DateEnd, periodemployedto, 
+  DateBirth, dateofbirth)][1:20, ]
 #### Below takes about 2 hours!!!: End  ###
 ```
 
@@ -579,44 +583,39 @@ If there are workers working for multiple establishments ... no problem
 * see example shown in codes, 8 entries in 2012, 2013
 
 
-```{r correcting information of IRP panel}
+```{r correcting information of IRP panel irp5gir}
 #| attr.source = '.r .line-numbers',
 #### case: taxyear = 2015, DateStart = Dec 01, 2013, DateEnd = Jan 10, 2014
 #### taxyear 2015: Mar 2014 - Feb 2015
 #### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
 #### use this row for 2014
 #### paste0 operation is not slow
-#### library(data.table)
-#### library(fasttime)
-#### n <- 1e5
-#### dt <- data.table(
-####   x1 = sample(1000:2000, n, replace= T),
-####   x2 = sample(1000:2000, n, replace= T)
-#### )
-#### dt[, date1 := as.Date(x1, origin = "1990/01/01")]
-#### dt[, date2 := as.Date(x2, origin = "1990/01/01")]
-#### dt[, taxyear := year(date1)]
+ library(data.table)
+ library(fasttime)
+ library(anytime)
+ n <- 1e7
+ dt <- data.table(
+   x1 = sample(1000:2000, n, replace= T),
+   x2 = sample(1000:2000, n, replace= T)
+ )
+ dt[, date1 := as.Date(x1, origin = "1990/01/01")]
+ dt[, date2 := as.Date(x2, origin = "1990/01/01")]
+ dt[, taxyear := year(date1)]
 #### system.time(dt[, date := paste0(taxyear, "/03/01")])
 ####   user system elapsed 
-####   0.00   0.01    0.02 
+####   1.97   0.01    1.97 
 #### system.time(dt[, posix := as.POSIXct(date)])
-####  user system elapsed 
-####  1.21   0.00    1.22
+####   user system elapsed 
+#### 118.61   1.13  121.34 
 #### system.time(dt[, idate := as.IDate(date)])
 ####  user system elapsed 
-####  0.36   0.00    0.37 
+#### 36.91   0.22   38.19 
 #### system.time(dt[, fdate := fastPOSIXct(date)])
+####  user system elapsed
+####  0.08   0.01    0.11 
+#### system.time(dt[, adate := anytime(date)])
 ####  user system elapsed 
-####     0      0       0 
-#### system.time(dt[, posix1 := as.POSIXct(paste0(taxyear, "/03/01"))])
-####    user  system elapsed 
-####    1.24    0.01    1.25 
-#### system.time(dt[, idate1 := as.IDate(paste0(taxyear, "/03/01"))])
-####    user  system elapsed 
-####    0.42    0.00    0.44 
-#### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
-####    user  system elapsed 
-####    0.02    0.00    0.02 
+####  6.89   0.10    7.05 
 #### CLAUDE exi, sca, pos:
 if (exists("geoloc"))      rm(geoloc)
 if (exists("irp5i"))       rm(irp5i)
@@ -626,11 +625,12 @@ if (RunSep || length(ls(pattern="^irp5gi$"))==0)
   irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
     nthreads = 13)
 #### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+library(fasttime)
 irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
 irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
 irp5gi[, TrueTaxYear := taxyear]
 #### Entries of earlier jobs
-irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5) , 
+irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
   TrueTaxYear := year(DateStart)]
 apply(table(irp5gi[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
 ####    2003    2004    2005    2006    2007    2008    2009    2010    2011    2012 
@@ -681,6 +681,10 @@ irp5gir[, orig.bprov := busprov_geo]
 irp5gir[, orig.bdist := busdistmuni_geo]
 irp5gir[, orig.bloc  := buslocmuni_geo]
 irp5gir[, orig.bmain := busmainplc_geo]
+geo15vars <- c("bprov15", "bdist15", "bloc15", "bmain15")
+#### Copy location entries only if unique in an establishment
+#### 
+#### I. Old way (risks of misscopying)
 #### If we do not condition on first row "[1]", we wind up
 #### having multiple cases ==> error
 #### If there are multiple matches, we have no idea which to pick, so pick first
@@ -690,13 +694,60 @@ irp5gir[, orig.bmain := busmainplc_geo]
 #### irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
 #### CLAUDE tpo: [1] could select ""/NA before filtering; conflicting non-missing
 ####   values now set to NA (not copied). Loop uses geovars from setup.rmd.
-geo15vars <- c("bprov15", "bdist15", "bloc15", "bmain15")
+#### 
+#### II. Filter on non-NA and non-"", while 
+####     AVOIDING elegant expressions and stick to memory efficiency
+####  * direct vector subset by creating a working data tmp_2015
+####  * no .SD
+####  * no grouped evaluation using "by="
+####  * no get()
+####  * minimal abstraction layers (At 100M-row scale, abstractions 
+####    that are elegant or convenient can introduce: temporary objects, 
+####    method dispatch, expression evaluation, copying, hidden loops)
+#### 1. Initialize output columns to NA_character_ in the main table.
+####  This correctly covers groups with no valid data, or >1 unique 
+####  value.
+irp5gir[, (geo15vars) := NA_character_]
+#### 2. Pre-subset the 2015 data ONCE. 
+####  Extracting only the necessary columns drastically speeds up 
+####  subsetting inside the loop.
+ColsToKeep <- c("taxrefno", "uid", geovars)
+tmp_2015 <- irp5gir[taxyear == 2015, .SD, .SDcols = ColsToKeep]
 for (k in seq_along(geovars)) {
-  irp5gir[, (geo15vars[k]) := {
-    x <- get(geovars[k])
-    x <- x[taxyear == 2015 & !is.na(x) & x != ""]
-    if (uniqueN(x) == 1L) x[1L] else NA_character_
-  }, by = .(taxrefno, uid)]
+  gv <- geovars[k]
+  outv <- geo15vars[k]
+  #### a) Filter to non-NA and non-empty records for this variable
+  ####    Using tmp_2015[[gv]] prevents 'get()' overhead and 
+  ####    evaluates at vector speeds
+  valid_idx <- which(!is.na(tmp_2015[[gv]]) & tmp_2015[[gv]] != "")
+  #### Below is ugly but copies selected rows of each variables
+  #### and does not use get() which is less efficient than data.table
+  #### dt_valid <- tmp_2015[valid_idx, .(taxrefno, uid, v = get(gv))]
+  #### gemini 3.1 says: 
+  ####   By extracting the vectors with $ and [[ and subsetting them 
+  ####   directly with [valid_idx], you bypass all of data.table's 
+  ####   parsing overhead. You are dropping straight down to 
+  ####   R's primitive C functions. 
+  dt_valid <- data.table(
+    taxrefno = tmp_2015$taxrefno[valid_idx],
+    uid      = tmp_2015$uid[valid_idx],
+    v        = tmp_2015[[gv]][valid_idx]
+  )
+  #### b) Get unique combinations of[taxrefno, uid, value]
+  ####    (Highly optimized in C via data.table's internal radix sort)
+  #### GPT4 says no to unique(dt_valid, by = c("taxrefno", "uid", "v"))
+  #### because it may interfere with data.table's internal key/sort-ing
+  dt_uniq <- unique(dt_valid)
+  #### c) Identify groups that have exactly ONE unique value
+  ####    If a person has >1 unique location, their (taxrefno, uid) 
+  ####    will be duplicated here. We flag all rows that belong to 
+  ####    duplicated groups to drop them.
+  is_dup <- duplicated(dt_uniq, by = c("taxrefno", "uid")) | 
+            duplicated(dt_uniq, by = c("taxrefno", "uid"), fromLast = TRUE)
+  #### Keep only the "singleton" groups
+  dt_final <- dt_uniq[!is_dup]
+  #### d) Perform a fast update join back to the main 100M+ row dataset
+  irp5gir[dt_final, (outv) := i.v, on = .(taxrefno, uid)]
 }
 #### CLAUDE msk:
 #### irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
@@ -956,7 +1007,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
 ####   reshape() with timevar="taxyear" uses taxyear values as
 ####   column suffixes (Ob.2008, Ob.2009, ...), not as a column.
 ####   Commented out to avoid "Items to rename must exist: time".
-#### CLAUDE: Missing {} 矚ǁwithout braces only jjname <- ... is in
+#### CLAUDE: Missing {} without braces only jjname <- ... is in
 ####   the loop body. idyrW[...] ran once after loop with yy=2022.
 ####   Years 2008-2021 were never processed. Added {}.
 for (yy in 2008:2022) {
@@ -990,7 +1041,7 @@ for (jj in grepout("^Ob", colnames(idyrW))) {
   jjj <- paste0("Firm", jj)
   idyrW[, (jjj) := as.integer(any(get(jj) == 1L)), by = FirmID]
 }
-#### CLAUDE: Missing {} 矚ǁsame issue as EstabOb loop above.
+#### CLAUDE: Missing {} ・囈 same issue as EstabOb loop above.
 ####   Added {}.
 for (yy in 2008:2022) {
   jjname <- paste0("FirmOb.", yy)
