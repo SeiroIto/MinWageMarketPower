@@ -590,17 +590,17 @@ If there are workers working for multiple establishments ... no problem
 #### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
 #### use this row for 2014
 #### paste0 operation is not slow
- library(data.table)
- library(fasttime)
- library(anytime)
- n <- 1e7
- dt <- data.table(
-   x1 = sample(1000:2000, n, replace= T),
-   x2 = sample(1000:2000, n, replace= T)
- )
- dt[, date1 := as.Date(x1, origin = "1990/01/01")]
- dt[, date2 := as.Date(x2, origin = "1990/01/01")]
- dt[, taxyear := year(date1)]
+#### library(data.table)
+#### library(fasttime)
+#### library(anytime)
+#### n <- 1e7
+#### dt <- data.table(
+####   x1 = sample(1000:2000, n, replace= T),
+####   x2 = sample(1000:2000, n, replace= T)
+#### )
+#### dt[, date1 := as.Date(x1, origin = "1990/01/01")]
+#### dt[, date2 := as.Date(x2, origin = "1990/01/01")]
+#### dt[, taxyear := year(date1)]
 #### system.time(dt[, date := paste0(taxyear, "/03/01")])
 ####   user system elapsed 
 ####   1.97   0.01    1.97 
