@@ -85,9 +85,14 @@ Note
 * `IRP5MergeData.rmd` L177 (insert) | *(absent)* → `setorder(faa, taxyear)` | faa keyed by taxrefno only in HHI; radix sort not stable within groups; [1] baseline picks may not be earliest year | CLAUDE fix
 * `IRP5HHI.rmd` L816 (insert) | *(absent)* → 8-line comment block explaining why `!is.na()` is required inside `any()`: without it, group with only NA/empty geo gives `any(NA)=NA` not `FALSE`, breaking `fcase()`; trace for `x <- c(NA,"","")` included | CLAUDE fix
 
+# Session 12 Dawn Snipe | 2026-04-28/29
+
+* `IRP5HHI.rmd` L159 | (absent) → `library(fasttime)` in `{r fraction affected for all years}` chunk | `fastPOSIXct()` used below; `fasttime` not loaded | CLAUDE tpo
+* `IRP5HHI.rmd` L177-178 | `as.IDate(paste0(2000+yr-1, "/03/01"))` ×2 → `fastPOSIXct(...)` | DateStart/DateEnd are POSIXct from Condense; type consistency | CLAUDE tpo
+* `IRP5HHI.rmd` L305-306 | `as.IDate(paste0(2000+(yr-1),...))` + `as.IDate(paste0(2000+yr,...))` → `fastPOSIXct(...)` ×2 | same | CLAUDE tpo
+* `settings.local.json` Stop hook | `echo 'RULE: append...'` → `bash /mnt/c/seiro/languages/claude/.claude/append_cc.sh 2>/dev/null` | auto-write CC from transcript; eliminates manual composition | CLAUDE fix
+* `/mnt/c/seiro/languages/claude/.claude/append_cc.sh` | (new file) | reads JSONL transcript, extracts last turn, appends to project `CLAUDE_CC.md`; skips continuation-summary injections | CLAUDE fix
+
 # Sandbox
 
 <!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->
-* IRP5HHI.rmd L159 | (absent) → library(fasttime) in {fraction affected for all years} chunk | fastPOSIXct used below; fasttime not in setup | CLAUDE tpo
-* IRP5HHI.rmd L177-178 | as.IDate(paste0(2000+yr-1,...)) ×2 → fastPOSIXct(...) | DateStart/DateEnd are POSIXct from Condense; type consistency | CLAUDE tpo
-* IRP5HHI.rmd L305-306 | as.IDate(paste0(2000+(yr-1),...)) + as.IDate(paste0(2000+yr,...)) → fastPOSIXct(...) ×2 | same | CLAUDE tpo

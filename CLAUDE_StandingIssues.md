@@ -241,4 +241,3 @@ Low priority: 2013 HHI ≈ pre-policy HHI in practice (market structure adjusts 
 # Sandbox
 
 <!-- Raw notes on new issues as they surface. Promoted to canonical sections at orderly sign-off. Append-only. -->
-* 2026-04-24 05:00 JST | Session 9 | HHI contamination check + study-objective review → HHILevel0 dead code; threshold inconsistency; sort issues for HHI0 and Pre2013HHI; main regressions clean (HHILevel=Pre2013HHI, pre-policy)

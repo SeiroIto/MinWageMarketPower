@@ -393,10 +393,51 @@ Note
    * Issue 3 (HHILevel0 dead code): recommend deleting L130–134 and L703–707; added to StandingIssues
    * Issue 4 (threshold): `HHI0`/`HHI` swap is numerically a no-op (constant per estab); true fix = load panel in Impacts, compute `thr2012 <- median(LSMa[taxyear==2012,HHI],na.rm=T)`, replace inline `median()` at 8 lines; low priority; added to StandingIssues
 
+## Session 11 Pale Reed | 2026-04-25/26
+
+1. *Admin / infrastructure: feedback files, hooks, CC backfill — no code edits*
+
+   * Full startup after reinstall; xref rebuilt (124,339 rows / 48 files); Sessions 9+10 sandbox promoted to canonical
+   * `tempforCC.txt` deduplicated and appended to `CLAUDE_CC.md` (lines 7431–7516; CC → 2372 lines)
+   * `feedback_edit_preferences.md` symlink created; `feedback_global_claude_md_authoritative.md` updated
+   * PreToolUse + Stop hooks added to `settings.local.json`
+
+## Session 12 Dawn Snipe | 2026-04-28/29
+
+1. *IRP5HHI.rmd: replace `as.IDate()` with `fastPOSIXct()`; add `library(fasttime)`*
+
+   DateStart/DateEnd are already POSIXct from IRP5Condense.rmd; type mismatch fixed at L159, L177-178, L305-306.
+
+2. *Stop hook: auto-write CC from JSONL transcript*
+
+   Structural fix for repeated CC-verbatim failures (manual composition from memory was root cause).
+   * Created `/mnt/c/seiro/languages/claude/.claude/append_cc.sh` — reads transcript JSONL, extracts last user/assistant pair, appends to active project's `CLAUDE_CC.md` silently; skips continuation-summary injections
+   * Updated `settings.local.json` Stop hook: `echo RULE:...` → `bash .../append_cc.sh 2>/dev/null`
+
+## Session 13 Slate Gull | 2026-05-07 11:16–11:47 JST
+
+1. *IRP5Condense.rmd: diagnosed why "correcting information of IRP panel irp5gir" is slow vs old commit e7951788*
+
+   Two compounding root causes identified.
+   * `DateStart`/`DateEnd` changed `as.IDate()` → `fastPOSIXct()` in `create long format of irp5`;
+     `year(POSIXct)` over ~200M rows slower than `year(IDate)` (timezone overhead per element)
+   * 8 ID columns added to `irp5gi` in absorbed chunk; old version accidentally re-read narrower
+     `irp5gi` from disk (inverted load condition `==0` → `==1` fixed in PR81), so target chunk
+     now receives ~6 GB of extra columns in memory
+
+1. *check correcting information chunk — learn fast pattern from current ver vs slow CLAUDE advice*
+
+   Lesson: at 100M+ row scale `by=` on millions of groups forces R to dispatch a closure per group;
+   correct structure is subset → deduplicate → update-join.
+   * Slow (my advice): `dt[, (outv) := { get(); filter 2015; uniqueN() }, by = .(taxrefno, uid)]`
+     — closure per group on full table; `get()` dispatch per call; filter recomputed inside each group
+   * Fast (user's 3-step pattern):
+     1. Pre-subset once: `tmp_2015 <- irp5gir[taxyear==2015, .SD, .SDcols=ColsToKeep]`
+     2. Deduplicate on small table: `[[gv]]`/`$col[valid_idx]` (C primitives, no `get()`);
+        `unique()` + double `duplicated(fromLast=TRUE)` for singleton detection
+     3. Update-join back: `irp5gir[dt_final, (outv) := i.v, on = .(taxrefno, uid)]`
+   * Rule saved to `feedback_datatable_scale.md`
+
 # Sandbox
 
 <!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
-* 2026-04-25 20:50 JST | Session 11 | startup after reinstall → full startup complete; xref rebuilt (124339 rows/48 files); Sessions 9+10 sandbox promoted to canonical
-* 2026-04-26 05:55 JST | Session 11 | tempforCC.txt deduplicated and appended to CLAUDE_CC.md (lines 7431-7516 only → CC now 2372 lines)
-* 2026-04-26 06:24 JST | Session 11 | feedback_edit_preferences.md symlink created; feedback_global_claude_md_authoritative.md updated; PreToolUse+Stop hooks added to settings.local.json; Session 11 turns appended to CC
-* 2026-04-28 17:31 JST | Session 12 | IRP5HHI.rmd: as.IDate → fastPOSIXct (L177-178, L305-306); library(fasttime) added to chunk L159
