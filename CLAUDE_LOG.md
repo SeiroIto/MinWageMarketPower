@@ -444,3 +444,4 @@ Note
 
 * 2026-05-07 19:16 JST | Session 13 Slate Gull | check EstabOb.YYYY uniqueness for a given EstabID in IRP5Condense.rmd → two bugs found: (1) scalar `||` on L949 — NA→0L fill for Ob.YYYY never fires; (2) `EestabWith1` typo on L1014 (variable is `EstabWith1`) — EstabOb fill loop errors on first iteration; EstabOb.YYYY NOT uniform within EstabID
 * 2026-05-07 19:16 JST | Session 13 Slate Gull | git commit staged: IRP5Condense.rmd + 4 log files on Condense2026Apr branch
+* 2026-05-08 05:58 JST | Session 14 | check if edits to "merge irp5_WithRepetetiveUIDs GeoLF" break downstream → no breaks; uidtaxref→FirmUInd and IndID→EUIndID fully propagated in IRP5Condense.rmd; ReadMe.rmd L106,108,110 has stale uidtaxref (doc only, no runtime impact)

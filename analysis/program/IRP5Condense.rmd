@@ -473,7 +473,7 @@ GeoLF.nodup[, dup := NULL]
 #### irp5gi <- GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
 irp5gi <- GeoLF.nodup[irp5i, on = c(geovars, "irp5it3aid", "taxrefno")]
 colnames(GeoLF.nodup)
-rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5gi=dim(irp5gi	))
+rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5gi=dim(irp5gi))
 colnames(irp5gi)
 table(irp5gi[, taxyear], useNA = "ifany")
 table(irp5gi[, i.taxyear], useNA = "ifany")
@@ -487,8 +487,19 @@ if (any(grepl("i.taxyear", colnames(irp5gi))))
 #### irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
 ####  nthreads = 13)
 #### r copy 2015 location info
-irp5gi[, uidtaxref := 0L]
-irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
+#### CLAUDE msk: define anonymous ID columns; Corp/UInd used in all html display; taxrefno/uid retained for joins/filters only.
+irp5gi[, EstabIDTx := as.integer(factor(paste0(
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)))]
+irp5gi[, EstabID   := as.integer(factor(paste0(
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)))]
+irp5gi[, FirmIDTx  := as.integer(factor(Txrf))]
+irp5gi[, FirmID    := as.integer(factor(taxrefno))]
+irp5gi[, UIndID    := as.integer(factor(uid))]
+irp5gi[, EUIndID   := paste(EstabIDTx, UIndID, sep = "-")]
+irp5gi[, Corp      := FirmID]
+irp5gi[, UInd      := UIndID]
+irp5gi[, FirmUInd := 0L]
+irp5gi[, FirmUInd := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
 irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
 irp5gi[buslocmuni_geo == "" | is.na(buslocmuni_geo),
   NoLocMuni := 1L]
@@ -496,40 +507,29 @@ irp5gi[Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic),
   CanFill := 1L]
 irp5gi[NoLocMuni == 1L & CanFill == 1L, ShouldFill := 1L]
 #### How much is loc muni information populated?
-table(irp5gi[, .(NoLocMuni == 0L, taxyear)], useNA = "ifany")
+table(irp5gi[NoLocMuni == 0L, .(CanFill, taxyear)], useNA = "ifany")
 NAsInLocMuniBefore <- 
   irp5gi[, .(BeforeFill = sum(NoLocMuni)), by = taxyear]
 print(NAsInLocMuniBefore)
 #### to be safe, create a variable for "fill in"
 irp5gi[, FillInLocMuni := buslocmuni_geo]
 
-#### For each uidtaxref that ShouldFill == 1L, 
+#### For each FirmUInd that ShouldFill == 1L, 
 #### fill in loc muni info from the 1st CanFill row
-irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
+irp5gi[taxyear <= 2015 & FirmUInd %in% FirmUInd[ShouldFill == 1L], 
   FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], 
-  by = uidtaxref] 
-summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
+  by = FirmUInd] 
+summary(irp5gi[taxyear <= 2015 & FirmUInd %in% FirmUInd[ShouldFill == 1L], 
   .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
     naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
-#### CLAUDE msk: define anonymous ID columns; Corp/UInd used in all html display; taxrefno/uid retained for joins/filters only.
-irp5gi[, EstabIDTx := as.integer(as.numeric(factor(paste0(
-    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf))))]
-irp5gi[, EstabID   := as.integer(as.numeric(factor(paste0(
-    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno))))]
-irp5gi[, FirmIDTx  := as.integer(as.numeric(factor(Txrf)))]
-irp5gi[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
-irp5gi[, UIndID    := as.integer(as.numeric(factor(uid)))]
-irp5gi[, IndID     := paste(EstabIDTx, UIndID, sep = "-")]
-irp5gi[, Corp      := FirmID]
-irp5gi[, UInd      := UIndID]
 #### CLAUDE tpo: original used `=` instead of `:=` in data.table j (invalid syntax); removed entirely, masking now done inline in the select.
 #### irp5gi[, (c("taxrefno.", "uid.")) = lapply(.SD,
 ####   function(x) gsub("....$", "....", gsub("^....", "....", x))),
 ####   .SDcols = c("taxrefno", "uid")][
-####   taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10],
+####   taxyear <= 2015 & FirmUInd %in% FirmUInd[ShouldFill == 1L][1:10],
 ####   .(taxrefno., uid., taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
 ####     FillInLocMuni, buslocmuni_geo)]
-irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10],
+irp5gi[taxyear <= 2015 & FirmUInd %in% FirmUInd[ShouldFill == 1L][1:10],
   .(Corp, UInd, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic,
     FillInLocMuni, buslocmuni_geo)]
 #### How much is loc muni information populated after this?
@@ -796,10 +796,10 @@ rm(irp5gi)
 ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
 ipyr[, uid := gsub(" +$", "", UID)]
 #### CLAUDE msk: define Corp/UInd on ipyr (separate dataset; no Txrf-based IDs needed here).
-ipyr[, FirmID    := as.integer(as.numeric(factor(taxrefno)))]
-ipyr[, UIndID    := as.integer(as.numeric(factor(uid)))]
-ipyr[, Corp      := FirmID]
-ipyr[, UInd      := UIndID]
+ipyr[, FirmID := as.integer(factor(taxrefno))]
+ipyr[, UIndID := as.integer(factor(uid))]
+ipyr[, Corp   := FirmID]
+ipyr[, UInd   := UIndID]
 #### rm(ipyrs)
 #### CLAUDE: ipyrs never defined; only ipyr exists here.
 ####   Commented out to avoid "object not found" error.
@@ -915,7 +915,7 @@ Also create
 * `FirmIDTx` (Txrf)
 * `FirmID` (taxrefno)
 * `UIndID` (uid)
-* `IndID` (EstabIDTx)(UIndID)
+* `EUIndID` (EstabIDTx)(UIndID)
 * `Corp` (= FirmID; display alias)
 * `UInd` (= UIndID; display alias)
 
@@ -931,7 +931,7 @@ grepout <- function(str, x)
   x[grep(str, x, perl = T)]
 idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo,
   buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid,
-  EstabIDTx, EstabID, FirmIDTx, FirmID, IndID, UIndID, Corp, UInd)]
+  EstabIDTx, EstabID, FirmIDTx, FirmID, EUIndID, UIndID, Corp, UInd)]
 if (all(idyr[, uid == UID])) idyr[, UID := NULL]
 #### Individual observation pattern in a given establishment
 #### Reshape wide gives Ob2008, Ob2009, ..., Ob2022
@@ -942,7 +942,7 @@ idyrW <- reshape(idyr, direction = "wide",
     "buslocmuni_geo", "busmainplc_geo", 
     "FirmIDTx", "FirmID", 
     "EstabIDTx", "EstabID", 
-    "IndID"),
+    "EUIndID"),
   timevar = "taxyear", v.names= c("Ob"))
 #### ObYYYY = 0L if NA (if obs does not exist in long format data)
 for (jj in grep("^Ob", colnames(idyrW)))
@@ -1000,8 +1000,7 @@ ColsOb <- grepout("^Ob", colnames(idyrW))
 estabcols <- paste0("Estab", ColsOb)
 #### 1. Initialize the new columns as exact copies
 idyrW[, (estabcols) := .SD, .SDcols = ColsOb]
-#### 2. Single Loop: Find singletons, update the missing rows
-
+#### 2. Single Loop: Find estab with 1's, update the missing rows
 for (k in seq_along(ColsOb)) {
   ov <- ColsOb[k]
   jjj <- estabcols[k]
@@ -1044,18 +1043,18 @@ idyrW[, FObPattern := factor(FObPattern)]
 ####   idyrW[, (jjname) := get(jjname)[!is.na(get(jjname))][1],
 ####     by = .(FirmID)]
 #### }
-#### ObPattern: FirmIDTx, FirmID, EstabIDTx, EstabID, IndID, 
+#### ObPattern: FirmIDTx, FirmID, EstabIDTx, EstabID, EUIndID, 
 ####            FObPattern, EObPattern, IObPattern
 ObPattern <- idyrW[, c(
     geovars,
     "FirmIDTx", "FirmID", 
     "EstabIDTx", "EstabID", 
-    "IndID", 
+    "EUIndID", 
     "FObPattern", "EObPattern", "IObPattern"), with = F]
 qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
 #### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
-setkey(irp5Clean, IndID); setkey(ObPattern, IndID)
-irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "IndID")]
+setkey(irp5Clean, EUIndID); setkey(ObPattern, EUIndID)
+irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "EUIndID")]
 qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
 #### Agriculture panel
 irp5a <- irp5[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
