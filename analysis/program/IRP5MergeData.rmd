@@ -126,7 +126,8 @@ Tabulation gives
 
 ```{r create LSMa HHIAgriRowsMainPlaceLevel from LSa HHIAgriRows, results = F}
 #| attr.source = '.r .line-numbers',
-LSa <- qread(paste0(pathsaveddata, "HHIAgriRows.qs"), nthreads = 13)
+LSa <- qread(paste0(pathsaveddata, "HHIAgriRows.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 #### table(LSa[, .(Nums = 1:.N, taxyear), 
 ####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
 ####  "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
@@ -145,7 +146,8 @@ LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1],
 LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
 setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, taxyear)
-qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = 13)
+qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 ```{r for printing LSMa, eval = T}
 LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
@@ -174,7 +176,8 @@ Key variables defined at the establishment level:
 ```{r merge faa plus LSMa1 gives Lf, results = F}
 #| attr.source = '.r .line-numbers',
 #### faa (base) + LSMa1
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13)
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 setorder(faa, taxyear)  #### CLAUDE fix: ensure [1] = earliest year (faa keyed by taxrefno only in HHI)
 faa[, c("FA0", "Jobs0", "FAMP0", "JobsMP0") := 
   list(
@@ -192,7 +195,8 @@ faa[, rJobs := dJobs/Jobs0]
 faa[, dJobsMP := JobsMP - JobsMP0]
 faa[, rJobsMP := dJobsMP/JobsMP0]
 LSMa <- qread(paste0(pathsaveddata, "HHIAgriRowsMainPlaceLevel.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads,
+    use_alt_rep = TRUE)
 #### Drop rows with no location info
 LSMa1 <- LSMa[busmainplc_geo != "" & !is.na(busmainplc_geo) & !grepl("EXCEP", busmainplc_geo), ]
 #### Keep only first row of each establishment
@@ -261,7 +265,8 @@ Lf[, EstID := factor(as.numeric(factor(paste0(
   , busmainplc_geo
   , taxrefno))))
 ]
-qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = 13)
+qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 litedown::timing_data() 
 ```
 

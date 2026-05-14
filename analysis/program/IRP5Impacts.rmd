@@ -109,7 +109,8 @@ We use the TWFE event sudy specification.
 
 ```{r select estimation sample}
 #| attr.source = '.r .line-numbers',
-Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
 Lf[, c("Num", "DiffTY", "MaxDiffTY") := 
@@ -269,7 +270,8 @@ Destat201002
 ```
 
 ```{r show estimation data, echo = F}
-LfCYr <- qread(paste0(pathdata, "LfC201002.qs"))
+LfCYr <- qread(paste0(pathdata, "LfC201002.qs"),
+  use_alt_rep = TRUE)
 LfCYr[EstID %in% EstID[dJobsMP < -1000], ][order(EstID, taxyear),
   .(busdistmuni_geo, buslocmuni_geo, rk=EstID, 
   taxyear, y=JobsMP, dy=dJobsMP, Share, FAMP)][1:50, ]
@@ -500,11 +502,16 @@ for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
 #### for (Yr in 2010) {
-    LfYr    <- qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"))
-    LfCYr   <- qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"))
-    LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"))
-    LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"))
-    LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"))
+    LfYr    <- qread(paste0(pathdata, "Lf",    Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCYr   <- qread(paste0(pathdata, "LfC",   Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEYr  <- qread(paste0(pathdata, "LfCE",  Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEbYr <- qread(paste0(pathdata, "LfCEb", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEaYr <- qread(paste0(pathdata, "LfCEa", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
 
 
     library(fixest)
@@ -654,7 +661,8 @@ This results in the sample size reduction from 70888 to 70171 in the 13 year per
 
 
 ```{r select winsorized estimation sample}
-Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), nthreads = 13)
+Lf <- qread(paste0(pathsaveddata, "EstSample_Ag.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 #### Complete panel
 #### definition of complete: observed everyear in start year - 2020
 Lf[, c("Num", "DiffTY", "MaxDiffTY") := 
@@ -1044,15 +1052,24 @@ gMeanh
 for (Jb in c(2, 10)) {
   if (Jb < 10) Jb <- paste0(0, Jb)
   for (Yr in c(2010, 2012)) {
-    LfYr     <- qread(paste0(pathdata, "Lfw",     Yr, Jb, ".qs"))
-    LfCYr    <- qread(paste0(pathdata, "LfwC",    Yr, Jb, ".qs"))
-    LfCEYr   <- qread(paste0(pathdata, "LfwCE",   Yr, Jb, ".qs"))
-    LfCEbYr  <- qread(paste0(pathdata, "LfwCEb",  Yr, Jb, ".qs"))
-    LfCEaYr  <- qread(paste0(pathdata, "LfwCEa",  Yr, Jb, ".qs"))
-    LfCEmiYr <- qread(paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"))
-    LfCEsmYr <- qread(paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"))
-    LfCEmeYr <- qread(paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"))
-    LfCElaYr <- qread(paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"))
+    LfYr     <- qread(paste0(pathdata, "Lfw",     Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCYr    <- qread(paste0(pathdata, "LfwC",    Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEYr   <- qread(paste0(pathdata, "LfwCE",   Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEbYr  <- qread(paste0(pathdata, "LfwCEb",  Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEaYr  <- qread(paste0(pathdata, "LfwCEa",  Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEmiYr <- qread(paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEsmYr <- qread(paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCEmeYr <- qread(paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
+    LfCElaYr <- qread(paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"),
+      use_alt_rep = TRUE)
     library(fixest)
     esLfwYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
       vcov = ~ taxyear + busmainplc_geo,

@@ -7,7 +7,7 @@ output:
       css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
-#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5HHI.rmd"))
+#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5HHI.rmd"))
 ---
 ```{css, echo=F}
 .SeiroBenign {
@@ -148,10 +148,12 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 if (exists("irp5gi"))    rm(irp5gi)    #### CLAUDE exi: exists() for exact names, ls(pattern=) for partial/regex
 if (exists("irp5gir"))   rm(irp5gir)  #### CLAUDE exi:
 if (exists("irp5Clean")) rm(irp5Clean) #### CLAUDE exi:
+gc()
 #### irp5.qs is created in IRP5Condense.rmd
 library(qs)
 library(data.table)
-irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
+irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 ```
 
 ```{r fraction affected for all years}
@@ -165,9 +167,26 @@ library(fasttime)
 #### kerr_income, ptrs_income, a3601_income)]), 
 #### ]
 #### Takes 20-30 mins: End  ####
-aggsummary <- NULL
-for (yr in 8:22) { 
-  ipyrc <- irp5[taxyear == 2000+yr, ]#[1:100000, ]
+RawCols <- c(
+  "taxyear",
+  "busprov_geo", "busdistmuni_geo", "buslocmuni_geo", "busmainplc_geo",
+  "taxrefno", "Txrf", "UID", "uid",
+  "DateStart", "DateEnd",
+  "a3601_income", "kerr_income", "ptrs_income"
+)
+NeededCols <- c(
+  setdiff(RawCols, c("taxyear", "DateStart", "DateEnd", "kerr_income", "ptrs_income")),
+  "DurationMonth", "DurMonthMarch",
+  "IncomeMonth", "NumJobsPerWorker",
+  "PropToMW", "SubMW",
+  "Jobs", "NumSubMW", "Employees", "NumSubMWe",
+  "JobsMP", "NumSubMWMP", "EmployeesMP", "NumSubMWeMP",
+  "JobsPerWorker",
+  "FA", "FAe", "FAMP", "FAeMP"
+)
+aggsummary <- FAD <- NULL
+for (yr in 8:22) {
+  ipyrc <- irp5[taxyear == 2000+yr, ..RawCols]#[1:100000, ]
   #### Compute job duration and monthly income
   ####   (DateEnd-DateStart2012)/30.5
   ####   a3601_income/DurationMonth
@@ -307,18 +326,7 @@ for (yr in 8:22) {
     FinYr20yr := 0L]
   ipyrc[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")]
   #### Select variables to keep
-  FAdata <- ipyrc[, .(
-      busprov_geo, 
-      busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
-      taxrefno, Txrf, UID, uid,
-      DurationMonth, DurMonthMarch,
-      a3601_income, IncomeMonth, NumJobsPerWorker,
-      PropToMW, SubMW, 
-      Jobs, NumSubMW, Employees, NumSubMWe,  
-      JobsMP, NumSubMWMP, EmployeesMP, NumSubMWeMP,  
-      JobsPerWorker,
-      FA, FAe, FAMP, FAeMP
-    )]
+  FAdata <- ipyrc[, ..NeededCols]
   #### summary(FAdata)
   #### summary(FAdata[is.na(FA), .(FA, Jobs, a3601_income, IncomeMonth, DurationMonth)])
   FAdata[, Size := "micro"]
@@ -364,10 +372,26 @@ for (yr in 8:22) {
   aggsummary <- rbindlist(list(aggsummary, ag2), use.names = T, fill = T)
   FAdata[, taxyear := 2000+yr]
   if (yr < 10) yr <- paste0("0", yr)
-  qsave(FAdata, paste0(pathdata, "FA", yr, ".qs"), nthreads = 13)
+  qsave(FAdata, paste0(pathdata, "FA", yr, ".qs"), nthreads = DTThreads)
+  FAD <- rbindlist(list(FAD, FAdata))
 } 
-qsave(aggsummary, paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
-aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
+qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = DTThreads)
+qsave(aggsummary, paste0(pathdata, "AggregateSummary.qs"), 
+  nthreads = DTThreads)
+table(FAD[,taxyear])
+#### 2009     2010     2011     2012     2013     2014     2015     2016     2017     2018     2019     2020     2021     2022 
+####  200625  5289890   535385  4379788  8910574 10078717 10249875 10412189 11013133 11183320 11163246 10901136  9882070  9683715
+options(datatable.print.nrows = 200, datatable.print.topn = 20)
+print(round(
+  FAD[, .(JobsPerWorker, num = 1:.N), 
+    by = c(geovars, "taxrefno", "UID", "taxyear")][num == 1L, 
+    .(
+      MeanJobsPerWorker = mean(JobsPerWorker, na.rm = T)
+    , StdJobsPerWorker  = var(JobsPerWorker, na.rm = T)^(.5)
+    , NumberOfObs       = length(JobsPerWorker[!is.na(JobsPerWorker)])
+    ), by = taxyear], 4))
+aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
 ```
 
 1. For each taxyear, `FAdata` has 4 indicators of "Fraction Affected":
@@ -391,16 +415,17 @@ aggsummary <- qread(paste0(pathdata, "AggregateSummary.qs"), nthreads = 13)
    *   `estfa`: fadataUniqueEntries.qs, unique entries by location-taxrefno-taxyear in fadatai (almost same as fadatai except uniqueness is explicitly imposed)
 
 
-```{r create FA panel}
+```{r create FA panel, eval = F, echo = F}
 #| attr.source = '.r .line-numbers',
 FAD <- NULL
 for (yr in 8:22) {
   if (yr < 10)  yr <- paste0("0", yr)
-  FAdata <- qread(paste0(pathdata, "FA", yr, ".qs"))
+  FAdata <- qread(paste0(pathdata, "FA", yr, ".qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
   FAdata[, taxyear := 2000+as.numeric(yr)]
   FAD <- rbindlist(list(FAD, FAdata))
 }
-qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = 13)
+qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = DTThreads)
 
 table(FAD[,taxyear])
 #### 2009     2010     2011     2012     2013     2014     2015     2016     2017     2018     2019     2020     2021     2022 
@@ -420,7 +445,12 @@ print(round(
 #| attr.source = '.r .line-numbers',
 #### DO NOT RUN THIS TWICE. It has been run and let us keep it that way.
 #### Merge industry code, taking fadata as base
-ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+if (!exists("RunSep")) RunSep <- T
+if (RunSep || length(ls(pattern="^irp5$"))==0)
+  irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
+ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
 setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
 ind[, n := 1:.N, by = taxrefno]
 inda <- ind[n == 1 & grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
@@ -432,30 +462,35 @@ inda[grepl("Lo|for", imp_mic_sic7_3d), Forest := 1L]
 inda[, grepout("mp_mic", colnames(inda)) := NULL]
 setkey(inda, taxrefno)
 setnames(inda, "taxyear", "FirstYearOnSIC7")
-qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+qsave(inda, paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = DTThreads)
 ```
 
 ```{r faa and Fadata are first lines of FAD in each year}
 #| attr.source = '.r .line-numbers',
-FAD <- qread(paste0(pathsaveddata, "FAD.qs"), nthreads = 13)
+if (!exists("RunSep")) RunSep <- T
+if (RunSep || length(ls(pattern="^FAD$"))==0)
+  FAD <- qread(paste0(pathdata, "FAD.qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
 FAD[, num := 1:.N, by = .(busprov_geo, busdistmuni_geo, 
   buslocmuni_geo, busmainplc_geo, taxrefno, taxyear)]
 Fadata <- FAD[num == 1L, ]
 table(Fadata[, taxyear])
 ####  2008   2009   2010   2011   2012   2013   2014   2015   2016   2017   2018   2019   2020   2021   2022 
 #### 23791  15641 168258  15521 243798 283160 299154 311918 323084 331015 341569 352993 364654 329671 309533 
-qsave(Fadata, paste0(pathdata, "FAFirstRow.qs"), nthreads = 13)
-Fadata <- qread(paste0(pathdata, "FAFirstRow.qs"), nthreads = 13)
+qsave(Fadata, paste0(pathdata, "FAFirstRow.qs"), nthreads = DTThreads)
+Fadata <- qread(paste0(pathdata, "FAFirstRow.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 #### Drop date errors (Negative and over duration)
 fadata <- Fadata[0 <= DurMonthMarch & DurMonthMarch <= 12, ]
 nrow(Fadata); nrow(fadata) # reduced 1.2M rows...
 qsave(fadata, 
   paste0(pathdata, "FAFirstRowWithoutNegativeDurations.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads)
 #### Merge industry code, taking fadata as base
-inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"), nthreads = 13)
+inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
 fadatai <- inda[fadata, on = "taxrefno"]
-qsave(fadatai, paste0(pathdata, "FAAndJobs.qs"), nthreads = 13)
+qsave(fadatai, paste0(pathdata, "FAAndJobs.qs"), nthreads = DTThreads)
 fadatain <- fadatai[busmainplc_geo != "", ]
 faa <- fadatain[Crop == 1L | Animal == 1L | Forest == 1L, ]
 setkey(faa, taxrefno)
@@ -475,11 +510,12 @@ faa[, Sample := factor(Sample)]
 table(duplicated(faa[, .(taxrefno, taxyear, busmainplc_geo)]))
 #### FALSE  TRUE 
 #### 59627     5 
-qsave(faa, paste0(pathdata, "FAOfAgri.qs"), nthreads = 13)
+qsave(faa, paste0(pathdata, "FAOfAgri.qs"), nthreads = DTThreads)
 #### estfa: establishment level FAs with location, taxrefno, taxyear
 estfa <- unique(fadatai[, 
   grepout("^bus|^tax[ry]|^Tx|Num|Jo|Emp|FA", colnames(fadatai)), with = F])
-qsave(estfa, paste0(pathdata, "fadataUniqueEntries.qs"), nthreads = 13)
+qsave(estfa, paste0(pathdata, "fadataUniqueEntries.qs"), 
+  nthreads = DTThreads)
 ```
 
 ```{r copy FAD and derived files to saveddata, eval = F}
@@ -490,7 +526,7 @@ FilesToCopy <- paste0(c(
   "FAOfAgri",   # faa    : fadatain[Crop==1L|Animal==1L|Forest==1L, ]
   "fadataUniqueEntries" ,
                 # estfa  : unique entries by location-taxrefno-taxyear
-  "AggregateSummary.qs"
+  "AggregateSummary"
                 # aggsummary : summary stats, busprov_geo, TotalEmployees, TotalSubMWWorkers, AggFA, TotalFirmsWithEmployees, TotalAffectedFirms,      AggFirmFA
   ), ".qs")
 for (ff in FilesToCopy)
@@ -506,9 +542,9 @@ for (ff in FilesToCopy)
 ```{r descriptive stats FA and jobs}
 #| attr.source = '.r .line-numbers',
 library(tinytable)
-aggsummary <- 
-  qread(paste0(pathsaveddata, "AggregateSummary.qs"), 
-  nthreads = 13)
+aggsummary <-
+  qread(paste0(pathsaveddata, "AggregateSummary.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
 #### total jobs, total sub MW jobs, aggregate FA
 aggsum <- 
   aggsummary[, .(
@@ -532,7 +568,8 @@ tb.agg <- format_tt(tb, #### CLAUDE tpo:
   )
 tb.agg
 #### Agriculture
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13) #### CLAUDE tpo:
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs", 
+  nthreads = DTThreads, use_alt_rep = TRUE) #### CLAUDE tpo:
 agsum <- faa[, .(
       TotalJobs          = sum(JobsMP)
                          #### CLAUDE agg: wrong aggregation level
@@ -580,8 +617,8 @@ tb.ag
 
 ```{r plot FAs by size}
 #| attr.source = '.r .line-numbers',
-fadatai <- qread(paste0(pathsaveddata, "FAAndJobs.qs"), 
-  nthreads = 13)
+fadatai <- qread(paste0(pathsaveddata, "FAAndJobs.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
 #### possible duplicates with different local municipality names
 ii0 <- fadatai[, buslocmuni_geo != "" & busdistmuni_geo != ""
    & busmainplc_geo != ""]
@@ -674,7 +711,8 @@ library(ggplot2)
 #### irp5Ma is created in 
 #### Location information granularity checks (next section)
 #### irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), nthreads = 13) #### CLAUDE tpo:
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE) #### CLAUDE tpo:
 #### Below is resolved. Negative duration reflects 
 #### "revision reporting to SARS" by firms.
 #### To Michael, 2026 Jan 21, negative duration entries
@@ -705,7 +743,8 @@ ggsave(
 #| attr.source = '.r .line-numbers',
 #### irp5M, agriculture
 #### Jobs by firm age (existed prior to 2013 vs. new entrants after 2013)
-irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+irp5Ma <- qread(paste0(pathdata, "irp5Ma.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 irp5Ma[, .(num = 1:.N, Num), by = .(taxyear, taxrefno)][num == 1, 
   .(TotalJobs = sum(Num, na.rm = T)), by = taxyear]
 irp5Ma[, .(num = 1:.N, Num = .N), by = .(taxyear, taxrefno)][num == 1, 
@@ -787,8 +826,12 @@ Mutually exclusive by construction; firm-level (all rows travel together). `irp5
 #| attr.source = '.r .line-numbers',
 rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
 rm(faa)
-irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
-GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+gc()
+if (!exists("RunSep")) RunSep <- T
+if (RunSep || length(ls(pattern="^irp5$"))==0)
+  irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
+geoLevel <- c("Prv", "Dis", "Loc", "Mai")
 geovars <- grepout("^bus.*geo$", colnames(irp5))
 #### Location granularity indicator
 #### irp5[, LocGranular := "none"]
@@ -920,7 +963,8 @@ irp5[, NARowsLoc := as.integer(sum(is.na(Loc))), by = .(Txrf, taxyear)]
 irp5[, NARowsDis := as.integer(sum(is.na(Dis))), by = .(Txrf, taxyear)]
 irp5[, NARowsPrv := as.integer(sum(is.na(Prv))), by = .(Txrf, taxyear)]
 irp5[, TotalRowsInTxrf := as.integer(.N), by = .(Txrf, taxyear)]
-qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"), nthreads = 13)
+qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"), 
+  nthreads = DTThreads)
 
 unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
   & taxyear == 2009, 
@@ -978,10 +1022,10 @@ nrow(irp5M <- irp5[iiM, ])
 nrow(irp5L <- irp5[iiL, ])
 nrow(irp5D <- irp5[iiD, ])
 nrow(irp5P <- irp5[iiP, ])
-qsave(irp5M, paste0(pathdata, "irp5M.qs"), nthreads = 13)
-qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = 13)
-qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = 13)
-qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = 13)
+qsave(irp5M, paste0(pathdata, "irp5M.qs"), nthreads = DTThreads)
+qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = DTThreads)
+qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = DTThreads)
+qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = DTThreads)
 
 irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
 irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
@@ -1001,7 +1045,7 @@ irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same
 
 #### Agricultural panel
 irp5Ma <- irp5M[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
-qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = 13)
+qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = DTThreads)
 ```
 
 ```{r copy irp5M and derived files to saveddata, eval = F}
@@ -1033,10 +1077,19 @@ For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5
 #### code "hhi"
 library(qs)
 library(data.table)
-irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
+if (!exists("irp5L")) rm(irp5L)
+if (!exists("irp5D")) rm(irp5D)
+if (!exists("irp5P")) rm(irp5P)
+gc()
+if (!exists("RunSep")) RunSep <- T
+if (RunSep || length(ls(pattern="^irp5M$"))==0)
+  irp5M <- qread(paste0(pathdata, "irp5M.qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
+gc()
 #### irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5M))
 GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+LS <- NULL
 for (yr in 8:22) {
   ipyr <- irp5M[taxyear == 2000+yr, ]
 ####  ipyr <- irp5[taxyear == 2000+yr, ]
@@ -1099,16 +1152,20 @@ for (yr in 8:22) {
     "Entity", "AreaLevel", 
     "WorkersAtEstab", "WorkersInMarket", 
     "WorkersAtEstabNoGov", "WorkersInMarketNoGov"))
+  LShare[, taxyear := 2000+yr]
   if (yr < 10) yr <- paste0("0", yr)
-  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = 13)
+  qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = DTThreads)
+  LS <- rbindlist(list(LS, LShare))
 }
+qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = DTThreads)
 #### LShare:  Txrf, Share, ShareNoGov, HHI, HHINoGov, AreaLevel for all entities 
 #### in all area levels (main place/local municipality/district municipality/province)
 #### This will be merged to ipyr data using Txrf
 #### Before the merge, we check integrity of LShare.
 
 library(ggplot2)
-LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 LShare[is.na(busdistmuni_geo) & grepl('D', AreaLevel), ]
 LShare[grepl('M', AreaLevel) & WorkersInMarket < 500, ]
 g12 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
@@ -1118,7 +1175,8 @@ g12 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel))
   scale_x_continuous(trans = "log10") +
   theme(legend.position = "none") +
   facet_grid(AreaLevel ~ .)
-LShare <- qread(paste0(pathdata, "ShareHHI13.qs"))
+LShare <- qread(paste0(pathdata, "ShareHHI13.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 g13 <- ggplot(data = LShare, aes(x = HHI, colour = AreaLevel, fill = AreaLevel)) +
   geom_density(alpha = .2) + 
   scale_fill_manual(values = rep("blue", 4)) +
@@ -1140,28 +1198,31 @@ ggsave(
 #### HHI at Dist muni and Loc muni are similar
 ```
 
-```{r create LShare panel}
+```{r create LShare panel, eval = F, echo = F}
 #| attr.source = '.r .line-numbers',
 LS <- NULL
 for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
-  ls <- qread(paste0(pathdata, "ShareHHI", yr, ".qs"))
+  ls <- qread(paste0(pathdata, "ShareHHI", yr, ".qs"), 
+    nthreads = DTThreads, use_alt_rep = TRUE)
   ls[, taxyear := 2000+as.numeric(yr)]
   LS <- rbindlist(list(LS, ls))
 }
-qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = DTThreads)
 ```
 
 
 ```{r LSa is LS of agri only}
 #| attr.source = '.r .line-numbers',
-inda <- qread(paste0(pathsaveddata, "TaxrefnoOfAgri.qs"), nthreads = 13)
-LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = 13)
+inda <- qread(paste0(pathdata, "TaxrefnoOfAgri.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
+LS <- qread(paste0(pathdata, "LShareHHI.qs"), nthreads = DTThreads, use_alt_rep = TRUE)
 LSia <- inda[LS, on = "taxrefno"]
 LSa <- LSia[Crop == 1L | Animal == 1L | Forest == 1L, ]
 #### LSa is rows of agri only, but HHI is measured at all industries
-qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
-LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), nthreads = 13)
+qsave(LSa, paste0(pathdata, "HHIAgriRows.qs"), nthreads = DTThreads)
+LSa <- qread(paste0(pathdata, "HHIAgriRows.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 table(LSa[grepl("M", AreaLevel), .(Nums = 1:.N), 
   by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
   "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
@@ -1181,7 +1242,8 @@ for (ff in FilesToCopy)
 ```{r further checks on shares, eval = F}
 #| attr.source = '.r .line-numbers',
 #### further checks
-LShare <- qread(paste0(pathdata, "ShareHHI12.qs"))
+LShare <- qread(paste0(pathdata, "ShareHHI12.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 LShare[, Nums := .N, by = Txrf]
 tb <- table(LShare[, Nums])
 numtb <- as.numeric(names(tb))
@@ -1193,7 +1255,8 @@ LShare[Nums %in% numtb[1:10],
     WorkersAtEstab, WorkersAtEstabNoGov, 
   	WorkersInMarket, WorkersInMarketNoGov, Share, 
 	  HHI)]
-ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
+ipyr <- qread(paste0(pathdata, "irp512.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 ipyr <- ipyr[grepl("A", natureofperson), ]
 ipyr[, Txrf := taxrefno]
 ipyr[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
@@ -1225,7 +1288,8 @@ print(LShare[!is.na(Newgt.kerr),
 
 ```{r plot HHI by year, eval = F}
 library(ggplot2)
-LS <- qread(paste0(pathsaveddata, "LShareHHI.qs"), nthreads = 13)
+LS <- qread(paste0(pathsaveddata, "LShareHHI.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 gsh <- ggplot(data = LS, 
     aes(x = HHI)) +
   geom_density(alpha = .2) + 

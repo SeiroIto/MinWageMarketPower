@@ -14,8 +14,9 @@ litedown::reactor(
 options(htmltools.dir.version = FALSE, width = 100)
 #### threads
 MaxCores <- parallel::detectCores()
-setDTthreads(threads = MaxCores - 1)
-setFixest_nthreads(nthreads = MaxCores - 1, save = TRUE)
+DTThreads <- MaxCores - 1
+setDTthreads(threads = DTThreads)
+setFixest_nthreads(nthreads = DTThreads, save = TRUE)
 #### ggplot theme
 ThisTheme <- ggplot2::theme(
    axis.text.x = element_text(angle = 90, vjust = .5, hjust = .5), 

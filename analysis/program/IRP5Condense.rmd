@@ -106,21 +106,22 @@ for (yr in 8:22) {
   ## irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, "_cleaned.dta"))
   ## ipyr <- data.table(irpyr)
   ## rm(irpyr)
-  ## qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  ## qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = DTThreads)
   ## irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, 
   ##   "_cleaned_best_geodata.dta"))
   ## ipb <- data.table(irpyr)
-  ## qsave(ipb, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## qsave(ipb, paste0(pathdata, "irpb", yr, ".qs"), nthreads = DTThreads)
   ## # merge best geocode to irpYR.qs
-  ## ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
-  ## ipb <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = DTThreads)
+  ## ipb <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = DTThreads)
   ## geonames <- grepout("^bus.*geo$", colnames(ipyr))
   ## setnames(ipyr, geonames, paste0("OLD", geonames))
   ## ipbyr <- ipyr[ipb, , on = grepout("irp.*aid", colnames(ipb))]
   ## nrow(ipbyr[OLDbusmainplc_geo == "" & busmainplc_geo != "", ])
-  ## qsave(ipbyr, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## qsave(ipbyr, paste0(pathdata, "irpb", yr, ".qs"), nthreads = DTThreads)
   ## Below code is run only once: End ##
-  ipyr <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ipyr <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = DTThreads,
+    use_alt_rep = TRUE)
   ## Keep only nature of person is "an individual"
   ### ipyr <- ipyr[grepl("A", natureofperson), ]
   ## Drop obs with missing taxrefno
@@ -141,7 +142,8 @@ for (yr in 8:22) {
     totalperiodsworked, totalperiodsinyearofassessment,
     #### a3601_income: basic salary
     Num, kerr_income, ptrs_income, a3601_income)]
-  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)
+  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = DTThreads,
+    use_alt_rep = TRUE)
 }
 ```
 
@@ -163,8 +165,10 @@ for (ii in c(1:3, 5))
     as.integer(uniqueN(get(paste0("imp_mic_sic7_", ii, "d")))), 
     by = taxrefno]
 table(indNoNA[, change3d])
-qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = 13)
-qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
+qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 # Create irp5 panel
@@ -181,10 +185,12 @@ for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
   if (yr == 12)  
     irp5pnl <- rbindlist(list(irp5pnl, 
-      qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)), 
+      qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = DTThreads,
+        use_alt_rep = TRUE)), 
       use.names = T, fill = T) else 
     irp5pnl <- rbindlist(list(irp5pnl, 
-      qread(paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)), 
+      qread(paste0(pathdata, "irp5", yr, ".qs"), nthreads = DTThreads,
+        use_alt_rep = TRUE)), 
       use.names = T, fill = T)
 }
 irp5pnl[, Num := as.integer(.N), by = .(busprov_geo,
@@ -216,7 +222,8 @@ irp5pnl[!is.na(DateStart),
 
 ```{r checking 2009 2010 2014, eval = F}
 #| attr.source = '.r .line-numbers',
-irp09 <- qread(paste0(pathdata, "irp509.qs"), nthreads = 13)
+irp09 <- qread(paste0(pathdata, "irp509.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 irp09[, c("Num", "num") := list(.N, 1:.N), 
   by = c(geovars, "taxrefno", "taxyear")]
 irp09[UID %in% UID[grepl("^A$", natureofperson)], 
@@ -226,7 +233,8 @@ irp09[num == 1L & grepl("A", NatureOfPer),
 ####    JobTotal
 ####       <int>
 ####     1381105
-irp10 <- qread(paste0(pathdata, "irp510.qs"), nthreads = 13)
+irp10 <- qread(paste0(pathdata, "irp510.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 irp10[, c("Num", "num") := list(.N, 1:.N), 
   by = c(geovars, "taxrefno", "taxyear")]
 irp10[UID %in% UID[grepl("^A$", natureofperson)], 
@@ -236,7 +244,8 @@ irp10[num == 1L & grepl("A", NatureOfPer),
 ####    JobTotal
 ####       <int>
 ####    12303557
-irp14 <- qread(paste0(pathdata, "irp514.qs"), nthreads = 13)
+irp14 <- qread(paste0(pathdata, "irp514.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 irp14[, c("Num", "num") := list(.N, 1:.N), 
   by = c(geovars, "taxrefno", "taxyear")]
 irp14[UID %in% UID[grepl("^A$", natureofperson)], 
@@ -246,7 +255,7 @@ irp14[num == 1L & grepl("A", NatureOfPer),
 ####    JobTotal
 ####       <int>
 ####    12303557
-#### irp5a <- qread(paste0(pathdata, "irp5a.qs"), nthreads = 13)
+#### irp5a <- qread(paste0(pathdata, "irp5a.qs"), nthreads = DTThreads)
 #### irp5a[, c("Num", "num") := list(.N, 1:.N), 
 ####   by = c(geovars, "taxrefno", "taxyear")]
 #### irp5a[UID %in% UID[grepl("^A$", natureofperson)], NatureOfPer := "A"]
@@ -330,15 +339,17 @@ irp5pnl[, NatureOfPer := "ZZ"]
 irp5pnl[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
 qsave(irp5pnl, 
   paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads,
+    use_alt_rep = TRUE)
 ```
 
 ```{r merge industry code}
 #| attr.source = '.r .line-numbers',
 #### Merge industry code, taking irp5 as base
 irp5 <- qread(paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
-  nthreads = 13)
-ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+  nthreads = DTThreads, use_alt_rep = TRUE)
+ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE)
 setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
 ind[, n := 1:.N, by = taxrefno]
 indFirstYear <- ind[n == 1, ]
@@ -349,7 +360,8 @@ irp5i <- indFirstYear[irp5, on = "taxrefno"]
 setcolorder(irp5i, c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
   "busmainplc_geo", "taxrefno", "Txrf", "uid", "UID", "gender",
   grepout("Date", colnames(irp5i))))  
-qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 ```{r copy ipr5pnl irp5i to saveddata, eval = F}
@@ -392,12 +404,14 @@ setnames(geodat,
 )
 geodat[, taxyear := as.integer(taxyear)]
 geoloc <- geodat[taxyear==2015, ]
-qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
+qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 geodat[, HaveInfo := 0L]
 geodat[(Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)), 
   HaveInfo := 1L]
 table(geodat[, .(HaveInfo, taxyear)], useNA = "ifany")
-qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
+qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 ```{r smallirp5}
@@ -407,15 +421,17 @@ qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
 if (exists("geodat")) rm(geodat)
 if (!exists("RunSep")) RunSep <- T
 if (RunSep && exists("geoloc")) rm(geoloc)
+gc()
 #### Read from disk if running separately OR object not in memory
 if (RunSep || length(ls(pattern="^irp5i"))==0)
   irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"),
-    nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
 smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
   c(geovars, "taxrefno", "irp5it3aid"), with = F])
 smallirp5 <- smallirp5[!duplicated(smallirp5), ]
-qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
+qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 ```{r GeoLF}
@@ -424,17 +440,18 @@ qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
 if (!exists("RunSep")) RunSep <- T
 if (RunSep || !exists("geoloc"))
   geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"),
-    nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
 if (RunSep || length(ls(pattern="smalli"))==0)
   smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"),
-    nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
 #### setkey(geoloc, payereferenceno)
 #### setkey(smallirp5, payereferenceno)
 #### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
 setkey(geoloc, irp5it3aid)
 setkey(smallirp5, irp5it3aid)
 GeoLF <- smallirp5[geoloc, on = "irp5it3aid"]
-qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 ```{r copy GeoXX and derived files to saveddata, eval = F}
@@ -461,11 +478,13 @@ Copy from GeoLF if
 #### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
 #### CLAUDE exi, sca, pos:
 if (!RunSep && exists("geoloc")) rm(geoloc)
+gc()
 if (RunSep || length(ls(pattern="irp5i"))==0)
   irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"),
-    nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
 if (RunSep || length(ls(pattern="GeoLF"))==0)
-  GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+  GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads,
+    use_alt_rep = TRUE)
 GeoLF[, dup := 1:.N, by = irp5it3aid]
 nrow(GeoLF[dup > 1, ])
 GeoLF.nodup <- GeoLF[dup == 1L, ]
@@ -483,9 +502,9 @@ irp5gi[, taxyear := NULL]
 if (any(grepl("i.taxyear", colnames(irp5gi)))) 
   setnames(irp5gi, "i.taxyear", "taxyear")
 #### qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-####  nthreads = 13)
+####  nthreads = DTThreads)
 #### irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
-####  nthreads = 13)
+####  nthreads = DTThreads)
 #### r copy 2015 location info
 #### CLAUDE msk: define anonymous ID columns; Corp/UInd used in all html display; taxrefno/uid retained for joins/filters only.
 irp5gi[, EstabIDTx := as.integer(factor(paste0(
@@ -557,15 +576,16 @@ setnames(irp5gi,
     c("buslocmuni_geo", "FillInLocMuni")
   , c("old_buslocmuni_geo", "buslocmuni_geo")) 
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads,
+    use_alt_rep = TRUE)
 ```
 
 
 ```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
 irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads, use_alt_rep = TRUE)
 qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = 13)
+  nthreads = DTThreads, use_alt_rep = TRUE)
 ```
 
 Copy location info
@@ -621,10 +641,11 @@ if (exists("geoloc"))      rm(geoloc)
 if (exists("irp5i"))       rm(irp5i)
 if (exists("GeoLF"))       rm(GeoLF)
 if (exists("GeoLF.nodup")) rm(GeoLF.nodup)
+gc()
 if (RunSep || length(ls(pattern="^irp5gi$"))==0)
   irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
-    nthreads = 13)
-#### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
+#### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads)
 library(fasttime)
 irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
 irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
@@ -784,8 +805,10 @@ irp5gir[
   (bmain15 != "" & !is.na(bmain15) & bmain15 != "EXCEPTION"),
   c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain15, 1L, 2015L)
 ]
-qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 rm(irp5gi)
+gc()
 ```
 ```{r dropping rows}
 #| attr.source = '.r .line-numbers',
@@ -793,7 +816,8 @@ rm(irp5gi)
 #### code "dropthese"
 #### Read data
 #### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
-ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
+ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ipyr[, uid := gsub(" +$", "", UID)]
 #### CLAUDE msk: define Corp/UInd on ipyr (separate dataset; no Txrf-based IDs needed here).
 ipyr[, FirmID := as.integer(factor(taxrefno))]
@@ -884,11 +908,12 @@ table(dropthese[, UInd])
 ####      CCCCCCCC CCCCCCCCCCCCC 
 ####           191          2341 
 qsave(dropthese, 
-  paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = 13)
+  paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads,
+    use_alt_rep = TRUE)
 
 #### Keep only nature of person is "an individual"
 #### we did this: irp5[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
-#### irp5ir <- qread(paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+#### irp5ir <- qread(paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads)
 addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson), 
   NatureOf = grepl("A", NatureOfPer))]))
 ####         NatureOf
@@ -903,7 +928,8 @@ c(nrow(irp5gir), nrow(irp5Clean))
 #### [1] 175424198 175176433
 #### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
 #### grepl("^Crop|^Fore", imp_mic_sic7_2d), ]
-qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 ```
 
 Get observation pattern for individuals, establishments, firms: IObPattern, EObPattern, FObPattern
@@ -923,9 +949,10 @@ Also create
 #| attr.source = '.r .line-numbers',
 #### CLAUDE exi, sca, pos:
 if (exists("irp5gir")) rm(irp5gir)
+gc()
 if (RunSep || !exists("irp5Clean"))
   irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"),
-    nthreads = 13)
+    nthreads = DTThreads, use_alt_rep = TRUE)
 grepout <- function(str, x)
   # returns element of match (not numbers)
   x[grep(str, x, perl = T)]
@@ -1051,14 +1078,17 @@ ObPattern <- idyrW[, c(
     "EstabIDTx", "EstabID", 
     "EUIndID", 
     "FObPattern", "EObPattern", "IObPattern"), with = F]
-qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
-#### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
+#### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads)
 setkey(irp5Clean, EUIndID); setkey(ObPattern, EUIndID)
 irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "EUIndID")]
-qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 #### Agriculture panel
 irp5a <- irp5[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
-qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = 13)
+qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads,
+  use_alt_rep = TRUE)
 litedown::timing_data() 
 ```
 
@@ -1071,8 +1101,10 @@ library(data.table)
 library(qs)
 if (length(ls(pattern="irp5C"))==1) rm(irp5Clean) 
 if (length(ls(pattern="ObP"))==1) rm(ObPattern)
+gc()
 if (length(ls(pattern="irp5$"))==0) # do not read if in memory
-  irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+  irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = DTThreads,
+    use_alt_rep = TRUE)
 irp5[, c("num", "Num") := list(as.integer(1:.N), as.integer(.N)), 
   by = EstabIDTx]
 MeanStdN <- irp5[num == 1L, .(
