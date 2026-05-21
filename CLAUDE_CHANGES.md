@@ -96,3 +96,8 @@ Note
 # Sandbox
 
 <!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->
+* IRP5HHI.rmd FA loop end + after loop | (absent) → rm(ipyrc,FAdata,ag1,ag2);gc() per iteration + rm(irp5);gc() after loop | free per-year transients before next slice; full IRP5 dead past loop | CLAUDE mem
+* IRP5HHI.rmd after irp5M/L/D/P built | (absent) → rm(iiM,iiL,iiD,iiP,irp5);gc() | free 4 logical index vectors (~0.45GB each) + full irp5 (already saved) | CLAUDE mem
+* IRP5HHI.rmd after irp5L/D/P diagnostic prints | (absent) → rm(irp5L,irp5D,irp5P);gc() | saved + printed; only irp5M needed onward | CLAUDE mem
+* IRP5HHI.rmd hhi loop end + after loop | (absent) → rm(ipyr,ipGeo,lshare,LShare);gc() per iteration + rm(LS,irp5M);gc() after | free per-year transients; plots below re-read ShareHHI from disk | CLAUDE mem
+* IRP5HHI.rmd L1080-1082 | if(!exists(x))rm(x) → if(exists(x))rm(x) | condition inverted — never freed irp5L/D/P when present, errored when absent | CLAUDE tpo

@@ -374,7 +374,11 @@ for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
   qsave(FAdata, paste0(pathdata, "FA", yr, ".qs"), nthreads = DTThreads)
   FAD <- rbindlist(list(FAD, FAdata))
-} 
+  #### CLAUDE mem: rm()/gc() added to free large objects at end-of-life.
+  #### Free per-year transients before next irp5[taxyear==] allocation.
+  rm(ipyrc, FAdata, ag1, ag2); gc()
+}
+rm(irp5); gc()  #### CLAUDE mem: full IRP5 unused past loop (re-read fresh later)
 qsave(FAD, paste0(pathdata, "FAD.qs"), nthreads = DTThreads)
 qsave(aggsummary, paste0(pathdata, "AggregateSummary.qs"), 
   nthreads = DTThreads)
@@ -568,8 +572,8 @@ tb.agg <- format_tt(tb, #### CLAUDE tpo:
   )
 tb.agg
 #### Agriculture
-faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs", 
-  nthreads = DTThreads, use_alt_rep = TRUE) #### CLAUDE tpo:
+faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"), 
+  nthreads = DTThreads, use_alt_rep = TRUE) 
 agsum <- faa[, .(
       TotalJobs          = sum(JobsMP)
                          #### CLAUDE agg: wrong aggregation level
@@ -1022,6 +1026,7 @@ nrow(irp5M <- irp5[iiM, ])
 nrow(irp5L <- irp5[iiL, ])
 nrow(irp5D <- irp5[iiD, ])
 nrow(irp5P <- irp5[iiP, ])
+rm(iiM, iiL, iiD, iiP, irp5); gc()  #### CLAUDE mem: indices + full irp5 dead
 qsave(irp5M, paste0(pathdata, "irp5M.qs"), nthreads = DTThreads)
 qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = DTThreads)
 qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = DTThreads)
@@ -1030,6 +1035,7 @@ qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = DTThreads)
 irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
 irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
 irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same prov
+rm(irp5L, irp5D, irp5P); gc()  #### CLAUDE mem: saved + printed; only irp5M needed onward
 
 #### Missingness in location information
 #### 1. Maximum sample size data sets
@@ -1077,9 +1083,9 @@ For Jan 23, 2026, we use `irp5[busmainplc_geo != "", ]`, which is close to `irp5
 #### code "hhi"
 library(qs)
 library(data.table)
-if (!exists("irp5L")) rm(irp5L)
-if (!exists("irp5D")) rm(irp5D)
-if (!exists("irp5P")) rm(irp5P)
+if (exists("irp5L")) rm(irp5L)  #### CLAUDE tpo: condition was inverted
+if (exists("irp5D")) rm(irp5D)
+if (exists("irp5P")) rm(irp5P)
 gc()
 if (!exists("RunSep")) RunSep <- T
 if (RunSep || length(ls(pattern="^irp5M$"))==0)
@@ -1156,8 +1162,10 @@ for (yr in 8:22) {
   if (yr < 10) yr <- paste0("0", yr)
   qsave(LShare, paste0(pathdata, "ShareHHI", yr, ".qs"), nthreads = DTThreads)
   LS <- rbindlist(list(LS, LShare))
+  rm(ipyr, ipGeo, lshare, LShare); gc()  #### CLAUDE mem:
 }
 qsave(LS, paste0(pathdata, "LShareHHI.qs"), nthreads = DTThreads)
+rm(LS, irp5M); gc()  #### CLAUDE mem: ggplots below re-read ShareHHI from disk
 #### LShare:  Txrf, Share, ShareNoGov, HHI, HHINoGov, AreaLevel for all entities 
 #### in all area levels (main place/local municipality/district municipality/province)
 #### This will be merged to ipyr data using Txrf
