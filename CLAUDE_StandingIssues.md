@@ -263,3 +263,30 @@ Lines
 
 Problem
 :   Variable assigned as `EstabWith1` (L1009) but referenced as `EestabWith1` (L1014). On a clean run: `Error: object 'EestabWith1' not found`. The EstabOb.YYYY fill loop never executes; EstabOb.YYYY remains a copy of individual Ob.YYYY (NA-heavy), not the intended establishment-level indicator. EstabOb.YYYY is therefore NOT uniform within EstabID. Fix: rename `EestabWith1` → `EstabWith1` on L1014.
+
+* IRP5HHI.rmd L404 {create FA panel} eval=F | FAD.qs no longer built by main loop (FAD accumulation removed); chunk must be eval=T or FAD.qs + downstream FAFirstRow/FAAndJobs/FAOfAgri go stale | frg
+* IRP5HHI.rmd L1187 {create LShare panel} eval=F | redundant while {hhi} still qsaves LShareHHI.qs; needs eval=T only if LS accumulation later removed from {hhi} | com
+* IRP5HHI.rmd L1063 {hhi} | inverted exists() guard if(!exists("irp5L"))rm(irp5L) never frees irp5L/D/P when present, errors when absent on standalone run | tpo
+* IRP5HHI.rmd L289-311,L322-326 {fraction affected for all years} | FinYr20yr computed after NumSubMW/Jobs/Employees/MP-level counts, never used to filter them, excluded from NeededCols → dead flag; counts trust raw taxyear label uncorrected for forward-mislabeled rows | frg
+
+* IRP5Condense.rmd L664 | TrueTaxYear code uses DateEnd but worked example L655-660 + wrong-ref L663 use DateStart; diverge for episodes straddling 1-March boundary (filter L662 admits them: DateEnd can fall inside current YoA). Pick anchor, align comment. Rec: DateStart | frg
+* IRP5Condense.rmd L666-670,L693 | saved 9.0204% DropThisForRev + mismatch table predate end-year revert; stale, re-run before trusting | com
+* IRP5Condense.rmd:985 | missing ) in Ob NA-fill loop — chunk unparseable; html render had ))) | tpo
+* IRP5Condense.rmd:990,1051,1070 | paste(.SD,sep=,collapse=) → one deparsed string recycled; I/E/FObPattern garbage; fix do.call(paste0,.SD) | tpo
+* IRP5Condense.rmd:688-691 | DropThisForRev: i evaluated globally (by= no-op) + TrueTaxYear!=taxyear conjunct → drops revisions, keeps superseded originals; opposite of L679-684 example | tpo
+* IRP5Condense.rmd:131-133 | grouped .N overwritten by 0L next line — wasted pass ×15 files | eff
+* IRP5Condense.rmd:1117-1123 | MeanStdN: mean(num)≡1/var(num)≡0, intended Num; by= lacks taxyear; := on 175M rows → 36GB error | tpo
+* IRP5Condense.rmd:971 | all(uid==UID) NA-unsafe → isTRUE() | frg
+* IRP5Condense.rmd:1093-1094 | setkey sorts unused by on= join | eff
+* IRP5Condense.rmd:538-540 | FillInLocMuni grouped-closure fill by FirmUInd — apply subset→unique→update-join | eff
+* IRP5HHI.rmd:289-309 | 8 grouped := passes → 2 multi-assigns; taxyear constant in by | eff
+* IRP5HHI.rmd:1162,1164 | nHHI/nHHIG NaN when WorkersInMarket==1 | frg
+* IRP5HHI.rmd:376,422 | FAD accumulation restored in main loop — {create FA panel} eval=F redundant again (supersedes Session 16 L404 note) | com
+* IRP5MergeData.rmd:280 | table(LSMa2[num==1L]) undercounts — num inherited from LSMa1 numbering | tpo
+* IRP5MergeData.rmd:253-256 | ReportEveryYear by= omits busprov_geo (EstID includes it) | com
+* IRP5Impacts.rmd:792 | DESS[[yy]][[jj]] should be DESSw — DESSw.qs saved empty, DESS overwritten | tpo
+* IRP5Impacts.rmd:693-694 | comment abs(rJobsMP)>2 vs code >6 | com
+* IRP5Condense.rmd:131-133 | correction (user): intent is Num=.N count; fix = move L133 init above L131 count, not delete — order bug | tpo
+* IRP5Condense.rmd:131-133 | final decision (user): comment out Num:=0L init line, keep grouped .N count | tpo
+* IRP5Condense.rmd:975 | stats::reshape with 9 idvar columns aborts on R 4.4: interaction() indexes Cartesian product of id levels → integer overflow → cannot-allocate (298Gb repro at 1.8M rows, scratch_reshape_test.R); strengthens dcast rewrite (apply item 1) | frg
+* IRP5Condense.rmd | Session 17 fixes applied 2026-07-02: A3 L688 flag; A4 L131; A9 L538; L971 isTRUE; L975 dcast; ObPattern do.call x3; Estab/Firm update joins; setkey L1093; MeanStdN L1117 — full pipeline re-run required; 9.0204% and mismatch tables stale | com

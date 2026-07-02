@@ -101,3 +101,21 @@ Note
 * IRP5HHI.rmd after irp5L/D/P diagnostic prints | (absent) → rm(irp5L,irp5D,irp5P);gc() | saved + printed; only irp5M needed onward | CLAUDE mem
 * IRP5HHI.rmd hhi loop end + after loop | (absent) → rm(ipyr,ipGeo,lshare,LShare);gc() per iteration + rm(LS,irp5M);gc() after | free per-year transients; plots below re-read ShareHHI from disk | CLAUDE mem
 * IRP5HHI.rmd L1080-1082 | if(!exists(x))rm(x) → if(exists(x))rm(x) | condition inverted — never freed irp5L/D/P when present, errored when absent | CLAUDE tpo
+* IRP5HHI.rmd | Claude rm()/gc() + exists()-fix edits committed as 0e8602a, then reverted by user in working tree | superseded: user dropped in-memory FAD accumulation rather than patch with rm() | CLAUDE com
+* IRP5HHI.rmd {fraction affected for all years} L184,L375-376 | aggsummary<-FAD<-NULL -> aggsummary<-NULL; removed FAD<-rbindlist, qsave(FAD,FAD.qs), table(FAD), print(round(FAD...)) | user edit: FAD no longer held in RAM during year loop; FA{yr}.qs still saved per year | user edit
+* IRP5HHI.rmd {hhi} L1063 | if(exists(x))rm(x) reverted -> if(!exists(x))rm(x) | user reverted Claude bug fix; inverted-guard bug is live again | CLAUDE tpo
+* IRP5Condense.rmd L650-651 | TYStart=(taxyear-1)/03/01, TYEnd=taxyear/03/01 → TYStart=taxyear/03/01, TYEnd=(taxyear+1)/03/01 | taxyear names starting year (Mar Y-Feb Y+1), not ending year | CLAUDE tpo
+* IRP5Condense.rmd L654-655(orig) | TrueTaxYear:=year(DateStart) → TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3) | plain calendar year wrong for Jan/Feb (belongs to prior fiscal year); verified against comment worked example L608-611 | CLAUDE tpo
+
+* IRP5Condense.rmd L650-651 | TYStart=taxyear/TYEnd=taxyear+1 (my Session16 start-year edit) → TYStart=taxyear-1/TYEnd=taxyear | reverted to SARS end-year YoA convention (verified web) | user edit
+* IRP5Condense.rmd L664 | TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3) → year(DateEnd)+as.integer(month(DateEnd)>=3) | end-year mapping; NOTE comment L655-660 uses DateStart, code uses DateEnd — inconsistent | user edit
+* IRP5Condense.rmd:131 | Num:=0L after grouped count erased it → count only, init commented out | tpo
+* IRP5Condense.rmd:538 | grouped closure fill → need/lkfill lookup + update join with fifelse | eff
+* IRP5Condense.rmd:688 | global-i + inverted conjunct flag → RevYears per-person update join | tpo
+* IRP5Condense.rmd:971 | all() → isTRUE(all()) NA-safe | frg
+* IRP5Condense.rmd:975 | reshape (interaction overflow abort risk) → dcast fill=0L fun.aggregate=max + Ob.YYYY rename | frg
+* IRP5Condense.rmd:984 | NA→0 fill loop retired (fill=0L) | tpo
+* IRP5Condense.rmd:990,1051,1070 | paste(.SD,collapse) → do.call(paste0,.SD) x3 | tpo
+* IRP5Condense.rmd:1040,1059 | %in% scans → keyed update joins on EstabID/FirmID | eff
+* IRP5Condense.rmd:1093 | unused setkey pair commented out | eff
+* IRP5Condense.rmd:1117 | MeanStdN: EstabN by (EstabIDTx,taxyear) then stats on Num | tpo

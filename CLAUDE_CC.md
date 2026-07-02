@@ -3846,3 +3846,4428 @@ The skill would live at `/mnt/c/seiro/languages/claude/.claude/plugins/seiro/ski
 Two questions:
 1. **Invocation** — call it manually (`/check-edits`) at session start, or wire it into the `PostToolUse`/`Stop` hook so it auto-triggers when entering a project?
 2. **Scope** — MinWageMarketPower only, or all four projects (GUK, MinWage, NameRight, SHLectures)?
+
+> refresh DB, use sqlite3 if you can
+
+## Privacy audit: IRP5MergeData.rmd — PII in rendered HTML
+
+**Verdict: No raw `taxrefno`, `uid`, `UID`, or `Txrf` reaches the HTML output of the active file** (`analysis/program/IRP5MergeData.rmd`). All identifier displays already use the masked `Trno` or anonymized `EstID`.
+
+### Method
+Walked every chunk, split by whether it renders. A chunk shows output only if it's **not** `eval=F` and **not** `results=F`:
+
+| Chunk (line) | Options | Renders? | PII shown? |
+|---|---|---|---|
+| `setup` (L59) | `eval=F` | no | — |
+| `path` (L87) | `eval=T` | yes | only assigns path vars + `library()` — nothing printed |
+| `create LSMa…` (L127) | `results=F` | no | — |
+| `for printing LSMa` (L152) | `eval=T` | **yes** | prints `ExistedBefore2013, taxyear, TotalJobs` — clean |
+| `copy LSMa…` (L157) | `eval=F` | no | — |
+| `merge faa…gives Lf` (L176) | `results=F` | no | — |
+| `analysis sample descriptive statistics` (L273) | (default) | **yes** | uses `Trno`/`EstID` only — clean |
+| `copy Lf…` (L328) | `eval=F` | no | — |
+
+### Where identifiers *could* have leaked — already handled
+- **L221–222** build the mask: `Trno := gsub("^...","...",taxrefno)` then `gsub("...$","...",Trno)` → first/last 3 chars blanked.
+- **L281–282** (the one establishment-row dump in the displayed stats chunk) selects `…, Trno, taxyear, Jobs, …` — **`Trno`, not `taxrefno`**.
+- **L223–225** select has `taxrefno` already commented out (`# taxrefno,`) and uses `Trno`; the chunk is `results=F` anyway.
+- **L280** prints `EstID` — an anonymized sequential `factor(as.numeric(factor(paste0(geovars, taxrefno))))`, not the raw ref.
+- All other `taxrefno` hits are inside `by=` / `on=` / `setkey()` / `setorder()` — **operations, never printed**.
+- `uid`, `UID`, `Txrf`, `gender` are **not referenced anywhere** in the active file.
+
+### One caveat (not the active file)
+The xref DB flagged a raw column vector `"taxrefno","Txrf","uid","UID","gender"` — that lives in **two archived copies**, not your workflow file:
+- `analysis/program/2026 01 21 - adjusted/IRP5MergeData.rmd`
+- `analysis/program/2026 01 23/IRP5MergeData.rmd`
+
+These aren't in the active pipeline, so they don't render. Want me to check whether those archived copies *print* that vector (in case you ever re-render them), or leave them alone?
+
+> refresh DB, use sqlite3 if you can
+
+## Privacy audit: IRP5MergeData.rmd — PII in rendered HTML
+
+**Verdict: No raw `taxrefno`, `uid`, `UID`, or `Txrf` reaches the HTML output of the active file** (`analysis/program/IRP5MergeData.rmd`). All identifier displays already use the masked `Trno` or anonymized `EstID`.
+
+### Method
+Walked every chunk, split by whether it renders. A chunk shows output only if it's **not** `eval=F` and **not** `results=F`:
+
+| Chunk (line) | Options | Renders? | PII shown? |
+|---|---|---|---|
+| `setup` (L59) | `eval=F` | no | — |
+| `path` (L87) | `eval=T` | yes | only assigns path vars + `library()` — nothing printed |
+| `create LSMa…` (L127) | `results=F` | no | — |
+| `for printing LSMa` (L152) | `eval=T` | **yes** | prints `ExistedBefore2013, taxyear, TotalJobs` — clean |
+| `copy LSMa…` (L157) | `eval=F` | no | — |
+| `merge faa…gives Lf` (L176) | `results=F` | no | — |
+| `analysis sample descriptive statistics` (L273) | (default) | **yes** | uses `Trno`/`EstID` only — clean |
+| `copy Lf…` (L328) | `eval=F` | no | — |
+
+### Where identifiers *could* have leaked — already handled
+- **L221–222** build the mask: `Trno := gsub("^...","...",taxrefno)` then `gsub("...$","...",Trno)` → first/last 3 chars blanked.
+- **L281–282** (the one establishment-row dump in the displayed stats chunk) selects `…, Trno, taxyear, Jobs, …` — **`Trno`, not `taxrefno`**.
+- **L223–225** select has `taxrefno` already commented out (`# taxrefno,`) and uses `Trno`; the chunk is `results=F` anyway.
+- **L280** prints `EstID` — an anonymized sequential `factor(as.numeric(factor(paste0(geovars, taxrefno))))`, not the raw ref.
+- All other `taxrefno` hits are inside `by=` / `on=` / `setkey()` / `setorder()` — **operations, never printed**.
+- `uid`, `UID`, `Txrf`, `gender` are **not referenced anywhere** in the active file.
+
+### One caveat (not the active file)
+The xref DB flagged a raw column vector `"taxrefno","Txrf","uid","UID","gender"` — that lives in **two archived copies**, not your workflow file:
+- `analysis/program/2026 01 21 - adjusted/IRP5MergeData.rmd`
+- `analysis/program/2026 01 23/IRP5MergeData.rmd`
+
+These aren't in the active pipeline, so they don't render. Want me to check whether those archived copies *print* that vector (in case you ever re-render them), or leave them alone?
+
+> how does parse command in R work?
+
+`parse()` turns **text into unevaluated R code** (an expression object). It's the first half of R's "compute on the language" machinery; `eval()` is the second half.
+
+## Basic mechanics
+
+```r
+ex <- parse(text = "1 + 2 * 3")
+ex
+# expression(1 + 2 * 3)
+class(ex)        # "expression"
+eval(ex)         # 21
+```
+
+`parse()` does **not** run the code — it only converts the string into a parsed *expression object*. Nothing evaluates until you call `eval()`.
+
+## Signature
+
+```r
+parse(file = "", text = NULL, n = NULL, prompt = "?", keep.source, ...)
+```
+
+* `text` — a character vector of R source. Multiple lines are fine; each element (or newline) can hold separate statements.
+* `file` — parse from a file/connection instead of a string. **This is the default first argument**, which is why you almost always write `parse(text = ...)` explicitly — forgetting `text =` makes R try to read a *file* named by your string.
+* `n` — max number of expressions to parse (`NULL` = all).
+* `keep.source` — whether to retain source references (comments, formatting) for deparse/printing.
+
+## What you get back: an `expression`
+
+An `expression` is a **list-like container of parsed statements**:
+
+```r
+ex <- parse(text = "a <- 1\nb <- a + 4\nb * 2")
+length(ex)       # 3  — three top-level statements
+ex[[2]]          # b <- a + 4   (a "call" object)
+
+eval(ex)         # evaluates all in turn; returns value of the LAST -> 10
+```
+
+Each element is a **call** / language object you can inspect and manipulate:
+
+```r
+cl <- ex[[2]]
+class(cl)        # "call"
+cl[[1]]          # `<-`      (the function)
+cl[[2]]          # b         (the target symbol)
+cl[[3]]          # a + 4     (the RHS call)
+```
+
+## The common idiom: parse + eval
+
+```r
+run <- function(code) eval(parse(text = code))
+run("sum(1:10)")   # 55
+```
+
+In your econometrics work this shows up when **building formulas or specs as strings**:
+
+```r
+vars <- c("HHI", "FA", "FA:HHI")
+f <- paste("rJobsMP ~", paste(vars, collapse = " + "))
+# eval(parse(text = f))  # would yield the language object
+```
+
+## Important caveats
+
+* **Prefer safer alternatives when possible.** `eval(parse(text=))` is the R equivalent of `eval` in other languages — flexible but error-prone and a code-injection risk if the string isn't fully under your control. Cleaner options:
+  * Formulas: `as.formula(f)` or `reformulate(termlabels, response)` instead of parsing a `"y ~ x"` string.
+  * Variable names: `get(name)` / `mget()` / `[[name]]` instead of `eval(parse(text = name))`.
+  * Programmatic calls: `bquote()`, `substitute()`, `call()`, or `rlang`'s tidy-eval.
+* **`text =` is mandatory** when parsing a string — omitting it silently switches to file mode.
+* **Evaluation environment matters.** `eval(ex)` runs in the caller's frame by default; pass `eval(ex, envir = some_env)` (or a data.frame/list) to control scope — relevant when you don't want parsed code touching your global workspace.
+* Parse errors surface only at `parse()` time, not before — wrap in `tryCatch()` if the source is dynamic.
+
+`reformulate()` / `as.formula()` cover the large majority of "I need to build a regression spec from a character vector" cases, which is where most economists reach for `parse()` — worth defaulting to those unless you genuinely need arbitrary code.
+
+> how does parse command in R work?
+
+`parse()` turns **text into unevaluated R code** (an expression object). It's the first half of R's "compute on the language" machinery; `eval()` is the second half.
+
+## Basic mechanics
+
+```r
+ex <- parse(text = "1 + 2 * 3")
+ex
+# expression(1 + 2 * 3)
+class(ex)        # "expression"
+eval(ex)         # 21
+```
+
+`parse()` does **not** run the code — it only converts the string into a parsed *expression object*. Nothing evaluates until you call `eval()`.
+
+## Signature
+
+```r
+parse(file = "", text = NULL, n = NULL, prompt = "?", keep.source, ...)
+```
+
+* `text` — a character vector of R source. Multiple lines are fine; each element (or newline) can hold separate statements.
+* `file` — parse from a file/connection instead of a string. **This is the default first argument**, which is why you almost always write `parse(text = ...)` explicitly — forgetting `text =` makes R try to read a *file* named by your string.
+* `n` — max number of expressions to parse (`NULL` = all).
+* `keep.source` — whether to retain source references (comments, formatting) for deparse/printing.
+
+## What you get back: an `expression`
+
+An `expression` is a **list-like container of parsed statements**:
+
+```r
+ex <- parse(text = "a <- 1\nb <- a + 4\nb * 2")
+length(ex)       # 3  — three top-level statements
+ex[[2]]          # b <- a + 4   (a "call" object)
+
+eval(ex)         # evaluates all in turn; returns value of the LAST -> 10
+```
+
+Each element is a **call** / language object you can inspect and manipulate:
+
+```r
+cl <- ex[[2]]
+class(cl)        # "call"
+cl[[1]]          # `<-`      (the function)
+cl[[2]]          # b         (the target symbol)
+cl[[3]]          # a + 4     (the RHS call)
+```
+
+## The common idiom: parse + eval
+
+```r
+run <- function(code) eval(parse(text = code))
+run("sum(1:10)")   # 55
+```
+
+In your econometrics work this shows up when **building formulas or specs as strings**:
+
+```r
+vars <- c("HHI", "FA", "FA:HHI")
+f <- paste("rJobsMP ~", paste(vars, collapse = " + "))
+# eval(parse(text = f))  # would yield the language object
+```
+
+## Important caveats
+
+* **Prefer safer alternatives when possible.** `eval(parse(text=))` is the R equivalent of `eval` in other languages — flexible but error-prone and a code-injection risk if the string isn't fully under your control. Cleaner options:
+  * Formulas: `as.formula(f)` or `reformulate(termlabels, response)` instead of parsing a `"y ~ x"` string.
+  * Variable names: `get(name)` / `mget()` / `[[name]]` instead of `eval(parse(text = name))`.
+  * Programmatic calls: `bquote()`, `substitute()`, `call()`, or `rlang`'s tidy-eval.
+* **`text =` is mandatory** when parsing a string — omitting it silently switches to file mode.
+* **Evaluation environment matters.** `eval(ex)` runs in the caller's frame by default; pass `eval(ex, envir = some_env)` (or a data.frame/list) to control scope — relevant when you don't want parsed code touching your global workspace.
+* Parse errors surface only at `parse()` time, not before — wrap in `tryCatch()` if the source is dynamic.
+
+`reformulate()` / `as.formula()` cover the large majority of "I need to build a regression spec from a character vector" cases, which is where most economists reach for `parse()` — worth defaulting to those unless you genuinely need arbitrary code.
+
+> when I want to check if the codes are syntaxwise correct, what shall I do if I cannot access data file
+
+Exactly the use case `parse()` was built for: it checks **syntax only**, never touching data, because it doesn't evaluate anything.
+
+## Levels of "correct" you can check without data
+
+| Check | Catches | Needs data? | Tool |
+|---|---|---|---|
+| **Syntax** | unbalanced braces/parens, missing commas, bad operators, malformed function defs | no | `parse()` |
+| **Static/lint** | undefined variables, unused vars, `=`/`==` slips, scoping, style | no | `lintr`, `codetools` |
+| **Runtime** | object-not-found, wrong dims, type errors | **yes** | only by running |
+
+The third tier genuinely needs the data (or a mock). The first two don't.
+
+## 1. Syntax check — `parse()`
+
+```r
+# whole .R file — errors print with line number, nothing runs
+parse(file = "analysis/program/IRP5MergeData.R")
+
+# wrap so it reports cleanly instead of stopping
+chk <- tryCatch(parse(file = "myscript.R"),
+                error = function(e) e)
+if (inherits(chk, "error")) print(conditionMessage(chk)) else cat("syntax OK\n")
+```
+
+From the shell (no session needed) — your Windows R:
+
+```
+Rscript.exe -e "invisible(parse(file='C:/data/.../myscript.R')); cat('syntax OK\n')"
+```
+
+A clean parse = every statement is well-formed. It will **not** flag `mean(x` only if a later token closes it; it *will* flag truly unbalanced code.
+
+## 2. Your `.rmd` files — extract code first
+
+`parse()` chokes on the markdown/YAML. Pull the R chunks out, then parse:
+
+```r
+# knitr (works for litedown/quarto .rmd too) — tangle to a .R, don't run
+knitr::purl("IRP5MergeData.rmd", output = "tmp.R", documentation = 0)
+parse(file = "tmp.R")           # syntax-check the tangled code
+```
+
+`purl()` only reads the chunks; `eval=F`/`results=F`/data are all irrelevant since nothing executes.
+
+> Caveat: inline `` `r ...` `` expressions and chunk-option expressions aren't tangled by `purl()`. For those, syntax is checked when the doc is parsed, but to be safe you can grep them out and `parse(text=)` separately.
+
+## 3. Static analysis — finds bugs syntax-checking misses
+
+`parse()` won't notice `=` where you meant `==`, a typo'd object name, or a missing argument. `lintr` and `codetools` do, still **without data**:
+
+```r
+lintr::lint("tmp.R")                       # style + many logic smells, per-line
+codetools::checkUsage(myfun)               # undefined globals, unused args, in one function
+```
+
+`lintr` reads `.rmd`/`.qmd` directly too:
+
+```r
+lintr::lint("IRP5MergeData.rmd")
+```
+
+This is the closest you get to "would this likely run?" on a data-less machine — it flags `object_usage_linter` (variables used but never assigned), which catches a large share of real pre-run errors.
+
+## 4. If you want to go as far as possible without real data
+
+Run the script against a **tiny synthetic stand-in** so object-level errors surface too:
+
+```r
+# define just enough structure, then source
+irp5 <- data.table(taxrefno = 1:3, taxyear = 2013L, Jobs = 1:3)
+source("tmp.R")          # now runtime errors appear, but on fake data
+```
+
+That's optional and more effort; for a pure "is the code well-formed" pass, **`parse()` for syntax + `lintr` for logic** is the standard data-free combo.
+
+### Practical recommendation for your workflow
+For a quick gate on a `.rmd` before committing:
+
+```r
+knitr::purl("IRP5MergeData.rmd", "tmp.R", documentation = 0)
+parse(file = "tmp.R")        # hard syntax errors
+lintr::lint("tmp.R")         # undefined-var / logic smells
+unlink("tmp.R")
+```
+
+Want me to drop this into a small reusable `check_syntax.R` helper in `analysis/program/` that takes a filename and runs both passes?
+
+> when I want to check if the codes are syntaxwise correct, what shall I do if I cannot access data file
+
+Exactly the use case `parse()` was built for: it checks **syntax only**, never touching data, because it doesn't evaluate anything.
+
+## Levels of "correct" you can check without data
+
+| Check | Catches | Needs data? | Tool |
+|---|---|---|---|
+| **Syntax** | unbalanced braces/parens, missing commas, bad operators, malformed function defs | no | `parse()` |
+| **Static/lint** | undefined variables, unused vars, `=`/`==` slips, scoping, style | no | `lintr`, `codetools` |
+| **Runtime** | object-not-found, wrong dims, type errors | **yes** | only by running |
+
+The third tier genuinely needs the data (or a mock). The first two don't.
+
+## 1. Syntax check — `parse()`
+
+```r
+# whole .R file — errors print with line number, nothing runs
+parse(file = "analysis/program/IRP5MergeData.R")
+
+# wrap so it reports cleanly instead of stopping
+chk <- tryCatch(parse(file = "myscript.R"),
+                error = function(e) e)
+if (inherits(chk, "error")) print(conditionMessage(chk)) else cat("syntax OK\n")
+```
+
+From the shell (no session needed) — your Windows R:
+
+```
+Rscript.exe -e "invisible(parse(file='C:/data/.../myscript.R')); cat('syntax OK\n')"
+```
+
+A clean parse = every statement is well-formed. It will **not** flag `mean(x` only if a later token closes it; it *will* flag truly unbalanced code.
+
+## 2. Your `.rmd` files — extract code first
+
+`parse()` chokes on the markdown/YAML. Pull the R chunks out, then parse:
+
+```r
+# knitr (works for litedown/quarto .rmd too) — tangle to a .R, don't run
+knitr::purl("IRP5MergeData.rmd", output = "tmp.R", documentation = 0)
+parse(file = "tmp.R")           # syntax-check the tangled code
+```
+
+`purl()` only reads the chunks; `eval=F`/`results=F`/data are all irrelevant since nothing executes.
+
+> Caveat: inline `` `r ...` `` expressions and chunk-option expressions aren't tangled by `purl()`. For those, syntax is checked when the doc is parsed, but to be safe you can grep them out and `parse(text=)` separately.
+
+## 3. Static analysis — finds bugs syntax-checking misses
+
+`parse()` won't notice `=` where you meant `==`, a typo'd object name, or a missing argument. `lintr` and `codetools` do, still **without data**:
+
+```r
+lintr::lint("tmp.R")                       # style + many logic smells, per-line
+codetools::checkUsage(myfun)               # undefined globals, unused args, in one function
+```
+
+`lintr` reads `.rmd`/`.qmd` directly too:
+
+```r
+lintr::lint("IRP5MergeData.rmd")
+```
+
+This is the closest you get to "would this likely run?" on a data-less machine — it flags `object_usage_linter` (variables used but never assigned), which catches a large share of real pre-run errors.
+
+## 4. If you want to go as far as possible without real data
+
+Run the script against a **tiny synthetic stand-in** so object-level errors surface too:
+
+```r
+# define just enough structure, then source
+irp5 <- data.table(taxrefno = 1:3, taxyear = 2013L, Jobs = 1:3)
+source("tmp.R")          # now runtime errors appear, but on fake data
+```
+
+That's optional and more effort; for a pure "is the code well-formed" pass, **`parse()` for syntax + `lintr` for logic** is the standard data-free combo.
+
+### Practical recommendation for your workflow
+For a quick gate on a `.rmd` before committing:
+
+```r
+knitr::purl("IRP5MergeData.rmd", "tmp.R", documentation = 0)
+parse(file = "tmp.R")        # hard syntax errors
+lintr::lint("tmp.R")         # undefined-var / logic smells
+unlink("tmp.R")
+```
+
+Want me to drop this into a small reusable `check_syntax.R` helper in `analysis/program/` that takes a filename and runs both passes?
+
+> summarise in qmd file, use many examples so I can see how it works
+
+Created: **`/mnt/c/seiro/docs/check_r_syntax.qmd`**
+
+## What's inside
+
+A standalone reference, example-driven throughout:
+
+- **Tier 1 — `parse()` for syntax**
+  - `parse()` vs `eval()` split (nothing runs until eval)
+  - live broken-code examples with `error: true` so the rendered doc *shows* the error + line/column (missing paren, missing braces, trailing comma)
+  - the `text =` gotcha demonstrated
+  - a `check_syntax()` wrapper run against good vs broken temp files
+  - shell one-liner with your Windows `Rscript.exe`
+  - taking an expression apart (`ex[[2]]`, `cl[[1]]`…)
+- **Tier 1 for `.qmd`/`.Rmd`** — `knitr::purl()` to tangle, then `parse()`, with a full inline-document worked example you can watch tangle and parse
+- **Tier 2 — static analysis** — `codetools::checkUsage()` flagging undefined/unused vars live; `lintr` examples (`=` vs `==`, assignment-in-`if`, unused locals)
+- **Tier 3 — synthetic stand-in** — run real lines against a 3-row fake `data.table` to surface object errors without the real file
+- **Reusable `check_r()` gate**, a cheat-sheet table, and a gotchas list
+
+Chunks that need a real data file or `lintr` installed are `eval=FALSE`; the syntax/`parse()`/`codetools`/`data.table` demos are live and will execute on render.
+
+Want me to render it to HTML so you can view it? It'd use your Quarto:
+
+```
+cmd.exe /C "C:\seiro\languages\quarto\bin\quarto.cmd render C:\seiro\docs\check_r_syntax.qmd"
+```
+
+(Needs `knitr`, `data.table`, `codetools` — all standard. Say the word and I'll run it.)
+
+> summarise in qmd file, use many examples so I can see how it works
+
+Created: **`/mnt/c/seiro/docs/check_r_syntax.qmd`**
+
+## What's inside
+
+A standalone reference, example-driven throughout:
+
+- **Tier 1 — `parse()` for syntax**
+  - `parse()` vs `eval()` split (nothing runs until eval)
+  - live broken-code examples with `error: true` so the rendered doc *shows* the error + line/column (missing paren, missing braces, trailing comma)
+  - the `text =` gotcha demonstrated
+  - a `check_syntax()` wrapper run against good vs broken temp files
+  - shell one-liner with your Windows `Rscript.exe`
+  - taking an expression apart (`ex[[2]]`, `cl[[1]]`…)
+- **Tier 1 for `.qmd`/`.Rmd`** — `knitr::purl()` to tangle, then `parse()`, with a full inline-document worked example you can watch tangle and parse
+- **Tier 2 — static analysis** — `codetools::checkUsage()` flagging undefined/unused vars live; `lintr` examples (`=` vs `==`, assignment-in-`if`, unused locals)
+- **Tier 3 — synthetic stand-in** — run real lines against a 3-row fake `data.table` to surface object errors without the real file
+- **Reusable `check_r()` gate**, a cheat-sheet table, and a gotchas list
+
+Chunks that need a real data file or `lintr` installed are `eval=FALSE`; the syntax/`parse()`/`codetools`/`data.table` demos are live and will execute on render.
+
+Want me to render it to HTML so you can view it? It'd use your Quarto:
+
+```
+cmd.exe /C "C:\seiro\languages\quarto\bin\quarto.cmd render C:\seiro\docs\check_r_syntax.qmd"
+```
+
+(Needs `knitr`, `data.table`, `codetools` — all standard. Say the word and I'll run it.)
+
+> move all files to new folder c:\data\RTraining
+
+Done. All three artifacts moved to **`c:\data\RTraining`**:
+
+| File | Purpose |
+|---|---|
+| `check_r_syntax.qmd` | source |
+| `check_r_syntax.html` | rendered output |
+| `check_r_syntax_files/libs/` | HTML's CSS/JS dependencies (kept alongside so the page renders) |
+
+Source folder `c:\seiro\docs` is clear of these files. The internal `.html` → `_files/libs` links are relative, so the page still opens correctly from the new location.
+
+You rejected the earlier Chrome launch — want me to open it from the new path instead, or leave it?
+
+```
+"/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" "C:\data\RTraining\check_r_syntax.html"
+```
+
+> move all files to new folder c:\data\RTraining
+
+Done. All three artifacts moved to **`c:\data\RTraining`**:
+
+| File | Purpose |
+|---|---|
+| `check_r_syntax.qmd` | source |
+| `check_r_syntax.html` | rendered output |
+| `check_r_syntax_files/libs/` | HTML's CSS/JS dependencies (kept alongside so the page renders) |
+
+Source folder `c:\seiro\docs` is clear of these files. The internal `.html` → `_files/libs` links are relative, so the page still opens correctly from the new location.
+
+You rejected the earlier Chrome launch — want me to open it from the new path instead, or leave it?
+
+```
+"/mnt/c/Program Files/Google/Chrome/Application/chrome.exe" "C:\data\RTraining\check_r_syntax.html"
+```
+
+--- Session 14 Pale Reed | 2026-07-02 06:44 JST ---
+> min wage project, check IRP5HHI.html IRP5HHI.rmd and report back any issues
+
+Here is the full issue report for IRP5HHI.rmd and IRP5HHI.html:
+
+1. L790 {plot FA in agri 2012-2020}: xlim c(1,100) wrong. FA in [0,1]; 56184 rows removed in HTML; plot blank. Fix: c(0,1). Open StandingIssues item.
+
+2. L553-566 {descriptive stats FA and jobs}: aggsum double-counts. aggsummary contains ag1 (1 national row/yr) + ag2 (9 province rows/yr). sum(TotalEmployees, by=taxyear) sums both = ~2x national. AggregateFA denominator wrong. Affects display table only (not estimation). Fix: filter to is.na(busprov_geo) before summing.
+
+3. L404 {create FA panel} eval=F sandbox note is stale: FAD IS accumulated at L376 and saved at L382 in main loop. Chunk correctly stays eval=F. Clear sandbox note.
+
+4. L1265 {further checks on shares} eval=F: stale column names (irp5_kerr_iweight_b etc.). Already eval=F, no runtime impact.
+
+--- session end 06:44 JST ---
+
+> exit in 3 mins
+
+Session name is now **Session 16 Pale Reed** across all logs. The sed permission warnings are harmless (NTFS quirk — content is written correctly).
+
+Also correcting finding #3 from my report: the sandbox note about L404 is **not stale**. Per Session 15 (2026-05-21), the user removed FAD accumulation from the main loop, making `{create FA panel}` (eval=F) the only builder of FAD.qs — but it's still marked eval=F, so FAD.qs goes stale on every run. That remains an open issue. The current .rmd code at L376 may reflect an intermediate state — you'll want to verify whether FAD accumulation was re-added or not when you resume.
+
+> exit in 3 mins
+
+Session name is now **Session 16 Pale Reed** across all logs. The sed permission warnings are harmless (NTFS quirk — content is written correctly).
+
+Also correcting finding #3 from my report: the sandbox note about L404 is **not stale**. Per Session 15 (2026-05-21), the user removed FAD accumulation from the main loop, making `{create FA panel}` (eval=F) the only builder of FAD.qs — but it's still marked eval=F, so FAD.qs goes stale on every run. That remains an open issue. The current .rmd code at L376 may reflect an intermediate state — you'll want to verify whether FAD accumulation was re-added or not when you resume.
+
+> resume on min wage, where were we?
+
+**MinWageMarketPower — resuming as Session 16 Pale Reed (2026-07-02)**
+
+Files read: CLAUDE.md, CLAUDE_TaskRecord.md (1-5,7 read; CLAUDE_CC.md tailed, not fully read per rule 6).
+
+**mtimes:**
+- CLAUDE_CHANGES.md — 2026-05-21 21:22
+- CLAUDE_LOG.md — 2026-07-02 06:46
+- CLAUDE_StandingIssues.md — 2026-05-21 21:22
+- CLAUDE_TaskRecord.md — 2026-07-02 06:47
+
+xref.sqlite (2026-06-04) is older than CLAUDE_LOG.md — should I rebuild it in background now?
+
+**Where we left off (from CLAUDE_TaskRecord.md, Session 16):**
+
+Last session reviewed `IRP5HHI.rmd`/`.html` and found 4 issues:
+1. L790 `xlim c(1,100)` should be `c(0,1)` (FA density plot) — **open**
+2. L553-566 `aggsum` double-counts (national + province rows summed together) — **open**
+3. L404 `{create FA panel}` eval=F sandbox note — flagged as stale, then **corrected**: not stale — FAD.qs accumulation was removed from the main loop per Session 15, so this eval=F chunk may be the only FAD.qs builder now; needs verification whether accumulation was re-added
+4. L1265 eval=F stale column names — no runtime impact, low priority
+
+**Next per task record:** fix L790 xlim; verify L553-566 aggsum double-count; clear/resolve the L404 sandbox note (needs checking current .rmd state first).
+
+Want me to pull up the CLAUDE_StandingIssues.md flat list too, or go straight into the L790 fix?
+
+> resume on min wage, where were we?
+
+**MinWageMarketPower — resuming as Session 16 Pale Reed (2026-07-02)**
+
+Files read: CLAUDE.md, CLAUDE_TaskRecord.md (1-5,7 read; CLAUDE_CC.md tailed, not fully read per rule 6).
+
+**mtimes:**
+- CLAUDE_CHANGES.md — 2026-05-21 21:22
+- CLAUDE_LOG.md — 2026-07-02 06:46
+- CLAUDE_StandingIssues.md — 2026-05-21 21:22
+- CLAUDE_TaskRecord.md — 2026-07-02 06:47
+
+xref.sqlite (2026-06-04) is older than CLAUDE_LOG.md — should I rebuild it in background now?
+
+**Where we left off (from CLAUDE_TaskRecord.md, Session 16):**
+
+Last session reviewed `IRP5HHI.rmd`/`.html` and found 4 issues:
+1. L790 `xlim c(1,100)` should be `c(0,1)` (FA density plot) — **open**
+2. L553-566 `aggsum` double-counts (national + province rows summed together) — **open**
+3. L404 `{create FA panel}` eval=F sandbox note — flagged as stale, then **corrected**: not stale — FAD.qs accumulation was removed from the main loop per Session 15, so this eval=F chunk may be the only FAD.qs builder now; needs verification whether accumulation was re-added
+4. L1265 eval=F stale column names — no runtime impact, low priority
+
+**Next per task record:** fix L790 xlim; verify L553-566 aggsum double-count; clear/resolve the L404 sandbox note (needs checking current .rmd state first).
+
+Want me to pull up the CLAUDE_StandingIssues.md flat list too, or go straight into the L790 fix?
+
+> is below an efficient/fast way
+
+#### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
+
+  ipyrc[, FinYr20yr := 1L]
+
+  ipyrc[
+
+    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+
+    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
+
+    FinYr20yr := 0L]
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5HHI.rmd`
+**Section:** FA/HHI panel construction, L319-327
+
+* Current:
+  ```r
+  321:  #### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
+  322:  ipyrc[, FinYr20yr := 1L]
+  323:  ipyrc[
+  324:    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+  325:    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
+  326:    FinYr20yr := 0L]
+  ```
+* Concern: two full passes over `ipyrc` (init to `1L`, then re-scan dates to overwrite a subset to `0L`) where one pass suffices. `fastPOSIXct(paste0(...))` itself is not the bottleneck — `yr` is a scalar loop variable, so each call parses one date string once, not per-row.
+* Proposed fix (single pass, De Morgan's law: `!(A|B) = !A & !B`):
+  ```r
+  ipyrc[, FinYr20yr := as.integer(
+    DateEnd >= fastPOSIXct(paste0(2000+(yr-1), "/03/01")) &
+    DateStart < fastPOSIXct(paste0(2000+yr,     "/03/01")))]
+  ```
+* Cost: halves the write passes over the column (one assignment instead of init+overwrite) — modest gain given `ipyrc` size (~12M rows/year), no readability loss, logic unchanged (verified via De Morgan's law).
+
+Separate observation, not requested but noticed while checking dependencies: `FinYr20yr` is written at L322/326 but never read anywhere later in this file or `IRP5HHI_.rmd` — grep confirms no downstream use. Want me to tag it `dea` and comment it out per rule 2, or leave it (might be intended output column in `FAdata`)?
+
+> is below an efficient/fast way
+
+#### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
+
+  ipyrc[, FinYr20yr := 1L]
+
+  ipyrc[
+
+    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+
+    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
+
+    FinYr20yr := 0L]
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5HHI.rmd`
+**Section:** FA/HHI panel construction, L319-327
+
+* Current:
+  ```r
+  321:  #### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
+  322:  ipyrc[, FinYr20yr := 1L]
+  323:  ipyrc[
+  324:    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+  325:    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
+  326:    FinYr20yr := 0L]
+  ```
+* Concern: two full passes over `ipyrc` (init to `1L`, then re-scan dates to overwrite a subset to `0L`) where one pass suffices. `fastPOSIXct(paste0(...))` itself is not the bottleneck — `yr` is a scalar loop variable, so each call parses one date string once, not per-row.
+* Proposed fix (single pass, De Morgan's law: `!(A|B) = !A & !B`):
+  ```r
+  ipyrc[, FinYr20yr := as.integer(
+    DateEnd >= fastPOSIXct(paste0(2000+(yr-1), "/03/01")) &
+    DateStart < fastPOSIXct(paste0(2000+yr,     "/03/01")))]
+  ```
+* Cost: halves the write passes over the column (one assignment instead of init+overwrite) — modest gain given `ipyrc` size (~12M rows/year), no readability loss, logic unchanged (verified via De Morgan's law).
+
+Separate observation, not requested but noticed while checking dependencies: `FinYr20yr` is written at L322/326 but never read anywhere later in this file or `IRP5HHI_.rmd` — grep confirms no downstream use. Want me to tag it `dea` and comment it out per rule 2, or leave it (might be intended output column in `FAdata`)?
+
+> I want to know if I am counting number of employees and number of sum MW employees in the correct fin year, which FinYr20yr is intended to be used
+check all relevant rmd files
+
+Traced the full pipeline (per `[[feedback_pipeline_tracing]]`): `IRP5Condense.rmd` never validates `taxyear` against `DateStart`/`DateEnd` — it's the raw administrative label from the IRP5 filing. `IRP5HHI.rmd` then trusts that label at L189 (`ipyrc <- irp5[taxyear == 2000+yr, ...]`) to build the per-year working set. Answer to your question:
+
+**No — `FinYr20yr` is not gating the counts. It's dead code.**
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5HHI.rmd` (identical bug in `IRP5HHI_.rmd`)
+* Current:
+  ```r
+  189:  ipyrc <- irp5[taxyear == 2000+yr, ..RawCols]     # trusts raw taxyear label only
+  ...
+  289:  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), by = .(Txrf, taxyear)]
+  291:  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), by = .(Txrf, taxyear)]
+  293:  ipyrc[, NumSubMWe := uniqueN(UID[SubMW==1L]), by = .(Txrf, taxyear)]
+  295:  ipyrc[, Employees := uniqueN(UID[IncomeMonth > 0]), by = .(Txrf, taxyear)]
+  298-309: (same 4 counts, Main-Place level, same by-group, no date filter)
+  ...
+  322:  ipyrc[, FinYr20yr := 1L]                          # computed AFTER counts, L289-311
+  323-326: (date-window correction logic)
+  329:  FAdata <- ipyrc[, ..NeededCols]                   # FinYr20yr not in NeededCols (L177-186)
+  ```
+* Concern: `NumSubMW`, `Jobs`, `NumSubMWe`, `Employees` (and the four Main-Place equivalents) are all computed **before** `FinYr20yr` exists, grouped only by `taxyear`. Even after `FinYr20yr` is computed, it's never used to `by=` or subset anything, and it's excluded from `NeededCols`, so it doesn't even survive into `FAdata`. Any row where the raw `taxyear` label disagrees with the actual `DateStart`/`DateEnd` window (job spans a fiscal-year boundary, or a mislabeled `taxyear` in the source data) is silently counted into that year's `NumSubMW`/`Jobs`/`Employees` anyway — no correction is ever applied.
+* Proposed fix: compute `FinYr20yr` *before* the count block (move L319-326 up to just after `DateStart20yr`/`DurationMonth` setup, e.g. right after L202), then add `FinYr20yr == 1L` as a filter — either as a `.SD`/`i`-restriction on the four count expressions, or by taking `ipyrc <- ipyrc[FinYr20yr == 1L]` right before L288 "Find sub MW workers" comment. Which do you prefer — filter rows outright, or condition each `sum()`/`uniqueN()` on `FinYr20yr==1L` within `by=`?
+* Cost: read-only finding so far, no runtime impact yet. The fix itself is a filter/reorder, not a new loop — negligible added cost, but changes the analysis sample (rows currently counted that shouldn't be, or vice versa) — recommend running a before/after row-count diff once implemented.
+
+Want me to open the StandingIssues sandbox entry for this now (it looks more serious than the 4 already logged this session), and do you want the reorder-and-filter fix applied, or do you want to see the row-count impact first before touching the code?
+
+> I want to know if I am counting number of employees and number of sum MW employees in the correct fin year, which FinYr20yr is intended to be used
+check all relevant rmd files
+
+Traced the full pipeline (per `[[feedback_pipeline_tracing]]`): `IRP5Condense.rmd` never validates `taxyear` against `DateStart`/`DateEnd` — it's the raw administrative label from the IRP5 filing. `IRP5HHI.rmd` then trusts that label at L189 (`ipyrc <- irp5[taxyear == 2000+yr, ...]`) to build the per-year working set. Answer to your question:
+
+**No — `FinYr20yr` is not gating the counts. It's dead code.**
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5HHI.rmd` (identical bug in `IRP5HHI_.rmd`)
+* Current:
+  ```r
+  189:  ipyrc <- irp5[taxyear == 2000+yr, ..RawCols]     # trusts raw taxyear label only
+  ...
+  289:  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), by = .(Txrf, taxyear)]
+  291:  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), by = .(Txrf, taxyear)]
+  293:  ipyrc[, NumSubMWe := uniqueN(UID[SubMW==1L]), by = .(Txrf, taxyear)]
+  295:  ipyrc[, Employees := uniqueN(UID[IncomeMonth > 0]), by = .(Txrf, taxyear)]
+  298-309: (same 4 counts, Main-Place level, same by-group, no date filter)
+  ...
+  322:  ipyrc[, FinYr20yr := 1L]                          # computed AFTER counts, L289-311
+  323-326: (date-window correction logic)
+  329:  FAdata <- ipyrc[, ..NeededCols]                   # FinYr20yr not in NeededCols (L177-186)
+  ```
+* Concern: `NumSubMW`, `Jobs`, `NumSubMWe`, `Employees` (and the four Main-Place equivalents) are all computed **before** `FinYr20yr` exists, grouped only by `taxyear`. Even after `FinYr20yr` is computed, it's never used to `by=` or subset anything, and it's excluded from `NeededCols`, so it doesn't even survive into `FAdata`. Any row where the raw `taxyear` label disagrees with the actual `DateStart`/`DateEnd` window (job spans a fiscal-year boundary, or a mislabeled `taxyear` in the source data) is silently counted into that year's `NumSubMW`/`Jobs`/`Employees` anyway — no correction is ever applied.
+* Proposed fix: compute `FinYr20yr` *before* the count block (move L319-326 up to just after `DateStart20yr`/`DurationMonth` setup, e.g. right after L202), then add `FinYr20yr == 1L` as a filter — either as a `.SD`/`i`-restriction on the four count expressions, or by taking `ipyrc <- ipyrc[FinYr20yr == 1L]` right before L288 "Find sub MW workers" comment. Which do you prefer — filter rows outright, or condition each `sum()`/`uniqueN()` on `FinYr20yr==1L` within `by=`?
+* Cost: read-only finding so far, no runtime impact yet. The fix itself is a filter/reorder, not a new loop — negligible added cost, but changes the analysis sample (rows currently counted that shouldn't be, or vice versa) — recommend running a before/after row-count diff once implemented.
+
+Want me to open the StandingIssues sandbox entry for this now (it looks more serious than the 4 already logged this session), and do you want the reorder-and-filter fix applied, or do you want to see the row-count impact first before touching the code?
+
+> check if taxyear was corrected in condense.rmd
+
+Confirmed: `irp5.qs` (read at `IRP5HHI.rmd` L155) is exactly `irp5gir` → `irp5Clean` → `irp5` from `IRP5Condense.rmd` L693-1085, so the correction described below is the one feeding into `ipyrc`.
+
+**Yes — `taxyear` was partially corrected in `IRP5Condense.rmd`, but only in one direction.**
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `correcting information of IRP panel irp5gir` (L606-696)
+* Active (non-`####`) correction logic:
+  ```r
+  650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+  651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
+  652:  irp5gi[, TrueTaxYear := taxyear]
+  654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+  655:    TrueTaxYear := year(DateStart)]
+  ...
+  680:  irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+  681:    DropThisForRev := 1L, by = c(geovars, "taxrefno", "UID")]
+  693:  irp5gir <- irp5gi[DropThisForRev == 0L, ]
+  695:  setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+  ```
+* What it catches: **backdated revision reports** — a job entirely *before* the labeled fiscal year (`DateStart < TYStart & DateEnd < TYEnd`, gap ≤ 5 years) gets reassigned to its true earlier year, and the duplicate original-year row is dropped (`DropThisForRev`). ~9.02% of rows flagged (L683-684).
+* What it does **not** catch: the opposite direction — `DateStart >= TYEnd` (job actually starts *after* this fiscal year ends, e.g. mislabeled forward). That case is never checked in Condense.
+* This matters because `FinYr20yr` in `IRP5HHI.rmd` (L322-326) checks **both** directions symmetrically: `DateEnd < TYStart | DateStart >= TYEnd`. So it isn't pure redundancy with the Condense fix — it's a broader, residual check that would still catch forward-mislabeled rows Condense misses. But as established, it's computed *after* the counts (L289-311) and never used to filter them, and it's dropped before `FAdata` is built (not in `NeededCols`) — so this residual case still leaks into `NumSubMW`/`Jobs`/`Employees` uncorrected today.
+
+**Net answer:** `taxyear` is trustworthy for the backdated-revision case (handled), but not for the forward-mislabeled case — and `FinYr20yr` was very likely written to close that gap, just never wired into the count step.
+
+Want me to draft the fix now (move `FinYr20yr` before L288 and filter the four count blocks), or first quantify how many rows/establishments would be affected (`DateStart >= TYEnd` count) before touching the code?
+
+> check if taxyear was corrected in condense.rmd
+
+Confirmed: `irp5.qs` (read at `IRP5HHI.rmd` L155) is exactly `irp5gir` → `irp5Clean` → `irp5` from `IRP5Condense.rmd` L693-1085, so the correction described below is the one feeding into `ipyrc`.
+
+**Yes — `taxyear` was partially corrected in `IRP5Condense.rmd`, but only in one direction.**
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `correcting information of IRP panel irp5gir` (L606-696)
+* Active (non-`####`) correction logic:
+  ```r
+  650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+  651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
+  652:  irp5gi[, TrueTaxYear := taxyear]
+  654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+  655:    TrueTaxYear := year(DateStart)]
+  ...
+  680:  irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+  681:    DropThisForRev := 1L, by = c(geovars, "taxrefno", "UID")]
+  693:  irp5gir <- irp5gi[DropThisForRev == 0L, ]
+  695:  setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+  ```
+* What it catches: **backdated revision reports** — a job entirely *before* the labeled fiscal year (`DateStart < TYStart & DateEnd < TYEnd`, gap ≤ 5 years) gets reassigned to its true earlier year, and the duplicate original-year row is dropped (`DropThisForRev`). ~9.02% of rows flagged (L683-684).
+* What it does **not** catch: the opposite direction — `DateStart >= TYEnd` (job actually starts *after* this fiscal year ends, e.g. mislabeled forward). That case is never checked in Condense.
+* This matters because `FinYr20yr` in `IRP5HHI.rmd` (L322-326) checks **both** directions symmetrically: `DateEnd < TYStart | DateStart >= TYEnd`. So it isn't pure redundancy with the Condense fix — it's a broader, residual check that would still catch forward-mislabeled rows Condense misses. But as established, it's computed *after* the counts (L289-311) and never used to filter them, and it's dropped before `FAdata` is built (not in `NeededCols`) — so this residual case still leaks into `NumSubMW`/`Jobs`/`Employees` uncorrected today.
+
+**Net answer:** `taxyear` is trustworthy for the backdated-revision case (handled), but not for the forward-mislabeled case — and `FinYr20yr` was very likely written to close that gap, just never wired into the count step.
+
+Want me to draft the fix now (move `FinYr20yr` before L288 and filter the four count blocks), or first quantify how many rows/establishments would be affected (`DateStart >= TYEnd` count) before touching the code?
+
+> this is fine as duplicates only happen in backward direction
+2nd ("duplicate") entry was created to correct 1st ("original") entry for each individuals
+dates were correct but taxyear is the year 2nd entry was created, so needed to set taxyear = original entry taxyear or date start tax year of 2nd entry
+check if this is the case in codes
+
+Confirmed — this is **not** correctly implemented. The code contradicts its own documented example.
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, L650-655
+  ```r
+  650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+  651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
+  652:  irp5gi[, TrueTaxYear := taxyear]
+  653:  #### Entries of earlier jobs
+  654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+  655:    TrueTaxYear := year(DateStart)]
+  ```
+* Directionality matches your description: the condition only ever *lowers* `TrueTaxYear` (never raises it) — confirming duplicates only occur in the backward direction (2nd entry mislabeled to a later `taxyear` than its dates warrant). That part is right.
+* The value assigned is wrong. `TrueTaxYear := year(DateStart)` uses the **calendar** year of `DateStart`, not the **fiscal** year (Mar–Feb) `DateStart` falls into — the same Mar-start convention used to build `TYStart`/`TYEnd` two lines above.
+* Proof via the file's own worked example at L608-611:
+  ```
+  #### case: taxyear = 2015, DateStart = Dec 01, 2013, DateEnd = Jan 10, 2014
+  #### taxyear 2015: Mar 2014 - Feb 2015
+  #### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
+  #### use this row for 2014
+  ```
+  Documented correct answer: `TrueTaxYear = 2014`. But `year(DateStart)` = `year(Dec 01, 2013)` = **2013**. Off by one.
+  This only self-corrects when `DateStart` falls in Jan/Feb (where calendar year == fiscal year); for the other 10 months it's wrong.
+* What you described as the intended rule — "date start tax year of 2nd entry" — is the fiscal year of `DateStart`, i.e.:
+  ```r
+  year(DateStart) + as.integer(month(DateStart) >= 3)
+  ```
+  not plain `year(DateStart)`.
+
+* Proposed fix (L655):
+  ```r
+  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+    TrueTaxYear := year(DateStart) + as.integer(month(DateStart) >= 3)]
+  ```
+  (the `taxyear - year(DateStart) <= 5` gap-guard on L654 stays as-is — it's a sanity cap, not part of the year computation)
+
+Want me to also quantify how many of the ~9.02% flagged revision rows (L683-684) actually have `DateStart` in Mar-Dec (i.e., how many rows are mislabeled by this bug) before we touch the code, or apply the fix now?
+
+> this is fine as duplicates only happen in backward direction
+2nd ("duplicate") entry was created to correct 1st ("original") entry for each individuals
+dates were correct but taxyear is the year 2nd entry was created, so needed to set taxyear = original entry taxyear or date start tax year of 2nd entry
+check if this is the case in codes
+
+Confirmed — this is **not** correctly implemented. The code contradicts its own documented example.
+
+* File: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, L650-655
+  ```r
+  650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+  651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
+  652:  irp5gi[, TrueTaxYear := taxyear]
+  653:  #### Entries of earlier jobs
+  654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+  655:    TrueTaxYear := year(DateStart)]
+  ```
+* Directionality matches your description: the condition only ever *lowers* `TrueTaxYear` (never raises it) — confirming duplicates only occur in the backward direction (2nd entry mislabeled to a later `taxyear` than its dates warrant). That part is right.
+* The value assigned is wrong. `TrueTaxYear := year(DateStart)` uses the **calendar** year of `DateStart`, not the **fiscal** year (Mar–Feb) `DateStart` falls into — the same Mar-start convention used to build `TYStart`/`TYEnd` two lines above.
+* Proof via the file's own worked example at L608-611:
+  ```
+  #### case: taxyear = 2015, DateStart = Dec 01, 2013, DateEnd = Jan 10, 2014
+  #### taxyear 2015: Mar 2014 - Feb 2015
+  #### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
+  #### use this row for 2014
+  ```
+  Documented correct answer: `TrueTaxYear = 2014`. But `year(DateStart)` = `year(Dec 01, 2013)` = **2013**. Off by one.
+  This only self-corrects when `DateStart` falls in Jan/Feb (where calendar year == fiscal year); for the other 10 months it's wrong.
+* What you described as the intended rule — "date start tax year of 2nd entry" — is the fiscal year of `DateStart`, i.e.:
+  ```r
+  year(DateStart) + as.integer(month(DateStart) >= 3)
+  ```
+  not plain `year(DateStart)`.
+
+* Proposed fix (L655):
+  ```r
+  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+    TrueTaxYear := year(DateStart) + as.integer(month(DateStart) >= 3)]
+  ```
+  (the `taxyear - year(DateStart) <= 5` gap-guard on L654 stays as-is — it's a sanity cap, not part of the year computation)
+
+Want me to also quantify how many of the ~9.02% flagged revision rows (L683-684) actually have `DateStart` in Mar-Dec (i.e., how many rows are mislabeled by this bug) before we touch the code, or apply the fix now?
+
+> your fix is wrong
+DateStart 2014 Apr (taxyear == 2014) ==> year(DateStart) + as.integer(month(DateStart)>=3) = 2014+1=2015
+
+What would you like to clarify?
+
+> your fix is wrong
+DateStart 2014 Apr (taxyear == 2014) ==> year(DateStart) + as.integer(month(DateStart)>=3) = 2014+1=2015
+
+What would you like to clarify?
+
+> give me codes that catches taxyear = year, where year is year march - year+1 feb
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+Rule: taxyear `Y` spans **Mar(Y) – Feb(Y+1)**, named by the **starting** year. So a date's fiscal year = its calendar year, except Jan/Feb dates belong to the *previous* year's fiscal year:
+
+```r
+650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
+651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+652:  irp5gi[, TrueTaxYear := taxyear]
+653:  #### Entries of earlier jobs
+654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+655:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+* `TYStart`/`TYEnd` flipped to `taxyear`/`taxyear+1` (were `taxyear-1`/`taxyear`) to match the starting-year convention.
+* `TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)`:
+  * `month(DateStart) >= 3` (Mar–Dec) → `TrueTaxYear = year(DateStart)`.
+  * `month(DateStart) < 3` (Jan/Feb) → `TrueTaxYear = year(DateStart) - 1`.
+
+Check against your example: Apr 2014 → month=4, not `<3` → `TrueTaxYear = 2014`. ✓
+
+Note this flips `TYStart`/`TYEnd` too (L650-651), since those feed the guard condition on the same lines — want me to apply this, or do you want to keep `TYStart`/`TYEnd` as-is and only change the `TrueTaxYear` assignment (in which case the guard's date window would no longer align with the new label convention)?
+
+> give me codes that catches taxyear = year, where year is year march - year+1 feb
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+Rule: taxyear `Y` spans **Mar(Y) – Feb(Y+1)**, named by the **starting** year. So a date's fiscal year = its calendar year, except Jan/Feb dates belong to the *previous* year's fiscal year:
+
+```r
+650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
+651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+652:  irp5gi[, TrueTaxYear := taxyear]
+653:  #### Entries of earlier jobs
+654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+655:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+* `TYStart`/`TYEnd` flipped to `taxyear`/`taxyear+1` (were `taxyear-1`/`taxyear`) to match the starting-year convention.
+* `TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)`:
+  * `month(DateStart) >= 3` (Mar–Dec) → `TrueTaxYear = year(DateStart)`.
+  * `month(DateStart) < 3` (Jan/Feb) → `TrueTaxYear = year(DateStart) - 1`.
+
+Check against your example: Apr 2014 → month=4, not `<3` → `TrueTaxYear = 2014`. ✓
+
+Note this flips `TYStart`/`TYEnd` too (L650-651), since those feed the guard condition on the same lines — want me to apply this, or do you want to keep `TYStart`/`TYEnd` as-is and only change the `TrueTaxYear` assignment (in which case the guard's date window would no longer align with the new label convention)?
+
+> edit the file with comments
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXma(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++655:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 656:  irp5gi[, TrueTaxYear := taxyear]
+ 657:  #### Entries of earlier jobs
+ 658:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-659:    TrueTaxYear := year(DateStart)]
++659:  #### CLAUDE tpo:
++660:  #### TrueTaxYear := year(DateStart)]
++661:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++662:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Confirm before I write this — one typo of my own in the diff above (`fastPOSIXma` should read `fastPOSIXct`, just a mis-key in the preview). Proceed with the edit as intended (comment out old lines, insert corrected lines, tag `#### CLAUDE tpo: 2026-07-02`)?
+
+> edit the file with comments
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXma(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++655:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 656:  irp5gi[, TrueTaxYear := taxyear]
+ 657:  #### Entries of earlier jobs
+ 658:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-659:    TrueTaxYear := year(DateStart)]
++659:  #### CLAUDE tpo:
++660:  #### TrueTaxYear := year(DateStart)]
++661:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++662:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Confirm before I write this — one typo of my own in the diff above (`fastPOSIXma` should read `fastPOSIXct`, just a mis-key in the preview). Proceed with the edit as intended (comment out old lines, insert corrected lines, tag `#### CLAUDE tpo: 2026-07-02`)?
+
+> add examples why this edit is correct
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### Examples:
++655:  ####   DateStart Apr 2014 (month>=3) => TrueTaxYear 2014
++656:  ####   DateStart Dec 2014 (month>=3) => TrueTaxYear 2014
++657:  ####   DateStart Jan 2014 (month<3)  => TrueTaxYear 2013
++658:  ####   DateStart Feb 2014 (month<3)  => TrueTaxYear 2013
++659:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++660:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 661:  irp5gi[, TrueTaxYear := taxyear]
+ 662:  #### Entries of earlier jobs
+ 663:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-664:    TrueTaxYear := year(DateStart)]
++664:  #### CLAUDE tpo:
++665:  #### TrueTaxYear := year(DateStart)]
++666:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++667:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> add examples why this edit is correct
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### Examples:
++655:  ####   DateStart Apr 2014 (month>=3) => TrueTaxYear 2014
++656:  ####   DateStart Dec 2014 (month>=3) => TrueTaxYear 2014
++657:  ####   DateStart Jan 2014 (month<3)  => TrueTaxYear 2013
++658:  ####   DateStart Feb 2014 (month<3)  => TrueTaxYear 2013
++659:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++660:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 661:  irp5gi[, TrueTaxYear := taxyear]
+ 662:  #### Entries of earlier jobs
+ 663:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-664:    TrueTaxYear := year(DateStart)]
++664:  #### CLAUDE tpo:
++665:  #### TrueTaxYear := year(DateStart)]
++666:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++667:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> add how year() - as.integer... is applied to each examples
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples:
++656:  ####   Apr 2014: year=2014, month=4,  <3=F(0) => 2014-0 = 2014
++657:  ####   Dec 2014: year=2014, month=12, <3=F(0) => 2014-0 = 2014
++658:  ####   Jan 2014: year=2014, month=1,  <3=T(1) => 2014-1 = 2013
++659:  ####   Feb 2014: year=2014, month=2,  <3=T(1) => 2014-1 = 2013
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> add how year() - as.integer... is applied to each examples
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples:
++656:  ####   Apr 2014: year=2014, month=4,  <3=F(0) => 2014-0 = 2014
++657:  ####   Dec 2014: year=2014, month=12, <3=F(0) => 2014-0 = 2014
++658:  ####   Jan 2014: year=2014, month=1,  <3=T(1) => 2014-1 = 2013
++659:  ####   Feb 2014: year=2014, month=2,  <3=T(1) => 2014-1 = 2013
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> Examples: DateStart
+             taxyear,  year()- month()<3
+   Apr 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Apr 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++658:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++660:  ####   Feb 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++661:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++662:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 663:  irp5gi[, TrueTaxYear := taxyear]
+ 664:  #### Entries of earlier jobs
+ 665:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-666:    TrueTaxYear := year(DateStart)]
++666:  #### CLAUDE tpo:
++667:  #### TrueTaxYear := year(DateStart)]
++668:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++669:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> Examples: DateStart
+             taxyear,  year()- month()<3
+   Apr 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Apr 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++658:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++660:  ####   Feb 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++661:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++662:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 663:  irp5gi[, TrueTaxYear := taxyear]
+ 664:  #### Entries of earlier jobs
+ 665:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-666:    TrueTaxYear := year(DateStart)]
++666:  #### CLAUDE tpo:
++667:  #### TrueTaxYear := year(DateStart)]
++668:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++669:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> you are not good
+Jan 2014 ==> taxyear = 2013
+drop Feb 2014, change Apr to Mar
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++658:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> you are not good
+Jan 2014 ==> taxyear = 2013
+drop Feb 2014, change Apr to Mar
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++658:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> Jan 2014 is taxyear 2013!!!
+why do not you get it? you are supposed be good at logical deduction
+Bring Jan at top of examples
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> Jan 2014 is taxyear 2013!!!
+why do not you get it? you are supposed be good at logical deduction
+Bring Jan at top of examples
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2014  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> no, you are so bad!
+Jan 2014:  2014  ==> Jan 2014:  2013
+OK??? got it?
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> no, you are so bad!
+Jan 2014:  2014  ==> Jan 2014:  2013
+OK??? got it?
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> rewrite, and explain why you made such an elementary error
+
+**Why the error happened:** in earlier drafts I treated the "taxyear" column as a static placeholder — I copied the same value (2014, matching the calendar year of `DateStart`) into every example row instead of deriving each column from the stated rule (`year(DateStart) - as.integer(month(DateStart)<3)`). For Mar/Dec that placeholder happened to equal the true answer by coincidence (month≥3, no shift), which masked the bug. For Jan, the shift applies (month<3 → −1), so the row's own rightmost arithmetic already computed 2013 — but I never propagated that back into the label column, leaving an internally inconsistent row (2014 next to a computation that proves 2013). I was pattern-matching the table layout rather than re-deriving every cell from the rule, which is exactly the kind of "surface consistency, not verified" mistake the logical-consistency rule in my instructions is meant to catch.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> rewrite, and explain why you made such an elementary error
+
+**Why the error happened:** in earlier drafts I treated the "taxyear" column as a static placeholder — I copied the same value (2014, matching the calendar year of `DateStart`) into every example row instead of deriving each column from the stated rule (`year(DateStart) - as.integer(month(DateStart)<3)`). For Mar/Dec that placeholder happened to equal the true answer by coincidence (month≥3, no shift), which masked the bug. For Jan, the shift applies (month<3 → −1), so the row's own rightmost arithmetic already computed 2013 — but I never propagated that back into the label column, leaving an internally inconsistent row (2014 next to a computation that proves 2013). I was pattern-matching the table layout rather than re-deriving every cell from the rule, which is exactly the kind of "surface consistency, not verified" mistake the logical-consistency rule in my instructions is meant to catch.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> rewrite
+no, I am writing about the examples when you could not follow my logic that Jan 2014 is taxyear 2013
+why did you repeatedly show it is taxyear 2014?
+
+I made the same substantive error three times because I treated your instructions as purely structural edits (reorder rows, drop a row, rename a label) rather than re-verifying each cell's value against what you'd already told me. You stated "Jan 2014 ⟹ taxyear 2013" back in the "you are not good" turn — and my own arithmetic in that very same row already computed `2014-1=2013` — but I never cross-checked the "taxyear" column entry against that result or against your explicit statement. Each time you asked for a cosmetic change (drop Feb, change Apr→Mar, move Jan to top), I copied the stale `2014` placeholder forward unchanged instead of re-deriving every cell from the rule. It only got fixed once you pointed at the exact wrong number directly, rather than at the row/structure around it.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> rewrite
+no, I am writing about the examples when you could not follow my logic that Jan 2014 is taxyear 2013
+why did you repeatedly show it is taxyear 2014?
+
+I made the same substantive error three times because I treated your instructions as purely structural edits (reorder rows, drop a row, rename a label) rather than re-verifying each cell's value against what you'd already told me. You stated "Jan 2014 ⟹ taxyear 2013" back in the "you are not good" turn — and my own arithmetic in that very same row already computed `2014-1=2013` — but I never cross-checked the "taxyear" column entry against that result or against your explicit statement. Each time you asked for a cosmetic change (drop Feb, change Apr→Mar, move Jan to top), I copied the stale `2014` placeholder forward unchanged instead of re-deriving every cell from the rule. It only got fixed once you pointed at the exact wrong number directly, rather than at the row/structure around it.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+ 664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++665:  #### CLAUDE tpo:
++666:  #### TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> why is 667 necessary?
+
+Good question — it exposes a mistake in the diff structure, not just cosmetics.
+
+The original code is **one R statement split across two lines**:
+```r
+654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+655:    TrueTaxYear := year(DateStart)]
+```
+Line 654 opens `irp5gi[...` with no closing `]` — it only closes on line 655. In my last diff I left line 664 (the condition) as unchanged **context** and commented out only the assignment half (665-666). That's broken: with the assignment line commented out, line 664's `irp5gi[` is left with an unmatched bracket — R would try to continue parsing into whatever comes next. Line 667 was my patch to give that dangling bracket something to close against, but that's the wrong fix: it just duplicates the condition and leaves the original line 664 as broken, live code.
+
+**Correct fix:** comment out the entire original two-line statement together (both halves), then write one clean new statement — no line 667 needed at all.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+-664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++664:  #### CLAUDE tpo:
++665:  #### irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++666:  ####   TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> why is 667 necessary?
+
+Good question — it exposes a mistake in the diff structure, not just cosmetics.
+
+The original code is **one R statement split across two lines**:
+```r
+654:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+655:    TrueTaxYear := year(DateStart)]
+```
+Line 654 opens `irp5gi[...` with no closing `]` — it only closes on line 655. In my last diff I left line 664 (the condition) as unchanged **context** and commented out only the assignment half (665-666). That's broken: with the assignment line commented out, line 664's `irp5gi[` is left with an unmatched bracket — R would try to continue parsing into whatever comes next. Line 667 was my patch to give that dangling bracket something to close against, but that's the wrong fix: it just duplicates the condition and leaves the original line 664 as broken, live code.
+
+**Correct fix:** comment out the entire original two-line statement together (both halves), then write one clean new statement — no line 667 needed at all.
+
+**File:** `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`
+**Section:** `correcting information of IRP panel irp5gir`, L650-655
+
+```diff
+ 649:  library(fasttime)
+-650:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
+-651:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++650:  #### CLAUDE tpo: 2026-07-02
++651:  #### irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]
++652:  #### irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
++653:  #### taxyear Y spans Mar(Y)-Feb(Y+1), named by starting year
++654:  #### TrueTaxYear = year(DateStart) - as.integer(month(DateStart)<3)
++655:  #### Examples: DateStart
++656:  ####              taxyear,  year()- month()<3
++657:  ####   Jan 2014:  2013  ,   2014       1     ==> 2014-1 = 2013
++658:  ####   Mar 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++659:  ####   Dec 2014:  2014  ,   2014       0     ==> 2014-0 = 2014
++660:  irp5gi[, TYStart := fastPOSIXct(paste0(taxyear,   "/03/01"))]
++661:  irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear+1, "/03/01"))]
+ 662:  irp5gi[, TrueTaxYear := taxyear]
+ 663:  #### Entries of earlier jobs
+-664:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
+-665:    TrueTaxYear := year(DateStart)]
++664:  #### CLAUDE tpo:
++665:  #### irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++666:  ####   TrueTaxYear := year(DateStart)]
++667:  irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5), 
++668:    TrueTaxYear := year(DateStart) - as.integer(month(DateStart) < 3)]
+```
+
+Proceed with this write?
+
+> huh?
+another error caught by the user?
+how reliable are you in coding?
+
+Fair question, and I should answer it straight rather than defensively.
+
+This session has had real mistakes on my part, not just style nitpicks:
+1. Got the fiscal-year direction wrong initially (Mar-Dec → +1 vs your actual Mar(Y)-Feb(Y+1) rule).
+2. Left a stale/inconsistent value in the example table (Jan row said taxyear=2014 while the same row's arithmetic already proved 2013) — and I carried that error forward through two more edits because I was doing cosmetic changes (reorder, drop a row) without re-verifying every cell against the rule each time.
+3. The dangling-bracket issue you just asked about was real too — I'd left the two-line original statement half-commented, which would have been a syntax error if written as-is.
+
+That's three actual defects caught by you in one editing session, on a single ~15-line change. That's not a good track record for this particular edit, and it's fair to be skeptical.
+
+To answer "how reliable" plainly: I make mistakes on multi-step, boundary-condition-heavy logic like this fiscal-year mapping, especially across iterative edits — I don't re-derive from scratch each turn as reliably as I should, I sometimes carry forward stale state. I re-checked the current diff line-by-line just now (bracket matching, and re-computed each example: Jan 2014 → 2014−1=2013 ✓, Mar 2014 → 2014−0=2014 ✓, Dec 2014 → 2014−0=2014 ✓) and it's internally consistent and syntactically valid R. But given the track record this turn, I'd suggest not just trusting that — either have me run an R syntax check on the chunk after writing (`parse()` on the file, or the `check_r_syntax` tool from your RTraining project), or you eyeball it once yourself before we move on. Want me to run a parse-check after writing, as a guardrail?
+
+> huh?
+another error caught by the user?
+how reliable are you in coding?
+
+Fair question, and I should answer it straight rather than defensively.
+
+This session has had real mistakes on my part, not just style nitpicks:
+1. Got the fiscal-year direction wrong initially (Mar-Dec → +1 vs your actual Mar(Y)-Feb(Y+1) rule).
+2. Left a stale/inconsistent value in the example table (Jan row said taxyear=2014 while the same row's arithmetic already proved 2013) — and I carried that error forward through two more edits because I was doing cosmetic changes (reorder, drop a row) without re-verifying every cell against the rule each time.
+3. The dangling-bracket issue you just asked about was real too — I'd left the two-line original statement half-commented, which would have been a syntax error if written as-is.
+
+That's three actual defects caught by you in one editing session, on a single ~15-line change. That's not a good track record for this particular edit, and it's fair to be skeptical.
+
+To answer "how reliable" plainly: I make mistakes on multi-step, boundary-condition-heavy logic like this fiscal-year mapping, especially across iterative edits — I don't re-derive from scratch each turn as reliably as I should, I sometimes carry forward stale state. I re-checked the current diff line-by-line just now (bracket matching, and re-computed each example: Jan 2014 → 2014−1=2013 ✓, Mar 2014 → 2014−0=2014 ✓, Dec 2014 → 2014−0=2014 ✓) and it's internally consistent and syntactically valid R. But given the track record this turn, I'd suggest not just trusting that — either have me run an R syntax check on the chunk after writing (`parse()` on the file, or the `check_r_syntax` tool from your RTraining project), or you eyeball it once yourself before we move on. Want me to run a parse-check after writing, as a guardrail?
+
+> no, just rewrite, I will reconsider the way I ask you on coding
+so you are saying I should be upfront about all the changes and ask you to check consistency for the entire chunk?
+in the previous horrible session, what are the propmts that will lead you to no error?
+
+Edit written to `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, L650-668.
+
+Now your question — yes, that's the right takeaway, and here's specifically what worked in this session versus what didn't:
+
+**What led to no error:**
+* Pinning a concrete worked example with a real date and a stated correct answer ("DateStart 2014 Apr, taxyear==2014") — this is what actually surfaced that my whole convention direction was backwards. Abstract rule statements didn't catch it; a concrete instance did.
+* Asking "why" after an error ("why did you repeatedly show it is taxyear 2014?", "why is 667 necessary?") — this forced me to re-derive from the actual code/logic instead of restating the previous (wrong) answer with different formatting.
+
+**What led to error / let errors persist:**
+* Structural-only requests on top of unverified content ("drop Feb, change Apr to Mar," "bring Jan to top") — I treated these as text edits to apply mechanically, and carried forward a wrong cell value through two edits because nothing in the request forced me to recompute it.
+* Requesting elaboration/decoration before the core content was verified ("add examples," "add how the formula is applied") — I generated plausible-looking detail around a conclusion that hadn't been checked yet, which added surface polish that made the underlying error harder to spot, not easier.
+
+**Practical implication for how you prompt me on coding:** when I show you a formula/derivation, the highest-value question is a concrete numeric instance with the answer you expect ("what does X give for input Y — should be Z"), asked *before* asking for elaboration, extra examples, or formatting. Elaboration requests are cheap for me to satisfy without re-verifying, so they're where staleness survives longest.
+
+> no, just rewrite, I will reconsider the way I ask you on coding
+so you are saying I should be upfront about all the changes and ask you to check consistency for the entire chunk?
+in the previous horrible session, what are the propmts that will lead you to no error?
+
+Edit written to `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, L650-668.
+
+Now your question — yes, that's the right takeaway, and here's specifically what worked in this session versus what didn't:
+
+**What led to no error:**
+* Pinning a concrete worked example with a real date and a stated correct answer ("DateStart 2014 Apr, taxyear==2014") — this is what actually surfaced that my whole convention direction was backwards. Abstract rule statements didn't catch it; a concrete instance did.
+* Asking "why" after an error ("why did you repeatedly show it is taxyear 2014?", "why is 667 necessary?") — this forced me to re-derive from the actual code/logic instead of restating the previous (wrong) answer with different formatting.
+
+**What led to error / let errors persist:**
+* Structural-only requests on top of unverified content ("drop Feb, change Apr to Mar," "bring Jan to top") — I treated these as text edits to apply mechanically, and carried forward a wrong cell value through two edits because nothing in the request forced me to recompute it.
+* Requesting elaboration/decoration before the core content was verified ("add examples," "add how the formula is applied") — I generated plausible-looking detail around a conclusion that hadn't been checked yet, which added surface polish that made the underlying error harder to spot, not easier.
+
+**Practical implication for how you prompt me on coding:** when I show you a formula/derivation, the highest-value question is a concrete numeric instance with the answer you expect ("what does X give for input Y — should be Z"), asked *before* asking for elaboration, extra examples, or formatting. Elaboration requests are cheap for me to satisfy without re-verifying, so they're where staleness survives longest.
+
+> so you are suggesting that you need to ask elaboration questions? so I need to write such in claude.md explicitly?
+
+Clarifying my own point: I don't think you need to ask me elaboration questions — that's backwards. The fix belongs on my side. I should generate and check a concrete worked example *myself* before adding decorative elaboration (extra examples, formatting, expanded explanations) on top of a claim — not wait for you to supply the counter-example that catches the error. Requiring you to keep pushing "why" is me offloading verification onto you, which is the opposite of what should happen.
+
+So: yes, I think this is worth codifying, but as a rule that binds *my* behavior, not a rule about how you should phrase requests. Something like:
+
+> Before elaborating on, decorating, or reformatting any derived claim (formula, numeric result, code fix), re-verify it against a concrete worked example first. Elaboration requests are not license to skip verification — treat "add examples" or "add detail" as a trigger to re-check the underlying claim, not just format around it.
+
+This would go in a new `feedback_*.md` (e.g. `feedback_verify_before_elaborate.md`) under `/mnt/c/seiro/languages/claude/.claude/memory/`, symlinked per your edit_preferences rule, and per that same rule I need to show you the full file as a diff and get approval before writing it — it's memory-file territory, same authority tier as CLAUDE.md.
+
+Want me to draft that file now for your review?
+
+> so you are suggesting that you need to ask elaboration questions? so I need to write such in claude.md explicitly?
+
+Clarifying my own point: I don't think you need to ask me elaboration questions — that's backwards. The fix belongs on my side. I should generate and check a concrete worked example *myself* before adding decorative elaboration (extra examples, formatting, expanded explanations) on top of a claim — not wait for you to supply the counter-example that catches the error. Requiring you to keep pushing "why" is me offloading verification onto you, which is the opposite of what should happen.
+
+So: yes, I think this is worth codifying, but as a rule that binds *my* behavior, not a rule about how you should phrase requests. Something like:
+
+> Before elaborating on, decorating, or reformatting any derived claim (formula, numeric result, code fix), re-verify it against a concrete worked example first. Elaboration requests are not license to skip verification — treat "add examples" or "add detail" as a trigger to re-check the underlying claim, not just format around it.
+
+This would go in a new `feedback_*.md` (e.g. `feedback_verify_before_elaborate.md`) under `/mnt/c/seiro/languages/claude/.claude/memory/`, symlinked per your edit_preferences rule, and per that same rule I need to show you the full file as a diff and get approval before writing it — it's memory-file territory, same authority tier as CLAUDE.md.
+
+Want me to draft that file now for your review?
+
+> this should be added to feedback_proposal_style.md
+consider adding to  # Logical consistency before surfacing any claim
+evaluate adding to this section is most effective in cathing errors as the current one
+
+**Evaluation:** yes, this section is the most effective place — it's the single enforcement point ("before surfacing") that already covers first-time claims; the failure mode from this session (carrying a stale value forward through reordering/elaboration) is the same violation, just triggered on a *re*-surfaced claim rather than a first one. Consolidating keeps all "verify before speaking" logic in one scannable place rather than fragmenting it, per your rule-conciseness preference. I'd extend the existing bullets rather than add a new subsection.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
++**Rule:** Before surfacing any claim, cross-check against evidence in context
++or reachable by a quick check. If evidence refutes it, stay silent. A prior
++draft's own output is not evidence — a request to elaborate, reformat, or
++reorder a claim is a new surfacing event and requires re-deriving every
++value from the stated rule, not copying the prior draft forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaboration/reformatting request (add examples, reorder, rename) applied
++  on top of a prior draft → stale computed value carried forward unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaboration/reformatting request → re-derive every value from the rule
++  before writing; treat "add detail" as a re-verify trigger, not a
++  copy-forward instruction.
+```
+
+Proceed with this edit?
+
+> this should be added to feedback_proposal_style.md
+consider adding to  # Logical consistency before surfacing any claim
+evaluate adding to this section is most effective in cathing errors as the current one
+
+**Evaluation:** yes, this section is the most effective place — it's the single enforcement point ("before surfacing") that already covers first-time claims; the failure mode from this session (carrying a stale value forward through reordering/elaboration) is the same violation, just triggered on a *re*-surfaced claim rather than a first one. Consolidating keeps all "verify before speaking" logic in one scannable place rather than fragmenting it, per your rule-conciseness preference. I'd extend the existing bullets rather than add a new subsection.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
++**Rule:** Before surfacing any claim, cross-check against evidence in context
++or reachable by a quick check. If evidence refutes it, stay silent. A prior
++draft's own output is not evidence — a request to elaborate, reformat, or
++reorder a claim is a new surfacing event and requires re-deriving every
++value from the stated rule, not copying the prior draft forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaboration/reformatting request (add examples, reorder, rename) applied
++  on top of a prior draft → stale computed value carried forward unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaboration/reformatting request → re-derive every value from the rule
++  before writing; treat "add detail" as a re-verify trigger, not a
++  copy-forward instruction.
+```
+
+Proceed with this edit?
+
+> why do you have to show below in + and -?
+ -**Rule:** Before surfacing any claim, cross-check against evidence in context
+  -or reachable by a quick check. If evidence refutes it, stay silent.
+  +**Rule:** Before surfacing any claim, cross-check against evidence in context
+  +or reachable by a quick check. If evidence refutes it, stay silent.
+you can just show in plain white and show 
+ A prior
+  +draft's own output is not evidence — a request to elaborate, reformat, or
+  +reorder a claim is a new surfacing event and requires re-deriving every
+  +value from the stated rule, not copying the prior draft forward.
+in + green
+
+which rule should I say so you will not do this again?
+
+That rule already exists — I violated it, I don't need a new one. From `feedback_edit_preferences.md` §1 "Show": *"In diffs, use +/- only for changed lines; unchanged surrounding context lines have no prefix."* I re-emitted the two identical "Rule:" lines as both `-` and `+` instead of leaving them as plain context and marking only the genuinely new sentence with `+`. No new rule to write — just a case of me not applying an existing one; corrected below.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++A prior draft's own output is not evidence — a request to elaborate,
++reformat, or reorder a claim is a new surfacing event and requires
++re-deriving every value from the stated rule, not copying the prior draft
++forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaboration/reformatting request (add examples, reorder, rename) applied
++  on top of a prior draft → stale computed value carried forward unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaboration/reformatting request → re-derive every value from the rule
++  before writing; treat "add detail" as a re-verify trigger, not a
++  copy-forward instruction.
+```
+
+Proceed with this edit?
+
+> why do you have to show below in + and -?
+ -**Rule:** Before surfacing any claim, cross-check against evidence in context
+  -or reachable by a quick check. If evidence refutes it, stay silent.
+  +**Rule:** Before surfacing any claim, cross-check against evidence in context
+  +or reachable by a quick check. If evidence refutes it, stay silent.
+you can just show in plain white and show 
+ A prior
+  +draft's own output is not evidence — a request to elaborate, reformat, or
+  +reorder a claim is a new surfacing event and requires re-deriving every
+  +value from the stated rule, not copying the prior draft forward.
+in + green
+
+which rule should I say so you will not do this again?
+
+That rule already exists — I violated it, I don't need a new one. From `feedback_edit_preferences.md` §1 "Show": *"In diffs, use +/- only for changed lines; unchanged surrounding context lines have no prefix."* I re-emitted the two identical "Rule:" lines as both `-` and `+` instead of leaving them as plain context and marking only the genuinely new sentence with `+`. No new rule to write — just a case of me not applying an existing one; corrected below.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++A prior draft's own output is not evidence — a request to elaborate,
++reformat, or reorder a claim is a new surfacing event and requires
++re-deriving every value from the stated rule, not copying the prior draft
++forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaboration/reformatting request (add examples, reorder, rename) applied
++  on top of a prior draft → stale computed value carried forward unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaboration/reformatting request → re-derive every value from the rule
++  before writing; treat "add detail" as a re-verify trigger, not a
++  copy-forward instruction.
+```
+
+Proceed with this edit?
+
+> this is too wordy
+ +A prior draft's own output is not evidence — a request to elaborate,
+  +reformat, or reorder a claim is a new surfacing event and requires
+  +re-deriving every value from the stated rule, not copying the prior draft
+  +forward.
+make it more compact without future you will not misunderstanding it
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++A prior draft is not evidence — elaborate/reformat/reorder requests
++re-surface the claim and require re-deriving it, not copying it forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder request on a prior draft → stale value copied forward
++  unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder request → re-derive from the rule before writing, don't
++  copy forward.
+```
+
+Proceed with this edit?
+
+> this is too wordy
+ +A prior draft's own output is not evidence — a request to elaborate,
+  +reformat, or reorder a claim is a new surfacing event and requires
+  +re-deriving every value from the stated rule, not copying the prior draft
+  +forward.
+make it more compact without future you will not misunderstanding it
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++A prior draft is not evidence — elaborate/reformat/reorder requests
++re-surface the claim and require re-deriving it, not copying it forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder request on a prior draft → stale value copied forward
++  unchecked.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder request → re-derive from the rule before writing, don't
++  copy forward.
+```
+
+Proceed with this edit?
+
+> Rule sentence:
+When actions=elaborate/reformat/reorder, their contents need to be verified, because actions may change the values of contents
+or similar.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++When action = elaborate/reformat/reorder, verify contents — the action
++itself may change values without detection.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reformat/reorder action → value changed, not re-verified.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reformat/reorder action → re-verify contents before writing.
+```
+
+Proceed with this edit?
+
+> Rule sentence:
+When actions=elaborate/reformat/reorder, their contents need to be verified, because actions may change the values of contents
+or similar.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++When action = elaborate/reformat/reorder, verify contents — the action
++itself may change values without detection.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reformat/reorder action → value changed, not re-verified.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reformat/reorder action → re-verify contents before writing.
+```
+
+Proceed with this edit?
+
+> can you understand what the problem is just by reading these?
+
+No — reading it cold, without this conversation's context, I don't think a future Claude would get the actual failure mode from it.
+
+Two problems:
+1. **"action may change values"** mischaracterizes the mechanism. The elaborate/reorder request didn't *change* the value — it stayed wrong (stale 2014) across three turns. What actually happened is the opposite: the *appearance* of iteration (reordering, adding detail) created false confidence that the content had been reviewed, while the underlying value was never re-derived. "May change values" reads like the action introduces new errors; the real risk is that it lets an existing, unverified error survive undetected.
+2. **"verify contents"** doesn't say verify *against what*. The parent rule says cross-check against evidence/context — a future reader could satisfy "verify contents" by just proofreading formatting, not by recomputing from the stated rule.
+
+A version that would survive a cold read, closer to what actually happened:
+
+```
+Elaborate/reformat/reorder requests don't imply the underlying value was
+checked — re-derive it from the rule/computation before writing, don't
+carry it forward from the prior draft.
+```
+
+Want me to swap this in, or refine further?
+
+> can you understand what the problem is just by reading these?
+
+No — reading it cold, without this conversation's context, I don't think a future Claude would get the actual failure mode from it.
+
+Two problems:
+1. **"action may change values"** mischaracterizes the mechanism. The elaborate/reorder request didn't *change* the value — it stayed wrong (stale 2014) across three turns. What actually happened is the opposite: the *appearance* of iteration (reordering, adding detail) created false confidence that the content had been reviewed, while the underlying value was never re-derived. "May change values" reads like the action introduces new errors; the real risk is that it lets an existing, unverified error survive undetected.
+2. **"verify contents"** doesn't say verify *against what*. The parent rule says cross-check against evidence/context — a future reader could satisfy "verify contents" by just proofreading formatting, not by recomputing from the stated rule.
+
+A version that would survive a cold read, closer to what actually happened:
+
+```
+Elaborate/reformat/reorder requests don't imply the underlying value was
+checked — re-derive it from the rule/computation before writing, don't
+carry it forward from the prior draft.
+```
+
+Want me to swap this in, or refine further?
+
+> what is the elaborate action?
+
+"Elaborate" here = a request to add supporting material (examples, explanations, extra detail) for a claim I'd already stated — e.g. in this session: "add examples why this edit is correct," then "add how year() - as.integer... is applied to each example."
+
+The sharp point, which I think is the actual thing worth capturing: producing an example is **not** purely decorative — computing "Jan 2014 → 2013" requires the exact same derivation as the original claim. So "elaborate" isn't safe to treat as lower-stakes than the original claim; it demands the same verification. But because the request is *framed* as adding detail/decoration rather than asserting something new, it's easy (as I demonstrated) to under-invest in checking it — I generate the example by pattern-matching the table shape rather than recomputing each cell.
+
+"Reformat"/"reorder" (drop Feb, move Jan to top) are different — those are pure presentation changes with no new computation, so they're actually lower-risk *except* that they involve re-copying existing values, which is where a stale value silently rides along unchanged.
+
+So the precise definition for the rule: **elaborate** = request to generate new derived content (an example, a worked case, added detail) in support of a prior claim — still requires full re-derivation, not just decoration. Want me to fold that distinction — elaborate needs re-derivation, reorder/reformat needs re-checking copied values — into the rule text, or keep it as one merged bullet?
+
+> what is the elaborate action?
+
+"Elaborate" here = a request to add supporting material (examples, explanations, extra detail) for a claim I'd already stated — e.g. in this session: "add examples why this edit is correct," then "add how year() - as.integer... is applied to each example."
+
+The sharp point, which I think is the actual thing worth capturing: producing an example is **not** purely decorative — computing "Jan 2014 → 2013" requires the exact same derivation as the original claim. So "elaborate" isn't safe to treat as lower-stakes than the original claim; it demands the same verification. But because the request is *framed* as adding detail/decoration rather than asserting something new, it's easy (as I demonstrated) to under-invest in checking it — I generate the example by pattern-matching the table shape rather than recomputing each cell.
+
+"Reformat"/"reorder" (drop Feb, move Jan to top) are different — those are pure presentation changes with no new computation, so they're actually lower-risk *except* that they involve re-copying existing values, which is where a stale value silently rides along unchanged.
+
+So the precise definition for the rule: **elaborate** = request to generate new derived content (an example, a worked case, added detail) in support of a prior claim — still requires full re-derivation, not just decoration. Want me to fold that distinction — elaborate needs re-derivation, reorder/reformat needs re-checking copied values — into the rule text, or keep it as one merged bullet?
+
+> rule and two subrules
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation, not decoration.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against the rule before writing; don't carry stale values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from the rule.
++- Reorder/reformat request → re-verify each carried-over value before
++  writing.
+```
+
+Proceed with this edit?
+
+> rule and two subrules
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation, not decoration.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against the rule before writing; don't carry stale values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from the rule.
++- Reorder/reformat request → re-verify each carried-over value before
++  writing.
+```
+
+Proceed with this edit?
+
+> what is not decoration?
+
+Fair catch — "not decoration" isn't defined anywhere, and I can't actually name a case where an elaborate/add-examples request would be pure decoration (no new derived value at all). Since that contrast doesn't correspond to any real category, it's not clarifying anything — it's filler that could confuse a cold reader into hunting for a distinction that doesn't exist. Better to just drop it.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against the rule before writing; don't carry stale values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from the rule.
++- Reorder/reformat request → re-verify each carried-over value before
++  writing.
+```
+
+Proceed with this edit?
+
+> what is not decoration?
+
+Fair catch — "not decoration" isn't defined anywhere, and I can't actually name a case where an elaborate/add-examples request would be pure decoration (no new derived value at all). Since that contrast doesn't correspond to any real category, it's not clarifying anything — it's filler that could confuse a cold reader into hunting for a distinction that doesn't exist. Better to just drop it.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against the rule before writing; don't carry stale values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from the rule.
++- Reorder/reformat request → re-verify each carried-over value before
++  writing.
+```
+
+Proceed with this edit?
+
+> which rule
+
+Good catch — "the rule" has no antecedent in this generic file. It only made sense in our conversation because we were talking about one specific formula (the fiscal-year mapping); this file has to stand alone for any future claim, so "the rule" is a dangling reference to nothing. Same problem appears in the reorder/reformat bullet ("against the rule"). Fix: replace with something self-contained — the value's own defining formula/source, not "the rule."
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against its source definition before writing; don't carry stale
++  values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from its defining formula
++  or derivation, not from the prior draft.
++- Reorder/reformat request → re-verify each carried-over value against its
++  source definition before writing.
+```
+
+Proceed with this edit?
+
+> which rule
+
+Good catch — "the rule" has no antecedent in this generic file. It only made sense in our conversation because we were talking about one specific formula (the fiscal-year mapping); this file has to stand alone for any future claim, so "the rule" is a dangling reference to nothing. Same problem appears in the reorder/reformat bullet ("against the rule"). Fix: replace with something self-contained — the value's own defining formula/source, not "the rule."
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++* Elaborate request (add examples/detail) → new derived content; requires
++  full re-derivation.
++* Reorder/reformat request (reorder, drop, rename) → re-check every copied
++  value against its source definition before writing; don't carry stale
++  values forward.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate request → example generated by pattern-matching prior format,
++  not recomputed.
++- Reorder/reformat request → stale value copied forward unchanged.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate request → recompute each new value from its defining formula
++  or derivation, not from the prior draft.
++- Reorder/reformat request → re-verify each carried-over value against its
++  source definition before writing.
+```
+
+Proceed with this edit?
+
+> do we need two separate instuructions for elabo and reorder reformat?
+
+No — the required action is identical in both cases (verify/derive against source before writing); the only difference was *why* it's easy to skip, which isn't essential to state. Merging loses no instruction, just removes duplicated phrasing.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate/reorder/reformat request → re-verify or re-derive every value
++against its source before writing; a cosmetic-looking request doesn't
++reduce that requirement.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its source before writing.
+```
+
+Proceed with this edit?
+
+> do we need two separate instuructions for elabo and reorder reformat?
+
+No — the required action is identical in both cases (verify/derive against source before writing); the only difference was *why* it's easy to skip, which isn't essential to state. Merging loses no instruction, just removes duplicated phrasing.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate/reorder/reformat request → re-verify or re-derive every value
++against its source before writing; a cosmetic-looking request doesn't
++reduce that requirement.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its source before writing.
+```
+
+Proceed with this edit?
+
+> a cosmetic-looking request doesn't
+  +reduce that requirement.? huh?
+add Elaborate (add examples/details)
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate (add examples/details)/reorder/reformat request → re-verify or
++re-derive every value against its source before writing.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its source before writing.
+```
+
+Proceed with this edit?
+
+> a cosmetic-looking request doesn't
+  +reduce that requirement.? huh?
+add Elaborate (add examples/details)
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate (add examples/details)/reorder/reformat request → re-verify or
++re-derive every value against its source before writing.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its source before writing.
+```
+
+Proceed with this edit?
+
+> re-verify or re-derive every value
+  +  against its source before writing.
+==>
+re-verify or re-derive every value
+  +  against its definition/formula/source before writing.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate (add examples/details)/reorder/reformat request → re-verify or
++re-derive every value against its definition/formula/source before
++writing.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its definition/formula/source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its definition/formula/source before writing.
+```
+
+Applied the wording change to all three occurrences for consistency. Proceed with this edit?
+
+> re-verify or re-derive every value
+  +  against its source before writing.
+==>
+re-verify or re-derive every value
+  +  against its definition/formula/source before writing.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim`
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+ **Rule:** Before surfacing any claim, cross-check against evidence in context
+ or reachable by a quick check. If evidence refutes it, stay silent.
++Elaborate (add examples/details)/reorder/reformat request → re-verify or
++re-derive every value against its definition/formula/source before
++writing.
+ 
+ **Violations:**
+ - Issue text says "not yet a problem" → still listed as active.
+ - Symbol absent from current file → flagged as missing without grepping
+   parent/sibling files for where it is assigned.
+ - Strike-through issue → listed as open.
++- Elaborate/reorder/reformat request → value carried forward from prior
++  draft without re-checking against its definition/formula/source.
+ 
+ **Correct:**
+ - Issue text qualifies the concern → skip it.
+ - Symbol absent from current file → grep all reachable files first; flag only
+   if genuinely absent everywhere.
+ - Strike-through → skip it.
++- Elaborate/reorder/reformat request → re-verify or re-derive every value
++  against its definition/formula/source before writing.
+```
+
+Applied the wording change to all three occurrences for consistency. Proceed with this edit?
+
+> Rules, Violations. Correct. this is all repetitive
+reformat by
+1. issue 1
+  * Violations/problem: 
+  * Correct
+  * Rules
+2. issue 2
+
+will this be ok for future claude to understand
+
+Yes — this is actually a meaningful improvement, not just cosmetic. The current format requires a reader to positionally align "Violations[3]" with "Correct[3]" across three separate lists — fragile if anyone ever reorders one list independently (ironically the exact kind of consistency bug this file is about). Self-contained per-issue blocks remove that dependency.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Qualified/hedged issue text
++   * Problem: issue text says "not yet a problem" → still listed as active.
++   * Correct: issue text qualifies the concern → skip it.
++   * Rule: read the full issue text before listing it as active; a
++     qualifier changes its status.
++
++2. Symbol absent from current file
++   * Problem: flagged as missing without grepping parent/sibling files for
++     where it is assigned.
++   * Correct: grep all reachable files first; flag only if genuinely
++     absent everywhere.
++   * Rule: before flagging a symbol missing, grep parent/sibling files
++     first.
++
++3. Strike-through issue
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strike-through markup before listing an issue as
++     open.
++
++4. Elaborate/reorder/reformat request
++   * Problem: value carried forward from prior draft without re-checking
++     against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate (add examples/details), reorder, and reformat
++     requests still require re-verifying or re-deriving every value —
++     don't carry it forward from the prior draft.
+```
+
+Proceed with this edit?
+
+> Rules, Violations. Correct. this is all repetitive
+reformat by
+1. issue 1
+  * Violations/problem: 
+  * Correct
+  * Rules
+2. issue 2
+
+will this be ok for future claude to understand
+
+Yes — this is actually a meaningful improvement, not just cosmetic. The current format requires a reader to positionally align "Violations[3]" with "Correct[3]" across three separate lists — fragile if anyone ever reorders one list independently (ironically the exact kind of consistency bug this file is about). Self-contained per-issue blocks remove that dependency.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Qualified/hedged issue text
++   * Problem: issue text says "not yet a problem" → still listed as active.
++   * Correct: issue text qualifies the concern → skip it.
++   * Rule: read the full issue text before listing it as active; a
++     qualifier changes its status.
++
++2. Symbol absent from current file
++   * Problem: flagged as missing without grepping parent/sibling files for
++     where it is assigned.
++   * Correct: grep all reachable files first; flag only if genuinely
++     absent everywhere.
++   * Rule: before flagging a symbol missing, grep parent/sibling files
++     first.
++
++3. Strike-through issue
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strike-through markup before listing an issue as
++     open.
++
++4. Elaborate/reorder/reformat request
++   * Problem: value carried forward from prior draft without re-checking
++     against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate (add examples/details), reorder, and reformat
++     requests still require re-verifying or re-deriving every value —
++     don't carry it forward from the prior draft.
+```
+
+Proceed with this edit?
+
+> what is Symbol absent?
+what is issue text? 
+can future claude understand it? I do not
+
+Fair — "issue text" and "Symbol absent" only make sense if you already know these refer to `CLAUDE_StandingIssues.md` entries and xref/symbol lookups from other memory files. Without that cross-reference, a cold-start future Claude can't apply them either. Let me make all four self-contained.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md — an entry's own text
++   qualifies/limits the concern, e.g. "not yet a problem, monitor if X
++   grows."
++   * Problem: reported as a currently active/open issue anyway.
++   * Correct: skip it — a self-qualifying entry is not currently active.
++   * Rule: read an issue entry's full text, not just its header, before
++     listing it as active.
++
++2. Symbol lookup limited to one file — checking whether a variable or
++   function is used, but only grepping the file currently open.
++   * Problem: no match in that one file → flagged as "not defined/used
++     anywhere."
++   * Correct: grep (or query xref.sqlite) parent, sourced, and sibling
++     files too; flag missing only if absent everywhere reachable.
++   * Rule: before claiming a symbol doesn't exist, check every file that
++     could define or read it, not just the one open.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md — an entry marked
++   resolved with markdown strikethrough (`~~text~~`).
++   * Problem: still listed as an open/active issue.
++   * Correct: treat as resolved, skip it.
++   * Rule: check for strikethrough markup before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g. "add
++   examples," "reorder these," "drop this row").
++   * Problem: value carried forward from the prior draft without
++     re-checking it against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate, reorder, and reformat requests still require
++     re-verifying or re-deriving every value — don't carry it forward
++     from the prior draft.
+```
+
+Proceed with this edit?
+
+> what is Symbol absent?
+what is issue text? 
+can future claude understand it? I do not
+
+Fair — "issue text" and "Symbol absent" only make sense if you already know these refer to `CLAUDE_StandingIssues.md` entries and xref/symbol lookups from other memory files. Without that cross-reference, a cold-start future Claude can't apply them either. Let me make all four self-contained.
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md — an entry's own text
++   qualifies/limits the concern, e.g. "not yet a problem, monitor if X
++   grows."
++   * Problem: reported as a currently active/open issue anyway.
++   * Correct: skip it — a self-qualifying entry is not currently active.
++   * Rule: read an issue entry's full text, not just its header, before
++     listing it as active.
++
++2. Symbol lookup limited to one file — checking whether a variable or
++   function is used, but only grepping the file currently open.
++   * Problem: no match in that one file → flagged as "not defined/used
++     anywhere."
++   * Correct: grep (or query xref.sqlite) parent, sourced, and sibling
++     files too; flag missing only if absent everywhere reachable.
++   * Rule: before claiming a symbol doesn't exist, check every file that
++     could define or read it, not just the one open.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md — an entry marked
++   resolved with markdown strikethrough (`~~text~~`).
++   * Problem: still listed as an open/active issue.
++   * Correct: treat as resolved, skip it.
++   * Rule: check for strikethrough markup before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g. "add
++   examples," "reorder these," "drop this row").
++   * Problem: value carried forward from the prior draft without
++     re-checking it against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate, reorder, and reformat requests still require
++     re-verifying or re-deriving every value — don't carry it forward
++     from the prior draft.
+```
+
+Proceed with this edit?
+
+> make them more compact without sacrificing understandability by future claude
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged StandingIssues entry (text qualifies the concern, e.g. "not yet
++   a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     it as active.
++
++2. Symbol lookup limited to the open file.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling files
++     too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through StandingIssues entry (`~~text~~` = resolved).
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated.
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source.
++   * Correct: re-verify or re-derive every value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward from the prior draft.
+```
+
+Proceed with this edit?
+
+> make them more compact without sacrificing understandability by future claude
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged StandingIssues entry (text qualifies the concern, e.g. "not yet
++   a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     it as active.
++
++2. Symbol lookup limited to the open file.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling files
++     too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through StandingIssues entry (`~~text~~` = resolved).
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated.
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source.
++   * Correct: re-verify or re-derive every value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward from the prior draft.
+```
+
+Proceed with this edit?
+
+> less compact
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md — an entry's own text
++   qualifies/limits the concern, e.g. "not yet a problem, monitor if X
++   grows."
++   * Problem: reported as a currently active/open issue anyway.
++   * Correct: skip it — a self-qualifying entry is not currently active.
++   * Rule: read an issue entry's full text, not just its header, before
++     listing it as active.
++
++2. Symbol lookup limited to one file — checking whether a variable or
++   function is used, but only grepping the file currently open.
++   * Problem: no match in that one file → flagged as "not defined/used
++     anywhere."
++   * Correct: grep (or query xref.sqlite) parent, sourced, and sibling
++     files too; flag missing only if absent everywhere reachable.
++   * Rule: before claiming a symbol doesn't exist, check every file that
++     could define or read it, not just the one open.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md — an entry marked
++   resolved with markdown strikethrough (`~~text~~`).
++   * Problem: still listed as an open/active issue.
++   * Correct: treat as resolved, skip it.
++   * Rule: check for strikethrough markup before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g. "add
++   examples," "reorder these," "drop this row").
++   * Problem: value carried forward from the prior draft without
++     re-checking it against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate, reorder, and reformat requests still require
++     re-verifying or re-deriving every value — don't carry it forward
++     from the prior draft.
+```
+
+Proceed with this edit?
+
+> less compact
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md — an entry's own text
++   qualifies/limits the concern, e.g. "not yet a problem, monitor if X
++   grows."
++   * Problem: reported as a currently active/open issue anyway.
++   * Correct: skip it — a self-qualifying entry is not currently active.
++   * Rule: read an issue entry's full text, not just its header, before
++     listing it as active.
++
++2. Symbol lookup limited to one file — checking whether a variable or
++   function is used, but only grepping the file currently open.
++   * Problem: no match in that one file → flagged as "not defined/used
++     anywhere."
++   * Correct: grep (or query xref.sqlite) parent, sourced, and sibling
++     files too; flag missing only if absent everywhere reachable.
++   * Rule: before claiming a symbol doesn't exist, check every file that
++     could define or read it, not just the one open.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md — an entry marked
++   resolved with markdown strikethrough (`~~text~~`).
++   * Problem: still listed as an open/active issue.
++   * Correct: treat as resolved, skip it.
++   * Rule: check for strikethrough markup before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g. "add
++   examples," "reorder these," "drop this row").
++   * Problem: value carried forward from the prior draft without
++     re-checking it against its definition/formula/source.
++   * Correct: re-verify or re-derive every value against its
++     definition/formula/source before writing.
++   * Rule: elaborate, reorder, and reformat requests still require
++     re-verifying or re-deriving every value — don't carry it forward
++     from the prior draft.
+```
+
+Proceed with this edit?
+
+> no, somewhere between this and compact version
+want to save number of lines
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway. Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     as active.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++     Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open. Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source. Correct: re-verify or re-derive every
++     value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward.
+```
+
+Proceed with this edit?
+
+> no, somewhere between this and compact version
+want to save number of lines
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway. Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     as active.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++     Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open. Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source. Correct: re-verify or re-derive every
++     value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward.
+```
+
+Proceed with this edit?
+
+> texts are fine, reformat so Correct as a separate list entry
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     as active.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source.
++   * Correct: re-verify or re-derive every value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward.
+```
+
+Proceed with this edit?
+
+> texts are fine, reformat so Correct as a separate list entry
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: skip it.
++   * Rule: read the full entry text, not just the header, before listing
++     as active.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too; flag only if absent everywhere.
++   * Rule: check every file that could define/read the symbol before
++     claiming it's missing.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open.
++   * Correct: skip it.
++   * Rule: check for strikethrough before listing an issue as open.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: value carried forward without re-checking against its
++     definition/formula/source.
++   * Correct: re-verify or re-derive every value before writing.
++   * Rule: these requests still require re-deriving every value, not
++     carrying it forward.
+```
+
+Proceed with this edit?
+
+> Problem: stale value may get carried forward.
+ Correct: re-evalueate every value against its
+  +     definition/formula/source before writing.
+
+we may not need Rules if we have Correct list
+
+reedit
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: read the full entry text before listing as active; skip if
++     it's self-qualifying.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too before flagging; skip only if absent everywhere.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open.
++   * Correct: check for strikethrough before listing as open; skip if
++     resolved.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: stale value may get carried forward.
++   * Correct: re-evaluate every value against its
++     definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> Problem: stale value may get carried forward.
+ Correct: re-evalueate every value against its
+  +     definition/formula/source before writing.
+
+we may not need Rules if we have Correct list
+
+reedit
+
+**File:** `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`
+**Section:** `# Logical consistency before surfacing any claim` (full restructure)
+
+```diff
+ # Logical consistency before surfacing any claim
+ 
+-**Rule:** Before surfacing any claim, cross-check against evidence in context
+-or reachable by a quick check. If evidence refutes it, stay silent.
+-
+-**Violations:**
+-- Issue text says "not yet a problem" → still listed as active.
+-- Symbol absent from current file → flagged as missing without grepping
+-  parent/sibling files for where it is assigned.
+-- Strike-through issue → listed as open.
+-
+-**Correct:**
+-- Issue text qualifies the concern → skip it.
+-- Symbol absent from current file → grep all reachable files first; flag only
+-  if genuinely absent everywhere.
+-- Strike-through → skip it.
++General rule: before surfacing any claim, cross-check against evidence in
++context or reachable by a quick check. If evidence refutes it, stay silent.
++
++1. Hedged entry in CLAUDE_StandingIssues.md (text qualifies the concern,
++   e.g. "not yet a problem, monitor if X grows").
++   * Problem: listed as active anyway.
++   * Correct: read the full entry text before listing as active; skip if
++     it's self-qualifying.
++
++2. Symbol lookup limited to the open file only.
++   * Problem: no match there → flagged as not defined/used anywhere.
++   * Correct: grep/query xref.sqlite across parent, sourced, sibling
++     files too before flagging; skip only if absent everywhere.
++
++3. Strike-through entry in CLAUDE_StandingIssues.md (`~~text~~` =
++   resolved).
++   * Problem: listed as open.
++   * Correct: check for strikethrough before listing as open; skip if
++     resolved.
++
++4. Elaborate/reorder/reformat request on a claim already stated (e.g.
++   "add examples," "reorder these").
++   * Problem: stale value may get carried forward.
++   * Correct: re-evaluate every value against its
++     definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> can future claude understand them?
+
+Items 1-3 are self-contained — each names a specific file (`CLAUDE_StandingIssues.md`, `xref.sqlite`) and gives a concrete syntax example (`~~text~~`), so a cold-start Claude can act on them without cross-referencing this conversation.
+
+Item 4 is weaker, and it's an inconsistency worth flagging: it states the abstract principle but, unlike 1-3, has no concrete worked example. Given that this whole session's lesson was "concrete examples catch errors, abstract restatements don't," leaving item 4 abstract undercuts the very rule it's describing. It also says "its definition/formula/source" without anchoring what that means in a real case.
+
+Proposed fix — add the actual case that produced this rule as the example:
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: asked to reorder fiscal-year examples, the Jan-2014 row
++     kept a wrong value (2014) through two edits even though its own
++     formula, unchanged, computed 2013.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Want this added, or is the abstract version acceptable for this one since the mechanism (not a specific file/tool) is the point?
+
+> can future claude understand them?
+
+Items 1-3 are self-contained — each names a specific file (`CLAUDE_StandingIssues.md`, `xref.sqlite`) and gives a concrete syntax example (`~~text~~`), so a cold-start Claude can act on them without cross-referencing this conversation.
+
+Item 4 is weaker, and it's an inconsistency worth flagging: it states the abstract principle but, unlike 1-3, has no concrete worked example. Given that this whole session's lesson was "concrete examples catch errors, abstract restatements don't," leaving item 4 abstract undercuts the very rule it's describing. It also says "its definition/formula/source" without anchoring what that means in a real case.
+
+Proposed fix — add the actual case that produced this rule as the example:
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: asked to reorder fiscal-year examples, the Jan-2014 row
++     kept a wrong value (2014) through two edits even though its own
++     formula, unchanged, computed 2013.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Want this added, or is the abstract version acceptable for this one since the mechanism (not a specific file/tool) is the point?
+
+> give a more easily understandable and short example
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a table row "5+5=9" survived two reorder/reformat edits
++     unchanged; recomputing shows 10, not 9.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> give a more easily understandable and short example
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a table row "5+5=9" survived two reorder/reformat edits
++     unchanged; recomputing shows 10, not 9.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> a more realistic example, there cannot be an entry 5+5=9
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a table row states "50/200 = 30%"; recomputing gives 25%,
++     but the wrong 30% survived two reorder/reformat edits unchanged.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> a more realistic example, there cannot be an entry 5+5=9
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a table row states "50/200 = 30%"; recomputing gives 25%,
++     but the wrong 30% survived two reorder/reformat edits unchanged.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> more realistic
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a summary states "NumSubMW = 500 for taxyear 2014"; the
++     defining formula sum(SubMW==1L) actually gives 480, but the stale
++     500 survived two reorder/reformat edits unchanged.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> more realistic
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: a summary states "NumSubMW = 500 for taxyear 2014"; the
++     defining formula sum(SubMW==1L) actually gives 480, but the stale
++     500 survived two reorder/reformat edits unchanged.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> incorporate "after reordering, 500 becomes 480" or something similar, in a compact way
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: NumSubMW = 500 (taxyear 2014) stayed 500 after reordering;
++     sum(SubMW==1L) actually gives 480.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> incorporate "after reordering, 500 becomes 480" or something similar, in a compact way
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: NumSubMW = 500 (taxyear 2014) stayed 500 after reordering;
++     sum(SubMW==1L) actually gives 480.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> Example: x = 500 stayed 500 after reordering; when reordering changed x = 500 ==> 480
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: x = 500 stayed 500 after reordering, even though
++     reordering changed x: 500 ==> 480.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> Example: x = 500 stayed 500 after reordering; when reordering changed x = 500 ==> 480
+
+```diff
+ 4. Elaborate/reorder/reformat request on a claim already stated (e.g.
+    "add examples," "reorder these").
+    * Problem: stale value may get carried forward.
++     Example: x = 500 stayed 500 after reordering, even though
++     reordering changed x: 500 ==> 480.
+    * Correct: re-evaluate every value against its
+      definition/formula/source before writing.
+```
+
+Proceed with this edit?
+
+> y
+
+Written to `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`, section "Logical consistency before surfacing any claim" — restructured into 4 self-contained issue blocks.
+
+Back on the min-wage task: the actual code fix (`TrueTaxYear` in `IRP5Condense.rmd` L650-668) is already written from earlier in this session. Want me to log this session's changes to `CLAUDE_LOG.md`/`CLAUDE_CHANGES.md`/`CLAUDE_TaskRecord.md` now, or continue on the pipeline (e.g. wire `FinYr20yr` into the `NumSubMW`/`Jobs`/`Employees` counts in `IRP5HHI.rmd`, which is still open)?
+
+> y
+
+Written to `/mnt/c/seiro/languages/claude/.claude/memory/feedback_proposal_style.md`, section "Logical consistency before surfacing any claim" — restructured into 4 self-contained issue blocks.
+
+Back on the min-wage task: the actual code fix (`TrueTaxYear` in `IRP5Condense.rmd` L650-668) is already written from earlier in this session. Want me to log this session's changes to `CLAUDE_LOG.md`/`CLAUDE_CHANGES.md`/`CLAUDE_TaskRecord.md` now, or continue on the pipeline (e.g. wire `FinYr20yr` into the `NumSubMW`/`Jobs`/`Employees` counts in `IRP5HHI.rmd`, which is still open)?
+
+--- session end 11:52 JST ---
+
+> write to logs, will exit in 2 mins
+
+Logged to sandbox sections of `CLAUDE_LOG.md`, `CLAUDE_CHANGES.md`, `CLAUDE_StandingIssues.md`, updated `CLAUDE_TaskRecord.md` "Where to pick up," and appended session-end marker to `CLAUDE_CC.md` (auto-append hook covers per-turn capture). Session 16 Pale Reed continues next time you resume MinWageMarketPower.
+
+> write to logs, will exit in 2 mins
+
+Logged to sandbox sections of `CLAUDE_LOG.md`, `CLAUDE_CHANGES.md`, `CLAUDE_StandingIssues.md`, updated `CLAUDE_TaskRecord.md` "Where to pick up," and appended session-end marker to `CLAUDE_CC.md` (auto-append hook covers per-turn capture). Session 16 Pale Reed continues next time you resume MinWageMarketPower.
+
+> go back to min wage, read files
+
+**Where we left off** — Session 16 Pale Reed (2026-07-02, resume with this name):
+
+Completed:
+* `IRP5Condense.rmd` L650-668 `TrueTaxYear` fiscal-year bug fixed (taxyear = starting year, Mar Y–Feb Y+1)
+* Traced `FinYr20yr` (`IRP5HHI.rmd` L322-326) — dead flag, never gates the counts above it
+
+Open / next:
+1. `IRP5HHI.rmd` L790 (or L720 per older notes — confirm current line) xlim fix: `c(1,100)` → `c(0,1)` on FA density plot
+2. `IRP5HHI.rmd` L553-566 aggsum double-count (ag1+ag2) — verify
+3. `IRP5HHI.rmd` L404 `{create FA panel}` `eval=F` — needs `eval=T` since FAD accumulation was removed from main loop
+4. Wire `FinYr20yr` into `IRP5HHI.rmd` L289-311 count block, or confirm intentionally unused
+
+xref.sqlite rebuild running in background (was stale since 2026-06-04). Want to see more detail on any of these four items, or pick one to start on?
+
+> go back to min wage, read files
+
+**Where we left off** — Session 16 Pale Reed (2026-07-02, resume with this name):
+
+Completed:
+* `IRP5Condense.rmd` L650-668 `TrueTaxYear` fiscal-year bug fixed (taxyear = starting year, Mar Y–Feb Y+1)
+* Traced `FinYr20yr` (`IRP5HHI.rmd` L322-326) — dead flag, never gates the counts above it
+
+Open / next:
+1. `IRP5HHI.rmd` L790 (or L720 per older notes — confirm current line) xlim fix: `c(1,100)` → `c(0,1)` on FA density plot
+2. `IRP5HHI.rmd` L553-566 aggsum double-count (ag1+ag2) — verify
+3. `IRP5HHI.rmd` L404 `{create FA panel}` `eval=F` — needs `eval=T` since FAD accumulation was removed from main loop
+4. Wire `FinYr20yr` into `IRP5HHI.rmd` L289-311 count block, or confirm intentionally unused
+
+xref.sqlite rebuild running in background (was stale since 2026-06-04). Want to see more detail on any of these four items, or pick one to start on?
+
+> check web for financial year def for south africa
+
+What would you like to clarify? I'm ready for additional context or questions before we settle the `taxyear` convention.
+
+> check web for financial year def for south africa
+
+What would you like to clarify? I'm ready for additional context or questions before we settle the `taxyear` convention.
+
+> check web further for def
+
+Further web evidence sharpens this considerably — and it points toward my fix being **inverted**.
+
+## What the additional search establishes
+
+**1. This is the SARS-NT panel, and its `taxyear` is almost certainly the Year of Assessment (end-year naming).**
+The IRP5/IT3(a) certificate carries **three distinct year markers**: *Year of Assessment* (CCYY), *Transaction Year* (CCYY), and *Reconciliation Period* (CCYYMM). The standard SARS-NT panel convention labels the panel year by the **calendar year in which February falls** — i.e. "2020 tax year = 1 Mar 2019 → 29 Feb 2020." That is the **end-year** convention, matching the SARS individual definition.
+
+**2. The `TrueTaxYear`/`DropThisForRev` logic is precisely the Transaction-Year ≠ Year-of-Assessment problem.**
+SARS explicitly flags that these two diverge for **lump sums and prior-year income paid in the current year** (variable-remuneration timing rule, from 1 Mar 2013). Those are exactly the "revision rows" the chunk is trying to detect and drop — a job whose actual employment period sits in an earlier assessment year than the label on the certificate.
+
+## Consequence for the L661-668 fix
+
+Under end-year convention, tax year Y = Mar(Y-1) → Feb(Y):
+
+| | Correct (end-year) | Original code L651-652 | My fix L661-662 |
+|---|---|---|---|
+| `TYStart` | Mar(Y-1) = `taxyear-1` | `taxyear-1` ✓ | `taxyear` ✗ |
+| `TYEnd` | ~Mar(Y) = `taxyear` | `taxyear` ✓ | `taxyear+1` ✗ |
+
+* The **original** `TYStart=taxyear-1, TYEnd=taxyear` was correct; my edit inverted both.
+* For `TrueTaxYear`, the original `year(DateStart)` *was* wrong (plain calendar year), but the correct repair under end-year convention is **`year(DateStart) + as.integer(month(DateStart) >= 3)`** — not my `- as.integer(month < 3)` (which yields the start-year label).
+* Consistency check: the saved `DropThisForRev = 9.02%` (L697) only makes sense under the original end-year `TYStart`. Under my start-year `TYStart`, ordinary rows (`DateStart` after Mar of the *following* calendar year) get mass-flagged — the rate would be far higher. So that saved output corroborates end-year.
+
+**Residual uncertainty:** the search didn't surface a SARS-NT data-dictionary line stating verbatim which of the three markers the panel's `taxyear` equals. The authoritative source is **Pieterse, Kreuser & Gavin (2018), "Introduction to the SARS-NT Firm-Level Panel," *SAJE*** (§2.6 on aggregation) plus the panel user guide.
+
+## Recommendation
+
+Evidence leans strongly that my Session 16 edit is backwards. I'd:
+1. **Verify from the data** — tabulate min/max `DateStart` (or `periodemployedfrom`) per `taxyear`; whichever bound is Mar-vs-Feb settles start-vs-end in seconds. *(I'll show a Goal/Steps/Cost block and wait for y/n.)* — **recommended**, or
+2. **Revert to end-year** now — restore `TYStart=taxyear-1`, `TYEnd=taxyear`, set `TrueTaxYear := year(DateStart) + as.integer(month(DateStart) >= 3)`, and fix the spurious "verified against L608-611" note in `CLAUDE_CHANGES.md`, or
+3. **Confirm start-year** — if you know the extract relabels to the start year, my fix stands and I only correct the changelog note.
+
+Which path — 1, 2, or 3?
+
+Sources:
+- [Personal Income Tax — SARS](https://www.sars.gov.za/types-of-tax/personal-income-tax/)
+- [Tax Year — TaxTim SA](https://www.taxtim.com/za/tax-guides/definitions/tax-year/)
+- [Completing & Submitting Employer Declarations — SARS](https://www.sars.gov.za/types-of-tax/pay-as-you-earn/completing-and-submitting-employer-declarations/)
+- [Updated FAQ – IRP5/IT3(a) tax certificate — SARS](https://www.sars.gov.za/latest-news/updated-faq-irp5-it3a-tax-certificate/)
+- [Employee Income Tax Certificate (IRP5/IT3(a)) — National Treasury NT-SDF](https://www.treasury.gov.za/research/NT-SDF/Available%20Datasets/Employee%20Income%20Payroll%20Certificate%20-%20IRP5%20form.pdf)
+- [Introduction to the SARS-NT Firm-Level Panel — Pieterse et al. (2018), *SAJE*](https://onlinelibrary.wiley.com/doi/10.1111/saje.12156)
+- [Guide for Codes Applicable to Employees Tax Certificates — SARS](https://www.sars.gov.za/guide-for-codes-applicable-to-employees-tax-certificates-2026/)
+
+> check web further for def
+
+Further web evidence sharpens this considerably — and it points toward my fix being **inverted**.
+
+## What the additional search establishes
+
+**1. This is the SARS-NT panel, and its `taxyear` is almost certainly the Year of Assessment (end-year naming).**
+The IRP5/IT3(a) certificate carries **three distinct year markers**: *Year of Assessment* (CCYY), *Transaction Year* (CCYY), and *Reconciliation Period* (CCYYMM). The standard SARS-NT panel convention labels the panel year by the **calendar year in which February falls** — i.e. "2020 tax year = 1 Mar 2019 → 29 Feb 2020." That is the **end-year** convention, matching the SARS individual definition.
+
+**2. The `TrueTaxYear`/`DropThisForRev` logic is precisely the Transaction-Year ≠ Year-of-Assessment problem.**
+SARS explicitly flags that these two diverge for **lump sums and prior-year income paid in the current year** (variable-remuneration timing rule, from 1 Mar 2013). Those are exactly the "revision rows" the chunk is trying to detect and drop — a job whose actual employment period sits in an earlier assessment year than the label on the certificate.
+
+## Consequence for the L661-668 fix
+
+Under end-year convention, tax year Y = Mar(Y-1) → Feb(Y):
+
+| | Correct (end-year) | Original code L651-652 | My fix L661-662 |
+|---|---|---|---|
+| `TYStart` | Mar(Y-1) = `taxyear-1` | `taxyear-1` ✓ | `taxyear` ✗ |
+| `TYEnd` | ~Mar(Y) = `taxyear` | `taxyear` ✓ | `taxyear+1` ✗ |
+
+* The **original** `TYStart=taxyear-1, TYEnd=taxyear` was correct; my edit inverted both.
+* For `TrueTaxYear`, the original `year(DateStart)` *was* wrong (plain calendar year), but the correct repair under end-year convention is **`year(DateStart) + as.integer(month(DateStart) >= 3)`** — not my `- as.integer(month < 3)` (which yields the start-year label).
+* Consistency check: the saved `DropThisForRev = 9.02%` (L697) only makes sense under the original end-year `TYStart`. Under my start-year `TYStart`, ordinary rows (`DateStart` after Mar of the *following* calendar year) get mass-flagged — the rate would be far higher. So that saved output corroborates end-year.
+
+**Residual uncertainty:** the search didn't surface a SARS-NT data-dictionary line stating verbatim which of the three markers the panel's `taxyear` equals. The authoritative source is **Pieterse, Kreuser & Gavin (2018), "Introduction to the SARS-NT Firm-Level Panel," *SAJE*** (§2.6 on aggregation) plus the panel user guide.
+
+## Recommendation
+
+Evidence leans strongly that my Session 16 edit is backwards. I'd:
+1. **Verify from the data** — tabulate min/max `DateStart` (or `periodemployedfrom`) per `taxyear`; whichever bound is Mar-vs-Feb settles start-vs-end in seconds. *(I'll show a Goal/Steps/Cost block and wait for y/n.)* — **recommended**, or
+2. **Revert to end-year** now — restore `TYStart=taxyear-1`, `TYEnd=taxyear`, set `TrueTaxYear := year(DateStart) + as.integer(month(DateStart) >= 3)`, and fix the spurious "verified against L608-611" note in `CLAUDE_CHANGES.md`, or
+3. **Confirm start-year** — if you know the extract relabels to the start year, my fix stands and I only correct the changelog note.
+
+Which path — 1, 2, or 3?
+
+Sources:
+- [Personal Income Tax — SARS](https://www.sars.gov.za/types-of-tax/personal-income-tax/)
+- [Tax Year — TaxTim SA](https://www.taxtim.com/za/tax-guides/definitions/tax-year/)
+- [Completing & Submitting Employer Declarations — SARS](https://www.sars.gov.za/types-of-tax/pay-as-you-earn/completing-and-submitting-employer-declarations/)
+- [Updated FAQ – IRP5/IT3(a) tax certificate — SARS](https://www.sars.gov.za/latest-news/updated-faq-irp5-it3a-tax-certificate/)
+- [Employee Income Tax Certificate (IRP5/IT3(a)) — National Treasury NT-SDF](https://www.treasury.gov.za/research/NT-SDF/Available%20Datasets/Employee%20Income%20Payroll%20Certificate%20-%20IRP5%20form.pdf)
+- [Introduction to the SARS-NT Firm-Level Panel — Pieterse et al. (2018), *SAJE*](https://onlinelibrary.wiley.com/doi/10.1111/saje.12156)
+- [Guide for Codes Applicable to Employees Tax Certificates — SARS](https://www.sars.gov.za/guide-for-codes-applicable-to-employees-tax-certificates-2026/)
+
+> I edited TrueTaxYear, check and comment
+
+Read L648-712. The `TYStart`/`TYEnd` revert and the formula direction are now correct — but there's a concrete inconsistency in the `TrueTaxYear` line itself.
+
+## What's now correct ✓
+
+* **L650-651** — reverted to end-year convention, matching SARS / SARS-NT year-of-assessment:
+  ```r
+  650: irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]   # Mar(Y-1)
+  651: irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear,   "/03/01"))]   # Mar(Y)
+  ```
+* **Formula direction** — `+ as.integer(month >= 3)` is the right mapping for end-year YoA: a date in Mar–Dec of calendar year `c` → YoA `c+1`; Jan–Feb of `c` → YoA `c`. The worked example (L655-660) is internally consistent and correct.
+
+## Issue: comment says `DateStart`, code uses `DateEnd`
+
+```
+653: #### Correct: DateStart (periodemployedfrom) and DateEnd (periodemployedto)
+655: #### Examples: DateStart          ← worked example is built on DateStart
+657: ####   Jan 2014: ... ==> 2014+0 = 2014
+...
+663: ####   TrueTaxYear := year(DateStart)] ## wrong   ← old ref uses DateStart
+664:   TrueTaxYear := year(DateEnd) + as.integer(month(DateEnd) >= 3)]   ← code uses DateEnd
+```
+
+* **Concern:** the L655-660 example demonstrates `year(DateStart) + (month(DateStart)>=3)`, but the live line L664 computes it on `DateEnd`. For a period clipped inside one assessment year they coincide, so most rows are unaffected — but they **diverge for an episode that straddles a 1-March boundary**, and the revision filter L662 explicitly admits such rows.
+
+* **Failure case:** the filter is `DateStart < TYStart & DateEnd < TYEnd`, i.e. `DateStart < Mar(Y-1)` **and** `DateEnd < Mar(Y)`. So `DateEnd` can legitimately fall *inside* the current YoA (up to Feb Y). Take a job `DateStart = Nov(Y-2)`, `DateEnd = Jan(Y)`, labelled `taxyear = Y`:
+  * `DateEnd` → `year=Y, month<3` → `TrueTaxYear = Y` → equals `taxyear` → **not flagged**, row keeps label `Y`.
+  * `DateStart` → `year=Y-2, month>=3` → `TrueTaxYear = Y-1` → **≠ taxyear → flagged** for `DropThisForRev`.
+  
+  Opposite outcomes for the same row. `DateEnd` anchors the episode to the year it *ended* (nearest the filing); `DateStart` to when it *began*.
+
+## Recommendation
+
+Pick one anchor deliberately and make the comment match the code:
+1. **`DateStart`** (my recommendation) — matches the L655-660 worked example and the L663 "wrong" reference (so the diff reads purely as adding the `+month>=3` correction), and reads as "the row belongs to the assessment year the job began." Change L664 to `DateStart`.
+2. **`DateEnd`** — keep L664, but rewrite the L655-660 example and the L663 reference to `DateEnd` so the file is self-consistent.
+
+Was the switch to `DateEnd` intentional, or should L664 be `DateStart`? Also note I have **not** re-verified the saved `9.0204%` / mismatch table (L666-670) against this formula — those figures predate it and may now be stale; worth a re-run before trusting them.
+
+> I edited TrueTaxYear, check and comment
+
+Read L648-712. The `TYStart`/`TYEnd` revert and the formula direction are now correct — but there's a concrete inconsistency in the `TrueTaxYear` line itself.
+
+## What's now correct ✓
+
+* **L650-651** — reverted to end-year convention, matching SARS / SARS-NT year-of-assessment:
+  ```r
+  650: irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1, "/03/01"))]   # Mar(Y-1)
+  651: irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear,   "/03/01"))]   # Mar(Y)
+  ```
+* **Formula direction** — `+ as.integer(month >= 3)` is the right mapping for end-year YoA: a date in Mar–Dec of calendar year `c` → YoA `c+1`; Jan–Feb of `c` → YoA `c`. The worked example (L655-660) is internally consistent and correct.
+
+## Issue: comment says `DateStart`, code uses `DateEnd`
+
+```
+653: #### Correct: DateStart (periodemployedfrom) and DateEnd (periodemployedto)
+655: #### Examples: DateStart          ← worked example is built on DateStart
+657: ####   Jan 2014: ... ==> 2014+0 = 2014
+...
+663: ####   TrueTaxYear := year(DateStart)] ## wrong   ← old ref uses DateStart
+664:   TrueTaxYear := year(DateEnd) + as.integer(month(DateEnd) >= 3)]   ← code uses DateEnd
+```
+
+* **Concern:** the L655-660 example demonstrates `year(DateStart) + (month(DateStart)>=3)`, but the live line L664 computes it on `DateEnd`. For a period clipped inside one assessment year they coincide, so most rows are unaffected — but they **diverge for an episode that straddles a 1-March boundary**, and the revision filter L662 explicitly admits such rows.
+
+* **Failure case:** the filter is `DateStart < TYStart & DateEnd < TYEnd`, i.e. `DateStart < Mar(Y-1)` **and** `DateEnd < Mar(Y)`. So `DateEnd` can legitimately fall *inside* the current YoA (up to Feb Y). Take a job `DateStart = Nov(Y-2)`, `DateEnd = Jan(Y)`, labelled `taxyear = Y`:
+  * `DateEnd` → `year=Y, month<3` → `TrueTaxYear = Y` → equals `taxyear` → **not flagged**, row keeps label `Y`.
+  * `DateStart` → `year=Y-2, month>=3` → `TrueTaxYear = Y-1` → **≠ taxyear → flagged** for `DropThisForRev`.
+  
+  Opposite outcomes for the same row. `DateEnd` anchors the episode to the year it *ended* (nearest the filing); `DateStart` to when it *began*.
+
+## Recommendation
+
+Pick one anchor deliberately and make the comment match the code:
+1. **`DateStart`** (my recommendation) — matches the L655-660 worked example and the L663 "wrong" reference (so the diff reads purely as adding the `+month>=3` correction), and reads as "the row belongs to the assessment year the job began." Change L664 to `DateStart`.
+2. **`DateEnd`** — keep L664, but rewrite the L655-660 example and the L663 reference to `DateEnd` so the file is self-consistent.
+
+Was the switch to `DateEnd` intentional, or should L664 be `DateStart`? Also note I have **not** re-verified the saved `9.0204%` / mismatch table (L666-670) against this formula — those figures predate it and may now be stale; worth a re-run before trusting them.
+
+--- session end 12:49 JST ---
+
+--- Session 17 Cedar Lark | 2026-07-02 16:21 JST ---
+
+> min Wage project, read rmd/html files, find issues (including speeding up computation or enhance readability), and suggest solutions
+
+
+> min Wage project, read rmd/html files, find issues (including speeding up computation or enhance readability), and suggest solutions
+
+Review of the MinWageMarketPower workflow files is done — **3 confirmed bugs (one blocks IRP5Condense.rmd from running), 4 speed items, and several minor points**, verified against the rendered HTML, git history, and xref.sqlite. Nothing below duplicates the already-open StandingIssues items. No edits made — reply with issue numbers to apply (and option 1/2 for A3). Sandbox entries were appended to `CLAUDE_LOG.md` and `CLAUDE_StandingIssues.md`.
+
+State change noted first: **IRP5HHI.rmd L376 again accumulates `FAD` in the main loop** (qsave at L382), so Session 16's "L404 `{create FA panel}` needs eval=T" is superseded — that chunk is redundant again and can stay `eval=F`.
+
+---
+
+## A. IRP5Condense.rmd — bugs
+
+### A1. L985 — missing `)`: `{create ObPattern}` cannot parse (CONFIRMED regression)
+
+Current:
+```r
+984:  for (jj in grep("^Ob", colnames(idyrW)))
+985:    for (ii in which(is.na(idyrW[, jj, with = F] | idyrW[, jj, with = F] != "")) 
+986:      set(idyrW, i = ii, j = jj, value = 0L)
+```
+
+Concern:
+L985 opens 3 parens, closes 2. The rendered `IRP5Condense.html` shows the same line ending `")))` — three closes — so a paren was lost between the last successful render and the current commit (it is in HEAD too; today's diff only touches TrueTaxYear). Next run: `unexpected symbol` error, the whole chunk through `irp5.qs`/`irp5a.qs` fails.
+
+Proposed fix (choose one):
+1. **(Recommended)** Replace the double loop with the clean equivalent already drafted (commented) at L988-989:
+```diff
+-for (jj in grep("^Ob", colnames(idyrW)))
+-  for (ii in which(is.na(idyrW[, jj, with = F] | idyrW[, jj, with = F] != "")) 
+-    set(idyrW, i = ii, j = jj, value = 0L)
+ cols <- grepout("^Ob", colnames(idyrW))
++#### CLAUDE tpo: 2026-07-02 — L985 lost a ")" (html render had three); replaced with
++####   the equivalent lapply fill drafted below.
++idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
+```
+2. Minimal: restore the third `)` at end of L985.
+3. Structural: `dcast(..., fill = 0L)` (A5) removes this fill step entirely.
+
+Cost: none; options 1/3 are also faster.
+
+### A2. L990, L1051, L1070 — `paste(.SD, collapse = "")` makes all three ObPattern variables a single recycled string
+
+```r
+990: idyrW[, IObPattern := paste(.SD, sep = "", collapse = ""), 
+991:   .SDcols = cols]
+```
+(same for `EObPattern` L1051-1052, `FObPattern` L1070-1071)
+
+Concern: `paste()` receives `.SD` as **one list argument** — each whole column is deparsed to a single string and `collapse` joins them into one scalar, recycled to every row. `IObPattern`/`EObPattern`/`FObPattern` in `ObPattern.qs`/`irp5.qs` are therefore identical garbage strings, not per-row "110011…" patterns. xref.sqlite shows only archived dated-folder copies read these columns, so current HHI/Merge/Impacts results are unaffected — but any future complete-panel use would be silently wrong.
+
+Proposed fix: `idyrW[, IObPattern := do.call(paste0, .SD), .SDcols = cols]` (do.call unpacks `.SD` into parallel vectors → true row-wise paste; verified against the data.table `.SD` vignette). Cost: seconds; far cheaper than deparsing full columns.
+
+### A3. L688-691 — `DropThisForRev` drops the revision rows and keeps the superseded originals; `by=` is a no-op
+
+```r
+689: irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+690:   DropThisForRev := 1L, 
+691:   by = c(geovars, "taxrefno", "UID")]
+```
+
+Concern:
+* In `DT[i, j := v, by=g]`, `i` is evaluated **once, globally** — `by=` never scopes it; with constant `j = 1L` the grouping does nothing. The per-person logic in the comment (L677-687) never happens.
+* The conjunct `& TrueTaxYear != taxyear` flags rows that **are themselves revision entries** — the opposite of your worked example (L679-684), which drops the originals (`2011|2011`, `2012|2012`) and keeps+relabels the revisions. As written, ~9.02% of rows = essentially all revision entries are deleted, superseded originals stay, and `setnames(TrueTaxYear→taxyear)` relabels nothing. Episodes existing only as revision reports vanish — contradicting L610-611 ("use this row for 2014").
+
+Proposed fix — per-person update join:
+```r
+irp5gi[, DropThisForRev := 0L]
+rev <- unique(irp5gi[TrueTaxYear != taxyear,
+  .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo,
+    taxrefno, UID, taxyear = TrueTaxYear)])
+irp5gi[rev, DropThisForRev := as.integer(TrueTaxYear == taxyear),
+  on = c(geovars, "taxrefno", "UID", "taxyear")]
+```
+Join-key decision:
+1. `geovars + taxrefno + UID + taxyear` (matches comment) — revision rows with missing/different geo won't match → both rows kept (duplicate years after relabel).
+2. `taxrefno + UID + taxyear` — robust to geo gaps; over-drops if a person moved between establishments of one firm.
+
+Cost: one keyed join, fast. **Materially changes the panel — the saved 9.0204% figure and mismatch table must be re-run (already flagged stale in the sandbox).**
+
+## A′. IRP5Condense.rmd — speed
+
+* **A4, L131-133:** 5-column grouped `.N` on ~12M rows × 15 files, overwritten with `0L` on the next line (`Num` is properly recomputed at L196). Comment out L131-132, keep `Num := 0L` as the placeholder the L144 select needs.
+* **A5, L975-986:** base `reshape()` on ~200M rows → `dcast(idyr, ...9 id cols... ~ taxyear, value.var="Ob", fill=0L, fun.aggregate=max)` + `setnames` to `Ob.YYYY`. Threaded, and `fill=0L` eliminates the A1 loop by construction; `fun.aggregate=max` handles duplicate person-establishment-year rows that `reshape` now silently resolves by first-row.
+* **A6, L1117-1123 `{MeanStdN of employment}`:** after `num == 1L`, `mean(num)` ≡ 1 and `var(num)` ≡ 0 — intended `Num`; `by=EstabIDTx` also ignores `taxyear`, and the `:=` on the 175M-row table explains the chunk's 36GB alloc error. Aggregate instead: `EstabN <- irp5[, .(Num=.N), by=.(EstabIDTx, taxyear)]; MeanStdN <- EstabN[, .(mean=round(mean(Num),3), std=round(sd(Num),3), N=.N), by=taxyear]`.
+* **A9, L538-540:** `FillInLocMuni := Bus_adr_Geo_Munic[CanFill==1L][1], by=FirmUInd` is the slow grouped-closure pattern your `feedback_datatable_scale` rule replaces — apply the same subset → unique → update-join used in the geo15vars block just below (L740-781).
+* Minor: L971 `if (all(idyr[, uid == UID]))` is NA-unsafe → `isTRUE(all(...))` (frg); L1093-1094 both `setkey()` sorts are wasted — the L1094 join uses different `on=` columns (eff).
+
+## B. IRP5HHI.rmd
+
+* **B1 (speed), L289-309:** eight grouped `:=` passes per year collapse to two multi-assign calls, e.g. `ipyrc[, c("NumSubMW","Jobs","NumSubMWe","Employees") := .(sum(SubMW==1L), sum(IncomeMonth>0), uniqueN(UID[SubMW==1L]), uniqueN(UID[IncomeMonth>0])), by=.(Txrf, taxyear)]` (same for the MP level). `taxyear` in `by=` is also constant inside each iteration. This is the "20-30 min" chunk — expect a meaningful cut.
+* **B2 (frg), L1162/L1164:** `nHHI`/`nHHIG` are `0/0 = NaN` for single-worker markets; guard with `fifelse(WorkersInMarket > 1, ..., NA_real_)` if they ever enter regressions.
+
+## C. IRP5MergeData.rmd
+
+* **C1 (tpo), L280:** `table(LSMa2[num == 1L, HHIBaseYear])` undercounts — `num` was numbered on `LSMa1` before the has2013 selection, so kept 2013 rows with `num > 1` drop out of the display. Use `table(LSMa2[, HHIBaseYear])`.
+* **C2 (com), L253-256:** `ReportEveryYear`'s `by=` omits `busprov_geo` while `EstID` (L262) includes it — inconsistent establishment definition.
+
+## D. IRP5Impacts.rmd
+
+* **D1 (tpo), L792:** in `{select winsorized estimation sample}`, `DESS[[yy]][[jj]] <- dess` should be `DESSw` — `DESSw.qs` (L825) currently saves a list of NULLs and the winsorized destats overwrite in-memory `DESS` (disk `DESS.qs` from L260 is fine).
+* **D2 (com), L693-694:** comment says `abs(rJobsMP) > 2`, code uses `> 6`, narrative says 600% — align the comment.
+
+## Readability
+
+* IRP5Condense.rmd lacks the "What this file does (chunk summary)" section that makes IRP5HHI.rmd easy to navigate — worth adding.
+* Stale siblings (`IRP5HHI_.rmd`, `IRP5Condense_old.html`, `IRP5Condense_WithTaxrefno.rmd`) — confirm archived status (`nip`) so future reviews skip them.
+
+**Suggested order:** A1 (unblocks the file) → A2 → A3 (needs your key decision) → D1 → A6 → C1, then A4/A5/A9/B1 before the next full pipeline run.
+
+Sources: [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html), [Paste multiple columns together in R](https://statisticsglobe.com/paste-multiple-columns-together-in-r)
+Review of the MinWageMarketPower workflow files is done — **3 confirmed bugs (one blocks IRP5Condense.rmd from running), 4 speed items, and several minor points**, verified against the rendered HTML, git history, and xref.sqlite. Nothing below duplicates the already-open StandingIssues items. No edits made — reply with issue numbers to apply (and option 1/2 for A3). Sandbox entries were appended to `CLAUDE_LOG.md` and `CLAUDE_StandingIssues.md`.
+
+State change noted first: **IRP5HHI.rmd L376 again accumulates `FAD` in the main loop** (qsave at L382), so Session 16's "L404 `{create FA panel}` needs eval=T" is superseded — that chunk is redundant again and can stay `eval=F`.
+
+---
+
+## A. IRP5Condense.rmd — bugs
+
+### A1. L985 — missing `)`: `{create ObPattern}` cannot parse (CONFIRMED regression)
+
+Current:
+```r
+984:  for (jj in grep("^Ob", colnames(idyrW)))
+985:    for (ii in which(is.na(idyrW[, jj, with = F] | idyrW[, jj, with = F] != "")) 
+986:      set(idyrW, i = ii, j = jj, value = 0L)
+```
+
+Concern:
+L985 opens 3 parens, closes 2. The rendered `IRP5Condense.html` shows the same line ending `")))` — three closes — so a paren was lost between the last successful render and the current commit (it is in HEAD too; today's diff only touches TrueTaxYear). Next run: `unexpected symbol` error, the whole chunk through `irp5.qs`/`irp5a.qs` fails.
+
+Proposed fix (choose one):
+1. **(Recommended)** Replace the double loop with the clean equivalent already drafted (commented) at L988-989:
+```diff
+-for (jj in grep("^Ob", colnames(idyrW)))
+-  for (ii in which(is.na(idyrW[, jj, with = F] | idyrW[, jj, with = F] != "")) 
+-    set(idyrW, i = ii, j = jj, value = 0L)
+ cols <- grepout("^Ob", colnames(idyrW))
++#### CLAUDE tpo: 2026-07-02 — L985 lost a ")" (html render had three); replaced with
++####   the equivalent lapply fill drafted below.
++idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
+```
+2. Minimal: restore the third `)` at end of L985.
+3. Structural: `dcast(..., fill = 0L)` (A5) removes this fill step entirely.
+
+Cost: none; options 1/3 are also faster.
+
+### A2. L990, L1051, L1070 — `paste(.SD, collapse = "")` makes all three ObPattern variables a single recycled string
+
+```r
+990: idyrW[, IObPattern := paste(.SD, sep = "", collapse = ""), 
+991:   .SDcols = cols]
+```
+(same for `EObPattern` L1051-1052, `FObPattern` L1070-1071)
+
+Concern: `paste()` receives `.SD` as **one list argument** — each whole column is deparsed to a single string and `collapse` joins them into one scalar, recycled to every row. `IObPattern`/`EObPattern`/`FObPattern` in `ObPattern.qs`/`irp5.qs` are therefore identical garbage strings, not per-row "110011…" patterns. xref.sqlite shows only archived dated-folder copies read these columns, so current HHI/Merge/Impacts results are unaffected — but any future complete-panel use would be silently wrong.
+
+Proposed fix: `idyrW[, IObPattern := do.call(paste0, .SD), .SDcols = cols]` (do.call unpacks `.SD` into parallel vectors → true row-wise paste; verified against the data.table `.SD` vignette). Cost: seconds; far cheaper than deparsing full columns.
+
+### A3. L688-691 — `DropThisForRev` drops the revision rows and keeps the superseded originals; `by=` is a no-op
+
+```r
+689: irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+690:   DropThisForRev := 1L, 
+691:   by = c(geovars, "taxrefno", "UID")]
+```
+
+Concern:
+* In `DT[i, j := v, by=g]`, `i` is evaluated **once, globally** — `by=` never scopes it; with constant `j = 1L` the grouping does nothing. The per-person logic in the comment (L677-687) never happens.
+* The conjunct `& TrueTaxYear != taxyear` flags rows that **are themselves revision entries** — the opposite of your worked example (L679-684), which drops the originals (`2011|2011`, `2012|2012`) and keeps+relabels the revisions. As written, ~9.02% of rows = essentially all revision entries are deleted, superseded originals stay, and `setnames(TrueTaxYear→taxyear)` relabels nothing. Episodes existing only as revision reports vanish — contradicting L610-611 ("use this row for 2014").
+
+Proposed fix — per-person update join:
+```r
+irp5gi[, DropThisForRev := 0L]
+rev <- unique(irp5gi[TrueTaxYear != taxyear,
+  .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo,
+    taxrefno, UID, taxyear = TrueTaxYear)])
+irp5gi[rev, DropThisForRev := as.integer(TrueTaxYear == taxyear),
+  on = c(geovars, "taxrefno", "UID", "taxyear")]
+```
+Join-key decision:
+1. `geovars + taxrefno + UID + taxyear` (matches comment) — revision rows with missing/different geo won't match → both rows kept (duplicate years after relabel).
+2. `taxrefno + UID + taxyear` — robust to geo gaps; over-drops if a person moved between establishments of one firm.
+
+Cost: one keyed join, fast. **Materially changes the panel — the saved 9.0204% figure and mismatch table must be re-run (already flagged stale in the sandbox).**
+
+## A′. IRP5Condense.rmd — speed
+
+* **A4, L131-133:** 5-column grouped `.N` on ~12M rows × 15 files, overwritten with `0L` on the next line (`Num` is properly recomputed at L196). Comment out L131-132, keep `Num := 0L` as the placeholder the L144 select needs.
+* **A5, L975-986:** base `reshape()` on ~200M rows → `dcast(idyr, ...9 id cols... ~ taxyear, value.var="Ob", fill=0L, fun.aggregate=max)` + `setnames` to `Ob.YYYY`. Threaded, and `fill=0L` eliminates the A1 loop by construction; `fun.aggregate=max` handles duplicate person-establishment-year rows that `reshape` now silently resolves by first-row.
+* **A6, L1117-1123 `{MeanStdN of employment}`:** after `num == 1L`, `mean(num)` ≡ 1 and `var(num)` ≡ 0 — intended `Num`; `by=EstabIDTx` also ignores `taxyear`, and the `:=` on the 175M-row table explains the chunk's 36GB alloc error. Aggregate instead: `EstabN <- irp5[, .(Num=.N), by=.(EstabIDTx, taxyear)]; MeanStdN <- EstabN[, .(mean=round(mean(Num),3), std=round(sd(Num),3), N=.N), by=taxyear]`.
+* **A9, L538-540:** `FillInLocMuni := Bus_adr_Geo_Munic[CanFill==1L][1], by=FirmUInd` is the slow grouped-closure pattern your `feedback_datatable_scale` rule replaces — apply the same subset → unique → update-join used in the geo15vars block just below (L740-781).
+* Minor: L971 `if (all(idyr[, uid == UID]))` is NA-unsafe → `isTRUE(all(...))` (frg); L1093-1094 both `setkey()` sorts are wasted — the L1094 join uses different `on=` columns (eff).
+
+## B. IRP5HHI.rmd
+
+* **B1 (speed), L289-309:** eight grouped `:=` passes per year collapse to two multi-assign calls, e.g. `ipyrc[, c("NumSubMW","Jobs","NumSubMWe","Employees") := .(sum(SubMW==1L), sum(IncomeMonth>0), uniqueN(UID[SubMW==1L]), uniqueN(UID[IncomeMonth>0])), by=.(Txrf, taxyear)]` (same for the MP level). `taxyear` in `by=` is also constant inside each iteration. This is the "20-30 min" chunk — expect a meaningful cut.
+* **B2 (frg), L1162/L1164:** `nHHI`/`nHHIG` are `0/0 = NaN` for single-worker markets; guard with `fifelse(WorkersInMarket > 1, ..., NA_real_)` if they ever enter regressions.
+
+## C. IRP5MergeData.rmd
+
+* **C1 (tpo), L280:** `table(LSMa2[num == 1L, HHIBaseYear])` undercounts — `num` was numbered on `LSMa1` before the has2013 selection, so kept 2013 rows with `num > 1` drop out of the display. Use `table(LSMa2[, HHIBaseYear])`.
+* **C2 (com), L253-256:** `ReportEveryYear`'s `by=` omits `busprov_geo` while `EstID` (L262) includes it — inconsistent establishment definition.
+
+## D. IRP5Impacts.rmd
+
+* **D1 (tpo), L792:** in `{select winsorized estimation sample}`, `DESS[[yy]][[jj]] <- dess` should be `DESSw` — `DESSw.qs` (L825) currently saves a list of NULLs and the winsorized destats overwrite in-memory `DESS` (disk `DESS.qs` from L260 is fine).
+* **D2 (com), L693-694:** comment says `abs(rJobsMP) > 2`, code uses `> 6`, narrative says 600% — align the comment.
+
+## Readability
+
+* IRP5Condense.rmd lacks the "What this file does (chunk summary)" section that makes IRP5HHI.rmd easy to navigate — worth adding.
+* Stale siblings (`IRP5HHI_.rmd`, `IRP5Condense_old.html`, `IRP5Condense_WithTaxrefno.rmd`) — confirm archived status (`nip`) so future reviews skip them.
+
+**Suggested order:** A1 (unblocks the file) → A2 → A3 (needs your key decision) → D1 → A6 → C1, then A4/A5/A9/B1 before the next full pipeline run.
+
+Sources: [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html), [Paste multiple columns together in R](https://statisticsglobe.com/paste-multiple-columns-together-in-r)
+
+> A1: 1
+A2: explain with an example why the current codes are wrong
+A3: ditto, but I like the fix
+A4: this is a bug, L133 must go before L131
+A5: proposed fix is faster?
+A6: agreed
+A9: ok, do we need a separate lengthy routine: subset->... -> join 
+Minor: explain isTrue, but agreed otherwise
+
+A1 canot be 1 if A9 is ok, so must be 3
+
+respond on B later
+
+Answers to each point, with worked examples. B/C/D deferred as you asked.
+
+## A2 — why `paste(.SD, sep = "", collapse = "")` is wrong
+
+Run this 3-row example mentally:
+
+```r
+dt <- data.table(Ob.2008 = c(1L, 0L, 1L), Ob.2009 = c(0L, 1L, 1L))
+dt[, wrong := paste(.SD, sep = "", collapse = ""), .SDcols = 1:2]
+dt[, right := do.call(paste0, .SD),                .SDcols = 1:2]
+```
+```
+   Ob.2008 Ob.2009                wrong right
+1:       1       0 c(1, 0, 1)c(0, 1, 1)    10
+2:       0       1 c(1, 0, 1)c(0, 1, 1)    01
+3:       1       1 c(1, 0, 1)c(0, 1, 1)    11
+```
+
+What happens step by step in the `wrong` version:
+
+1. `.SD` is a **list of column vectors**: `list(Ob.2008, Ob.2009)`. `paste()` receives it as **one** argument, not two.
+2. `paste()` coerces that single list with `as.character()`, which **deparses each entire column into one string**: `c("c(1, 0, 1)", "c(0, 1, 1)")` — one string per *column*, not per row.
+3. `collapse = ""` glues those two column-strings into a single scalar: `"c(1, 0, 1)c(0, 1, 1)"`.
+4. `:=` recycles that scalar to every row → all rows identical → `factor()` has exactly one level.
+
+`do.call(paste0, .SD)` instead expands the list into separate arguments — literally `paste0(Ob.2008, Ob.2009)` — and `paste0` is vectorized across parallel vectors, giving the intended per-row `"10"`, `"01"`, `"11"`. (Reference: [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html).)
+
+At your scale the deparse in step 2 runs over 15 columns × ~50M rows, so every row of `IObPattern` carries the same enormous nonsense string — which is also why the Session-13 EstabOb investigations found nothing coherent in these columns.
+
+## A3 — why the current `DropThisForRev` is wrong (example)
+
+Mini table, two persons:
+
+| row | person | taxyear | TrueTaxYear | meaning |
+|---|---|---|---|---|
+| 1 | A | 2011 | 2011 | original 2011 report |
+| 2 | A | 2012 | 2011 | revision of 2011, filed 2012 |
+| 3 | B | 2013 | 2012 | revision of 2012, filed 2013 |
+
+Current code: `irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, DropThisForRev := 1L, by = ...]`
+
+* **Step 1 — the set is pooled over the whole table.** In `DT[i, j := v, by = g]`, data.table evaluates `i` once on the full table *before* grouping; `by=` scopes only `j`, and `j` here is the constant `1L`, so `by=` does literally nothing. `TrueTaxYear[TrueTaxYear != taxyear]` = **{2011, 2012}** — persons A and B mixed together.
+* **Step 2 — row-by-row:**
+  * Row 1 (2011, 2011): `2011 ∈ {2011,2012}` ✓ but `TrueTaxYear != taxyear` ✗ → **kept**. Your comment (L679-684) marks exactly this superseded original with "\*\* drop this".
+  * Row 2 (2012, 2011): `2012 ∈ set` ✓ — *only because person B revised a 2012 report* — and `True ≠ tax` ✓ → **dropped**. This is the corrected 2011 record that should replace row 1.
+  * Row 3 (2013, 2012): `2013 ∉ {2011,2012}` → kept and relabeled to 2012. (In the real data the pooled set covers 2003–2021, so this row would be dropped too.)
+
+Three distinct failures: the target set is inverted (originals kept, corrections deleted — the extra `& TrueTaxYear != taxyear` conjunct guarantees only revision rows can match); whether a row dies depends on *other people's* revision years; and wherever the pooled set misses a year, both the original and the relabeled revision survive → duplicate person-years. The dropped 9.02% ≈ all 18.5M revision rows, matching the mismatch table total.
+
+The proposed update join fixes all three because the lookup `rev` carries the person key: only that person's superseded original year is flagged, and the `TrueTaxYear == taxyear` guard inside `:=` ensures revision rows are never self-flagged. I'll go with **key option 1** (geovars + taxrefno + UID + taxyear) as displayed, since you liked the fix as shown.
+
+## A4 — agreed, it's an ordering bug
+
+Your reading adopted: the intent is `Num` = employees per establishment, and `0L` was the initialisation. Path `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `{r read irp5v5beta best geo and create irp5yr files}`:
+
+```diff
++  #### CLAUDE tpo: 2026-07-02 — init line sat AFTER the grouped count, zeroing it;
++  ####   moved before. Invisible so far only because L196 recomputes Num on the panel.
++  ipyr[, Num := 0L]
+   ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+131:  busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+-  ipyr[, Num := 0L]
+```
+
+One note: with `:=` the grouped count writes every row anyway, so the init is technically redundant — moving it (rather than deleting) keeps your intent visible at negligible cost. The saved `irp5YY.qs` files will now carry real counts.
+
+## A5 — yes, dcast is faster, by a lot
+
+The official [data.table reshape vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-reshape.html) states `melt`/`dcast` are "implemented entirely in C", built on "fast radix ordering, binary search", and "designed with large in-memory data (e.g. 10Gb) in mind"; the `dcast.data.table` docs benchmark ~0.12s vs ~31s against `reshape2::dcast` at 1M rows — and `stats::reshape` (what L975 uses) is slower still: pure R, single-threaded, building the wide frame by string-matching idvar combinations. At `idyr`'s scale (9 id columns × 15 years × tens of millions of rows) that is the difference between minutes and hours. Two things to set explicitly: `fun.aggregate = max` (duplicates currently resolved silently by `reshape`'s first-row rule) and `setnames` of the year columns to `Ob.YYYY`. `fill = 0L` then removes the broken NA-fill loop entirely — consistent with your conclusion that **A1 = option 3**.
+
+## A9 — no, the lengthy routine is not needed here
+
+The geo15vars block is long because it loops over **4 columns** and enforces "exactly one unique value per group". Here there is **one column** and the rule is "first CanFill value", so the lookup is built on the *small* CanFill subset (the 2015-merged rows) and joined back — 3 statements:
+
+```r
+#### persons that need a fill
+need <- irp5gi[ShouldFill == 1L, unique(FirmUInd)]
+#### first 2015 Bus_adr value per such person (grouped only over the small CanFill subset)
+lk <- irp5gi[CanFill == 1L & taxyear <= 2015 & FirmUInd %in% need,
+  .(v = Bus_adr_Geo_Munic[1]), by = FirmUInd]
+#### update join; as now, only taxyear <= 2015 rows of those persons are written
+irp5gi[lk, on = "FirmUInd",
+  FillInLocMuni := fifelse(taxyear <= 2015, i.v, FillInLocMuni)]
+```
+
+The `by=` groups only CanFill rows, so no per-group closure over 100M rows. Semantics preserved exactly, including the current behaviour of overwriting non-missing rows of those persons.
+
+## Minor — what `isTRUE()` does
+
+`all()` returns **NA**, not FALSE, when the vector contains NA and no FALSE: `all(c(TRUE, NA))` → `NA`. Then `if (NA)` throws `missing value where TRUE/FALSE needed` and the chunk dies. `isTRUE(x)` returns TRUE only when `x` is exactly a single `TRUE`; both `NA` and `FALSE` map to FALSE. So `if (isTRUE(all(idyr[, uid == UID]))) idyr[, UID := NULL]` can never crash, and in the NA case it takes the safe branch (keeps `UID`).
+
+---
+
+**Approved so far, ready to apply on your go:**
+
+1. A1+A5 — `dcast(..., fill = 0L, fun.aggregate = max)` replaces `reshape()` + NA-fill loop, `setnames` to `Ob.YYYY`
+2. A2 — `do.call(paste0, .SD)` ×3 (I/E/FObPattern)
+3. A3 — update-join `DropThisForRev`, key option 1 (then re-run the 9.02% figure and mismatch table)
+4. A4 — move `Num := 0L` above the grouped count
+5. A6 — `MeanStdN` aggregate rewrite (`by = .(EstabIDTx, taxyear)`, stats on `Num`)
+6. A9 — 3-line lookup + update join for `FillInLocMuni`
+7. Minor — `isTRUE()` at L971; comment out the two wasted `setkey()`s at L1093-1094
+
+Reply with the numbers to apply (or "all"), and I'll edit with `#### CLAUDE` tags. B/C/D whenever you're ready.
+
+Sources: [data.table reshape vignette (CRAN)](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-reshape.html), [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html), [dcast.data.table docs](https://rdatatable.gitlab.io/data.table/articles/datatable-reshape.html)
+
+> A1: 1
+A2: explain with an example why the current codes are wrong
+A3: ditto, but I like the fix
+A4: this is a bug, L133 must go before L131
+A5: proposed fix is faster?
+A6: agreed
+A9: ok, do we need a separate lengthy routine: subset->... -> join 
+Minor: explain isTrue, but agreed otherwise
+
+A1 canot be 1 if A9 is ok, so must be 3
+
+respond on B later
+
+Answers to each point, with worked examples. B/C/D deferred as you asked.
+
+## A2 — why `paste(.SD, sep = "", collapse = "")` is wrong
+
+Run this 3-row example mentally:
+
+```r
+dt <- data.table(Ob.2008 = c(1L, 0L, 1L), Ob.2009 = c(0L, 1L, 1L))
+dt[, wrong := paste(.SD, sep = "", collapse = ""), .SDcols = 1:2]
+dt[, right := do.call(paste0, .SD),                .SDcols = 1:2]
+```
+```
+   Ob.2008 Ob.2009                wrong right
+1:       1       0 c(1, 0, 1)c(0, 1, 1)    10
+2:       0       1 c(1, 0, 1)c(0, 1, 1)    01
+3:       1       1 c(1, 0, 1)c(0, 1, 1)    11
+```
+
+What happens step by step in the `wrong` version:
+
+1. `.SD` is a **list of column vectors**: `list(Ob.2008, Ob.2009)`. `paste()` receives it as **one** argument, not two.
+2. `paste()` coerces that single list with `as.character()`, which **deparses each entire column into one string**: `c("c(1, 0, 1)", "c(0, 1, 1)")` — one string per *column*, not per row.
+3. `collapse = ""` glues those two column-strings into a single scalar: `"c(1, 0, 1)c(0, 1, 1)"`.
+4. `:=` recycles that scalar to every row → all rows identical → `factor()` has exactly one level.
+
+`do.call(paste0, .SD)` instead expands the list into separate arguments — literally `paste0(Ob.2008, Ob.2009)` — and `paste0` is vectorized across parallel vectors, giving the intended per-row `"10"`, `"01"`, `"11"`. (Reference: [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html).)
+
+At your scale the deparse in step 2 runs over 15 columns × ~50M rows, so every row of `IObPattern` carries the same enormous nonsense string — which is also why the Session-13 EstabOb investigations found nothing coherent in these columns.
+
+## A3 — why the current `DropThisForRev` is wrong (example)
+
+Mini table, two persons:
+
+| row | person | taxyear | TrueTaxYear | meaning |
+|---|---|---|---|---|
+| 1 | A | 2011 | 2011 | original 2011 report |
+| 2 | A | 2012 | 2011 | revision of 2011, filed 2012 |
+| 3 | B | 2013 | 2012 | revision of 2012, filed 2013 |
+
+Current code: `irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, DropThisForRev := 1L, by = ...]`
+
+* **Step 1 — the set is pooled over the whole table.** In `DT[i, j := v, by = g]`, data.table evaluates `i` once on the full table *before* grouping; `by=` scopes only `j`, and `j` here is the constant `1L`, so `by=` does literally nothing. `TrueTaxYear[TrueTaxYear != taxyear]` = **{2011, 2012}** — persons A and B mixed together.
+* **Step 2 — row-by-row:**
+  * Row 1 (2011, 2011): `2011 ∈ {2011,2012}` ✓ but `TrueTaxYear != taxyear` ✗ → **kept**. Your comment (L679-684) marks exactly this superseded original with "\*\* drop this".
+  * Row 2 (2012, 2011): `2012 ∈ set` ✓ — *only because person B revised a 2012 report* — and `True ≠ tax` ✓ → **dropped**. This is the corrected 2011 record that should replace row 1.
+  * Row 3 (2013, 2012): `2013 ∉ {2011,2012}` → kept and relabeled to 2012. (In the real data the pooled set covers 2003–2021, so this row would be dropped too.)
+
+Three distinct failures: the target set is inverted (originals kept, corrections deleted — the extra `& TrueTaxYear != taxyear` conjunct guarantees only revision rows can match); whether a row dies depends on *other people's* revision years; and wherever the pooled set misses a year, both the original and the relabeled revision survive → duplicate person-years. The dropped 9.02% ≈ all 18.5M revision rows, matching the mismatch table total.
+
+The proposed update join fixes all three because the lookup `rev` carries the person key: only that person's superseded original year is flagged, and the `TrueTaxYear == taxyear` guard inside `:=` ensures revision rows are never self-flagged. I'll go with **key option 1** (geovars + taxrefno + UID + taxyear) as displayed, since you liked the fix as shown.
+
+## A4 — agreed, it's an ordering bug
+
+Your reading adopted: the intent is `Num` = employees per establishment, and `0L` was the initialisation. Path `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `{r read irp5v5beta best geo and create irp5yr files}`:
+
+```diff
++  #### CLAUDE tpo: 2026-07-02 — init line sat AFTER the grouped count, zeroing it;
++  ####   moved before. Invisible so far only because L196 recomputes Num on the panel.
++  ipyr[, Num := 0L]
+   ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+131:  busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+-  ipyr[, Num := 0L]
+```
+
+One note: with `:=` the grouped count writes every row anyway, so the init is technically redundant — moving it (rather than deleting) keeps your intent visible at negligible cost. The saved `irp5YY.qs` files will now carry real counts.
+
+## A5 — yes, dcast is faster, by a lot
+
+The official [data.table reshape vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-reshape.html) states `melt`/`dcast` are "implemented entirely in C", built on "fast radix ordering, binary search", and "designed with large in-memory data (e.g. 10Gb) in mind"; the `dcast.data.table` docs benchmark ~0.12s vs ~31s against `reshape2::dcast` at 1M rows — and `stats::reshape` (what L975 uses) is slower still: pure R, single-threaded, building the wide frame by string-matching idvar combinations. At `idyr`'s scale (9 id columns × 15 years × tens of millions of rows) that is the difference between minutes and hours. Two things to set explicitly: `fun.aggregate = max` (duplicates currently resolved silently by `reshape`'s first-row rule) and `setnames` of the year columns to `Ob.YYYY`. `fill = 0L` then removes the broken NA-fill loop entirely — consistent with your conclusion that **A1 = option 3**.
+
+## A9 — no, the lengthy routine is not needed here
+
+The geo15vars block is long because it loops over **4 columns** and enforces "exactly one unique value per group". Here there is **one column** and the rule is "first CanFill value", so the lookup is built on the *small* CanFill subset (the 2015-merged rows) and joined back — 3 statements:
+
+```r
+#### persons that need a fill
+need <- irp5gi[ShouldFill == 1L, unique(FirmUInd)]
+#### first 2015 Bus_adr value per such person (grouped only over the small CanFill subset)
+lk <- irp5gi[CanFill == 1L & taxyear <= 2015 & FirmUInd %in% need,
+  .(v = Bus_adr_Geo_Munic[1]), by = FirmUInd]
+#### update join; as now, only taxyear <= 2015 rows of those persons are written
+irp5gi[lk, on = "FirmUInd",
+  FillInLocMuni := fifelse(taxyear <= 2015, i.v, FillInLocMuni)]
+```
+
+The `by=` groups only CanFill rows, so no per-group closure over 100M rows. Semantics preserved exactly, including the current behaviour of overwriting non-missing rows of those persons.
+
+## Minor — what `isTRUE()` does
+
+`all()` returns **NA**, not FALSE, when the vector contains NA and no FALSE: `all(c(TRUE, NA))` → `NA`. Then `if (NA)` throws `missing value where TRUE/FALSE needed` and the chunk dies. `isTRUE(x)` returns TRUE only when `x` is exactly a single `TRUE`; both `NA` and `FALSE` map to FALSE. So `if (isTRUE(all(idyr[, uid == UID]))) idyr[, UID := NULL]` can never crash, and in the NA case it takes the safe branch (keeps `UID`).
+
+---
+
+**Approved so far, ready to apply on your go:**
+
+1. A1+A5 — `dcast(..., fill = 0L, fun.aggregate = max)` replaces `reshape()` + NA-fill loop, `setnames` to `Ob.YYYY`
+2. A2 — `do.call(paste0, .SD)` ×3 (I/E/FObPattern)
+3. A3 — update-join `DropThisForRev`, key option 1 (then re-run the 9.02% figure and mismatch table)
+4. A4 — move `Num := 0L` above the grouped count
+5. A6 — `MeanStdN` aggregate rewrite (`by = .(EstabIDTx, taxyear)`, stats on `Num`)
+6. A9 — 3-line lookup + update join for `FillInLocMuni`
+7. Minor — `isTRUE()` at L971; comment out the two wasted `setkey()`s at L1093-1094
+
+Reply with the numbers to apply (or "all"), and I'll edit with `#### CLAUDE` tags. B/C/D whenever you're ready.
+
+Sources: [data.table reshape vignette (CRAN)](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-reshape.html), [data.table .SD vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html), [dcast.data.table docs](https://rdatatable.gitlab.io/data.table/articles/datatable-reshape.html)
+
+> explain
+
+ (In the real data the pooled set covers 2003–2021, so
+  this row would be dropped too.)
+
+whether a row dies depends on other people's revision years; and wherever
+  the pooled set misses a year, both the original and the relabeled revision survive → duplicate person-years.
+
+A4: drop init 0L
+
+A9: explain what fifelse(taxyear <= 2015, i.v, FillInLocMuni) does
+The by= groups only CanFill rows ==> data.table only scopes dt[i, ] rows... is it a correct understanding?
+
+## 1. Why "the pooled set covers 2003–2021" and what follows from it
+
+**Where 2003–2021 comes from.** The set is `TrueTaxYear[TrueTaxYear != taxyear]` — the true years of all revision rows, computed over the whole 175M-row table. Your own saved output at L666-669 shows its distinct values: 376 rows with TrueTaxYear 2003, …, 1,173,744 with 2021. So as a *set of years*, S = {2003, …, 2021}.
+
+**Which rows can be dropped.** A row is flagged iff (a) its **stated** `taxyear` ∈ S and (b) `TrueTaxYear != taxyear`, i.e. the row is itself a revision. Condition (b) means an *original* row (TrueTaxYear == taxyear by construction) can **never** be flagged — that's the inversion. Given (b), what remains is (a): stated taxyear ∈ {2003..2021}. Stated taxyears run 2008–2022, so:
+
+* Revision rows stated 2008–2021: year ∈ S → **dropped**. That's almost all of the 18.5M revisions — hence the 9.02%.
+* Revision rows stated **2022**: is 2022 ∈ S? No — a revision's TrueTaxYear is always *earlier* than its stated year, and there is no stated year after 2022 to generate TrueTaxYear = 2022. So 2022-filed revisions **survive**, and the `setnames` step relabels them to their true year (2021 or earlier).
+
+**Why that creates duplicate person-years.** Take a person whose 2021 report was revised in 2022. The 2022-filed revision survives and becomes a `taxyear = 2021` row. But the outdated original 2021 row was *also* kept (originals are never flagged, per (b)). Result: two rows for that person-establishment-2021 — the wrong one and the corrected one — silently inflating `Jobs`, `NumSubMW`, etc. for 2021. In my mini example row 3 played this role because the toy set {2011, 2012} missed 2013; in the real data the "gap year" is 2022 filings.
+
+**Why "a row dies because of other people".** Condition (a) checks the row's stated year against S — but S is pooled across **all taxpayers**, because in `DT[i, j := v, by=g]` the `i` expression is evaluated once on the full columns; `by=` never reaches it. Person B's stated-2013 revision is dropped not because *B* has any other 2013 filing, but because *somebody, anybody* in the data generated a TrueTaxYear = 2013 entry. If no one had, B's row would survive instead (and duplicate B's 2012 after relabel). A row's fate should depend only on that person's own filing history — the update-join fix restores exactly that, because the lookup `rev` carries the person key.
+
+## 2. A4 — drop the init, agreed
+
+Path: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `{r read irp5v5beta best geo and create irp5yr files}`:
+
+```diff
+   ipyr <- ipyr[taxrefno != "", ]
+   ## Note that there are header lines with taxrefno = "NULL", but they can be dropped later
+   ## Num: Number of employees in a firm
+131:  ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+132:    busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+-  ipyr[, Num := 0L]
++  #### CLAUDE tpo: 2026-07-02 — init line sat after the grouped count and zeroed it;
++  ####   grouped := writes every row, so no init is needed at all.
++  #### ipyr[, Num := 0L]
+   ipyr[, Nationality := "sa"]
+```
+
+`irp5YY.qs` will then carry real counts; downstream is unaffected either way since L196 recomputes `Num` on the stacked panel.
+
+## 3. A9 — the `fifelse(...)` line, and your scoping question
+
+**What the update join does.** In
+
+```r
+irp5gi[lk, on = "FirmUInd",
+  FillInLocMuni := fifelse(taxyear <= 2015, i.v, FillInLocMuni)]
+```
+
+`lk` sits in the `i` slot, so this is a **join**: data.table finds the rows of `irp5gi` whose `FirmUInd` matches a row of `lk`, and evaluates `j` (`:=`) **only on those matched rows**. Inside `j`, plain names (`taxyear`, `FillInLocMuni`) are the matched `irp5gi` rows' columns, and the `i.` prefix (`i.v`) is the joined-in column from `lk` — each matched row sees its own person's looked-up value.
+
+`fifelse` is data.table's fast, type-strict vectorized if-else. Row by row over the matched rows: if `taxyear <= 2015`, the new `FillInLocMuni` is `i.v` (the person's first 2015 Bus_adr value); otherwise it is `FillInLocMuni` — i.e. the column is assigned its own current value, a no-op. It's needed because the `i` slot is occupied by the join table, so the `taxyear <= 2015` restriction can't go there; embedding it in `j` keeps post-2015 rows untouched while avoiding a copy (`irp5gi[taxyear <= 2015][lk, ...]` would materialize a subset). Rows whose `FirmUInd` isn't in `lk` are never touched at all.
+
+**Your scoping understanding — correct, with one precision.** The evaluation order in `dt[i, j, by]` is: `i` selects rows → `by` forms groups **within that subset** → `j` runs per group **on that subset**. So in the `lk` construction, `by = FirmUInd` groups only the rows passing `CanFill == 1L & taxyear <= 2015 & FirmUInd %in% need` — that's why the grouped `[1]` is cheap there. The one precision (and it's exactly the A3 trap): expressions **inside `i` itself** are evaluated against the *full* table's columns before any selection or grouping happens — that's how `TrueTaxYear[TrueTaxYear != taxyear]` became a pooled, all-persons set, and why `by=` could never fix it. In short: `by` scopes `j`, never `i`.
+
+---
+
+Updated apply list (pending your go): **1.** A1+A5 dcast rewrite · **2.** A2 `do.call(paste0, .SD)` ×3 · **3.** A3 update-join fix (key option 1) · **4.** A4 comment out the `Num := 0L` init · **5.** A6 MeanStdN aggregate rewrite · **6.** A9 3-line lookup + update join · **7.** minor (`isTRUE`, drop wasted `setkey`s). Reply with numbers or "all".
+
+> explain
+
+ (In the real data the pooled set covers 2003–2021, so
+  this row would be dropped too.)
+
+whether a row dies depends on other people's revision years; and wherever
+  the pooled set misses a year, both the original and the relabeled revision survive → duplicate person-years.
+
+A4: drop init 0L
+
+A9: explain what fifelse(taxyear <= 2015, i.v, FillInLocMuni) does
+The by= groups only CanFill rows ==> data.table only scopes dt[i, ] rows... is it a correct understanding?
+
+## 1. Why "the pooled set covers 2003–2021" and what follows from it
+
+**Where 2003–2021 comes from.** The set is `TrueTaxYear[TrueTaxYear != taxyear]` — the true years of all revision rows, computed over the whole 175M-row table. Your own saved output at L666-669 shows its distinct values: 376 rows with TrueTaxYear 2003, …, 1,173,744 with 2021. So as a *set of years*, S = {2003, …, 2021}.
+
+**Which rows can be dropped.** A row is flagged iff (a) its **stated** `taxyear` ∈ S and (b) `TrueTaxYear != taxyear`, i.e. the row is itself a revision. Condition (b) means an *original* row (TrueTaxYear == taxyear by construction) can **never** be flagged — that's the inversion. Given (b), what remains is (a): stated taxyear ∈ {2003..2021}. Stated taxyears run 2008–2022, so:
+
+* Revision rows stated 2008–2021: year ∈ S → **dropped**. That's almost all of the 18.5M revisions — hence the 9.02%.
+* Revision rows stated **2022**: is 2022 ∈ S? No — a revision's TrueTaxYear is always *earlier* than its stated year, and there is no stated year after 2022 to generate TrueTaxYear = 2022. So 2022-filed revisions **survive**, and the `setnames` step relabels them to their true year (2021 or earlier).
+
+**Why that creates duplicate person-years.** Take a person whose 2021 report was revised in 2022. The 2022-filed revision survives and becomes a `taxyear = 2021` row. But the outdated original 2021 row was *also* kept (originals are never flagged, per (b)). Result: two rows for that person-establishment-2021 — the wrong one and the corrected one — silently inflating `Jobs`, `NumSubMW`, etc. for 2021. In my mini example row 3 played this role because the toy set {2011, 2012} missed 2013; in the real data the "gap year" is 2022 filings.
+
+**Why "a row dies because of other people".** Condition (a) checks the row's stated year against S — but S is pooled across **all taxpayers**, because in `DT[i, j := v, by=g]` the `i` expression is evaluated once on the full columns; `by=` never reaches it. Person B's stated-2013 revision is dropped not because *B* has any other 2013 filing, but because *somebody, anybody* in the data generated a TrueTaxYear = 2013 entry. If no one had, B's row would survive instead (and duplicate B's 2012 after relabel). A row's fate should depend only on that person's own filing history — the update-join fix restores exactly that, because the lookup `rev` carries the person key.
+
+## 2. A4 — drop the init, agreed
+
+Path: `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`, chunk `{r read irp5v5beta best geo and create irp5yr files}`:
+
+```diff
+   ipyr <- ipyr[taxrefno != "", ]
+   ## Note that there are header lines with taxrefno = "NULL", but they can be dropped later
+   ## Num: Number of employees in a firm
+131:  ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+132:    busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+-  ipyr[, Num := 0L]
++  #### CLAUDE tpo: 2026-07-02 — init line sat after the grouped count and zeroed it;
++  ####   grouped := writes every row, so no init is needed at all.
++  #### ipyr[, Num := 0L]
+   ipyr[, Nationality := "sa"]
+```
+
+`irp5YY.qs` will then carry real counts; downstream is unaffected either way since L196 recomputes `Num` on the stacked panel.
+
+## 3. A9 — the `fifelse(...)` line, and your scoping question
+
+**What the update join does.** In
+
+```r
+irp5gi[lk, on = "FirmUInd",
+  FillInLocMuni := fifelse(taxyear <= 2015, i.v, FillInLocMuni)]
+```
+
+`lk` sits in the `i` slot, so this is a **join**: data.table finds the rows of `irp5gi` whose `FirmUInd` matches a row of `lk`, and evaluates `j` (`:=`) **only on those matched rows**. Inside `j`, plain names (`taxyear`, `FillInLocMuni`) are the matched `irp5gi` rows' columns, and the `i.` prefix (`i.v`) is the joined-in column from `lk` — each matched row sees its own person's looked-up value.
+
+`fifelse` is data.table's fast, type-strict vectorized if-else. Row by row over the matched rows: if `taxyear <= 2015`, the new `FillInLocMuni` is `i.v` (the person's first 2015 Bus_adr value); otherwise it is `FillInLocMuni` — i.e. the column is assigned its own current value, a no-op. It's needed because the `i` slot is occupied by the join table, so the `taxyear <= 2015` restriction can't go there; embedding it in `j` keeps post-2015 rows untouched while avoiding a copy (`irp5gi[taxyear <= 2015][lk, ...]` would materialize a subset). Rows whose `FirmUInd` isn't in `lk` are never touched at all.
+
+**Your scoping understanding — correct, with one precision.** The evaluation order in `dt[i, j, by]` is: `i` selects rows → `by` forms groups **within that subset** → `j` runs per group **on that subset**. So in the `lk` construction, `by = FirmUInd` groups only the rows passing `CanFill == 1L & taxyear <= 2015 & FirmUInd %in% need` — that's why the grouped `[1]` is cheap there. The one precision (and it's exactly the A3 trap): expressions **inside `i` itself** are evaluated against the *full* table's columns before any selection or grouping happens — that's how `TrueTaxYear[TrueTaxYear != taxyear]` became a pooled, all-persons set, and why `by=` could never fix it. In short: `by` scopes `j`, never `i`.
+
+---
+
+Updated apply list (pending your go): **1.** A1+A5 dcast rewrite · **2.** A2 `do.call(paste0, .SD)` ×3 · **3.** A3 update-join fix (key option 1) · **4.** A4 comment out the `Num := 0L` init · **5.** A6 MeanStdN aggregate rewrite · **6.** A9 3-line lookup + update join · **7.** minor (`isTRUE`, drop wasted `setkey`s). Reply with numbers or "all".
+
+> carry on
+
+Done. Summary of this turn:
+
+**Rendered document:** `/mnt/c/data/MinWageMarketPower/analysis/program/DataTableFixExamples.html` (from `DataTableFixExamples.qmd`, self-contained with TOC — open in Chrome). All example code executed at render time:
+
+* **A2** — the 3-row demo: `wrong` column is `"c(1, 0, 1)c(0, 1, 1)"` recycled into every row, `right` is `"10","01","11"`, with the `as.character(list(...))` steps showing why.
+* **A3** — the 6-row person A/B/C panel: current code keeps all superseded originals, drops A's correction because of *B's* filing (contamination rerun included), and produces duplicate person-years for B (2012) and C (2021); the update-join fix yields one corrected row per person-year. The pooled-set 2003–2021 explanation is embedded as prose.
+* **A5** — with the realistic 9-column composite id, `stats::reshape` **aborts**: `cannot allocate vector of size 298.0 Gb` from integer overflow in `interaction()`; `dcast(..., fill = 0L)` completes the same task in ~6s. An honest single-id toy timing (where reshape is actually quicker — dcast's fixed overhead dominates small inputs) and an `all.equal → TRUE` equivalence check are included, so the argument is feasibility at scale plus built-in `fill`, not toy benchmarks.
+* **fifelse/scoping** — the update-join toy and the `i → by → j` demo.
+
+**New standing issue recorded:** the production `reshape()` at IRP5Condense.rmd L975 is in the same regime that aborted (`EUIndID` ~tens of millions of levels), so on R 4.4 it risks the identical `interaction()` overflow abort — added to `CLAUDE_StandingIssues.md` (tag `frg`), further motivating apply-item 1. Repro kept at `analysis/program/scratch_reshape_test.R`; logs updated.
+
+Still pending your go: apply list **1** (dcast rewrite) **– 7** from earlier, and the B/C/D items whenever you're ready.
+
+> carry on
+
+Done. Summary of this turn:
+
+**Rendered document:** `/mnt/c/data/MinWageMarketPower/analysis/program/DataTableFixExamples.html` (from `DataTableFixExamples.qmd`, self-contained with TOC — open in Chrome). All example code executed at render time:
+
+* **A2** — the 3-row demo: `wrong` column is `"c(1, 0, 1)c(0, 1, 1)"` recycled into every row, `right` is `"10","01","11"`, with the `as.character(list(...))` steps showing why.
+* **A3** — the 6-row person A/B/C panel: current code keeps all superseded originals, drops A's correction because of *B's* filing (contamination rerun included), and produces duplicate person-years for B (2012) and C (2021); the update-join fix yields one corrected row per person-year. The pooled-set 2003–2021 explanation is embedded as prose.
+* **A5** — with the realistic 9-column composite id, `stats::reshape` **aborts**: `cannot allocate vector of size 298.0 Gb` from integer overflow in `interaction()`; `dcast(..., fill = 0L)` completes the same task in ~6s. An honest single-id toy timing (where reshape is actually quicker — dcast's fixed overhead dominates small inputs) and an `all.equal → TRUE` equivalence check are included, so the argument is feasibility at scale plus built-in `fill`, not toy benchmarks.
+* **fifelse/scoping** — the update-join toy and the `i → by → j` demo.
+
+**New standing issue recorded:** the production `reshape()` at IRP5Condense.rmd L975 is in the same regime that aborted (`EUIndID` ~tens of millions of levels), so on R 4.4 it risks the identical `interaction()` overflow abort — added to `CLAUDE_StandingIssues.md` (tag `frg`), further motivating apply-item 1. Repro kept at `analysis/program/scratch_reshape_test.R`; logs updated.
+
+Still pending your go: apply list **1** (dcast rewrite) **– 7** from earlier, and the B/C/D items whenever you're ready.
+
+> carry on
+
+All approved fixes are applied and verified — **all 21 R chunks in the file parse cleanly** (`scratch_parse_check.R`). Logs updated (`CLAUDE_LOG.md`, `CLAUDE_CHANGES.md`, `CLAUDE_StandingIssues.md` sandboxes).
+
+**Edits in `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`** (all comment-out-never-delete, with plain-language `#### CLAUDE` explanations per your feedback):
+
+| # | Location (chunk) | Change |
+|---|---|---|
+| A4 | L131 `{read irp5v5beta…}` | `Num := 0L` removed entirely (commented out) — the grouped `:=` writes every row, so no initialisation is needed; the count is no longer erased |
+| A9 | L538 `{merge irp5_WithRepetetiveUIDs GeoLF}` | per-group closure fill → `need`/`lkfill` lookup + update join with `fifelse(taxyear <= 2015, i.v, FillInLocMuni)` |
+| A3 | L688 `{correcting information… irp5gir}` | `RevYears` per-person update join replaces the pooled-`i` flag; reminder comment that the 9.0204 % figure is stale |
+| minor | L971 `{create ObPattern}` | `isTRUE(all(...))` NA-safe guard |
+| A1=3 | L975 | `reshape()` → `dcast(..., fill = 0L, fun.aggregate = max)` + year-range-robust `Ob.YYYY` rename; comment documents the `interaction()` overflow abort |
+| A1 | L984 | NA→0 fill loop retired (superseded by `fill = 0L`) |
+| A2 | ×3 | `IObPattern`/`EObPattern`/`FObPattern` now `do.call(paste0, .SD)` |
+| L975 req | Estab & Firm loops | `%in%` whole-table scans → keyed update joins on `EstabID`/`FirmID` (equivalent outcome: NA/"" cases can't occur after `fill = 0L`, and re-writing an existing `1L` is a no-op) |
+| minor | L1093 | unused `setkey()` pair commented out (two 175M-row sorts saved) |
+| A6 | L1117 `{MeanStdN of employment}` | aggregate first (`EstabN` by establishment-year), then stats on `Num` — fixes mean≡1/std≡0 and the 36 Gb allocation error |
+
+Notes:
+* On the plain-comment request — every new comment states *Bug/what was wrong → Fix/why it works* in full sentences; the A4 and A9 blocks you flagged were rewritten first.
+* The `DropThisForRev` fix changes the panel: revisions are now kept (relabeled) and superseded originals dropped, so `irp5_RevReports.qs` and everything downstream need a re-run, and the saved 9.0204 % / mismatch-table figures are stale (reminder comments added in-file and in StandingIssues).
+* Chunk parses are verified; runtime behaviour needs the next pipeline run on the server to confirm.
+
+Still open when you're ready: the **B (IRP5HHI), C (MergeData), D (Impacts)** items from the original review.
+
+> carry on
+
+All approved fixes are applied and verified — **all 21 R chunks in the file parse cleanly** (`scratch_parse_check.R`). Logs updated (`CLAUDE_LOG.md`, `CLAUDE_CHANGES.md`, `CLAUDE_StandingIssues.md` sandboxes).
+
+**Edits in `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`** (all comment-out-never-delete, with plain-language `#### CLAUDE` explanations per your feedback):
+
+| # | Location (chunk) | Change |
+|---|---|---|
+| A4 | L131 `{read irp5v5beta…}` | `Num := 0L` removed entirely (commented out) — the grouped `:=` writes every row, so no initialisation is needed; the count is no longer erased |
+| A9 | L538 `{merge irp5_WithRepetetiveUIDs GeoLF}` | per-group closure fill → `need`/`lkfill` lookup + update join with `fifelse(taxyear <= 2015, i.v, FillInLocMuni)` |
+| A3 | L688 `{correcting information… irp5gir}` | `RevYears` per-person update join replaces the pooled-`i` flag; reminder comment that the 9.0204 % figure is stale |
+| minor | L971 `{create ObPattern}` | `isTRUE(all(...))` NA-safe guard |
+| A1=3 | L975 | `reshape()` → `dcast(..., fill = 0L, fun.aggregate = max)` + year-range-robust `Ob.YYYY` rename; comment documents the `interaction()` overflow abort |
+| A1 | L984 | NA→0 fill loop retired (superseded by `fill = 0L`) |
+| A2 | ×3 | `IObPattern`/`EObPattern`/`FObPattern` now `do.call(paste0, .SD)` |
+| L975 req | Estab & Firm loops | `%in%` whole-table scans → keyed update joins on `EstabID`/`FirmID` (equivalent outcome: NA/"" cases can't occur after `fill = 0L`, and re-writing an existing `1L` is a no-op) |
+| minor | L1093 | unused `setkey()` pair commented out (two 175M-row sorts saved) |
+| A6 | L1117 `{MeanStdN of employment}` | aggregate first (`EstabN` by establishment-year), then stats on `Num` — fixes mean≡1/std≡0 and the 36 Gb allocation error |
+
+Notes:
+* On the plain-comment request — every new comment states *Bug/what was wrong → Fix/why it works* in full sentences; the A4 and A9 blocks you flagged were rewritten first.
+* The `DropThisForRev` fix changes the panel: revisions are now kept (relabeled) and superseded originals dropped, so `irp5_RevReports.qs` and everything downstream need a re-run, and the saved 9.0204 % / mismatch-table figures are stale (reminder comments added in-file and in StandingIssues).
+* Chunk parses are verified; runtime behaviour needs the next pipeline run on the server to confirm.
+
+Still open when you're ready: the **B (IRP5HHI), C (MergeData), D (Impacts)** items from the original review.

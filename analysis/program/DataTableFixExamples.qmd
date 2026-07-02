@@ -1,0 +1,345 @@
+---
+title: "data.table pitfalls and fixes — worked examples (Session 17 Cedar Lark)"
+date: today
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    code-overflow: wrap
+---
+
+Worked, executable examples behind the Session 17 review findings on
+`IRP5Condense.rmd`. Each section shows the failing construct on a small
+data.table, the observed (wrong) result, and the fix with its result.
+
+```{r setup}
+#| message: false
+library(data.table)
+```
+
+# A2. `paste(.SD, collapse = "")` cannot build per-row patterns
+
+`.SD` is a *list of column vectors*. `paste()` receives it as **one**
+argument, so it deparses each entire column into a single string and
+`collapse` glues those column-strings into one scalar, which `:=` then
+recycles to every row.
+
+```{r a2-wrong-vs-right}
+dt <- data.table(Ob.2008 = c(1L, 0L, 1L), Ob.2009 = c(0L, 1L, 1L))
+dt[, wrong := paste(.SD, sep = "", collapse = ""), .SDcols = c("Ob.2008", "Ob.2009")]
+dt[, right := do.call(paste0, .SD),                .SDcols = c("Ob.2008", "Ob.2009")]
+dt
+```
+
+* `wrong` is the same deparsed-columns string in every row — a factor built
+  on it has exactly one level, and at IRP5 scale (15 columns x ~50M rows)
+  that one string is enormous.
+* `right` is the intended per-row observation pattern.
+
+Step by step, what `paste()` saw:
+
+```{r a2-step-by-step}
+#### Step 1-2: the single list argument is coerced column-by-column
+as.character(list(dt$Ob.2008, dt$Ob.2009))
+#### Step 3: collapse joins the two column-strings into ONE scalar
+paste(as.character(list(dt$Ob.2008, dt$Ob.2009)), collapse = "")
+```
+
+`do.call(paste0, .SD)` instead expands the list into separate parallel
+arguments — literally `paste0(Ob.2008, Ob.2009)` — and `paste0` vectorizes
+across rows.
+
+# A3. `DropThisForRev`: pooled `i`, inverted target, duplicate person-years
+
+Mini panel. Person A revised their 2011 report in 2012; person B revised
+2012 in 2013; person C revised 2021 in 2022. Originals have
+`TrueTaxYear == taxyear`; revisions have `TrueTaxYear < taxyear`.
+
+```{r a3-data}
+irp <- data.table(
+  person      = c("A",  "A",  "B",  "B",  "C",  "C"),
+  taxyear     = c(2011, 2012, 2012, 2013, 2021, 2022),
+  TrueTaxYear = c(2011, 2011, 2012, 2012, 2021, 2021),
+  role        = c("original 2011", "revision of 2011 (filed 2012)",
+                  "original 2012", "revision of 2012 (filed 2013)",
+                  "original 2021", "revision of 2021 (filed 2022)")
+)
+irp
+```
+
+**Intended outcome** (per the comment block at IRP5Condense.rmd L679-684):
+drop each superseded *original* (rows 1, 3, 5), keep the revisions and
+relabel them to their true year → one corrected row per person-year.
+
+## What the current code does
+
+```{r a3-current}
+cur <- copy(irp)
+cur[, DropThisForRev := 0L]
+cur[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear,
+  DropThisForRev := 1L,
+  by = person]
+cur[]
+```
+
+The pooled set `TrueTaxYear[TrueTaxYear != taxyear]` is evaluated on the
+**whole table** (in `DT[i, j := v, by=g]`, `i` never sees the groups):
+
+```{r a3-pooled-set}
+sort(unique(irp[TrueTaxYear != taxyear, TrueTaxYear]))
+```
+
+Row by row:
+
+* Rows 1, 3, 5 (the originals that *should* be dropped): the conjunct
+  `TrueTaxYear != taxyear` is FALSE → **never flagged**. Target inverted.
+* Row 2 (A's correction, stated 2012): `2012 %in% {2011,2012,2021}` is TRUE
+  — but 2012 entered the set through **person B's** revision → dropped
+  because of someone else's filing.
+* Row 4 (B's correction, stated 2013): `2013` is *not* in the set → kept.
+* Row 6 (C's correction, stated 2022): `2022` is not in the set (a
+  revision's TrueTaxYear is always earlier than its stated year, so the
+  set can never contain the last stated year) → kept.
+
+In the real IRP5 data the pooled set is `{2003, ..., 2021}` (the mismatch
+table saved at L666-669), while stated taxyears run 2008-2022. Hence every
+revision stated 2008-2021 is dropped (~9.02% of rows ≈ all 18.5M revision
+entries) and only 2022-filed revisions escape — the real-data analogue of
+row 6.
+
+## Consequence: duplicate person-years
+
+After the drop and the `TrueTaxYear -> taxyear` rename, C's surviving
+revision lands on 2021 — next to C's *kept* outdated original:
+
+```{r a3-duplicates}
+curkept <- cur[DropThisForRev == 0L]
+setnames(curkept, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+curkept[order(person, taxyear), .(person, taxyear, Old.taxyear, role)]
+table(curkept[, .(person, taxyear)])
+```
+
+* Person A lost the corrected 2011 record entirely (only the outdated
+  original remains).
+* Persons B and C now have **two rows** for 2012 and 2021 respectively —
+  the stale original *and* the relabeled revision — inflating any
+  count aggregated on `taxyear`.
+
+## Cross-person contamination, isolated
+
+Delete person B and rerun: A's correction (identical row!) now survives,
+because 2012 left the pooled set. A row's fate depends on other people's
+filings:
+
+```{r a3-contamination}
+cur2 <- copy(irp[person != "B"])
+cur2[, DropThisForRev := 0L]
+cur2[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear,
+  DropThisForRev := 1L, by = person]
+cur2[person == "A"]
+```
+
+## The fix: per-person update join
+
+Build a lookup of (person, superseded year) pairs from the revision rows,
+then flag — within the join — only rows that are originals of that year:
+
+```{r a3-fix}
+fix <- copy(irp)
+fix[, DropThisForRev := 0L]
+rev <- unique(fix[TrueTaxYear != taxyear, .(person, taxyear = TrueTaxYear)])
+rev
+fix[rev, DropThisForRev := as.integer(TrueTaxYear == taxyear),
+  on = c("person", "taxyear")]
+fix[]
+```
+
+Rows 1, 3, 5 flagged — exactly the superseded originals. After the drop
+and rename, one corrected row per person-year:
+
+```{r a3-fix-result}
+fixkept <- fix[DropThisForRev == 0L]
+setnames(fixkept, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+fixkept[order(person, taxyear), .(person, taxyear, Old.taxyear, role)]
+table(fixkept[, .(person, taxyear)])
+```
+
+In `IRP5Condense.rmd` the person key is
+`c(geovars, "taxrefno", "UID")` and the lookup carries `taxyear =
+TrueTaxYear`; the join is one keyed pass over the 175M-row table.
+
+# A5. `stats::reshape` vs `dcast()` — same result, different cost
+
+The problem with `reshape()` is the **composite id**: with several
+`idvar` columns (9 in `idyr`) it builds the row key with
+`interaction(data[, idvar], drop = TRUE)`, which indexes the full
+Cartesian product of all id-column levels. With high-cardinality ids that
+code space exceeds `.Machine$integer.max`, the codes overflow to NA, and
+the fallback allocation is absurd — `reshape` **aborts** rather than runs
+slowly. The example reproduces the real structure: 200,000 units carrying
+4 geo strings + 5 id columns, each observed in a random subset of
+2008-2022.
+
+```{r a5-data}
+set.seed(1)
+n_id <- 2e5
+#### 9 id columns, mimicking idyr (4 geo strings + 5 establishment/firm ids)
+units <- data.table(
+  busprov_geo     = sample(paste0("PR", 1:9),     n_id, replace = TRUE),
+  busdistmuni_geo = sample(paste0("DC", 1:52),    n_id, replace = TRUE),
+  buslocmuni_geo  = sample(paste0("LM", 1:205),   n_id, replace = TRUE),
+  busmainplc_geo  = sample(paste0("MP", 1:14000), n_id, replace = TRUE),
+  FirmIDTx  = seq_len(n_id),
+  FirmID    = seq_len(n_id),
+  EstabIDTx = seq_len(n_id),
+  EstabID   = seq_len(n_id),
+  EUIndID   = paste0(seq_len(n_id), "-", seq_len(n_id))
+)
+#### each unit observed in a random subset of 2008-2022 (no duplicates)
+ny   <- sample(3:15, n_id, replace = TRUE)
+long <- units[rep(seq_len(n_id), ny)]
+long[, taxyear := unlist(lapply(ny, sample, x = 2008:2022))]
+long[, Ob := 1L]
+idcols <- setdiff(names(long), c("taxyear", "Ob"))
+dim(long)
+```
+
+## `reshape()` on the 9-column composite id: it does not run at all
+
+```{r a5-reshape-fails}
+#| warning: true
+res <- try(
+  w1 <- reshape(as.data.frame(long), direction = "wide",
+                idvar = idcols, timevar = "taxyear", v.names = "Ob"),
+  silent = TRUE
+)
+cat("reshape():", attr(res, "condition")$message, "\n")
+```
+
+On this machine the failure is
+`cannot allocate vector of size 298.0 Gb`, preceded by
+`NAs produced by integer overflow` warnings from `interaction()` — the
+level-product of the 9 id columns (9 x 52 x 205 x 14000 x 2e5 x ...) has
+overflowed integer indexing. The production `idyr` at IRP5Condense.rmd
+L975 sits in the same regime (`EUIndID` alone has tens of millions of
+levels), so the current `reshape()` call is not merely slow — on
+R >= 4.4 it is exposed to exactly this abort.
+
+## `dcast()` on the same task
+
+```{r a5-dcast-succeeds}
+t_dcast <- system.time(
+  w2 <- dcast(long,
+    busprov_geo + busdistmuni_geo + buslocmuni_geo + busmainplc_geo +
+    FirmIDTx + FirmID + EstabIDTx + EstabID + EUIndID ~ taxyear,
+    value.var = "Ob", fill = 0L, fun.aggregate = max)
+)
+t_dcast
+dim(w2)
+w2[1:3, 9:14, with = FALSE]  #### unobserved years already 0L via fill = 0L
+```
+
+`dcast` never materializes the level product — it radix-orders the
+observed id combinations — so cardinality is harmless, and `fill = 0L`
+already delivers what the separate NA→0 fill loop (the loop carrying the
+L985 paren regression) was for.
+
+## Honest toy-scale comparison, and equivalence of results
+
+Where `reshape` *can* run — a single low-cardinality id — it is
+competitive at toy scale (`dcast` carries fixed setup overhead), so raw
+speed on small examples is **not** the argument; feasibility at scale and
+the built-in `fill` are:
+
+```{r a5-single-id}
+small <- long[, .(id = FirmID, taxyear, Ob)]
+t_r <- system.time(
+  w1s <- reshape(as.data.frame(small), direction = "wide",
+                 idvar = "id", timevar = "taxyear", v.names = "Ob"))
+t_d <- system.time(
+  w2s <- dcast(small, id ~ taxyear, value.var = "Ob",
+               fill = 0L, fun.aggregate = max))
+rbind(reshape = t_r, dcast = t_d)
+w1s[1:3, 1:6]                #### reshape: unobserved years are NA
+w2s[1:3, 1:6, with = FALSE]  #### dcast:   already 0L
+```
+
+Rename dcast's year columns to the `Ob.YYYY` convention and confirm the
+two routes agree once reshape's NAs are filled:
+
+```{r a5-equivalence}
+setnames(w2s, as.character(2008:2022), paste0("Ob.", 2008:2022))
+w1sdt <- setDT(w1s)
+cols <- grep("^Ob\\.", names(w1sdt), value = TRUE)
+w1sdt[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), .SDcols = cols]
+setkey(w1sdt, id); setkey(w2s, id)
+all.equal(w1sdt, w2s[, names(w1sdt), with = FALSE], check.attributes = FALSE)
+```
+
+At `idyr` scale (9 id columns, ~200M input rows) the gap widens further;
+the data.table
+[reshape vignette](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-reshape.html)
+notes `dcast`/`melt` are implemented in C with fast radix ordering and are
+designed for large (10Gb+) in-memory data. `fun.aggregate = max` must be
+stated explicitly: it defines what happens when a person-establishment-year
+appears twice (`reshape` silently keeps the first row; `dcast` errors
+without it — safer).
+
+# The `fifelse()` update join, and how `i`, `by`, `j` scope
+
+## What `fifelse(taxyear <= 2015, i.v, FillInLocMuni)` does
+
+Toy version of the A9 loc-muni fill. `lk` holds one looked-up value per
+person; the join writes only matched rows, and only their `taxyear <= 2015`
+entries:
+
+```{r fifelse-join}
+main <- data.table(
+  FirmUInd      = c(1L, 1L, 1L, 2L, 3L),
+  taxyear       = c(2014, 2015, 2016, 2014, 2014),
+  FillInLocMuni = c("", "", "", "", "Cape Town")
+)
+lk <- data.table(FirmUInd = c(1L, 2L), v = c("Stellenbosch", "eThekwini"))
+main[lk, on = "FirmUInd",
+  FillInLocMuni := fifelse(taxyear <= 2015, i.v, FillInLocMuni)]
+main[]
+```
+
+* `lk` occupies the `i` slot → `j` runs **only on matched rows**
+  (FirmUInd 1 and 2). FirmUInd 3 is never touched.
+* Inside `j`, bare names (`taxyear`, `FillInLocMuni`) are the matched
+  rows' own columns; `i.v` is the joined-in lookup value.
+* `fifelse` (fast, type-strict vectorized if-else) writes `i.v` where
+  `taxyear <= 2015` and re-assigns the current value elsewhere (a no-op) —
+  needed because the `i` slot is already taken by the join, so the year
+  restriction cannot go there without materializing a subset copy.
+
+## `by=` scopes `j` over the `i`-selected rows — never `i` itself
+
+Evaluation order in `dt[i, j, by]`: `i` selects rows (evaluated **once, on
+the full table's columns**) → `by` forms groups *within that subset* → `j`
+runs per group on that subset.
+
+```{r scoping-demo}
+dd <- data.table(g = c("a", "a", "b"), x = 1:3)
+#### j IS grouped: max(x) per group
+dd[, gmax := max(x), by = g]
+#### i is NOT grouped: max(x) inside i is the GLOBAL max (3), by= cannot change it
+dd[x == max(x), flag := 1L, by = g]
+dd[]
+```
+
+`gmax` differs by group (2, 3) — `j` saw the groups. `flag` marks only
+`x == 3` — the `i` expression used the global maximum even though `by = g`
+was supplied; with `j` a constant, that `by=` did nothing at all. This is
+precisely the A3 mechanism: the pooled revision-year set lived in `i`,
+out of `by=`'s reach. Conversely, in the A9 lookup
+
+```r
+lk <- irp5gi[CanFill == 1L & taxyear <= 2015 & FirmUInd %in% need,
+  .(v = Bus_adr_Geo_Munic[1]), by = FirmUInd]
+```
+
+`by = FirmUInd` groups **only the rows that passed `i`** (the small
+CanFill subset), which is why the grouped `[1]` is cheap there.

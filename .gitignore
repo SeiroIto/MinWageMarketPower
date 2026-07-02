@@ -19,5 +19,6 @@ analysis/program/IRP5Condense_WithTaxrefno.rmd
 analysis/program/Deliverable*
 analysis/program/_extensions
 analysis/draft/test_both_outputs_files/*
+analysis/program/scratch*
 source/**/
 program0/

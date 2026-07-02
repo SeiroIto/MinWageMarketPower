@@ -375,3 +375,46 @@ Open:
 * StandingIssues: Lf sort before qsave (low priority); HHILevel0 dead code; threshold year consistency; ExistedBefore2013 firm-level propagation (monitoring)
 
 **Next:** IRP5HHI.rmd L720 xlim fix.
+
+**Session 16 Pale Reed | 2026-07-02**
+
+Active session codename. Resume with this name.
+
+Task completed this session: IRP5HHI.rmd + IRP5HHI.html review → 4 issues found (see CLAUDE_LOG.md and CLAUDE_StandingIssues.md sandbox for details).
+
+Next: fix L790 xlim (c(1,100) → c(0,1)); verify L553-566 aggsum double-count; clear L404 sandbox note.
+
+**Session 16 (continuation) | 2026-07-02 11:51 JST**
+
+Completed:
+* IRP5Condense.rmd L650-668 `TrueTaxYear` fiscal-year bug fixed — taxyear
+  names starting year (Mar Y - Feb Y+1); TYStart/TYEnd and TrueTaxYear
+  formula corrected (see CLAUDE_CHANGES.md for detail)
+* Traced FinYr20yr (IRP5HHI.rmd L322-326): dead flag, never gates the
+  NumSubMW/Jobs/Employees counts computed above it (L289-311) — added to
+  StandingIssues
+* feedback_proposal_style.md restructured (logical-consistency section)
+
+Open / next:
+* IRP5HHI.rmd L790 xlim fix (c(1,100)→c(0,1)) — still open
+* IRP5HHI.rmd L553-566 aggsum double-count — still open
+* IRP5HHI.rmd L404 sandbox note re: FAD.qs eval=F — still open
+* New: wire FinYr20yr into IRP5HHI.rmd count block (L289-311) or confirm
+  intentionally unused before filtering NumSubMW/Jobs/Employees
+
+**Session 16 (continuation 2) | 2026-07-02 12:49 JST**
+
+TrueTaxYear / fiscal-year convention resolved via web check:
+* SARS year-of-assessment = END-year naming (tax year Y = Mar Y-1 – Feb Y).
+  SARS-NT panel labels by calendar year in which Feb falls. My earlier
+  start-year edit was inverted.
+* User reverted IRP5Condense.rmd L650-651 to end-year (TYStart=taxyear-1,
+  TYEnd=taxyear) and set L664 TrueTaxYear:=year(DateEnd)+as.integer(
+  month(DateEnd)>=3). Formula direction correct for end-year.
+* OPEN: L664 uses DateEnd but comment/example L655-660 + wrong-ref L663 use
+  DateStart — diverge for episodes straddling 1-March. Align (rec: DateStart).
+* OPEN: saved 9.0204%% + mismatch table L666-670 predate revert → stale;
+  re-run before trusting.
+
+**Next:** resolve DateStart-vs-DateEnd anchor in L664; then IRP5HHI.rmd L790
+xlim fix.

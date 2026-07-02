@@ -220,6 +220,7 @@ setnames(LSMa2, "taxyear", "HHIBaseYear")
 Lf0 <- LSMa2[faa, on = c("taxrefno", grepout("bus", colnames(LSMa2)))]
 Lf0[, Trno := gsub("^...", "...", taxrefno)]
 Lf0[, Trno := gsub("...$", "...", Trno)]
+Lf0[, Trno := as.integer(factor(Trno))]
 Lf0[, .(busmainplc_geo, Trno,
   # taxrefno, 
   taxyear, Jobs, JobsMP)]
@@ -249,10 +250,17 @@ Lf[, AgeSample := factor(AgeSample, levels =
   c("Existed, exposed", "Existed, unexposed", "New, exposed", "New, unexposed"))]
 #### ReportEveryYear (copied from /2026 01 23/IRP5Impacts.rmd)
 Lf[, ReportEveryYear := 0L]
-Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1, 
-  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
-Lf[, num := .N, 
-  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### CLAUDE com: reminder note. 2026-07-02
+####   The grouping lacked busprov_geo while EstID below includes it;
+####   aligned so both define the same establishment.
+#### Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1,
+####   by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### Lf[, num := .N,
+####   by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+Lf[, MaxDiffTY := max(taxyear, na.rm = T)-min(taxyear, na.rm = T)+1,
+  by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+Lf[, num := .N,
+  by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
 Lf[MaxDiffTY == num, ReportEveryYear := 1L]
 Lf[, c("num", "MaxDiffTY") := NULL]
 #### EstID: establishment IDs
@@ -276,7 +284,15 @@ litedown::timing_data()
     ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
     All = table(Lf[, taxyear])
   )
-table(LSMa2[num == 1L, HHIBaseYear])
+#### CLAUDE tpo: 2026-07-02
+####   num was numbered on LSMa1 BEFORE the 2013-or-earliest selection,
+####   so establishments whose kept 2013 row was not their first row
+####   carry num > 1 and dropped out of this table (undercount).
+####   LSMa2 holds one row per establishment by construction; tabulate
+####   over unique establishments explicitly so duplicates can never
+####   distort the display.
+#### table(LSMa2[num == 1L, HHIBaseYear])
+table(unique(LSMa2, by = c(geovars, "taxrefno"))[, HHIBaseYear])
 Lf[, .(num = 1:.N), by = .(EstID, taxyear)][num > 1L, ]
 Lf[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, Trno, taxyear, Jobs, rJobs, Jobs0, FA, FA0, Share)][1:30, ]

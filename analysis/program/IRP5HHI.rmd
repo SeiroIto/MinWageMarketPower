@@ -134,8 +134,8 @@ geovars <- c("busprov_geo", "busdistmuni_geo",
 
     * NumSubMW, NumSubMWMP := as.integer(sum(SubMW==1L)) 
     * Jobs, JobsMP      := as.integer(sum(IncomeMonth > 0))
-    * NumSubMWe, NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L]))
-    * Employees, EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0]))
+    * NumSubMWe, NumSubMWeMP := uniqueN(UID[SubMW==1L])
+    * Employees, EmployeesMP := uniqueN(UID[IncomeMonth > 0])
     * FA, FAMP := round(NumSubMW/Jobs, 6)]
     * FAe, FAeMP := round(NumSubMWe/Employees, 6)]
 1. Need to use unfiltered data like `irp5.qs` (except for NatureOfPer == A and empty taxrefno) 
@@ -286,26 +286,46 @@ for (yr in 8:22) {
   ipyrc[, PropToMW  := round(IncomeMonth/2274, 6)]
   ipyrc[, SubMW     := as.integer(PropToMW < 1 & IncomeMonth > 0)]
   #### a. Firm level
-  ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)), 
-    by = .(Txrf, taxyear)]
-  ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)), 
-    by = .(Txrf, taxyear)]
-  ipyrc[, NumSubMWe := as.integer(uniqueN(UID[SubMW==1L])), 
-    by = .(Txrf, taxyear)]
-  ipyrc[, Employees := as.integer(uniqueN(UID[IncomeMonth > 0])), 
-    by = .(Txrf, taxyear)]
+  #### CLAUDE eff: code correct but slow; faster native equivalent
+  #### exists. 2026-07-02
+  ####   The four separate := calls each rebuilt the same (Txrf, taxyear)
+  ####   grouping over ~12M rows; one multi-assign call groups once and
+  ####   computes all four columns inside it. Same values, same names.
+  #### ipyrc[, NumSubMW  := as.integer(sum(SubMW==1L)),
+  ####   by = .(Txrf, taxyear)]
+  #### ipyrc[, Jobs      := as.integer(sum(IncomeMonth > 0)),
+  ####   by = .(Txrf, taxyear)]
+  #### ipyrc[, NumSubMWe := uniqueN(UID[SubMW==1L]),
+  ####   by = .(Txrf, taxyear)]
+  #### ipyrc[, Employees := uniqueN(UID[IncomeMonth > 0]),
+  ####   by = .(Txrf, taxyear)]
+  ipyrc[, `:=`(
+      NumSubMW  = as.integer(sum(SubMW==1L)),
+      Jobs      = as.integer(sum(IncomeMonth > 0)),
+      NumSubMWe = uniqueN(UID[SubMW==1L]),
+      Employees = uniqueN(UID[IncomeMonth > 0])
+    ), by = .(Txrf, taxyear)]
   #### b. Establishment (Main Place) level
-  ipyrc[, NumSubMWMP  := as.integer(sum(SubMW==1L)), 
-    by = .(Txrf, busprov_geo, busdistmuni_geo, 
-      buslocmuni_geo, busmainplc_geo, taxyear)]
-  ipyrc[, JobsMP      := as.integer(sum(IncomeMonth > 0)), 
-    by = .(Txrf, busprov_geo, busdistmuni_geo, 
-      buslocmuni_geo, busmainplc_geo, taxyear)]
-  ipyrc[, NumSubMWeMP := as.integer(uniqueN(UID[SubMW==1L])), 
-    by = .(Txrf, busprov_geo, busdistmuni_geo, 
-      buslocmuni_geo, busmainplc_geo, taxyear)]
-  ipyrc[, EmployeesMP := as.integer(uniqueN(UID[IncomeMonth > 0])), 
-    by = .(Txrf, busprov_geo, busdistmuni_geo, 
+  #### CLAUDE eff: 2026-07-02 same consolidation as above, four
+  ####   groupings on the 6-column key reduced to one.
+  #### ipyrc[, NumSubMWMP  := as.integer(sum(SubMW==1L)),
+  ####   by = .(Txrf, busprov_geo, busdistmuni_geo,
+  ####     buslocmuni_geo, busmainplc_geo, taxyear)]
+  #### ipyrc[, JobsMP      := as.integer(sum(IncomeMonth > 0)),
+  ####   by = .(Txrf, busprov_geo, busdistmuni_geo,
+  ####     buslocmuni_geo, busmainplc_geo, taxyear)]
+  #### ipyrc[, NumSubMWeMP := uniqueN(UID[SubMW==1L]),
+  ####   by = .(Txrf, busprov_geo, busdistmuni_geo,
+  ####     buslocmuni_geo, busmainplc_geo, taxyear)]
+  #### ipyrc[, EmployeesMP := uniqueN(UID[IncomeMonth > 0]),
+  ####   by = .(Txrf, busprov_geo, busdistmuni_geo,
+  ####     buslocmuni_geo, busmainplc_geo, taxyear)]
+  ipyrc[, `:=`(
+      NumSubMWMP  = as.integer(sum(SubMW==1L)),
+      JobsMP      = as.integer(sum(IncomeMonth > 0)),
+      NumSubMWeMP = uniqueN(UID[SubMW==1L]),
+      EmployeesMP = uniqueN(UID[IncomeMonth > 0])
+    ), by = .(Txrf, busprov_geo, busdistmuni_geo,
       buslocmuni_geo, busmainplc_geo, taxyear)]
   ipyrc[, FA     := round(NumSubMW/Jobs, 6)]
   ipyrc[, FAe    := round(NumSubMWe/Employees, 6)]
@@ -633,7 +653,13 @@ ii2 <- duplicated(fadatai[, .(
    busmainplc_geo, Txrf
  )], fromLast = T)
 table(data.table(nonNA=ii0, duplicates=ii1))
-fadatai[ii0 & (ii1 | ii2), ]
+fadatai[ii0 & (ii1 | ii2), ][, .(
+  busdistmuni_geo, buslocmuni_geo, busmainplc_geo,
+  Firm = as.integer(as.factor(taxrefno)),
+  Crop, Animal, Forest, Size, 
+  FAMP, FAeMP, NumSubMW, Employees, NumSubMWe,
+  DateStart, DateEnd, kerr_income, PropToMW
+  )]
 #### ii0 & !ii1 = nonempty & non-duplicated
 table(duplicated(fadatai[ii0 & !ii1, ]))
 #### plot sensitivity to XThreshold (double job months cutoff)
@@ -972,7 +998,10 @@ qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"),
 
 unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
   & taxyear == 2009, 
-  c("Txrf", "UID", geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F])
+  c(Firm = letters[as.integer(as.factor(Txrf))], 
+  ind = letters[as.integer(as.factor(UID))], 
+  geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F]
+)
 
 #### LocGranularFirm: the most granular location info at firm level
 #### LocGranularJob : the most granular location info at each job level
@@ -1032,9 +1061,15 @@ qsave(irp5L, paste0(pathdata, "irp5L.qs"), nthreads = DTThreads)
 qsave(irp5D, paste0(pathdata, "irp5D.qs"), nthreads = DTThreads)
 qsave(irp5P, paste0(pathdata, "irp5P.qs"), nthreads = DTThreads)
 
-irp5L[Txrf %in% unique(Txrf)[4]] #### 5 rows missing location, 2 branches in same loc muni
-irp5D[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 2 branches in same dist muni
-irp5P[Txrf %in% unique(Txrf)[5]] #### 1 row missing location, 3 branches in same prov
+#### 5 rows missing location, 2 branches in same loc muni
+irp5L[Txrf %in% unique(Txrf)[4], 
+  c(geovars, grepout("^Estab|^Ind|income", colnames(irp5L))), with = F] 
+ #### 1 row missing location, 2 branches in same dist muni
+irp5D[Txrf %in% unique(Txrf)[5], 
+  c(geovars, grepout("^Estab|^Ind|income", colnames(irp5D))), with = F] 
+#### 1 row missing location, 3 branches in same prov
+irp5P[Txrf %in% unique(Txrf)[5], 
+  c(geovars, grepout("^Estab|^Ind|income", colnames(irp5P))), with = F] 
 rm(irp5L, irp5D, irp5P); gc()  #### CLAUDE mem: saved + printed; only irp5M needed onward
 
 #### Missingness in location information
@@ -1144,9 +1179,17 @@ for (yr in 8:22) {
     #### PicknPay has HQ in Kinilworth (Main Place = Capetown), 90K employees
     #### Woolworth has HQ in Capetown, 33K employees
     lshare[, HHI := sum(Share^(2), na.rm = T), by = byvar]
-    lshare[, nHHI := (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket)]
+    #### CLAUDE frg: code correct but breaks on an edge case. 2026-07-02
+    ####   In a one-worker market WorkersInMarket == 1, so the formula
+    ####   is 0/0 = NaN. Normalised HHI is undefined there; write NA.
+    #### lshare[, nHHI := (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket)]
+    lshare[, nHHI := fifelse(WorkersInMarket > 1,
+      (HHI-1/WorkersInMarket)/(1-1/WorkersInMarket), NA_real_)]
     lshare[, HHIG := sum(ShareNoGov^(2), na.rm = T), by = byvar]
-    lshare[, nHHIG := (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov)]
+    #### CLAUDE frg: 2026-07-02 same one-worker-market guard.
+    #### lshare[, nHHIG := (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov)]
+    lshare[, nHHIG := fifelse(WorkersInMarketNoGov > 1,
+      (HHIG-1/WorkersInMarketNoGov)/(1-1/WorkersInMarketNoGov), NA_real_)]
     LShare <- rbindlist(list(LShare, lshare), use.names = T, fill = T)
   }
   LShare[, AreaLevel := factor(AreaLevel, levels = GeoLevel)]
@@ -1312,5 +1355,4 @@ ggsave(
   dpi = 300
  )
 ```
-
 
