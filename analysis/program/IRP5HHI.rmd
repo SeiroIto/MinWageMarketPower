@@ -1,5 +1,5 @@
 ---
-title: "Compute HHI and FA"
+title: "Compute HHI and FA — speed refactor (IRP5HHI2)"
 date: "`{r} format(Sys.time(), "%Y %m %d %R")`"
 output: 
   litedown::html_format:
@@ -7,7 +7,7 @@ output:
       css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
-#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5HHI.rmd"))
+#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5HHI2.rmd"))
 ---
 ```{css, echo=F}
 .SeiroBenign {
@@ -23,12 +23,18 @@ output:
   /* border: 1px solid yellow; */
   /* font-weight: bold; */
 }
-#### Default height of a block
+/* CLAUDE tpo: 2026-07-12 was a '####' line — not CSS; the parser folded it
+   into the selector and silently dropped this whole pre rule */
+/* Default height of a block */
 pre {
   max-height: 700px;
   overflow-y: auto;
 }
 ```
+
+<!-- IRP5HHI2.rmd: speed refactor of IRP5HHI.rmd (2026-07-13, Session 21).
+Same pipeline, same chunk structure, same output files, value-identical.
+Every change is tagged "CLAUDE eff: 2026-07-13". -->
 
 # What this file does (chunk summary)
 
@@ -42,9 +48,9 @@ pre {
 1. {descriptive stats FA and jobs} — Tables of aggregate FA (all industries + agriculture)
 1. {plot FAs by size} — Density of FA by firm size
 1. {plot FAs by jobs employment} — Density of FA in jobs vs employment
-1. {plot number of agri jobs taxyear 2012-2020} — Histogram of ag establishment size
+1. {plot number of agri jobs taxyear 2010-2020} — Histogram of ag establishment size
 1. {agri Jobs by firm age} (eval=F) — Bar chart: ag jobs by incumbents vs entrants
-1. {plot FA in agri 2012-2020} — Density of FA by tax year
+1. {plot FA in agri 2010-2020} — Density of FA by tax year
 1. {plot FA of agri} — Boxplot of FA by tax year, Exposed/Unexposed
 1. {define irp5M by location granularity} — Classify location completeness, create irp5M/L/D/P panels, filter agriculture → irp5Ma.qs
 1. {copy irp5M and derived files to saveddata} (eval=F) — Copy outputs
@@ -159,6 +165,12 @@ irp5 <- qread(paste0(pathsaveddata, "irp5.qs"),
 ```{r fraction affected for all years}
 #| attr.source = '.r .line-numbers',
 library(fasttime)
+#### CLAUDE eff: 2026-07-13 secondary index: the loop below subsets
+####   irp5[taxyear == 2000+yr] fifteen times; the index turns each pass
+####   into a lookup instead of a 150M-row scan. Physical row order is
+####   untouched (setkey would reorder and change every "first row" pick
+####   downstream -- do NOT swap this for setkey).
+setindex(irp5, taxyear)
 #### Takes 20-30 mins: Start  ####
 #### irp5M <- qread(paste0(pathdata, "irp5M.qs"), nthreads = 13)
 #### ipyrc0 <- irp5M[
@@ -212,7 +224,12 @@ for (yr in 8:22) {
   print(ipyrc[DurMonthMarch > 100, 
     .(Txrf, DateStart, DateStart20yr, DateEnd, DurationMonth, DurMonthMarch)])
   ipyrc[, IncomeMonth   := round(a3601_income/DurationMonth, 0)]
-  setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+  #### CLAUDE tpo: 2026-07-07 key sorted by place first, so shift(lead)
+  ####   within (Txrf, taxyear, UID) was not chronological for workers at
+  ####   >1 busmainplc of the same firm; sort by start date within
+  ####   person-firm instead (taxyear is constant inside the year loop)
+  #### setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+  setkey(ipyrc, Txrf, UID, DateStart)
   #### DateStart2, DateEnd2: Dates for 2nd job in the same firm
   ipyrc[, DateStart2 := shift(DateStart, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
   ipyrc[,   DateEnd2 := shift(DateEnd, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
@@ -245,7 +262,11 @@ for (yr in 8:22) {
   ipyrc[DateStart20yr < DateStart2 & DateEnd > DateEnd2, 
          TDurationMonth    := round(as.numeric((DateEnd - DateStart20yr)/30.5), 3)]
   #### TDurationMonth = Total duration of jobs
-  ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+  #### CLAUDE eff: 2026-07-13 selecting the element equal to the max IS the
+  ####   max; plain max() is GForce-optimized. Values identical.
+  #### ipyrc[, TDurationMonth   := TDurationMonth[TDurationMonth == max(TDurationMonth, na.rm = T)][1],
+  ####   by = .(Txrf, taxyear, UID)]
+  ipyrc[, TDurationMonth := max(TDurationMonth, na.rm = T),
     by = .(Txrf, taxyear, UID)]
   ipyrc[, DoubleJobRatio   := round((DJobDurationMonth/TDurationMonth)*100, 2)]
   ipyrc[, DoubleJobRatio   := DoubleJobRatio[!is.na(DoubleJobRatio)][1],by = .(Txrf, taxyear, UID)]
@@ -337,13 +358,16 @@ for (yr in 8:22) {
   ####    IncomeMonth, SubMW, NumSubMW, Jobs, FA,
   ####    NumSubMWe, Employees, FAe)]
   #### Fin year 2013 = 2012 Mar 01 - 2013 Feb 29
-  ####  <==> 0L for DateEnd < 2012 Mar 01 or DateStart >= 2013 Mar 01 
+  ####  <==> 0L for DateEnd < 2012 Mar 01 or DateStart >= 2013 Mar 01
   #### FinYr20yr := 1L ==> DateStart & DateEnd are correct for current taxyear
-  ipyrc[, FinYr20yr := 1L]
-  ipyrc[
-    DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
-    DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")), 
-    FinYr20yr := 0L]
+  #### CLAUDE dea: 2026-07-12 FinYr20yr is not in NeededCols and is referenced
+  ####   nowhere in the pipeline (Condense/HHI/MergeData/Impacts grep: 0 hits);
+  ####   computation commented out, kept for reference.
+  #### ipyrc[, FinYr20yr := 1L]
+  #### ipyrc[
+  ####   DateEnd    < fastPOSIXct(paste0(2000+(yr-1), "/03/01")) |
+  ####   DateStart >= fastPOSIXct(paste0(2000+yr,     "/03/01")),
+  ####   FinYr20yr := 0L]
   ipyrc[, JobsPerWorker := .N, by = c(geovars, "taxrefno", "uid")]
   #### Select variables to keep
   FAdata <- ipyrc[, ..NeededCols]
@@ -570,8 +594,14 @@ aggsummary <-
   qread(paste0(pathsaveddata, "AggregateSummary.qs"),
   nthreads = DTThreads, use_alt_rep = TRUE)
 #### total jobs, total sub MW jobs, aggregate FA
-aggsum <- 
-  aggsummary[, .(
+#### CLAUDE agg: 2026-07-12 aggsummary stacks ag1 (national totals, busprov_geo
+####   is NA via rbindlist fill) AND ag2 (the same totals by province); summing
+####   both by taxyear double-counted jobs/sub-MW jobs/firm counts (~2x) and
+####   MeanFAJobs averaged 1 national + ~10 provincial FAs. National rows only.
+#### aggsum <-
+####   aggsummary[, .(
+aggsum <-
+  aggsummary[is.na(busprov_geo), .(
       TotalJobs               = sum(TotalEmployees)
     , TotalSubMWJobs          = sum(TotalSubMWWorkers)
     , MeanFAJobs              = mean(TotalSubMWWorkers/TotalEmployees)
@@ -586,8 +616,13 @@ aggsum <-
   ]
 tb <- tt(aggsum, width = 0.8, caption = "Jobs and sub-MW jobs, all industries")
 options(tinytable_format_digits = 2)
-tb.agg <- format_tt(tb, #### CLAUDE tpo:
-    j = 1:4,
+#### CLAUDE tpo: 2026-07-12 j=1:4 big-marked col 1 = taxyear (rendered
+####   "2 013") and skipped col 5 TotalAffectedFirms; the count columns are
+####   2:5 (cf. tb.ag below, which already skips taxyear).
+#### tb.agg <- format_tt(tb,
+####     j = 1:4,
+tb.agg <- format_tt(tb,
+    j = 2:5,
     num_mark_big = " "
   )
 tb.agg
@@ -733,7 +768,7 @@ ggsave(
  )
 ```
 
-```{r plot number of agri jobs taxyear 2012-2020}
+```{r plot number of agri jobs taxyear 2010-2020}
 #| attr.source = '.r .line-numbers',
 library(qs)
 library(data.table)
@@ -749,7 +784,12 @@ faa <- qread(paste0(pathsaveddata, "FAOfAgri.qs"),
 #### FAD[, .(Num = .N, Neg = sum(DurMonthMarch<0)), by = (yr)][, 
 ####  .(yr, Num, NegRate = round(Neg/Num, 4))]
 geovars <- grepout("^bus.*geo$", colnames(faa))
-faa[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
+#### CLAUDE agg: 2026-07-12 faa is one row per establishment-year (dup table
+####   in {faa and Fadata...}: 59,627 unique vs 5), so .N == 1 everywhere and
+####   the histogram collapsed at 1 — a leftover from the worker-level irp5Ma
+####   version of this chunk. Use the pre-computed establishment job count.
+#### faa[, Num := as.integer(.N), by = c(geovars, "taxrefno", "taxyear")]
+faa[, Num := JobsMP]
 irp5ForPlot <- unique(faa[taxyear >= 2010 & taxyear <= 2020, 
   c(geovars, "taxyear", "taxrefno", "Num", "FA"), with = F]) #### CLAUDE tpo:
 irp5ForPlot[, taxyear := as.character(taxyear)]
@@ -800,19 +840,23 @@ ggsave(
  )
 ```
 
-```{r plot FA in agri 2012-2020}
+```{r plot FA in agri 2010-2020}
 #| attr.source = '.r .line-numbers',
 g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ], 
     aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
   geom_density(alpha = .3) + 
   scale_color_viridis_d("Tax year") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(1, 100)) +
+  #### CLAUDE tpo: FA is a fraction in [0,1]; limits (1,100) kept only FA==1
+  #### scale_x_continuous(limits = c(1, 100)) +
+  scale_x_continuous(limits = c(0, 1)) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = .5)) + #### CLAUDE tpo:
   facet_wrap(taxyear ~ ., ncol = 2)
 ggsave(
-  paste0(pathresults, "FAOfAg2010-2022.jpg")
+  #### CLAUDE com: 2026-07-12 filename matched to plotted range (irp5ForPlot
+  ####   is 2010-2020); was FAOfAg2010-2022.jpg
+  paste0(pathresults, "FAOfAg2010-2020.jpg")
   , g2, width = 8*2, height = 4*2, units = "cm",
   dpi = 300
  )
@@ -854,8 +898,15 @@ Mutually exclusive by construction; firm-level (all rows travel together). `irp5
 
 ```{r define irp5M by location granularity}
 #| attr.source = '.r .line-numbers',
-rm(FAD); rm(Fadata); rm(fadata); rm(inda); 
-rm(faa)
+#### CLAUDE com: 2026-07-12 guarded — unguarded rm() warned "object not
+####   found" on a standalone RunSep run; same pattern as {read irp5 file}
+#### rm(FAD); rm(Fadata); rm(fadata); rm(inda);
+#### rm(faa)
+if (exists("FAD"))    rm(FAD)
+if (exists("Fadata")) rm(Fadata)
+if (exists("fadata")) rm(fadata)
+if (exists("inda"))   rm(inda)
+if (exists("faa"))    rm(faa)
 gc()
 if (!exists("RunSep")) RunSep <- T
 if (RunSep || length(ls(pattern="^irp5$"))==0)
@@ -899,12 +950,21 @@ geovars <- grepout("^bus.*geo$", colnames(irp5))
 ####   !grepl("EXCEP",x) → c(NA,    TRUE,  TRUE)
 ####   element-wise &    → c(FALSE, FALSE, FALSE)
 ####   any(...)          → FALSE  ← CORRECT; without !is.na(): any(c(NA,F,F)) = NA
+#### CLAUDE eff: 2026-07-13 the grepl() calls ran once per (Txrf, taxyear)
+####   group -- millions of small-vector regex invocations. Compute the
+####   row-level validity flags ONCE, vectorized with fixed=TRUE, then let
+####   GForce any() sweep them by group. Row-wise logic (incl. the !is.na()
+####   NA-trace in the note above) is preserved exactly.
+irp5[, c("pOK", "dOK", "lOK", "mOK") := .(
+  busprov_geo     != "" & !is.na(busprov_geo)     & !grepl("EXCEP", busprov_geo,     fixed = TRUE),
+  busdistmuni_geo != "" & !is.na(busdistmuni_geo) & !grepl("EXCEP", busdistmuni_geo, fixed = TRUE),
+  buslocmuni_geo  != "" & !is.na(buslocmuni_geo)  & !grepl("EXCEP", buslocmuni_geo,  fixed = TRUE),
+  busmainplc_geo  != "" & !is.na(busmainplc_geo)  & !grepl("EXCEP", busmainplc_geo,  fixed = TRUE)
+)]
 irp5[, c("provexists", "distexists", "locexists", "mainexists") := .(
-  any(busprov_geo     != "" & !is.na(busprov_geo)     & !grepl("EXCEP", busprov_geo)),
-  any(busdistmuni_geo != "" & !is.na(busdistmuni_geo) & !grepl("EXCEP", busdistmuni_geo)),
-  any(buslocmuni_geo  != "" & !is.na(buslocmuni_geo)  & !grepl("EXCEP", buslocmuni_geo)),
-  any(busmainplc_geo  != "" & !is.na(busmainplc_geo)  & !grepl("EXCEP", busmainplc_geo))
+  any(pOK), any(dOK), any(lOK), any(mOK)
 ), by = .(Txrf, taxyear)]
+irp5[, c("pOK", "dOK", "lOK", "mOK") := NULL]
 irp5[, LocGranular := fcase(
   #### Granular down to Main Place
    provexists &  distexists &  locexists &  mainexists, GeoLevel[4],
@@ -996,12 +1056,23 @@ irp5[, TotalRowsInTxrf := as.integer(.N), by = .(Txrf, taxyear)]
 qsave(irp5, paste0(pathdata, "irp5_LocationGranularity.qs"), 
   nthreads = DTThreads)
 
-unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
-  & taxyear == 2009, 
-  c(Firm = letters[as.integer(as.factor(Txrf))], 
-  ind = letters[as.integer(as.factor(UID))], 
-  geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F]
-)
+#### CLAUDE tpo: 2026-07-07 with=F evaluates j in the calling scope, so
+####   Txrf/UID are not found ("object 'Txrf' not found"); even if found,
+####   the letter strings would be taken as column names. Select real
+####   columns first, then build masked display columns (msk pattern).
+#### unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
+####   & taxyear == 2009,
+####   c(Firm = letters[as.integer(as.factor(Txrf))],
+####   ind = letters[as.integer(as.factor(UID))],
+####   geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F]
+#### )
+irp5msk <- unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
+  & taxyear == 2009,
+  c("Txrf", "UID", geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F])
+irp5msk[, Firm := letters[as.integer(factor(Txrf))]]
+irp5msk[, ind  := letters[as.integer(factor(UID))]]
+irp5msk[, c("Txrf", "UID") := NULL]
+irp5msk
 
 #### LocGranularFirm: the most granular location info at firm level
 #### LocGranularJob : the most granular location info at each job level
@@ -1010,7 +1081,15 @@ unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLoca
 #### CommonLocality : Lowest area level common among all the jobs for firm-taxyear
 ####   E.g., if all jobs are in Stellenbosch (main place), it is main place
 ####   If there are jobs attached to a branch in Capetown, then it is province
-####   If location info is missing in some rows, then "none"
+#### CLAUDE com: 2026-07-12 doc corrected — the last line said "if location
+####   info is missing in some rows, then none", which is the inverse. The
+####   XNum inputs are uniqueN()-1, so a level counts as unique only when the
+####   group ALSO has NA rows there (NA + 1 real value). CommonLocality is
+####   therefore assigned exactly for groups whose missing-location rows
+####   cluster at one place, and is "none" for complete-info groups (those
+####   are caught by the LocGranularFirm branch of iiM..iiP instead).
+####   Display-only (irp5msk example); the panel selectors pair XNum with
+####   NARowsX directly and are unaffected.
 
 #### We know that rows with no location info can be allocated to the area level by:
 ####   MainPlNum == 1L                    ==> main place
@@ -1085,7 +1164,12 @@ rm(irp5L, irp5D, irp5P); gc()  #### CLAUDE mem: saved + printed; only irp5M need
 ####   d. Prov data       = a
 
 #### Agricultural panel
-irp5Ma <- irp5M[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+#### CLAUDE eff: 2026-07-13 regex on unique industry labels, then %in%
+####   (works for character and factor alike). Same rows.
+uind <- unique(irp5M$imp_mic_sic7_3d)
+uind <- uind[grepl("^Anim|^Plant pro|crops|Logging|forest", uind)]
+irp5Ma <- irp5M[imp_mic_sic7_3d %in% uind, ]
+rm(uind)
 qsave(irp5Ma, paste0(pathdata, "irp5Ma.qs"), nthreads = DTThreads)
 ```
 
@@ -1126,6 +1210,9 @@ if (!exists("RunSep")) RunSep <- T
 if (RunSep || length(ls(pattern="^irp5M$"))==0)
   irp5M <- qread(paste0(pathdata, "irp5M.qs"), 
     nthreads = DTThreads, use_alt_rep = TRUE)
+#### CLAUDE eff: 2026-07-13 secondary index for the 15 per-year subsets
+####   below; physical row order untouched.
+setindex(irp5M, taxyear)
 gc()
 #### irp5 <- qread(paste0(pathsaveddata, "irp5.qs"), nthreads = 13)
 geovars <- grepout("^bus.*geo$", colnames(irp5M))
@@ -1162,7 +1249,9 @@ for (yr in 8:22) {
     ipGeo[, Share := round(WorkersAtEstab/WorkersInMarket, 8)]
     #### ShareG, HHIG: Share and HHI after dropping GovEntity ####
     ipGeo[, WorkersAtEstabNoGov := 0L]
-    ipGeo[!grepl("gov", Entity), WorkersAtEstabNoGov := WorkersAtEstab]
+    #### CLAUDE eff: 2026-07-13 Entity is a two-level factor ("private"/"gov");
+    ####   equality beats grepl. Same rows.
+    ipGeo[Entity != "gov", WorkersAtEstabNoGov := WorkersAtEstab]
 	  #### Below gives private firm totals for rows of private firms
     ipGeo[, WorkersInMarketNoGov := as.integer(.N), by = c(byvar, "Entity")]
     ipGeo[, ShareNoGov := round(WorkersAtEstabNoGov/WorkersInMarketNoGov, 8)]

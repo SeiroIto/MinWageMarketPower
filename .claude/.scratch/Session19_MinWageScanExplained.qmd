@@ -1,0 +1,278 @@
+---
+title: "Session 19 Moss Plover — findings explained with mock examples"
+subtitle: "Companion to Session19_MinWageScanSummary.html"
+date: 2026-07-07
+format:
+  html:
+    toc: true
+    toc-location: left
+    number-sections: false
+    embed-resources: true
+engine: knitr
+execute:
+  eval: true
+  echo: true
+  warning: true
+---
+
+Written by Claude (model: **Fable 5**). Every section links to the exact chunk
+in the original notebook, then reproduces the mechanism on mock data small
+enough to run anywhere. All chunks below execute at render time — outputs
+shown are live, not pasted.
+
+```{r setup, message=FALSE}
+library(data.table)
+library(qs)
+```
+
+# A1 — `use_alt_rep` is a `qread()` argument, `qsave()` has no such thing
+
+Original: [IRP5Condense.rmd](../../analysis/program/IRP5Condense.rmd),
+13 calls, e.g. chunk `{r merge industry code}` L378, chunk
+`{r create ObPattern}` L1223-1236.
+
+The installed qs 0.27.3 signatures:
+
+```{r}
+args(qs::qsave)
+args(qs::qread)
+```
+
+`use_alt_rep` exists in the package — but only in `qread()`. Passing it to
+`qsave()` is an immediate error, reproduced here:
+
+```{r}
+tf <- tempfile(fileext = ".qs")
+try(qsave(data.table(x = 1:3), tf, nthreads = 2, use_alt_rep = TRUE))
+#### the fix: drop the argument from qsave; keep it in qread
+qsave(data.table(x = 1:3), tf, nthreads = 2)
+qread(tf, use_alt_rep = TRUE)
+```
+
+Rule takeaway: "argument exists somewhere in the package" is not
+verification — it must belong to *that* function (`feedback_debug_rule.md`).
+
+# B1 — `dropthese` filter narrower than its comment (user-confirmed intentional, 2026-07-07)
+
+**Status: closed.** The user confirms the narrower selection is deliberate;
+this section is kept only to record what the scan saw and why it was raised.
+
+Original: [IRP5Condense.rmd](../../analysis/program/IRP5Condense.rmd)
+chunk `{r dropping rows}` L973; comment at L956:
+"Drop firms with repetetive entries if they are above 10".
+
+Mock: three firms; F1 has 12 repetitive-uid rows, F2 has 10, F3 has 2.
+Intent: drop F1 (and any other firm above 10).
+
+```{r}
+ipyr <- data.table(
+  taxrefno = rep(c("F1", "F2", "F3"), c(12, 10, 2)),
+  uid      = c(rep("AAAAAAAAAA", 12), rep("CCCCCCCCCC", 10), rep("ZZZZZZZZZZ", 2))
+)
+tb <- table(ipyr$taxrefno)   # repetitive rows per firm
+ii <- 10
+#### current code's row filter:
+dupuid <- ipyr[duplicated(uid) | duplicated(uid, fromLast = TRUE), .(taxrefno, uid)]
+cur <- ipyr[taxrefno %in% names(tb)[tb > 10] &
+            uid %in% dupuid[taxrefno %in% names(tb)[tb == ii], uid][1:5], ]
+#### proposed:
+prop <- ipyr[taxrefno %in% names(tb)[tb > 10], ]
+list(intent_drops = "F1",
+     current_selects = unique(cur$taxrefno),
+     proposed_selects = unique(prop$taxrefno))
+```
+
+The current filter only keeps F1's rows **because** F2 happens to have
+exactly 10 rows *and* shares no uid restriction — here F1's uid is not among
+F2's first-5 uids, so the current code selects **nothing**: the drop set is
+empty and no firm is dropped downstream. And if no firm had exactly 10:
+
+```{r}
+tb2 <- tb[c("F1", "F3")]     # pretend F2 does not exist
+dupuid[taxrefno %in% names(tb2)[tb2 == ii], uid][1:5]
+```
+
+`character(0)[1:5]` = five NAs → `uid %in% NA` is all-FALSE → `dropthese`
+empty, silently.
+
+# B2 — `shift(type="lead")` runs in *physical* order, which is not chronological here
+
+Original: [IRP5HHI.rmd](../../analysis/program/IRP5HHI.rmd) chunk
+`{r fraction affected for all years}`: `setkey(ipyrc, busmainplc_geo,
+taxrefno, UID, DateStart)` (L215) then `shift(..., type = "lead")`
+grouped by `(Txrf, taxyear, UID)` (L217-218).
+
+Mock: one worker, one firm, two establishments. Job 1 (Jan-Mar) is at place
+"ZZZ-town", job 2 (Feb-Jun) at "AAA-town". Sorted by place first, the "next
+row" inside the person-firm group is chronologically the *earlier* job:
+
+```{r}
+ipyrc <- data.table(
+  busmainplc_geo = c("ZZZ-town", "AAA-town"),
+  Txrf = "F1", UID = "W1",
+  DateStart = as.POSIXct(c("2013-01-01", "2013-02-01")),
+  DateEnd   = as.POSIXct(c("2013-03-31", "2013-06-30"))
+)
+setkey(ipyrc, busmainplc_geo, Txrf, UID, DateStart)   # as in the original
+ipyrc[, DateStart2 := shift(DateStart, type = "lead"), by = .(Txrf, UID)]
+ipyrc[, .(busmainplc_geo, DateStart, DateEnd, DateStart2)]
+```
+
+Row 1 ("AAA-town", starts Feb) gets `DateStart2` = Jan — the *previous* job.
+The overlap conditions (`DateStart20yr < DateStart2 & DateEnd > DateStart2`,
+etc.) then mis-fire. Proposed: order by start date within the shift group:
+
+```{r}
+setkey(ipyrc, Txrf, UID, DateStart)
+ipyrc[, DateStart2 := shift(DateStart, type = "lead"), by = .(Txrf, UID)]
+ipyrc[, .(busmainplc_geo, DateStart, DateEnd, DateStart2)]
+```
+
+Now the Jan job sees the Feb job as its successor, and the overlap window
+(Feb 1 – Mar 31) is computed correctly.
+
+# B3 — `with = FALSE` evaluates `j` *outside* the table
+
+Original: [IRP5HHI.rmd](../../analysis/program/IRP5HHI.rmd) chunk
+`{r define irp5M by location granularity}` L999-1004.
+
+```{r}
+dt <- data.table(Txrf = c("F1", "F2"), x = 1:2)
+#### the original pattern: column masking attempted inside a with=F selector
+try(dt[, c(Firm = letters[as.integer(as.factor(Txrf))], "x"), with = FALSE])
+```
+
+`Txrf` is looked up in the calling environment, not in `dt` — error. The
+`msk` pattern used elsewhere in the file does it in two steps:
+
+```{r}
+out <- dt[, c("Txrf", "x"), with = FALSE]
+out[, Firm := letters[as.integer(factor(Txrf))]][, Txrf := NULL]
+out
+```
+
+# B4 — axis limits (1, 100) on a variable that lives in [0, 1]
+
+Original: [IRP5HHI.rmd](../../analysis/program/IRP5HHI.rmd) chunk
+`{r plot FA in agri 2012-2020}` L810.
+
+`FA = NumSubMW/Jobs` is a fraction. What survives each pair of limits:
+
+```{r}
+FA <- c(0, .1, .25, .5, .8, 1)          # typical FA values
+data.table(
+  limits    = c("c(1, 100)  (current)", "c(0, 1)  (proposed)"),
+  rows_kept = c(sum(FA >= 1 & FA <= 100), sum(FA >= 0 & FA <= 1)),
+  rows_total = length(FA)
+)
+```
+
+With the current limits the density in `FAOfAg2010-2022.jpg` is drawn from
+the FA == 1 sliver only. The two sibling plots in the same file (L684, L715)
+already use (0, 1).
+
+# B5 — firm-level `by=` under an establishment-level variable name (user-confirmed intentional, 2026-07-07)
+
+**Status: closed.** The user confirms both levels are deliberate — firm level
+in the Lf block (L223-), establishment level in the LSMa block (L144-). This
+section records the mechanism that was flagged.
+
+Original: [IRP5MergeData.rmd](../../analysis/program/IRP5MergeData.rmd)
+L236-237 (`by = taxrefno`) vs the establishment-keyed version of the same
+variable at L144-145.
+
+Mock: firm F1 has establishment A since 2010 and opens establishment B
+in 2015:
+
+```{r}
+Lf <- data.table(
+  taxrefno = "F1",
+  busmainplc_geo = c("A", "A", "B", "B"),
+  taxyear  = c(2010, 2015, 2015, 2016)
+)
+Lf[, ExistedBefore2013 := as.integer(taxyear < 2013)]
+#### current: firm level
+Lf[, firmlevel  := ExistedBefore2013[ExistedBefore2013 == 1L][1], by = taxrefno]
+#### establishment level
+Lf[, establevel := ExistedBefore2013[ExistedBefore2013 == 1L][1],
+   by = .(busmainplc_geo, taxrefno)]
+Lf
+```
+
+Under `by = taxrefno`, the new establishment B inherits "Existed" from A
+(`firmlevel` = 1 everywhere); under establishment keys B stays NA (→ 0 after
+the NA-fill line). This feeds `AgeSample` and the `LfCE` estimation
+subsamples — **decision needed on which definition is intended** before any
+edit.
+
+# B6 — `intersect()` keeps an establishment if *any* row is moderate
+
+Original: [IRP5Impacts.rmd](../../analysis/program/IRP5Impacts.rmd) chunk
+`{r examining estimation data}` L337-338.
+
+```{r}
+lfdata <- data.table(
+  EstID  = c(1, 1, 2),
+  rJobsMP = c(10, 500, 5),      # EstID 1 has one moderate and one extreme row
+  dJobsMP = c(0, -5, 0)
+)
+cur  <- lfdata[EstID %in% intersect(EstID[abs(rJobsMP) < 200],
+                                    EstID[dJobsMP > -1000]), ]
+prop <- lfdata[!(EstID %in% EstID[abs(rJobsMP) >= 200 | dJobsMP <= -1000]), ]
+list(current_rows = cur, proposed_rows = prop)
+```
+
+The current filter keeps EstID 1 — including its rJobsMP = 500 outlier row,
+which then stretches the "after dropping outliers" plot. The proposed form is
+the same idiom the winsorize block (L696-700) already uses.
+
+# A2 — the archival-file syntax errors, reproduced
+
+Original: e.g. [CITIRP5BranchLevel.rmd](../../analysis/program/CITIRP5BranchLevel.rmd)
+chunk `{r hhi}` (7 copies), [ReadCITIRP5Data.rmd](../../analysis/program/ReadCITIRP5Data.rmd)
+same chunks, [IRP5Impacts_P.rmd](../../analysis/program/IRP5Impacts_P.rmd) ~L264.
+All four files set `eval=F` globally, so these are latent, not live.
+
+```{r}
+#### missing comma between a c(...) vector and the .(...) selector:
+try(parse(text = 'LShare[Txrf %in% c("a", "b")  .(Txrf, AreaLevel)]'))
+#### missing c() around a multi-column on=:
+try(parse(text = 'x[y, on = "a", "b", "c"]'))
+#### missing commas between column names (Impacts_P/Test .lb/.ub block):
+try(parse(text = 'x[, c("lb" "ub") := .(1, 2)]'))
+```
+
+The live counterpart, [IRP5Impacts.rmd](../../analysis/program/IRP5Impacts.rmd)
+L377-386, has the commas and the `c()` and parses fine:
+
+```{r}
+length(parse(text = 'x[, c("lb", "ub") := .(1, 2)]'))
+```
+
+# C6 — why `...`-functions escape the signature scanner
+
+`geom_pointrange(width = .01)`
+([IRP5Impacts.rmd](../../analysis/program/IRP5Impacts.rmd) L392-394): ggplot
+layer functions absorb unknown arguments through `...` and only *warn*
+("Ignoring unknown parameters"), so a name check against `formals()` passes
+trivially. That is the reason the new rule says: if the signature has `...`,
+bad names pass silently — confirm in `?fn`.
+
+```{r}
+"..." %in% names(formals(ggplot2::geom_pointrange))
+```
+
+# D2 — the qsave→qread round trip is deliberate (do not "fix")
+
+[IRP5HHI.rmd](../../analysis/program/IRP5HHI.rmd) L504-506 saves `Fadata`
+and immediately re-reads it with `use_alt_rep = TRUE`. That converts
+materialised string columns into ALTREP representations, cutting RAM on the
+100M-row tables. It looks like a no-op; it is a memory optimisation:
+
+```{r}
+tf <- tempfile(fileext = ".qs")
+big <- data.table(s = rep(sprintf("firm%06d", 1:100), 100))
+qsave(big, tf)
+alt <- qread(tf, use_alt_rep = TRUE)
+identical(big$s, alt$s)   # same values; alt's strings are ALTREP-backed
+```

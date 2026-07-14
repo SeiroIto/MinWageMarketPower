@@ -23,7 +23,10 @@ output:
   /* border: 1px solid yellow; */
   /* font-weight: bold; */
 }
-#### Default height of a block
+/* CLAUDE tpo: 2026-07-12 was a '####' line — not CSS; the parser folded it
+   into the selector and silently dropped this whole pre rule (same fix as
+   IRP5HHI.rmd S20-4) */
+/* Default height of a block */
 pre {
   max-height: 700px;
   overflow-y: auto;
@@ -132,8 +135,13 @@ LSa <- qread(paste0(pathsaveddata, "HHIAgriRows.qs"), nthreads = DTThreads,
 ####  by = c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
 ####  "busmainplc_geo", "taxrefno")][Nums == 1L, taxyear])
 LSMa <- LSa[grepl("Mai", AreaLevel), ]
-LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo, 
-  buslocmuni_geo, busmainplc_geo, taxrefno)]
+#### CLAUDE dea/frg: 2026-07-12 dJob ran BEFORE the setorder below (relying on
+####   inherited year-loop order through the HHIAgriRows join — the fragility
+####   class of the Session 9 faa fix), diff() spans gap years silently, and
+####   dJob is read nowhere (Impacts grep: 0 hits). Commented out; if needed,
+####   reinstate AFTER setorder with a next_gap-style guard on year gaps.
+#### LSMa[, dJob := c(NA, diff(WorkersAtEstab)), by = .(busprov_geo, busdistmuni_geo,
+####   buslocmuni_geo, busmainplc_geo, taxrefno)]
 #### jobs are recorded poorly prior to 2013
 LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), by = taxyear]
 #### Need to set the population == 2012 firms
@@ -146,8 +154,11 @@ LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1],
 LSMa[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
 setkey(LSMa, busprov_geo, busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, taxrefno, taxyear)
-qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo: 2026-07-07 use_alt_rep is qread-only (qs 0.27.3);
+####   qsave() has no such arg -> unused argument error
+#### qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(LSMa, paste0(pathdata, "HHIAgriRowsMainPlaceLevel.qs"), nthreads = DTThreads)
 ```
 ```{r for printing LSMa, eval = T}
 LSMa[, .(TotalJobs = sum(WorkersAtEstab, na.rm = T)), 
@@ -216,6 +227,10 @@ LSMa1[, has2013 := any(taxyear == 2013),
 LSMa2 <- LSMa1[(has2013 & taxyear == 2013) | (!has2013 & num == 1L), ]
 LSMa1[, has2013 := NULL]
 setnames(LSMa2, "taxyear", "HHIBaseYear")
+#### CLAUDE com: 2026-07-12 LSMa2 was subset before has2013 := NULL ran on
+####   LSMa1, so has2013 and the stale LSMa1 num rode the join into
+####   EstSample_Ag.qs (num also shadowed faa's num into i.num). Drop here.
+LSMa2[, c("num", "has2013") := NULL]
 #### Lf <- LSMa1[faa, on = c("taxrefno", grepout("bus", colnames(LSMa1)))]
 Lf0 <- LSMa2[faa, on = c("taxrefno", grepout("bus", colnames(LSMa2)))]
 Lf0[, Trno := gsub("^...", "...", taxrefno)]
@@ -237,7 +252,13 @@ Lf[, FirstYear2013 := "Before"]
 Lf[ExistedBefore2013 == 0L, FirstYear2013 := "Not before"]
 Lf[, FirstYear2013 := factor(FirstYear2013)]
 Lf[, Sample := "Exposed"]
-Lf[FA0 == 0L, Sample := "Unexposed"]
+#### CLAUDE agg: 2026-07-12 FA0 == 0L never matches — FA0 is the first
+####   NONZERO non-NA FA (see the faa block above), so it is either nonzero
+####   or NA; Sample was constant "Exposed" and the two "unexposed" AgeSample
+####   branches below were unreachable. Never-affected establishments are
+####   exactly the is.na(FA0) rows.
+#### Lf[FA0 == 0L, Sample := "Unexposed"]
+Lf[is.na(FA0), Sample := "Unexposed"]
 Lf[, Sample := factor(Sample)]
 Lf[, AgeSample := "Existed, exposed"]
 Lf[grepl("Be", FirstYear2013) & grepl("Un", Sample),
@@ -266,23 +287,51 @@ Lf[, c("num", "MaxDiffTY") := NULL]
 #### EstID: establishment IDs
 #### If location info is missing, all establishments of a firm
 #### will be treated as a single establishment under EstID
-Lf[, EstID := factor(as.numeric(factor(paste0(
+#### CLAUDE frg: 2026-07-12 separator added — separator-less paste0 lets
+####   different (geo, taxrefno) tuples collide ("AB"+"C" == "A"+"BC"), the
+####   hazard recorded for EstabIDTx in IRP5Condense.rmd:525. Factor integer
+####   labels change, but EstID is regenerated with every pipeline run and
+####   only consumed via EstSample_Ag.qs.
+#### Lf[, EstID := factor(as.numeric(factor(paste0(
+####     busprov_geo
+####   , busdistmuni_geo
+####   , buslocmuni_geo
+####   , busmainplc_geo
+####   , taxrefno))))
+#### ]
+Lf[, EstID := factor(as.numeric(factor(paste(
     busprov_geo
   , busdistmuni_geo
   , buslocmuni_geo
   , busmainplc_geo
-  , taxrefno))))
+  , taxrefno, sep = "|"))))
 ]
-qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE fix: 2026-07-13 (Session 9 item "Lf not sorted by taxyear before
+####   saving"): guarantees chronological [1] picks in Impacts (HHI0,
+####   Pre2013HHI, Pre2013FAMP0, Pre2013Size) and a chronological
+####   diff(taxyear) in the GapInTY flag, instead of relying on faa's
+####   inherited order surviving the join.
+setorder(Lf, EstID, taxyear)
+#### CLAUDE tpo:
+#### qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(Lf, paste0(pathdata, "EstSample_Ag.qs"), nthreads = DTThreads)
 litedown::timing_data() 
 ```
 
 ```{r analysis sample descriptive statistics}
 #| attr.source = '.r .line-numbers',
+  #### CLAUDE frg: 2026-07-12 fixed levels — if any taxyear had zero
+  ####   incumbent rows the two table() vectors differed in length and
+  ####   rbind() misaligned/recycled.
+  #### rbind(
+  ####   ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
+  ####   All = table(Lf[, taxyear])
+  #### )
+  yl <- sort(unique(Lf$taxyear))
   rbind(
-    ExistedBefore2013 = table(Lf[ExistedBefore2013 == 1L, taxyear]),
-    All = table(Lf[, taxyear])
+    ExistedBefore2013 = table(factor(Lf[ExistedBefore2013 == 1L, taxyear], levels = yl)),
+    All = table(factor(Lf[, taxyear], levels = yl))
   )
 #### CLAUDE tpo: 2026-07-02
 ####   num was numbered on LSMa1 BEFORE the 2013-or-earliest selection,
@@ -297,14 +346,29 @@ Lf[, .(num = 1:.N), by = .(EstID, taxyear)][num > 1L, ]
 Lf[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
   busmainplc_geo, Trno, taxyear, Jobs, rJobs, Jobs0, FA, FA0, Share)][1:30, ]
 library(tinytable)
+#### CLAUDE agg: 2026-07-12 wrong aggregation level, the defect already
+####   corrected in IRP5HHI.rmd's agsum: Jobs/NumSubMW/Employees/NumSubMWe
+####   are FIRM-level constants repeated on each of the firm's establishment
+####   rows, so summing them over Lf (one row per establishment-year)
+####   overcounted multi-establishment firms; the two "Firms" columns counted
+####   establishment rows. MP columns + uniqueN(taxrefno), as in IRP5HHI.
+#### agestsum <- Lf[, .(
+####       TotalJobs          = sum(Jobs, na.rm = T)
+####     , TotalSubMWJobs     = sum(NumSubMW, na.rm = T)
+####     , TotalEmployees     = sum(Employees, na.rm = T)
+####     , TotalSubMWWorkers  = sum(NumSubMWe, na.rm = T)
+####     , TotalFirmsWithEmp  = sum(Employees>0, na.rm = T)
+####     , TotalAffectedFirms = sum(NumSubMWe>0, na.rm = T)
+####     ),
+####     by = .(taxyear)
 agestsum <- Lf[, .(
-      TotalJobs          = sum(Jobs, na.rm = T) 
-    , TotalSubMWJobs     = sum(NumSubMW, na.rm = T) 
-    , TotalEmployees     = sum(Employees, na.rm = T) 
-    , TotalSubMWWorkers  = sum(NumSubMWe, na.rm = T) 
-    , TotalFirmsWithEmp  = sum(Employees>0, na.rm = T) 
-    , TotalAffectedFirms = sum(NumSubMWe>0, na.rm = T) 
-    ), 
+      TotalJobs          = sum(JobsMP, na.rm = T)
+    , TotalSubMWJobs     = sum(NumSubMWMP, na.rm = T)
+    , TotalEmployees     = sum(EmployeesMP, na.rm = T)
+    , TotalSubMWWorkers  = sum(NumSubMWeMP, na.rm = T)
+    , TotalFirmsWithEmp  = uniqueN(taxrefno[JobsMP > 0])
+    , TotalAffectedFirms = uniqueN(taxrefno[NumSubMWMP > 0])
+    ),
     by = .(taxyear)
     ][, .(
       taxyear, 

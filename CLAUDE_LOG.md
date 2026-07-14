@@ -442,21 +442,218 @@ Note
 
 <!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
 
-* 2026-05-07 19:16 JST | Session 13 Slate Gull | check EstabOb.YYYY uniqueness for a given EstabID in IRP5Condense.rmd → two bugs found: (1) scalar `||` on L949 — NA→0L fill for Ob.YYYY never fires; (2) `EestabWith1` typo on L1014 (variable is `EstabWith1`) — EstabOb fill loop errors on first iteration; EstabOb.YYYY NOT uniform within EstabID
-* 2026-05-07 19:16 JST | Session 13 Slate Gull | git commit staged: IRP5Condense.rmd + 4 log files on Condense2026Apr branch
-* 2026-05-08 05:58 JST | Session 14 | check if edits to "merge irp5_WithRepetetiveUIDs GeoLF" break downstream → no breaks; uidtaxref→FirmUInd and IndID→EUIndID fully propagated in IRP5Condense.rmd; ReadMe.rmd L106,108,110 has stale uidtaxref (doc only, no runtime impact)
-* 2026-05-21 20:46 JST | Session 15 Amber Kestrel | IRP5HHI.rmd memory issue — propose RAM reduction + rm() placement → added rm()/gc() at FA loop, granularity, and hhi chunk end-of-life points; fixed inverted exists() guard L1080-1082
-* 2026-05-21 21:00 JST | Session 15 Amber Kestrel | inspect IRP5HHI.rmd after user edits, write to logs → Claude's 5 rm()/gc() + exists()-fix edits were committed (0e8602a "Further RAM management edits") then reverted by user in working tree. User instead removed FAD accumulation from {fraction affected for all years} loop entirely. FAD.qs now built ONLY by {create FA panel} (L404, eval=F) → needs eval=T. {hhi} still qsaves LShareHHI.qs so {create LShare panel} (L1187, eval=F) stays redundant for now.
+## Session 13 Slate Gull (cont.) | 2026-05-07 19:16 JST
 
-* 2026-07-02 06:44 JST | Session 16 Pale Reed | check IRP5HHI.html + IRP5HHI.rmd → issues found: (1) L790 xlim c(1,100) wrong [open]; (2) L553-566 aggsum double-counts ag1+ag2 rows; (3) L404 {create FA panel} eval=F still needs eval=T — FAD removed from main loop per Session 15; (4) L1265 stale columns in eval=F chunk
-* 2026-07-02 11:51 JST | Session 16 Pale Reed | fix IRP5Condense.rmd TrueTaxYear fiscal-year bug (L650-668) → TYStart/TYEnd flipped to taxyear/taxyear+1 (start-year convention, Mar Y - Feb Y+1); TrueTaxYear formula corrected to year(DateStart)-as.integer(month(DateStart)<3); old lines commented CLAUDE tpo 2026-07-02
-* 2026-07-02 11:51 JST | Session 16 Pale Reed | reviewed FinYr20yr in IRP5HHI.rmd → computed L322-326 but never used to filter NumSubMW/Jobs/Employees/MP counts (L289-311, all pre-date the flag); excluded from NeededCols; dead flag, open issue added to StandingIssues
-* 2026-07-02 11:51 JST | Session 16 Pale Reed | restructured feedback_proposal_style.md "Logical consistency before surfacing any claim" section into 4 self-contained issue blocks (hedged/strike-through StandingIssues entries, symbol lookup, elaborate/reorder/reformat requests)
+1. *check EstabOb.YYYY uniqueness for a given EstabID in IRP5Condense.rmd*
 
-* 2026-07-02 12:49 JST | Session 16 Pale Reed | web-check SARS financial year def → confirmed year-of-assessment = END-year naming (Mar Y-1 – Feb Y); flagged my earlier start-year TrueTaxYear fix as inverted; SARS-NT panel context (3 year markers: YoA/transaction/reconciliation; TrueTaxYear logic = transaction-yr≠YoA revision handling)
-* 2026-07-02 12:49 JST | Session 16 Pale Reed | user reverted TYStart/TYEnd to end-year (L650-651 taxyear-1/taxyear) + changed TrueTaxYear to year(DateEnd)+as.integer(month(DateEnd)>=3) (L664); reviewed → direction correct for end-year, but comment/example (L655-660,L663) use DateStart while code uses DateEnd → diverges for March-boundary-spanning episodes; recommended aligning to DateStart
-* 2026-07-02 17:22 JST | Session 17 Cedar Lark | review MinWage rmd/html for issues → Condense: L985 missing paren (chunk unparseable, regression vs rendered html), L990/1051/1070 paste(.SD,collapse) recycles one string into [IEF]ObPattern, L688-691 DropThisForRev drops revision rows not originals (by= no-op on i), L131-133 wasted grouped .N, L1119 mean(num) not mean(Num) + 36GB alloc, L538-540 slow grouped fill; HHI: L289-309 8 grouped := collapsible to 2, L1162 nHHI NaN at N=1 markets, L376 FAD accumulation restored so {create FA panel} eval=F redundant again; Merge: L280 num==1L undercount display; Impacts: L792 DESS should be DESSw, L693 stale comment. Proposals shown, no edits
-* 2026-07-02 17:49 JST | Session 17 Cedar Lark | A1-A9 follow-up: explained paste(.SD) and DropThisForRev with worked examples; A1 resolved as option 3 (dcast, subsumes A5); A4 reinterpreted per user — Num:=0L init belongs BEFORE grouped .N (order bug, not dead code); A5 confirmed faster (data.table reshape vignette, C implementation); A9 reduced to 3-line lookup+update-join; isTRUE(all()) NA-safety explained. Awaiting apply approval; B/C/D deferred
-* 2026-07-02 18:06 JST | Session 17 Cedar Lark | explained pooled-set year coverage 2003-2021 (only stated-2022 revisions escape → duplicate person-years), cross-person contamination via global i-evaluation; A4 decision revised: drop (comment out) Num:=0L init, keep grouped count; A9: explained fifelse in update-join j (i.v for matched taxyear<=2015 rows, self-assign otherwise) and confirmed i→by→j scoping (by groups only i-selected rows; i itself always evaluates on full columns)
-* 2026-07-02 19:02 JST | Session 17 Cedar Lark | wrote + rendered DataTableFixExamples.qmd (analysis/program, quarto, all chunks executed): A2 paste(.SD) demo, A3 mini-panel with duplicate person-years + cross-person contamination + update-join fix, A5 reshape-vs-dcast, fifelse update-join + i/by/j scoping demos → NEW finding while building A5: stats::reshape with 9 composite idvars ABORTS (interaction() integer overflow, 'cannot allocate 298.0 Gb'); production reshape at IRP5Condense.rmd L975 (EUIndID ~50M levels) exposed to same abort on R 4.4; dcast same task ~6s. Scratch repro kept: scratch_reshape_test.R
-* 2026-07-02 19:41 JST | Session 17 Cedar Lark | applied approved fixes to IRP5Condense.rmd (9 edits, comment-out style, CLAUDE tags, plain-language comments per user request): A4 Num:=0L init removed (grouped := needs no init), A9 FillInLocMuni lookup+update-join, A3 DropThisForRev per-person update join (RevYears) + stale-9.0204 reminder, isTRUE guard L971, reshape->dcast with fill=0L + fun.aggregate=max + robust Ob.YYYY rename, NA-fill loop retired, IObPattern/EObPattern/FObPattern do.call(paste0,.SD), Estab/Firm fill loops -> keyed update joins (user request 'update join on L975'), setkey pair commented, MeanStdN aggregate rewrite; parse check: all 21 R chunks OK (scratch_parse_check.R)
+   Two bugs found.
+   * L949 scalar `||` collapses column to one TRUE/FALSE before `is.na()` — NA→0L fill for `Ob.YYYY` never fires
+   * L1014 `EestabWith1` typo (variable assigned as `EstabWith1` at L1009) — EstabOb fill loop errors on first iteration; `EstabOb.YYYY` NOT uniform within `EstabID`
+
+1. *git commit*
+
+   Staged `IRP5Condense.rmd` + 4 log files on `Condense2026Apr` branch.
+
+## Session 14 | 2026-05-08 05:58 JST
+
+1. *check if edits to "merge irp5_WithRepetetiveUIDs GeoLF" break downstream*
+
+   No breaks. `uidtaxref`→`FirmUInd` and `IndID`→`EUIndID` fully propagated in `IRP5Condense.rmd`; `ReadMe.rmd` L106,108,110 has stale `uidtaxref` (doc only, no runtime impact).
+
+## Session 15 Amber Kestrel | 2026-05-21 20:46-21:00 JST
+
+1. *IRP5HHI.rmd memory issue — propose RAM reduction + rm() placement*
+
+   Added `rm()`/`gc()` at FA loop, granularity, and hhi chunk end-of-life points; fixed inverted `exists()` guard L1080-1082.
+
+1. *inspect IRP5HHI.rmd after user edits, write to logs*
+
+   Claude's 5 `rm()`/`gc()` + `exists()`-fix edits were committed (`0e8602a` "Further RAM management edits") then reverted by user in working tree. User instead removed FAD accumulation from `{fraction affected for all years}` loop entirely.
+   * `FAD.qs` now built ONLY by `{create FA panel}` (L404, `eval=F`) → needs `eval=T`
+   * `{hhi}` still qsaves `LShareHHI.qs` so `{create LShare panel}` (L1187, `eval=F`) stays redundant for now
+
+## Session 16 Pale Reed | 2026-07-02 06:44-12:49 JST
+
+1. *check IRP5HHI.html + IRP5HHI.rmd*
+
+   Issues found: (1) L790 `xlim c(1,100)` wrong [open]; (2) L553-566 `aggsum` double-counts ag1+ag2 rows; (3) L404 `{create FA panel}` `eval=F` still needs `eval=T` — FAD removed from main loop per Session 15; (4) L1265 stale columns in `eval=F` chunk.
+
+1. *fix IRP5Condense.rmd TrueTaxYear fiscal-year bug (L650-668)*
+
+   `TYStart`/`TYEnd` flipped to `taxyear`/`taxyear+1` (start-year convention, Mar Y-Feb Y+1); `TrueTaxYear` formula corrected to `year(DateStart)-as.integer(month(DateStart)<3)`. Old lines commented `CLAUDE tpo 2026-07-02`.
+
+1. *review FinYr20yr in IRP5HHI.rmd*
+
+   Computed L322-326 but never used to filter NumSubMW/Jobs/Employees/MP counts (L289-311, all pre-date the flag); excluded from `NeededCols` — dead flag, open issue added to StandingIssues.
+
+1. *restructure feedback_proposal_style.md "Logical consistency before surfacing any claim" section*
+
+   Restructured into 4 self-contained issue blocks: hedged StandingIssues entries, strike-through StandingIssues entries, symbol lookup, elaborate/reorder/reformat requests.
+
+1. *web-check SARS financial year definition*
+
+   Confirmed year-of-assessment = END-year naming (Mar Y-1 – Feb Y); flagged the earlier start-year `TrueTaxYear` fix (this session, above) as inverted. SARS-NT panel context: 3 year markers (YoA / transaction / reconciliation); `TrueTaxYear` logic handles transaction-yr ≠ YoA revisions.
+
+1. *(user reverted TYStart/TYEnd to end-year)*
+
+   User reverted `TYStart`/`TYEnd` to end-year (L650-651 `taxyear-1`/`taxyear`) and changed `TrueTaxYear` to `year(DateEnd)+as.integer(month(DateEnd)>=3)` (L664). Reviewed: direction correct for end-year convention, but the comment/worked example (L655-660, L663) uses `DateStart` while the code uses `DateEnd` — diverges for episodes straddling the 1-March boundary. Recommended aligning the comment to `DateStart`.
+
+## Session 17 Cedar Lark | 2026-07-02 16:21-21:40 JST
+
+1. *review MinWage rmd/html for issues*
+
+   Findings across all 4 files, proposals shown, no edits made yet.
+   * Condense: L985 missing paren (chunk unparseable, regression vs rendered html); L990/1051/1070 `paste(.SD,collapse)` recycles one string into `[IEF]ObPattern`; L688-691 `DropThisForRev` drops revision rows not originals (`by=` no-op on `i`); L131-133 wasted grouped `.N`; L1119 `mean(num)` not `mean(Num)` + 36GB alloc; L538-540 slow grouped fill
+   * HHI: L289-309 8 grouped `:=` collapsible to 2; L1162 `nHHI` NaN at N=1 markets; L376 FAD accumulation restored so `{create FA panel}` `eval=F` redundant again
+   * Merge: L280 `num==1L` undercount in display
+   * Impacts: L792 `DESS` should be `DESSw`; L693 stale comment
+
+1. *A1-A9 follow-up*
+
+   Explained `paste(.SD)` and `DropThisForRev` with worked examples.
+   * A1 resolved as option 3 (dcast, subsumes A5)
+   * A4 reinterpreted per user — `Num:=0L` init belongs BEFORE grouped `.N` (order bug, not dead code)
+   * A5 confirmed faster (data.table reshape vignette, C implementation)
+   * A9 reduced to 3-line lookup+update-join; `isTRUE(all())` NA-safety explained
+   * Awaiting apply approval; B/C/D deferred
+
+1. *(follow-up on pooled-set contamination, A4/A9 decisions)*
+
+   Explained pooled-set year coverage 2003-2021 (only stated-2022 revisions escape → duplicate person-years), cross-person contamination via global `i`-evaluation.
+   * A4 decision revised: drop (comment out) `Num:=0L` init, keep grouped count
+   * A9: explained `fifelse` in update-join `j` (`i.v` for matched `taxyear<=2015` rows, self-assign otherwise) and confirmed `i`→`by`→`j` scoping (`by` groups only `i`-selected rows; `i` itself always evaluates on full columns)
+
+1. *write + render DataTableFixExamples.qmd*
+
+   Wrote and rendered `DataTableFixExamples.qmd` (`analysis/program`, quarto, all chunks executed): A2 `paste(.SD)` demo, A3 mini-panel with duplicate person-years + cross-person contamination + update-join fix, A5 reshape-vs-dcast, `fifelse` update-join + i/by/j scoping demos.
+   * New finding while building A5: `stats::reshape` with 9 composite `idvars` ABORTS (`interaction()` integer overflow, "cannot allocate 298.0 Gb"); production reshape at `IRP5Condense.rmd:975` (`EUIndID` ~50M levels) exposed to the same abort on R 4.4; `dcast` does the same task in ~6s
+   * Scratch repro kept: `scratch_reshape_test.R`
+
+1. *apply approved fixes to IRP5Condense.rmd*
+
+   9 edits applied, comment-out style, CLAUDE tags, plain-language comments per user request: `Num:=0L` init removed (grouped `:=` needs no init), `FillInLocMuni` lookup+update-join, `DropThisForRev` per-person update join (`RevYears`) + stale-9.0204% reminder, `isTRUE` guard L971, reshape→dcast with `fill=0L` + `fun.aggregate=max` + robust `Ob.YYYY` rename, NA-fill loop retired, `IObPattern`/`EObPattern`/`FObPattern` → `do.call(paste0,.SD)`, Estab/Firm fill loops → keyed update joins (user request "update join on L975"), setkey pair commented, `MeanStdN` aggregate rewrite. Parse check: all 21 R chunks OK (`scratch_parse_check.R`).
+
+1. *resume (B/C/D items)*
+
+   Applied remaining items, all parse-checked clean.
+   * B1 (HHI L289): 8 grouped `:=` → two `` `:=`(name=value) `` multi-assigns, functional form per user readability request
+   * B2 (HHI L1162/64): `nHHI`/`nHHIG` `fifelse` NA guard for 1-worker markets
+   * C1 (Merge L280): `table()` over `unique(LSMa2, by=geovars+taxrefno)`
+   * C2 (Merge L253): `busprov_geo` added to `ReportEveryYear` grouping
+   * D1 (Impacts L792): `DESS`→`DESSw`
+   * D2 (Impacts L694): comment `>2`→`>6`
+   * audio-hooks: `notification` hook → `notification_only`, debounce 500→5000ms (user "being yelled at" while reading prompts)
+   * Full pipeline re-run required before results are quoted — `DropThisForRev` change shifts the panel; 9.0204% figure and `irp5_RevReports.qs` are stale
+
+## Session 17 Cedar Lark (log write-up) | 2026-07-03
+
+1. *write logs of previous session*
+
+   Promoted the entire un-promoted sandbox backlog (Sessions 13 cont.-17) to canonical format across `CLAUDE_LOG.md`, `CLAUDE_CHANGES.md`, `CLAUDE_StandingIssues.md`; appended a Session 17 "Where to pick up" note to `CLAUDE_TaskRecord.md`; added a `CLAUDE_CC.md` session-end marker.
+   * `CLAUDE_StandingIssues.md`: converted ~16 flat bullet findings (Sessions 16-17) into full definition-list issue entries with File/Lines/Problem/Fix/Status/Tag, cross-referencing which are Fixed vs. still Open vs. superseded by later edits
+   * Noted GUK-parallel: `CLAUDE_CC.md` has exact back-to-back duplicate turns throughout (Stop hook `append_cc.sh` appears to fire twice per turn) — flagged to user, not fixed
+   * Same promotion done in parallel for the GUK project's three log files
+
+1. *summarise issues of min wage in qmd/html just as in GUK*
+
+   Wrote and rendered `Session17_MinWageScanSummary.qmd/.html` (`.claude/.scratch/`, quarto, self-contained, TOC) — 18 findings across all 4 production files (Condense/HHI/Merge/Impacts), each backed by either a live-code-read evidence chunk (confirms what actually shipped) or a minimal synthetic reproduction, since production IRP5/CIT data isn't present on this machine.
+   * Status table: 13 Fixed, 3 Open (`TrueTaxYear` DateStart/DateEnd anchor; HHI `exists()` guard reverted live again; dead `FinYr20yr` flag), 2 Fixed-but-unverified pending server pipeline re-run (`DropThisForRev`, `DESS`/`DESSw`)
+   * Referenced (did not duplicate) the existing `DataTableFixExamples.qmd` §A3/§A5 worked demos for `DropThisForRev` and `reshape`-vs-`dcast`
+   * Render gotcha: R >= 4.3 hard-errors on `\|\|` given a length>1 argument (used to warn); rewrote the Finding-1 repro to use `is.na(x)[1] \|\| is.na(y)[1]` to demonstrate the historical silent-scalar behaviour without erroring
+
+1. *Finding 10 review — user: "I believe this is fixed in Condense.rmd?"*
+
+   Re-derived the anchor question from scratch. User corrected the framing: `periodemployedto` (`DateEnd`) can never be later than end-Feb of its own filing year (annual return, Mar–Feb coverage), so the originally suspected boundary-straddling divergence was impossible, not just unlikely. `DateEnd` confirmed correct.
+   * `IRP5Condense.rmd:674-687` comment block rewritten: relabelled "Examples: DateStart" → "Examples: DateEnd" with an in-place explanation; comment-only, no functional change (`CLAUDE com: 2026-07-03`)
+   * `CLAUDE_StandingIssues.md` Issue 664 marked resolved (iterated down to a 3-line Resolution field per user's repeated brevity requests)
+   * `CLAUDE_CHANGES.md` — added Session 17 (comment fix) entry
+   * `Session17_MinWageScanSummary.qmd/.html` — Finding 10 rewritten from "open" to "resolved 2026-07-03", invalid boundary-case repro replaced with the correct long-tenure-`DateStart` repro; re-rendered clean
+
+## Session 18 Birch Tern | 2026-07-03
+
+* 2026-07-03 08:25 JST | Session 18 Birch Tern | restyle Session17_MinWageScanSummary.qmd → added Issue index (18 issues, open/solved, What/Damage/Fix def lists); all 18 Findings restyled to What/Damage/Fix + Live code + Status; Finding 10 stale open-status/table/next-steps leftovers removed; status summary → tinytable with file row groups (File column dropped, auto width); re-rendered clean
+
+## Session 19 Moss Plover | 2026-07-07, 16:20-21:22 JST (5 hours 02 minutes)
+
+1. *IRP5Condense.rmd qsave uses use_alt_rep argument which is not documented and gives an error*
+
+   Verified against installed qs 0.27.3: `use_alt_rep` is a `qread()`-only argument; `qsave()` has none — every call errors with "unused argument".
+    * removed from 3 `qsave` calls in IRP5Condense.rmd (L150, L173-176, L345-348) + 2 in IRP5MergeData.rmd (L149, L276); originals kept as `#### CLAUDE tpo:` comments
+    * `qread(..., use_alt_rep = TRUE)` calls untouched (valid there)
+    * bug introduced by an earlier Opus session
+
+1. *add to feedback_debug_rule.md: debug should check all calls, do not assume something written is correct*
+
+   New Rules item "Never assume existing code is correct": verify argument names with `args(pkg::fn)` — the arg must belong to *that* function; `...` in the signature → confirm in `?fn`. Why (use_alt_rep case) + How-to-apply lines added; wording iterated for conciseness.
+
+1. *scan all qmd files in min wage under the modified rule; raise issues, propose fixes; note model name; render html*
+
+   Scanner `scan_signatures.R` (parse-based, all 22 notebooks) + logic pass in line-number order.
+    * signature: 13 MORE live `qsave use_alt_rep` in IRP5Condense.rmd — earlier grep was head-truncated; latent syntax errors + duplicate `{r hhi}` labels in 4 archival eval=F files
+    * logic: non-chronological shift for multi-place workers (HHI L215), `with=F` scope error (HHI L999), FA plot limits (1,100) on a [0,1] variable (HHI L810), firm-vs-estab ExistedBefore2013 (MergeData L236), intersect outlier keep (Impacts L337), swapped HHI comments (Impacts L1119/1132)
+    * `Session19_MinWageScanSummary.qmd` + `Session19_MinWageScanExplained.qmd` (runnable mocks) in .claude/.scratch, rendered to HTML; model noted Fable 5
+    * style iterations per user: Status field per issue, chunk names + ordinals, Files+Chunks merged as nested lists, collapsible `<details>` chunk excerpts (litedown keeps raw HTML anchors — verified with a `fuse()` test), scanner-residue `...` explanation
+
+1. *B5 intentional (firm level L223-, estab level L144-); dedup = deduplicate; do all*
+
+   Applied A1 (13 qsave), B2 (chronological setkey), B3 (irp5msk two-step), B4 (limits 0-1), B6 (exclusion idiom), B7 (comment swap); B1/B5/D2 closed intentional.
+    * StandingIssues: issues 1063 and 720 struck resolved; Session 19 block appended (7 open items)
+    * post-hoc discovery: B4 was already open (Session 4 "720") and B5 already recorded intentional (Session 4 L221-222) — the scan failed to cross-check StandingIssues before flagging
+    * B2 value changes materialise at the next server pipeline run
+
+1. *taking into all rules applied in this debug session, propose an edit to the debug feedback rule file*
+
+   4 new Rules items in feedback_debug_rule.md after 3 wording iterations: enumerate completely (never truncate a listing); check StandingIssues before raising a flag; never-executing code is latent, not live; verify states if relevant (sort order, keys, seeds, options).
+
+    * idea: every miss this session traced to skipping a cheap completeness check — full grep count, prior records, `formals()`, sort state
+
+# Session 20 Iron Curlew | 2026-07-12
+
+1. *min wage, check HHI file*
+
+   Static check of IRP5HHI.rmd, cross-checked against StandingIssues before flagging (Session 19 rule).
+    * Session 19 fixes verified intact: B2 chronological setkey (220), B3 irp5msk two-step (1006-1021), B4 FA limits 0-1, {hhi} rm guards
+    * 2 live output bugs found: aggregate descriptive table double-counts ag1 national + ag2 provincial rows (~2x jobs/firm counts); agri-jobs histogram plots .N == 1 on the deduplicated faa (leftover from the irp5Ma version)
+    * 5 minor: taxyear big-marked "2 013" by format_tt j=1:4; '####' line kills the css pre rule; 2012/2010/2022 label drift; unguarded rm() under RunSep; FinYr20yr dead + CommonLocality doc inverted
+    * not re-raised: NoGov by-Entity (NOT A BUG 2026-04-15), uid/UID interchangeable, B5/D2 intentional
+
+1. *fix all*
+
+   All 7 applied in house style (originals commented, CLAUDE agg/tpo/com/dea tags): aggsum now national rows only (is.na(busprov_geo)); Num := JobsMP; format_tt j = 2:5; css /* */ comment; chunks + jpg renamed to 2010-2020 (old names only in .scratch and archived IRP5HHI_.rmd); if (exists()) rm guards; FinYr20yr commented out, CommonLocality doc corrected (no logic change).
+    * verification: all 23 R chunks parse, 0 failures (.claude/.scratch/parse_check_hhi_s20.R)
+    * value changes (table, histogram) materialise at the next server pipeline run; estimation objects (FAD, LShareHHI, EstSample) untouched
+    * logged: StandingIssues Session 20 block (7 struck items), CLAUDE_CHANGES S20-1..S20-7 (23:43 JST)
+
+1. *check mergedata*
+
+   Static check of IRP5MergeData.rmd, prior records cross-checked first.
+    * prior fixes intact: has2013 two-step, setorder(faa, taxyear), ReportEveryYear busprov_geo, unique-establishment tabulation, both qsave use_alt_rep removals
+    * 2 live bugs: Sample/AgeSample dead condition (FA0 == 0L can never match — FA0 is first NONZERO FA; everything "Exposed", faulty columns in EstSample_Ag.qs, sole consumer the archival TestRMD plot); descriptive table sums firm-level Jobs/Employees over establishment rows (the defect already fixed in IRP5HHI's agsum)
+    * 5 minor: dJob before sort + unused; css pre rule dead here AND in IRP5Impacts.rmd; has2013/num clutter into EstSample_Ag; EstID separator-less paste0; rbind-of-tables misalignment
+    * known-open left alone: Lf unsorted before qsave (Session 9); ExistedBefore2013 firm-level intentional
+
+1. *fix all*
+
+   All applied (originals commented, CLAUDE agg/dea/frg/com/tpo tags): is.na(FA0) for Unexposed; MP columns + uniqueN(taxrefno) in the descriptive table; dJob commented out; css fixed in MergeData and Impacts; LSMa2 num/has2013 dropped; EstID paste sep = "|"; fixed-levels tables.
+    * verification: 8 MergeData + 13 Impacts chunks parse, 0 failures (parse_check_s20b.R)
+    * value changes (Sample/AgeSample, table, EstID labels) materialise at the next server pipeline run; regression specifications untouched
+    * logged: StandingIssues second MergeData block, CHANGES S20-8..S20-13 (23:53 JST)
+
+# Session 21 Iron Curlew | 2026-07-13
+
+1. *check entire pipeline of rmds, find issues and fix*
+
+   Full pass over setup.Rmd + Condense + HHI + MergeData + Impacts (HHI and MergeData already done in Session 20). All recorded open items were treated as "next touch" and applied.
+    * Condense: 5 carried-over S19 items fixed — smallirp5 double dedup, EstabIDTx/EstabID paste(sep = "|"), dead FirmUInd init, no-op {copy Bus_adr_Geo_Munic} body, natureofperson regex unified behavior-preserving to loose "A" + table0 diagnostic for the server. NEW OPEN (not touched): dropthese at 991 couples tb>10 firms with uids from tb==10 firms — frozen exploratory code, needs a server check.
+    * MergeData: Session 9 item closed — setorder(Lf, EstID, taxyear) before the EstSample_Ag qsave; also makes Impacts' GapInTY diff chronological by construction.
+    * Impacts: Session 9 items closed — true-2012 HHI threshold (thr2012 from HHIAgriRowsMainPlaceLevel.qs, both chunks; CEa/CEb subsamples may shift, intended) and HHILevel0 removal. S19 D1 applied — 8+20 feols calls folded into named-list loops, order preserved for positional EstSpecs indexing; 4 dead LfwCE{mi,sm,me,la} qreads dropped. width=.01 removed x4; prose 3000 -> 2000. NEW: winsorized descriptives re-read LfwC201002.qs (was last-iteration Jb=10 — asymmetric with the unwinsorized twin).
+    * verification: 64 chunks parse, 0 failures (parse_check_s21.R); no es* object referenced outside the refactored blocks; setup.Rmd clean.
+    * NEXT SERVER RUN: full pipeline from Condense (ID relabeling); expect value changes in HHILevel subsamples, GapInTY, winsorized descriptives, plus the Session 20 items. (00:06 JST)
+
+1. *refactor condense and hhi for speed, save as condense2, HHI2*
+
+   IRP5Condense2.rmd (1,399 lines) and IRP5HHI2.rmd (1,447 lines) created; originals untouched. Same chunks, same outputs; value-identical except .GRP relabeling of the arbitrary integer IDs in Condense2.
+    * Condense2: DateBirth via unique-value lookup (kills the 2-hour as.IDate pass); NatureOfPer via unique()+update join (was %in% over ~150M elements with dups); grepl fixed=TRUE for NULL/A/EXCEP literals; all ID columns via .GRP radix grouping (no 200M-row paste, no factor sort, separator-collision class closed for good); NatureOfPer == "A"; agri filter on unique labels + %in%
+    * HHI2: setindex(taxyear) on irp5/irp5M for the 15 per-year subsets (setkey would reorder and change first-row picks -- warned in-file); TDurationMonth plain GForce max(); location-exists flags computed once vectorized then GForce any() by group (was millions of per-group regex calls); Entity != "gov"; agri filter on unique labels
+    * verification: 41 chunks parse, 0 failures (parse_check_s21b.R); hunk-by-hunk diff review (86/51 lines). UNTESTED against server data -- on first run compare qc prints/row counts to the originals' logged values
+    * tooling: python edits had converted IRP5Impacts.rmd + the CLAUDE logs to LF and left others mixed; all six rmds + three logs renormalized to full CRLF

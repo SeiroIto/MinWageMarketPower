@@ -93,29 +93,280 @@ Note
 * `settings.local.json` Stop hook | `echo 'RULE: append...'` → `bash /mnt/c/seiro/languages/claude/.claude/append_cc.sh 2>/dev/null` | auto-write CC from transcript; eliminates manual composition | CLAUDE fix
 * `/mnt/c/seiro/languages/claude/.claude/append_cc.sh` | (new file) | reads JSONL transcript, extracts last turn, appends to project `CLAUDE_CC.md`; skips continuation-summary injections | CLAUDE fix
 
+# Session 15 Amber Kestrel | 2026-05-21
+
+* `IRP5HHI.rmd` FA loop end + after loop | *(absent)* → `rm(ipyrc,FAdata,ag1,ag2);gc()` per iteration + `rm(irp5);gc()` after loop | free per-year transients before next slice; full IRP5 dead past loop | CLAUDE mem
+* `IRP5HHI.rmd` after irp5M/L/D/P built | *(absent)* → `rm(iiM,iiL,iiD,iiP,irp5);gc()` | free 4 logical index vectors (~0.45GB each) + full irp5 (already saved) | CLAUDE mem
+* `IRP5HHI.rmd` after irp5L/D/P diagnostic prints | *(absent)* → `rm(irp5L,irp5D,irp5P);gc()` | saved + printed; only irp5M needed onward | CLAUDE mem
+* `IRP5HHI.rmd` hhi loop end + after loop | *(absent)* → `rm(ipyr,ipGeo,lshare,LShare);gc()` per iteration + `rm(LS,irp5M);gc()` after | free per-year transients; plots below re-read ShareHHI from disk | CLAUDE mem
+* `IRP5HHI.rmd` L1080-1082 | `if(!exists(x))rm(x)` → `if(exists(x))rm(x)` | condition inverted — never freed irp5L/D/P when present, errored when absent | CLAUDE tpo
+
+Note
+:   The 5 edits above (commit `0e8602a` "Further RAM management edits") were reverted by the user in the working tree; see Session 15 (user edit) below.
+
+## Session 15 (user edit) | 2026-05-21
+
+* `IRP5HHI.rmd` `{fraction affected for all years}` L184,L375-376 | `aggsummary<-FAD<-NULL` + `FAD<-rbindlist(...)`, `qsave(FAD,FAD.qs)`, `table(FAD)`, `print(round(FAD...))` → `aggsummary<-NULL` only (FAD block removed) | user dropped in-memory FAD accumulation rather than patch with `rm()`; `FA{yr}.qs` still saved per year | user edit
+* `IRP5HHI.rmd` `{hhi}` L1063 | `if(exists(x))rm(x)` (Claude fix) → `if(!exists(x))rm(x)` | user reverted Claude's Session 15 fix — inverted-guard bug is live again | user edit
+
+# Session 16 Pale Reed | 2026-07-02
+
+* `IRP5Condense.rmd` L650-651 | `TYStart=(taxyear-1)/03/01, TYEnd=taxyear/03/01` → `TYStart=taxyear/03/01, TYEnd=(taxyear+1)/03/01` | taxyear names starting year (Mar Y-Feb Y+1), not ending year | CLAUDE tpo
+* `IRP5Condense.rmd` L654-655(orig) | `TrueTaxYear:=year(DateStart)` → `TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3)` | plain calendar year wrong for Jan/Feb (belongs to prior fiscal year); verified against comment worked example L608-611 | CLAUDE tpo
+
+## Session 16 (user edit) | 2026-07-02
+
+* `IRP5Condense.rmd` L650-651 | `TYStart=taxyear/TYEnd=taxyear+1` (Claude's start-year edit above) → `TYStart=taxyear-1/TYEnd=taxyear` | reverted to SARS end-year YoA convention (verified web) | user edit
+* `IRP5Condense.rmd` L664 | `TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3)` → `year(DateEnd)+as.integer(month(DateEnd)>=3)` | end-year mapping; note comment L655-660 still uses `DateStart`, code uses `DateEnd` — inconsistent, flagged in StandingIssues | user edit
+
+# Session 17 Cedar Lark | 2026-07-02
+
+* `IRP5Condense.rmd:131` | `Num:=0L` after grouped count erased it → count only, init commented out | tpo
+* `IRP5Condense.rmd:538` | grouped closure fill → need/lkfill lookup + update join with `fifelse` | eff
+* `IRP5Condense.rmd:688` | global-`i` + inverted conjunct flag → `RevYears` per-person update join | tpo
+* `IRP5Condense.rmd:971` | `all()` → `isTRUE(all())` NA-safe | frg
+* `IRP5Condense.rmd:975` | `reshape` (interaction overflow abort risk) → `dcast` `fill=0L` `fun.aggregate=max` + `Ob.YYYY` rename | frg
+* `IRP5Condense.rmd:984` | NA→0 fill loop retired (`fill=0L`) | tpo
+* `IRP5Condense.rmd:990,1051,1070` | `paste(.SD,collapse)` → `do.call(paste0,.SD)` ×3 | tpo
+* `IRP5Condense.rmd:1040,1059` | `%in%` scans → keyed update joins on `EstabID`/`FirmID` | eff
+* `IRP5Condense.rmd:1093` | unused `setkey` pair commented out | eff
+* `IRP5Condense.rmd:1117` | `MeanStdN`: `EstabN` by `(EstabIDTx,taxyear)` then stats on `Num` | tpo
+* `IRP5HHI.rmd:289,298` | 8 grouped `:=` → 2 functional `` `:=`(name=value) `` multi-assigns | eff
+* `IRP5HHI.rmd:1162,1164` | `nHHI`/`nHHIG` NaN at `WorkersInMarket==1` → `fifelse` NA guard | frg
+* `IRP5MergeData.rmd:253-256` | `busprov_geo` added to `ReportEveryYear` `by=` (align with `EstID`) | com
+* `IRP5MergeData.rmd:280` | `HHIBaseYear` table over unique establishments (`num==1L` undercounted) | tpo
+* `IRP5Impacts.rmd:792` | `DESS[[yy]][[jj]]` → `DESSw` (`DESSw.qs` was saved empty) | tpo
+* `IRP5Impacts.rmd:694` | winsorization comment `>2` → `>6` (=600%) | com
+
+# Session 17 Cedar Lark (comment fix) | 2026-07-03
+
+* `IRP5Condense.rmd:674-685` | comment block headed "Examples: DateStart" → relabelled "Examples: DateEnd" + explanation of why `DateEnd` is the correct (not just preferred) anchor for `TrueTaxYear`, given `periodemployedto` is bounded within its own filing year by construction while `periodemployedfrom` can be years stale for long-tenured employees | com
+
+# Session 19 Moss Plover | 2026-07-07 21:22 JST
+
+S19-1 — IRP5Condense.rmd:150,173,175,345,378,422,428,448,468,609,618,881,983,1004,1223,1231,1235; IRP5MergeData.rmd:149,276 | tpo | Discovered: user error report + scan_signatures.R full parse | Verified: args(qs::qsave) on installed qs 0.27.3
+
+Issue
+:   qsave called with use_alt_rep = TRUE in 18 places; use_alt_rep belongs to qread only, so every evaluated call stopped with "unused argument".
+
+Why
+:   the argument name is real in the qs package but for the wrong function; uniform repetition (introduced by an earlier Opus session) looked like house style. First fix pass covered only 5 calls because the enumeration grep was truncated with head -30.
+
+Before
+:   qsave(x, file, nthreads = DTThreads, use_alt_rep = TRUE)
+
+After
+:   qsave(x, file, nthreads = DTThreads) — originals commented, CLAUDE tpo.
+
+S19-2 — IRP5HHI.rmd:215 | tpo | Discovered: Session 19 logic pass | Verified: static, key order vs shift grouping
+
+Issue
+:   setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart) sorts place-first, so shift(type="lead") by (Txrf, taxyear, UID) returned a non-chronological next job for workers at more than one place of a firm, corrupting DJobDurationMonth, TDurationMonth, DoubleJobRatio for exactly those workers.
+
+Before
+:   setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+
+After
+:   setkey(ipyrc, Txrf, UID, DateStart) — original commented; values change at the next server pipeline run.
+
+S19-3 — IRP5HHI.rmd:999-1004 | tpo | Discovered: Session 19 logic pass | Verified: static, with=F evaluation scope
+
+Issue
+:   masked-display selector built letter IDs from Txrf/UID inside a with=F j; with=F evaluates j in the calling scope, so the line errors with object 'Txrf' not found.
+
+After
+:   irp5msk two-step: select real columns with with=F, add Firm/ind masks via :=, drop Txrf/UID, print.
+
+S19-4 — IRP5HHI.rmd:810 | tpo | Discovered: Session 19 logic pass; was already open as Session 4 standing issue 720 | Verified: static, FA = NumSubMW/Jobs in [0,1]
+
+Issue
+:   scale_x_continuous(limits = c(1, 100)) on the FA density kept only FA == 1; FAOfAg2010-2022.jpg showed a sliver.
+
+After
+:   limits = c(0, 1) — original commented; standing issue 720 struck as resolved.
+
+S19-5 — IRP5Impacts.rmd:337-338 | tpo | Discovered: Session 19 logic pass | Verified: static, against the winsorize-block idiom at 696-700
+
+Issue
+:   plot outlier drop kept any establishment having at least one moderate row (intersect of qualifying EstID sets); its extreme rows were still plotted.
+
+After
+:   lfdata[!(EstID %in% EstID[abs(rJobsMP) >= 200 | dJobsMP <= -1000]), ] — original commented.
+
+S19-6 — IRP5Impacts.rmd:1119,1132 | tpo | Discovered: Session 19 logic pass | Verified: static, CEa/CEb definitions at 744-745
+
+Issue
+:   comments "low HHI*Size" and "high HHI*Size" were swapped relative to CEa (above-median HHI) and CEb (below-median); the estimation list labels were correct.
+
+After
+:   comments swapped, CEa/CEb clarifiers added.
+
+S20-1 — IRP5HHI.rmd:583-593 | agg | Discovered: Session 20 check of IRP5HHI.rmd | Verified: static, ag1/ag2 construction at 368-397 (fill=T gives ag1 rows NA busprov_geo)
+
+Issue
+:   aggsum summed ag1 (national) and ag2 (provincial) rows together by taxyear — TotalJobs/TotalSubMWJobs/firm counts ~2x, MeanFAJobs a mean over 1 national + ~10 provincial FAs.
+
+After
+:   aggsummary[is.na(busprov_geo), ...] — original commented.
+
+S20-2 — IRP5HHI.rmd:773-778 | agg | Discovered: Session 20 check | Verified: static, against faa's own dup table (59,627 unique vs 5) printed in {faa and Fadata...}
+
+Issue
+:   Num := .N on the already-deduplicated faa gave Num == 1 everywhere; the "number of agri jobs" histogram plotted a spike at 1 (leftover from the worker-level irp5Ma version).
+
+After
+:   Num := JobsMP — original commented.
+
+S20-3 — IRP5HHI.rmd:605-612 | tpo | Discovered: Session 20 check | Verified: static, aggsum column order + tb.ag idiom at 655-658
+
+Issue
+:   format_tt(j = 1:4) big-marked col 1 = taxyear ("2 013") and skipped col 5 TotalAffectedFirms.
+
+After
+:   j = 2:5 — original commented.
+
+S20-4 — IRP5HHI.rmd:26-31 | tpo | Discovered: Session 20 check | Verified: static, CSS error-recovery drops a ruleset with an invalid selector
+
+Issue
+:   '#### Default height of a block' inside the css chunk is not a CSS comment; the pre { max-height: 700px } rule was silently dropped, so output blocks never scrolled.
+
+After
+:   /* */ comment.
+
+S20-5 — IRP5HHI.rmd chunk labels + FAOfAg jpg | com | Discovered: Session 20 check | Verified: grep, old names referenced only in .claude/.scratch notes and archived IRP5HHI_.rmd
+
+Issue
+:   chunk names said 2012-2020, filter is 2010-2020, output said 2010-2022.
+
+After
+:   chunks {plot number of agri jobs taxyear 2010-2020} / {plot FA in agri 2010-2020}; FAOfAg2010-2020.jpg; summary list updated.
+
+S20-6 — IRP5HHI.rmd:887-896 | com | Discovered: Session 20 check | Verified: static
+
+Issue
+:   unguarded rm(FAD)...rm(faa) warned "object not found" on a standalone RunSep run.
+
+After
+:   if (exists()) guards, matching {read irp5 file}.
+
+S20-7 — IRP5HHI.rmd:349-359, 1061-1072 | dea/com | Discovered: Session 20 check | Verified: grep across Condense/HHI/MergeData/Impacts (0 hits each)
+
+Issue
+:   FinYr20yr computed every year but never kept or read; CommonLocality doc line said the inverse of its semantics (uniqueN()-1 inputs mean it is assigned exactly for missing-row groups clustering at one place).
+
+After
+:   FinYr20yr computation commented out; CommonLocality doc corrected. No logic changes. Post-edit: all 23 R chunks parse (parse_check_hhi_s20.R).
+
+S20-8 — IRP5MergeData.rmd:255-262 | agg | Discovered: Session 20 check of IRP5MergeData.rmd | Verified: static, FA0 definition at 197-207 (first NONZERO non-NA FA); AgeSample consumers grepped (archival TestRMD.rmd only)
+
+Issue
+:   Lf[FA0 == 0L, Sample := "Unexposed"] never matched (FA0 is nonzero or NA); Sample constant "Exposed", both "unexposed" AgeSample branches unreachable, faulty columns saved into EstSample_Ag.qs.
+
+After
+:   Lf[is.na(FA0), Sample := "Unexposed"] — original commented.
+
+S20-9 — IRP5MergeData.rmd:343-366 | agg | Discovered: Session 20 check | Verified: static, against the corrected agsum idiom in IRP5HHI.rmd (MP columns, uniqueN firms)
+
+Issue
+:   descriptive table summed firm-level Jobs/NumSubMW/Employees/NumSubMWe over establishment rows (multi-establishment firms overcounted); "Firms" columns counted establishment rows.
+
+After
+:   JobsMP/NumSubMWMP/EmployeesMP/NumSubMWeMP + uniqueN(taxrefno[JobsMP > 0]) / uniqueN(taxrefno[NumSubMWMP > 0]) — original commented.
+
+S20-10 — IRP5MergeData.rmd:138-145 | dea/frg | Discovered: Session 20 check | Verified: grep (dJob 0 hits in Impacts); setorder at 148 postdates the old line
+
+Issue
+:   dJob := c(NA, diff(WorkersAtEstab)) ran before any explicit sort and spanned gap years; unused downstream.
+
+After
+:   commented out with reinstatement note.
+
+S20-11 — IRP5MergeData.rmd:26-33 + IRP5Impacts.rmd:26-33 | tpo | Discovered: Session 20 check | Verified: same defect as S20-4; Condense grepped clean
+
+Issue
+:   '####' pseudo-comment in the css chunk dropped the pre max-height rule.
+
+After
+:   /* */ comments in both files.
+
+S20-12 — IRP5MergeData.rmd:230-233, 290-303 | com/frg | Discovered: Session 20 check | Verified: static (join column shadowing; Condense 525 frg record)
+
+Issue
+:   LSMa2 carried has2013 + stale num into EstSample_Ag.qs (faa's num shadowed to i.num); EstID built with separator-less paste0 (collision hazard class of Condense EstabIDTx).
+
+After
+:   LSMa2[, c("num","has2013") := NULL]; EstID via paste(..., sep = "|") (factor labels regenerate at next pipeline run).
+
+S20-13 — IRP5MergeData.rmd:318-329 | frg | Discovered: Session 20 check | Verified: static
+
+Issue
+:   rbind of two table() vectors misaligned/recycled if any taxyear had zero incumbent rows.
+
+After
+:   both tabulated over fixed levels = sort(unique(taxyear)). Post-edit: 8 + 13 chunks parse (parse_check_s20b.R, 0 failures).
+
+S21-1 — IRP5Condense.rmd:316,463,547,567,653 | com/dea/frg | Discovered: S19 open items, applied on this touch | Verified: static; natureofperson unification is behavior-preserving (the "^A$" site fed only a display; pipeline filter was always loose "A"); diagnostic table0 print added for the server
+
+Issue
+:   five carried-over S19 items: regex divergence, double dedup, separator-less EstabIDTx/EstabID, dead FirmUInd init, no-op qread-qsave chunk.
+
+After
+:   all five applied, originals commented; EstabIDTx/EstabID now paste(sep = "|") (full re-run regenerates consistently).
+
+S21-2 — IRP5MergeData.rmd:309 | fix | Discovered: Session 9 open item | Verified: static; also protects Impacts' diff(taxyear)-based GapInTY
+
+Issue
+:   Lf saved in faa-inherited order; [1] picks (HHI0/Pre2013*) and GapInTY relied on that order surviving.
+
+After
+:   setorder(Lf, EstID, taxyear) before qsave.
+
+S21-3 — IRP5Impacts.rmd:132-,719- | fix | Discovered: Session 9 open item | Verified: static, HHIAgriRowsMainPlaceLevel.qs carries taxyear+HHI (saved before the LSMa2 rename)
+
+Issue
+:   HHILevel cutoff was median of base-year HHI constants on 2012 rows (mostly 2013 HHI), not actual 2012 market HHI.
+
+After
+:   thr2012 from the HHI panel at all sites, both chunks. CEa/CEb subsamples may change at the next run (intended correction).
+
+S21-4 — IRP5Impacts.rmd:142-,729- | dea | Discovered: Session 9 open item | Verified: grep (HHILevel0 in no feols call); identical to HHILevel inside the estimation sample
+
+Issue
+:   HHILevel0 dead + structurally redundant.
+
+After
+:   assignments commented out; HHI0 kept for descriptives.
+
+S21-5 — IRP5Impacts.rmd:539-,1096-,1109- | spl/dea | Discovered: S19 D1, applied on this touch | Verified: static; list names/order preserved exactly (EstSpecs positional indexing), formula/vcov/data identical; no es* object referenced outside the replaced blocks (grep 0); parse clean
+
+Issue
+:   8 + 20 near-identical feols calls (the copy-paste channel that produced S19-6); 4 qreads of LfwCE{mi,sm,me,la} never used.
+
+After
+:   subsetsYr/subsetsYrw named lists + loops; dead qreads commented; originals in git history.
+
+S21-6 — IRP5Impacts.rmd:851 | com | Discovered: Session 21 read | Verified: static, against the unwinsorized twin {show estimation data} which re-reads LfC201002.qs
+
+Issue
+:   winsorized descriptives/plots consumed last-iteration LfwC (Jb = 10 cutoff) — asymmetric with the unwinsorized section (Jb = 02).
+
+After
+:   LfwC <- qread(LfwC201002.qs) inserted.
+
+S21-7 — IRP5Impacts.rmd:409,487,959,1037,665 | com | Discovered: S19 open items | Verified: static
+
+Issue
+:   width = .01 not a geom_pointrange parameter (4 sites); prose said winsorize "by more than 3000" vs code 2000.
+
+After
+:   width removed; prose corrected. Post-edit: 64 chunks across the pipeline parse, 0 failures (parse_check_s21.R). NEW OPEN: Condense dropthese uid-conjunct oddity (991-1006) — server check before touching.
+
+S21-8 — IRP5Condense2.rmd + IRP5HHI2.rmd (new files) | eff | Discovered: user request "refactor condense and hhi for speed" | Verified: static — 41 chunks parse; diffs vs originals reviewed hunk by hunk (86/51 changed lines, only tagged edits); NOT run against server data
+
+Issue
+:   known hot spots at 150-200M-row scale: per-element as.IDate (the "2 hours" note), %in% over a duplicate-laden 150M vector, paste+factor ID construction, per-group regex in the location-exists flags, 15 full-table scans per year loop, element-equal-to-max group pick, regex filters where equality/uniques suffice.
+
+After
+:   Condense2: DateBirth unique-lookup join; NatureOfPer update joins; fixed=TRUE literals; .GRP IDs (labels change - arbitrary, within-run only); equality filter; %in%-on-unique agri filter. HHI2: setindex (NOT setkey - row order feeds first-row picks); GForce max(); vectorized exists flags + GForce any(); Entity equality; %in%-on-unique agri filter. First server run: compare qc prints/row counts against the originals' logged values before trusting outputs.
+
 # Sandbox
-
-<!-- Raw per-edit notes. Promoted to canonical section at orderly sign-off. Append-only. -->
-* IRP5HHI.rmd FA loop end + after loop | (absent) → rm(ipyrc,FAdata,ag1,ag2);gc() per iteration + rm(irp5);gc() after loop | free per-year transients before next slice; full IRP5 dead past loop | CLAUDE mem
-* IRP5HHI.rmd after irp5M/L/D/P built | (absent) → rm(iiM,iiL,iiD,iiP,irp5);gc() | free 4 logical index vectors (~0.45GB each) + full irp5 (already saved) | CLAUDE mem
-* IRP5HHI.rmd after irp5L/D/P diagnostic prints | (absent) → rm(irp5L,irp5D,irp5P);gc() | saved + printed; only irp5M needed onward | CLAUDE mem
-* IRP5HHI.rmd hhi loop end + after loop | (absent) → rm(ipyr,ipGeo,lshare,LShare);gc() per iteration + rm(LS,irp5M);gc() after | free per-year transients; plots below re-read ShareHHI from disk | CLAUDE mem
-* IRP5HHI.rmd L1080-1082 | if(!exists(x))rm(x) → if(exists(x))rm(x) | condition inverted — never freed irp5L/D/P when present, errored when absent | CLAUDE tpo
-* IRP5HHI.rmd | Claude rm()/gc() + exists()-fix edits committed as 0e8602a, then reverted by user in working tree | superseded: user dropped in-memory FAD accumulation rather than patch with rm() | CLAUDE com
-* IRP5HHI.rmd {fraction affected for all years} L184,L375-376 | aggsummary<-FAD<-NULL -> aggsummary<-NULL; removed FAD<-rbindlist, qsave(FAD,FAD.qs), table(FAD), print(round(FAD...)) | user edit: FAD no longer held in RAM during year loop; FA{yr}.qs still saved per year | user edit
-* IRP5HHI.rmd {hhi} L1063 | if(exists(x))rm(x) reverted -> if(!exists(x))rm(x) | user reverted Claude bug fix; inverted-guard bug is live again | CLAUDE tpo
-* IRP5Condense.rmd L650-651 | TYStart=(taxyear-1)/03/01, TYEnd=taxyear/03/01 → TYStart=taxyear/03/01, TYEnd=(taxyear+1)/03/01 | taxyear names starting year (Mar Y-Feb Y+1), not ending year | CLAUDE tpo
-* IRP5Condense.rmd L654-655(orig) | TrueTaxYear:=year(DateStart) → TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3) | plain calendar year wrong for Jan/Feb (belongs to prior fiscal year); verified against comment worked example L608-611 | CLAUDE tpo
-
-* IRP5Condense.rmd L650-651 | TYStart=taxyear/TYEnd=taxyear+1 (my Session16 start-year edit) → TYStart=taxyear-1/TYEnd=taxyear | reverted to SARS end-year YoA convention (verified web) | user edit
-* IRP5Condense.rmd L664 | TrueTaxYear:=year(DateStart)-as.integer(month(DateStart)<3) → year(DateEnd)+as.integer(month(DateEnd)>=3) | end-year mapping; NOTE comment L655-660 uses DateStart, code uses DateEnd — inconsistent | user edit
-* IRP5Condense.rmd:131 | Num:=0L after grouped count erased it → count only, init commented out | tpo
-* IRP5Condense.rmd:538 | grouped closure fill → need/lkfill lookup + update join with fifelse | eff
-* IRP5Condense.rmd:688 | global-i + inverted conjunct flag → RevYears per-person update join | tpo
-* IRP5Condense.rmd:971 | all() → isTRUE(all()) NA-safe | frg
-* IRP5Condense.rmd:975 | reshape (interaction overflow abort risk) → dcast fill=0L fun.aggregate=max + Ob.YYYY rename | frg
-* IRP5Condense.rmd:984 | NA→0 fill loop retired (fill=0L) | tpo
-* IRP5Condense.rmd:990,1051,1070 | paste(.SD,collapse) → do.call(paste0,.SD) x3 | tpo
-* IRP5Condense.rmd:1040,1059 | %in% scans → keyed update joins on EstabID/FirmID | eff
-* IRP5Condense.rmd:1093 | unused setkey pair commented out | eff
-* IRP5Condense.rmd:1117 | MeanStdN: EstabN by (EstabIDTx,taxyear) then stats on Num | tpo

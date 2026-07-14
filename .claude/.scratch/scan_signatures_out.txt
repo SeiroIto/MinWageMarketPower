@@ -1,0 +1,107 @@
+== library() packages found: knitr tufte qs data.table readstata13 ggplot2 cowplot reshape2 dplyr hurricaneexposuredata hurricaneexposure tinytable scales rmarkdown litedown fasttime kableExtra fixest ggfixest anytime pander Matrix
+== project-defined functions (skipped): cihalf destat destatfactor dup error fsize grepout latextab.simple mask_dots read.tablev recode_vars recode_vars2 recode_vars3 table0 write.tablev
+
+== NOT INSTALLED: hurricaneexposuredata
+== NOT INSTALLED: hurricaneexposure
+== FLAGS (file | line~ | call | bad arg | formals) ==
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 251 | <text>:137:3: unexpected symbol
+136:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+137:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 892 | <text>:148:3: unexpected symbol
+147:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+148:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1081 | <text>:110:24: unexpected ']'
+109: ipyrc[, PropToMWX := round(TIncomeMonth/2274, 6)]
+110:   by = .(Txrf, taxyear)]
+                            ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1354 | <text>:27:34: unexpected ')'
+26:   on = "busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+27:      "busmainplc_geo", "taxrefno")
+                                     ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1464 | <text>:100:3: unexpected symbol
+99:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+100:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1596 | <text>:148:3: unexpected symbol
+147:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+148:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1780 | <text>:104:3: unexpected symbol
+103:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+104:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 1888 | <text>:146:3: unexpected symbol
+145:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+146:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 2481 | <text>:120:3: unexpected symbol
+119:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+120:   .
+       ^
+PARSE-ERROR | CITIRP5BranchLevel.rmd | chunk at line 2605 | <text>:148:5: unexpected ']'
+147: ipyr[, .(NAInPayeref = is.na(payereferenceno) | payereferenceno == "", 
+148:   , ]
+         ^
+FLAG | IRP5Condense.rmd | L378 | qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads, use_alt_rep = TRU | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L422 | qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L428 | qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L448 | qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L468 | qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L609 | qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), nthreads = DTThreads, use_alt_rep | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L618 | qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), nthreads = DTThreads, use_alt_rep | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L881 | qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L983 | qsave(dropthese, paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads, use_alt_rep | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L1004 | qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L1223 | qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L1231 | qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+FLAG | IRP5Condense.rmd | L1235 | qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads, use_alt_rep = TRUE) | use_alt_rep | x,file,preset,algorithm,compress_level,shuffle_control,check_hash,nthreads
+PARSE-ERROR | IRP5Impacts_P.rmd | chunk at line 190 | <text>:75:9: unexpected string constant
+74:   x[, .("MeanJobsMP.lb"
+75:         "MeanJobsMP.ub"
+            ^
+PARSE-ERROR | IRP5ImpactsTest.rmd | chunk at line 204 | <text>:77:9: unexpected string constant
+76:   x[, c("MeanJobsMP.lb"
+77:         "MeanJobsMP.ub"
+            ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 1264 | <text>:148:3: unexpected symbol
+147:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+148:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 1453 | <text>:110:24: unexpected ']'
+109: ipyrc[, PropToMWX := round(TIncomeMonth/2274, 6)]
+110:   by = .(Txrf, taxyear)]
+                            ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 1726 | <text>:27:34: unexpected ')'
+26:   on = "busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+27:      "busmainplc_geo", "taxrefno")
+                                     ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 1836 | <text>:100:3: unexpected symbol
+99:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+100:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 1968 | <text>:148:3: unexpected symbol
+147:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+148:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 2152 | <text>:104:3: unexpected symbol
+103:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+104:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 2260 | <text>:146:3: unexpected symbol
+145:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+146:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 2853 | <text>:120:3: unexpected symbol
+119:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+120:   .
+       ^
+PARSE-ERROR | ReadCITIRP5Data.rmd | chunk at line 2977 | <text>:148:5: unexpected ']'
+147: ipyr[, .(NAInPayeref = is.na(payereferenceno) | payereferenceno == "", 
+148:   , ]
+         ^
+
+== 13 flags ==
+== not name-checkable (... in formals): sum  x 65; aes  x 60; ggplot  x 58; i  x 51; feols  x 50; paste  x 42; data.table  x 37; theme  x 37; ggsave  x 36; element_text  x 35; geom_density  x 35; print  x 29; scale_color_manual  x 28; mean  x 22; options  x 20; rbind  x 19; duplicated  x 18; order  x 18; median  x 17; table  x 17; list  x 15; etable  x 13; rep  x 13; style_tt  x 13; c  x 10; reactor  x 10; tt  x 10; geom_histogram  x 9; ggiplot  x 8; labs  x 8; kable  x 6; paste0  x 6; scale_fill_manual  x 6; guide_legend  x 5; guides  x 5; max  x 5; geom_pointrange  x 4; merge  x 4; plot_grid  x 4; setFixest_dict  x 4; dcast  x 3; lapply  x 3; melt  x 3; min  x 3; read.csv  x 3; fcase  x 2; geom_boxplot  x 2; lm  x 2; quantile  x 2; scale_x_discrete  x 2; all.equal  x 1; geom_col  x 1; scale_fill_viridis_d  x 1; seq  x 1; sunflowerplot  x 1; unique  x 1
+== unresolved (no package match; sourced or dynamic): .  x 103; county_rain  x 1

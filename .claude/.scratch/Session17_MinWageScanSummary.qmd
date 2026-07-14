@@ -1,0 +1,779 @@
+---
+title: "MinWage scan summary — IRP5Condense/HHI/MergeData/Impacts (Sessions 16-17 Pale Reed / Cedar Lark)"
+date: today
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    code-overflow: wrap
+---
+
+Review of the four production `.rmd` files (2026-07-02), covering fiscal-year
+convention (Session 16), then a full A-D fix pass (Session 17). Unlike the
+GUK scan, the underlying IRP5/CIT admin panels are not present on this
+machine (server-side data), so evidence chunks below either (a) read the
+**live production code** at render time to confirm what actually shipped, or
+(b) run a **minimal synthetic reproduction** of the bug mechanism. Row-count
+claims (9.0204%, `DESSw.qs` contents, etc.) require the next pipeline run on
+the server — flagged explicitly where that applies.
+
+```{r setup}
+#| message: false
+library(data.table)
+pathprogram <- "c:/data/MinWageMarketPower/analysis/program/"
+readfile <- function(f) readLines(paste0(pathprogram, f), warn = FALSE)
+live <- function(x, from, to) paste(trimws(x[from:to]), collapse = "\n")
+```
+
+# Issue index
+
+All 18 findings, open first. Severity: **Major** = wrong results or a
+blocked run; **Minor** = performance, display, or comment-only.
+
+## Open
+
+### Issue 1 (Major): Finding 12 — inverted `exists()` guard back in IRP5HHI.rmd
+
+What
+:   The Session-15 fix of the inverted `exists()` cleanup guards was reverted
+    in the working tree; the wrong-direction guard is live again.
+
+Damage
+:   `rm()` on an absent object errors on a standalone run, or memory is never
+    freed — the live direction per variable is currently unverified.
+
+Fix
+:   Open — re-check the direction of every `exists("irp5[LDP]")` guard in the
+    current file, not the inline comment ([Finding 12](#finding-12-open-live-bug-inverted-exists-guard-reintroduced-by-user-revert)).
+
+### Issue 2 (Unknown severity): Finding 13 — `FinYr20yr` computed but never used
+
+What
+:   `FinYr20yr` flags rows whose `DateStart`/`DateEnd` contradict the
+    `taxyear` label, but no count filters on it and it is excluded from
+    `NeededCols`.
+
+Damage
+:   Unknown — `NumSubMW`/`Jobs`/`Employees`/`MP` counts trust the raw
+    `taxyear` label; the share of mislabeled rows has not been measured.
+
+Fix
+:   Open — wire the flag into the counts or remove it
+    ([Finding 13](#finding-13-open-dead-code-finyr20yr-computed-but-never-used-to-filter-counts)).
+
+### Issue 3 (Housekeeping): Finding 14 — `eval=` flags of FA/LShare panel chunks
+
+What
+:   `{create FA panel}` / `{create LShare panel}` `eval=` flags must track
+    whether the main loop currently accumulates `FAD` in RAM.
+
+Damage
+:   None yet — but the setting has flipped twice across Sessions 15-17.
+
+Fix
+:   Re-verify before every render ([Finding 14](#finding-14-config-not-a-bug-create-fa-panel-create-lshare-panel-eval-flags-need-re-checking)).
+
+## Solved
+
+### Issue 4 (Major): Finding 1 — NA→0L fill loop no-op (`||`) and missing paren
+
+What
+:   Scalar `||` inside `which()` collapsed the row-wise `Ob.YYYY` NA fill to
+    a no-op; a missing closing paren also left the file unparseable.
+
+Damage
+:   The intended fill never fired; the file would not parse as last committed.
+
+Fix
+:   Loop replaced by `dcast(..., fill = 0L)`.
+
+### Issue 5 (Major): Finding 2 — `EestabWith1` typo
+
+What
+:   `EstabWith1` assigned, `EestabWith1` referenced.
+
+Damage
+:   `object not found` abort on any clean run.
+
+Fix
+:   Fill rewritten as a keyed update join; no second spelling remains.
+
+### Issue 6 (Major): Finding 3 — `paste(.SD, collapse=)` recycled one string
+
+What
+:   `collapse=` deparses all of `.SD` into one string instead of per-row
+    concatenation.
+
+Damage
+:   `I`/`E`/`FObPattern` all held one recycled string.
+
+Fix
+:   `do.call(paste0, .SD)` at all 3 sites.
+
+### Issue 7 (Major): Finding 4 — `DropThisForRev` dropped revisions, kept originals
+
+What
+:   The drop filter was evaluated globally (`by=` is a no-op on `i`) with the
+    conjunct inverted (`TrueTaxYear != taxyear`).
+
+Damage
+:   Revisions dropped, superseded originals kept — panel composition wrong;
+    the saved 9.0204% figure is stale.
+
+Fix
+:   Per-person update join on `RevYears`; **server pipeline re-run still
+    required**.
+
+### Issue 8 (Major): Finding 5 — grouped `.N` count immediately overwritten
+
+What
+:   `Num := 0L` ran textually after the grouped `.N` count (pattern repeated
+    in ~15 files).
+
+Damage
+:   `Num` was always 0.
+
+Fix
+:   Dead init commented out; the count itself was correct and kept.
+
+### Issue 9 (Minor): Finding 6 — `all(uid == UID)` not NA-safe
+
+What
+:   An NA in either vector makes `all()` return NA, not FALSE.
+
+Damage
+:   `if()` errors (or a branch silently misfires) when ids contain NA.
+
+Fix
+:   `isTRUE(all(...))`.
+
+### Issue 10 (Major): Finding 7 — `stats::reshape` aborts on R 4.4
+
+What
+:   `reshape()`'s `interaction()` over 9 composite id columns
+    integer-overflows with ~50M `EUIndID` levels.
+
+Damage
+:   "cannot allocate 298.0 Gb" abort — the production reshape could not
+    complete at all.
+
+Fix
+:   Replaced by `dcast()` (~6s at benchmark scale).
+
+### Issue 11 (Minor): Finding 8 — unused `setkey()` pair before an `on=` join
+
+What
+:   Two `setkey()` sorts preceded a join that already specified `on=`.
+
+Damage
+:   Two wasted 175M-row sorts.
+
+Fix
+:   Removed.
+
+### Issue 12 (Minor): Finding 9 — `FillInLocMuni` grouped-closure fill
+
+What
+:   Per-group closure dispatch scales badly past ~1M groups.
+
+Damage
+:   Slow fill; no correctness issue.
+
+Fix
+:   Rewritten as subset → dedupe → update join.
+
+### Issue 13 (Minor): Finding 10 — `TrueTaxYear` comment said `DateStart`
+
+What
+:   Worked-example comment was headed "DateStart" while the code anchors on
+    `DateEnd`.
+
+Damage
+:   None in code — `DateEnd` is bounded inside the correct fiscal window by
+    construction; the comment was misleading.
+
+Fix
+:   Comment relabelled to `DateEnd` with the reason (2026-07-03).
+
+### Issue 14 (Minor): Finding 11 — `nHHI`/`nHHIG` NaN in one-worker markets
+
+What
+:   The normalised-HHI formula divides by `1 - 1/N`, which is 0 at `N = 1`.
+
+Damage
+:   NaN instead of NA (both drop from estimation, but the stored value was
+    wrong).
+
+Fix
+:   `fifelse(WorkersInMarket > 1, ..., NA_real_)` guard.
+
+### Issue 15 (Minor): Finding 15 — base-year display undercounted establishments
+
+What
+:   Establishments tabulated via `num == 1L`, but `num` is inherited from
+    LSMa1 numbering rather than being 1 for every establishment.
+
+Damage
+:   Display table undercounted establishments per HHI base year.
+
+Fix
+:   `unique(LSMa2, by = c("geo","taxrefno"))`.
+
+### Issue 16 (Major): Finding 16 — `ReportEveryYear` grouping omitted `busprov_geo`
+
+What
+:   Grouping did not match `EstID`'s granularity.
+
+Damage
+:   Flag computed across merged geographies → wrong values.
+
+Fix
+:   `busprov_geo` added to `by=`.
+
+### Issue 17 (Major): Finding 17 — winsorized results written to `DESS`, not `DESSw`
+
+What
+:   The nested-list assignment targeted `DESS` instead of `DESSw`.
+
+Damage
+:   `DESSw.qs` saved as a list of NULLs; `DESS` silently clobbered with
+    winsorized values.
+
+Fix
+:   Assignment target corrected; **`DESSw.qs` must be regenerated on the next
+    server run**.
+
+### Issue 18 (Minor): Finding 18 — winsorization comment stated the wrong multiple
+
+What
+:   Comment disagreed with the `> 6` (600%) threshold in code.
+
+Damage
+:   Misleading comment only.
+
+Fix
+:   Comment corrected.
+
+# IRP5Condense.rmd
+
+## Finding 1 (fixed, confirmed live): NA→0L fill loop retired, along with its `||` bug
+
+What
+:   Scalar `||` inside `which()` collapses the whole column to one
+    `TRUE`/`FALSE` — the row-by-row `Ob.YYYY` fill never fired; a missing
+    closing paren also left the file unparseable as last committed.
+
+Damage
+:   NAs never filled to `0L`; the file would not parse.
+
+Fix
+:   Session 17 replaced the loop with `dcast(..., fill = 0L)` — no loop, so
+    neither defect can recur.
+
+Live code:
+
+```{r finding1}
+gk <- readfile("IRP5Condense.rmd")
+cat(live(gk, 1029, 1050), "\n")
+```
+
+```{r finding1-repro}
+#### minimal reproduction of why scalar || silently no-ops a row-wise fill.
+#### R >= 4.3 hard-errors on `||`/`&&` given a length>1 argument (used to
+#### warn and silently take element 1) - the historical (pre-4.3) behaviour
+#### is reproduced explicitly below via `[1]` to show what the fill loop
+#### actually evaluated on every call.
+x <- c(1L, NA, 3L, NA); y <- c(NA, 2L, NA, NA)
+cat("is.na(x)[1] || is.na(y)[1]  [buggy: pre-4.3 `||` behaviour, scalar]:",
+    is.na(x)[1] || is.na(y)[1], "-> which() over a length-1 logical picks at most index 1\n")
+cat("which(is.na(x) | is.na(y))   [correct, vectorised]:",
+    which(is.na(x) | is.na(y)), "\n")
+```
+
+Status: **fixed** (loop removed, not just patched).
+
+## Finding 2 (fixed, confirmed live): `EestabWith1` typo — superseded by update-join rewrite
+
+What
+:   `EstabWith1` assigned, `EestabWith1` referenced.
+
+Damage
+:   `object not found` abort on any clean run.
+
+Fix
+:   Session 17 rewrote the whole fill as a keyed update join; no second
+    spelling remains to diverge.
+
+Live code:
+
+```{r finding2}
+cat(live(gk, 1139, 1144), "\n")
+```
+
+Status: **fixed** (superseded by rewrite, not a find-replace patch).
+
+## Finding 3 (fixed, confirmed live): `paste(.SD, collapse=)` recycled one string into the Ob-pattern columns
+
+What
+:   `paste(.SD, sep=, collapse=)` collapses the whole `.SD` argument into one
+    deparsed string — not a per-row concatenation.
+
+Damage
+:   All three pattern columns (`I`/`E`/`FObPattern`) held one recycled
+    string.
+
+Fix
+:   `do.call(paste0, .SD)` at all 3 sites.
+
+Live code:
+
+```{r finding3}
+cat(grep("ObPattern := do.call", gk, value = TRUE), sep = "\n")
+```
+
+```{r finding3-repro}
+DT <- data.table(a = c("x","y"), b = c("1","2"), c = c("A","B"))
+cat("paste(.SD, collapse='') [buggy]: ",
+    DT[, paste(.SD, collapse = "")], "\n")
+cat("do.call(paste0, .SD)   [fixed]: ",
+    DT[, do.call(paste0, .SD)], "\n")
+```
+
+Status: **fixed**, all 3 sites (`do.call(paste0, .SD)`).
+
+## Finding 4 (fixed, pipeline re-run required): `DropThisForRev` dropped revisions, kept superseded originals
+
+What
+:   `i` was evaluated globally (`by=` is a no-op on `i`, only groups `j`)
+    and the conjunct was `TrueTaxYear != taxyear` — the opposite of the
+    documented example.
+
+Damage
+:   Revisions dropped, superseded originals kept — panel composition wrong.
+    The saved 9.0204% figure and the mismatch table (old L666-670/693) are
+    stale: they predate this fix **and** the Session 16 end-year
+    `TrueTaxYear` revert. Full mechanism, duplicate-person-year consequence,
+    and cross-person contamination: `analysis/program/DataTableFixExamples.qmd` §A3.
+
+Fix
+:   Per-person update join on `RevYears` (Session 17); regenerate the stale
+    figures on the next server run before quoting.
+
+Live code, post-fix:
+
+```{r finding4}
+cat(live(gk, 705, 745), "\n")
+```
+
+Status: **fixed in code**, **not yet verified against production data**.
+
+## Finding 5 (fixed, confirmed live): grouped `.N` count immediately overwritten
+
+What
+:   `Num := 0L` ran textually after the grouped `.N` count — the same
+    pattern repeats across roughly 15 files.
+
+Damage
+:   The count was erased; `Num` always 0.
+
+Fix
+:   Comment out the init, keep the count (user's final call — the count
+    itself was correct, only the ordering/dead init was wrong).
+
+Live code:
+
+```{r finding5}
+cat(live(gk, 130, 138), "\n")
+```
+
+```{r finding5-repro}
+DT <- data.table(g = c("a","a","b"))
+DT[, Num := as.integer(.N), by = g]
+cat("count only:\n"); print(DT)
+DT[, Num := 0L] #### the bug: this line, if left in, erases the count above
+cat("after the erasing line:\n"); print(DT)
+```
+
+Status: **fixed**.
+
+## Finding 6 (fixed, confirmed live): `all(uid == UID)` not NA-safe
+
+What
+:   An NA in either id vector makes `all(uid == UID)` return NA, not FALSE.
+
+Damage
+:   `if()` errors, or the branch silently misfires, when ids contain NA.
+
+Fix
+:   `isTRUE(all(...))`.
+
+Live code:
+
+```{r finding6}
+cat(grep("isTRUE\\(all\\(idyr", gk, value = TRUE), "\n")
+```
+
+```{r finding6-repro}
+uid <- c(1, 1, NA); UID <- c(1, 1, 1)
+cat("all(uid==UID)        [buggy, NA propagates]: ", all(uid == UID), "\n")
+cat("isTRUE(all(uid==UID)) [fixed, NA-safe]:      ", isTRUE(all(uid == UID)), "\n")
+```
+
+Status: **fixed**.
+
+## Finding 7 (fixed, confirmed live): `stats::reshape` aborts on R 4.4 with 9 composite id columns
+
+What
+:   `reshape()`'s `interaction()` call indexes the Cartesian product of
+    every id column's factor levels — `EUIndID` alone carries ~50M levels in
+    production.
+
+Damage
+:   Integer overflow → "cannot allocate 298.0 Gb" abort; the production
+    reshape (old L975) could not complete on R 4.4 at all —
+    correctness-blocking, not style.
+
+Fix
+:   Replaced by `dcast()` (~6s at 1.8M-row benchmark scale; repro in
+    `DataTableFixExamples.qmd` §A5).
+
+Live code:
+
+```{r finding7}
+cat(live(gk, 1045, 1050), "\n")
+```
+
+Status: **fixed**. This was a *correctness-blocking* bug, not just a style
+issue — the production reshape at the old L975 would not have completed on
+R 4.4 at all.
+
+## Finding 8 (fixed, confirmed live): unused `setkey()` pair before an `on=`-specified join
+
+What
+:   Two `setkey()` sorts preceded a join that already specified `on=`.
+
+Damage
+:   Two wasted 175M-row sorts; the keys were never used.
+
+Fix
+:   `setkey()` pair removed.
+
+Live code:
+
+```{r finding8}
+cat(live(gk, 1204, 1209), "\n")
+```
+
+Status: **fixed** — two 175M-row sorts removed; the join already specified
+`on=` so the keys were never used.
+
+## Finding 9 (fixed, confirmed live): `FillInLocMuni` grouped-closure fill rewritten as update join
+
+What
+:   `FillInLocMuni` filled via closures dispatched per group — the pattern
+    the Session 13 lesson (`feedback_datatable_scale.md`) flags as scaling
+    badly past ~1M groups.
+
+Damage
+:   Slow fill; no correctness issue.
+
+Fix
+:   Rewritten as subset → dedupe → update join.
+
+Live code:
+
+```{r finding9}
+cat(live(gk, 555, 562), "\n")
+```
+
+Status: **fixed**.
+
+## Finding 10 (resolved 2026-07-03): `TrueTaxYear` anchor — `DateEnd` confirmed correct, comment was stale
+
+What
+:   Code anchors on `DateEnd`; the worked-example comment was headed
+    "DateStart".
+
+Damage
+:   None in code — `periodemployedto` (`DateEnd`) never exceeds end-February
+    of the return's own filing year, so it is bounded inside the correct
+    fiscal window by construction. `DateStart` is the unbounded one:
+    anchoring on it would misclassify records into a past year (matching the
+    pre-existing `## wrong` annotation on that line). Misleading comment
+    only.
+
+Fix
+:   Comment relabelled to `DateEnd`; code untouched.
+
+Live code, post-fix:
+
+```{r finding10}
+cat(live(gk, 671, 697), "\n")
+```
+
+```{r finding10-repro}
+#### why DateStart (not DateEnd) is the one that can misfire: a filing-year
+#### return can report on an employee whose employment started years ago
+DateStart <- as.Date("2011-06-01")   #### employment began years earlier
+DateEnd   <- as.Date("2015-01-20")   #### but this return covers Mar2014-Feb2015
+yr <- function(d) year(d) + as.integer(month(d) >= 3)
+cat("year(DateStart)-anchor [wrong]: ", yr(DateStart), "-> unrelated past year\n")
+cat("year(DateEnd)-anchor   [correct]: ", yr(DateEnd),
+    "-> matches the return's own Mar2014-Feb2015 filing year\n")
+```
+
+Status: **fixed** (comment-only; the code was already correct).
+
+# IRP5HHI.rmd
+
+## Finding 11 (fixed, confirmed live): `nHHI`/`nHHIG` produced `NaN` for one-worker markets
+
+What
+:   The normalised-HHI formula divides by `1 - 1/WorkersInMarket`, which is
+    0 in one-worker markets.
+
+Damage
+:   `nHHI`/`nHHIG` stored `NaN` instead of `NA`.
+
+Fix
+:   `fifelse(WorkersInMarket > 1, ..., NA_real_)` guard.
+
+Live code:
+
+```{r finding11}
+hhi <- readfile("IRP5HHI.rmd")
+cat(live(hhi, 1183, 1192), "\n")
+```
+
+```{r finding11-repro}
+WorkersInMarket <- c(1L, 5L); HHI <- c(1, 0.4)
+cat("unguarded [buggy, NaN at N=1]: ",
+    (HHI - 1/WorkersInMarket) / (1 - 1/WorkersInMarket), "\n")
+cat("fifelse guard [fixed, NA]:     ",
+    fifelse(WorkersInMarket > 1,
+      (HHI - 1/WorkersInMarket) / (1 - 1/WorkersInMarket), NA_real_), "\n")
+```
+
+Status: **fixed**.
+
+## Finding 12 (open, live bug): inverted `exists()` guard reintroduced by user revert
+
+What
+:   Claude fixed this in Session 15 (commit `0e8602a`); the user then
+    reverted the commit in the working tree while dropping the FAD in-RAM
+    accumulation, which brought the inverted guard back.
+
+Damage
+:   The guard either never frees `irp5L` or errors if the object is absent
+    on a standalone run. The comment at L1121 claims the condition was
+    already fixed — the claim cannot be trusted after two flips.
+
+Fix
+:   Open — re-check which direction is now live, per variable, against the
+    current file rather than the comment.
+
+Live code:
+
+```{r finding12}
+cat(grep("exists\\(\"irp5[LDP]\"\\)", hhi, value = TRUE), sep = "\n")
+```
+
+Status: **open — verify current direction is correct**, not just that a
+comment claims it is.
+
+## Finding 13 (open, dead code): `FinYr20yr` computed but never used to filter counts
+
+What
+:   `FinYr20yr` flags whether `DateStart`/`DateEnd` match the current
+    `taxyear` label, but the `NumSubMW`/`Jobs`/`Employees`/`MP`-level counts
+    built earlier in the same chunk never filter on it, and it is excluded
+    from `NeededCols` — the flag exists but does nothing.
+
+Damage
+:   Unknown — counts trust the raw `taxyear` label uncorrected for
+    forward-mislabeled rows; the share of such rows has not been measured.
+
+Fix
+:   Open — wire the flag into the counts or remove it.
+
+Live code:
+
+```{r finding13}
+cat(live(hhi, 338, 347), "\n")
+```
+
+Status: **open**.
+
+## Finding 14 (config, not a bug): `{create FA panel}` / `{create LShare panel}` `eval=` flags need re-checking
+
+What
+:   `{create FA panel}` `eval=` status must track whether the main loop is
+    currently accumulating `FAD` in RAM or not.
+
+Damage
+:   None yet — but the setting has flipped twice across Sessions 15-17
+    (user removed accumulation, then restored it), so the flag is a moving
+    target.
+
+Fix
+:   Re-check before every render rather than trusting the current setting.
+
+Status: **housekeeping — re-verify before next render**.
+
+# IRP5MergeData.rmd
+
+## Finding 15 (fixed, confirmed live): base-year display undercounted establishments
+
+What
+:   The display tabulated `HHIBaseYear` over rows with `num == 1L`, but
+    `num` is inherited from LSMa1 numbering — `num == 1L` is not "one row
+    per establishment".
+
+Damage
+:   Display table undercounted establishments per HHI base year.
+
+Fix
+:   `unique(LSMa2, by = c("geo","taxrefno"))` — one row per establishment.
+
+Live code:
+
+```{r finding15}
+mg <- readfile("IRP5MergeData.rmd")
+cat(live(mg, 293, 296), "\n")
+```
+
+```{r finding15-repro}
+#### num is inherited from LSMa1 numbering, not unique per establishment
+LSMa2 <- data.table(
+  geo = c("a","a","b","b","b"), taxrefno = c(1,1,2,2,2),
+  num = c(1,2,1,2,3), HHIBaseYear = c(2013,2013,2015,2015,2015))
+cat("table(LSMa2[num==1L]) [buggy, undercounts if num!=1 rows share a base year]:\n")
+print(table(LSMa2[num == 1L, HHIBaseYear]))
+cat("table(unique(..., by=geo+taxrefno)) [fixed, one row per establishment]:\n")
+print(table(unique(LSMa2, by = c("geo","taxrefno"))[, HHIBaseYear]))
+```
+
+Status: **fixed**.
+
+## Finding 16 (fixed, confirmed live): `ReportEveryYear` grouping omitted `busprov_geo`
+
+What
+:   `ReportEveryYear` was grouped without `busprov_geo` — coarser than
+    `EstID`'s granularity.
+
+Damage
+:   Flag computed across merged geographies → wrong values.
+
+Fix
+:   `busprov_geo` added to the `by=`.
+
+Live code:
+
+```{r finding16}
+cat(grep("by = \\.\\(busprov_geo", mg, value = TRUE)[1:2], sep = "\n")
+```
+
+Status: **fixed** — `busprov_geo` now included, matching `EstID`'s
+granularity.
+
+# IRP5Impacts.rmd
+
+## Finding 17 (fixed, pipeline re-run required): `DESS` overwritten instead of `DESSw` being filled
+
+What
+:   The nested-list assignment targeted `DESS` instead of `DESSw`.
+
+Damage
+:   `DESSw.qs` was saved as a list of `NULL`s; `DESS` (a separate, unrelated
+    accumulator) was silently overwritten with winsorized values it
+    shouldn't hold.
+
+Fix
+:   Assignment target corrected; `DESSw.qs` must be regenerated on the next
+    server run.
+
+Live code, post-fix:
+
+```{r finding17}
+imp <- readfile("IRP5Impacts.rmd")
+cat(live(imp, 792, 798), "\n")
+```
+
+```{r finding17-repro}
+#### minimal reproduction of the nested-list assignment slip
+DESS <- list(); DESSw <- list("2010" = list())
+dess <- "winsorized value"
+DESS[["2010"]][["02"]] <- dess   #### buggy line as originally written
+cat("DESSw after buggy assignment (still empty list):\n"); str(DESSw)
+DESSw[["2010"]][["02"]] <- dess  #### fixed line
+cat("DESSw after fixed assignment:\n"); str(DESSw)
+```
+
+Status: **fixed in code, not yet re-run** — `DESSw.qs` needs regenerating.
+Also noted but **not fixed** (left to the user): the prose near L266-290
+describes winsorization dropping changes "by more than 3000" while the
+code's threshold is `abs(dJobsMP) > 2000` — text vs. code disagree and
+neither was touched this session.
+
+## Finding 18 (fixed, confirmed live): winsorization comment said the wrong multiple
+
+What
+:   The winsorization comment stated the wrong multiple.
+
+Damage
+:   Misleading comment only.
+
+Fix
+:   Comment now matches the `> 6` (600%) threshold in code.
+
+Live code:
+
+```{r finding18}
+cat(grep("abs\\(rJobsMP\\)", imp, value = TRUE)[1:2], sep = "\n")
+```
+
+Status: **fixed** — comment now matches the `> 6` (600%) threshold in code.
+
+# Status summary
+
+```{r status-summary}
+#| message: false
+library(tinytable)
+st <- data.frame(
+  Finding = 1:18,
+  Issue = c(
+    "NA-fill / || loop", "EestabWith1 typo", "paste(.SD) ObPatterns",
+    "DropThisForRev", "grouped .N overwrite", "all() NA-unsafe",
+    "reshape -> dcast", "unused setkey", "FillInLocMuni fill",
+    "TrueTaxYear anchor comment", "nHHI/nHHIG NaN",
+    "inverted exists() guard", "FinYr20yr dead flag", "eval= flags",
+    "base-year undercount", "ReportEveryYear grouping",
+    "DESS/DESSw swap", "winsor comment"),
+  Status = c(
+    "Fixed (loop removed)", "Fixed (superseded by rewrite)", "Fixed",
+    "Fixed in code - pipeline re-run required", "Fixed", "Fixed",
+    "Fixed (was correctness-blocking on R 4.4)", "Fixed", "Fixed",
+    "Fixed (comment-only)", "Fixed",
+    "OPEN - live bug, reverted by user", "OPEN - dead flag",
+    "Housekeeping", "Fixed", "Fixed",
+    "Fixed in code - pipeline re-run required", "Fixed"))
+tt(st) |>
+  group_tt(i = list(
+    "IRP5Condense.rmd"  = 1,
+    "IRP5HHI.rmd"       = 11,
+    "IRP5MergeData.rmd" = 15,
+    "IRP5Impacts.rmd"   = 17))
+```
+
+# Next steps
+
+1. **Server pipeline re-run is a prerequisite**, not optional — Finding 4
+   (`DropThisForRev`) changes which rows survive into `irp5gir`, so every
+   downstream `.qs` and the 9.0204% figure are stale until re-run.
+2. Re-verify Finding 12 (`exists()` guard direction) directly in the current
+   file rather than trusting the inline comment, since it has flipped twice
+   via reverts.
+3. Wire or remove Finding 13 (`FinYr20yr`) — currently dead weight.
+4. Reconcile the Finding 17 prose/code mismatch (2000 vs "3000") — user's
+   call, not touched.

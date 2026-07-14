@@ -1,0 +1,710 @@
+---
+title: "Session 19 Moss Plover — full-notebook scan under the signature-check rule"
+subtitle: "MinWageMarketPower, all 22 .rmd/.qmd in analysis/program"
+date: 2026-07-07
+format:
+  html:
+    toc: true
+    toc-location: left
+    number-sections: false
+    embed-resources: true
+engine: knitr
+execute:
+  eval: false
+  echo: true
+---
+
+```{=html}
+<style>
+details { margin: 0.6em 0 1em 0; }
+details summary { cursor: pointer; color: #2456a4; font-size: 0.9em; }
+details pre { background: #f6f8fa; padding: 0.6em; font-size: 0.8em;
+              max-height: 340px; overflow: auto; border-left: 3px solid #2456a4; }
+</style>
+```
+
+Scan by Claude (model: **Fable 5**), Session 19 Moss Plover, 2026-07-07.
+Scope: signature check of every external-package call (rule added to
+`feedback_debug_rule.md` this session), logical-consistency pass in
+line-number order, refactor proposals where a major speed gain is likely or
+the edit is non-drastic. Scanner: `scan_signatures.R` (this folder), output
+`scan_signatures_out.txt`. Companion document with runnable mock examples:
+`Session19_MinWageScanExplained.html`.
+
+Chunk references: "chunk name" (n) = the n-th `{r}` chunk of the file,
+counting child/setup chunks. Click **show chunk** under each issue to pop
+open the source excerpt (snapshot of 2026-07-07, line numbers = current
+local files). All files live in `analysis/program/`.
+
+Status
+:   Fixed in source (2026-07-07): A1, B2, B3, B4, B6, B7, B8
+:   Open: A2, A3, C1–C7, D1
+:   Closed, intentional (user confirmed 2026-07-07): B1, B5, D2
+
+# A. Signature findings
+
+### A1 (Major, live): 13 remaining `qsave(..., use_alt_rep = TRUE)`
+
+Status
+:   Fixed 2026-07-07 — argument removed from all 13 calls, originals kept as `#### CLAUDE tpo:` comments
+
+Files
+:   1. IRP5Condense.rmd
+        * "merge industry code" (9) — L378
+        * "Open the geolocation file and produce geoloc file" (11, eval=F) — L422, L428
+        * "smallirp5" (12) — L448
+        * "GeoLF" (13) — L468
+        * "merge irp5_WithRepetetiveUIDs GeoLF" (15) — L609
+        * "copy Bus_adr_Geo_Munic" (16, eval=F) — L618
+        * "correcting information of IRP panel irp5gir" (17) — L881
+        * "dropping rows" (18) — L983, L1004
+        * "create ObPattern" (19) — L1223, L1231, L1235
+
+Concern
+:   * `use_alt_rep` belongs to `qread()` only (qs 0.27.3) — every live call stops the server pipeline with "unused argument"
+    * three calls sit in `eval=F` chunks (latent), ten are live
+
+Proposed fix
+:   remove the argument; original lines kept as `#### CLAUDE tpo:` comments (same pattern as the 5 fixed earlier today)
+
+Process note
+:   my earlier grep was cut by `head -30` and stopped at L357 — the scanner's full parse caught the rest; exactly the failure the new rule targets
+
+```{=html}
+<details><summary>show all 13 call sites (IRP5Condense.rmd)</summary>
+<pre>
+ 361: ```{r merge industry code}
+ 378: qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads,
+ 379:   use_alt_rep = TRUE)
+
+ 410: ```{r Open the geolocation file and produce geoloc file, eval = F}
+ 422: qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads,
+ 423:   use_alt_rep = TRUE)
+ 428: qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads,
+ 429:   use_alt_rep = TRUE)
+
+ 432: ```{r smallirp5}
+ 448: qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads,
+ 449:   use_alt_rep = TRUE)
+
+ 452: ```{r GeoLF}
+ 468: qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads,
+ 469:   use_alt_rep = TRUE)
+
+ 491: ```{r merge irp5_WithRepetetiveUIDs GeoLF}
+ 609: qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+ 610:   nthreads = DTThreads,
+ 611:     use_alt_rep = TRUE)
+
+ 615: ```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
+ 618: qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+ 619:   nthreads = DTThreads, use_alt_rep = TRUE)
+
+ 637: ```{r correcting information of IRP panel irp5gir}
+ 881: qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads,
+ 882:   use_alt_rep = TRUE)
+
+ 886: ```{r dropping rows}
+ 983: qsave(dropthese,
+ 984:   paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads,
+ 985:     use_alt_rep = TRUE)
+1004: qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads,
+1005:   use_alt_rep = TRUE)
+
+1021: ```{r create ObPattern}
+1223: qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads,
+1224:   use_alt_rep = TRUE)
+1231: qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads,
+1232:   use_alt_rep = TRUE)
+1235: qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads,
+1236:   use_alt_rep = TRUE)
+</pre>
+</details>
+```
+
+### A2 (Latent): syntax errors in archival files (global `eval=F`)
+
+Status
+:   Open (latent — nothing executes while `eval=F`)
+
+Files
+:   1. CITIRP5BranchLevel.rmd
+        * "hhi" (10), (15), (35)
+        * "define fraction affected" (16)
+        * "merge branch weight with FAdata and compute FA by branch" (18)
+        * "count number of UIDs in ipyrc" (19)
+        * "hhi based on kerr income" (20), "hhi using kerr old" (21), "hhi this is older" (22)
+        * unnamed eval=F (36)
+    1. ReadCITIRP5Data.rmd
+        * same chunk set: (30), (31), (33), (34), (35), (36), (37), (50), (51)
+    1. IRP5Impacts_P.rmd
+        * "examining estimation data" (5)
+    1. IRP5ImpactsTest.rmd
+        * "examining estimation data" (6, eval=F)
+
+What
+:   1. Missing comma between the closing `)` of a `c(...)` vector and the `.(Txrf, ...)` selector — the 7 "hhi"-family chunks in files a and b
+    1. Orphan `by = .(Txrf, taxyear)]` line left behind an edit — "define fraction affected"
+    1. Missing `c()` wrapper in `on = "a", "b", ...` — "merge branch weight with FAdata..."
+    1. Truncated statement `.(NAInPayeref = ..., , ]` — unnamed eval=F chunk
+    1. Missing commas in the `.lb/.ub` column-name vector (files c, d); c additionally uses `.()` where the LHS of `:=` needs `c()`
+
+Concern
+:   * no damage while `eval=F`; bites the moment a chunk is copied or eval is flipped
+    * the live counterpart, IRP5Impacts.rmd "examining estimation data" (7) L377-386, already carries the correct commas + `c()` form
+
+Proposed fix
+:   fix on touch, or mark the four files archival explicitly (see C7)
+
+```{=html}
+<details><summary>show the four error patterns (CITIRP5BranchLevel.rmd, IRP5Impacts_P.rmd)</summary>
+<pre>
+#### 1. missing comma after c(...) — CITIRP5BranchLevel.rmd L384-387 (and 6 repeats):
+ 384: LShare[Txrf %in% c(ipyr[1:5, Txrf],
+ 385:   "AACAACCBBZ", "AACAACGZCZ", "AACAACZZTZ", "AACAAKCAQZ",
+ 386:   "AACABACJJZ", "AACABCAXTZ", "AACABCBCGZ", "AACABCQTQZ")
+ 387:   .(Txrf, AreaLevel, busprov_geo, busmainplc_geo,   &lt;-- no comma before .(
+
+#### 2. orphan by= line — CITIRP5BranchLevel.rmd L1189-1190:
+1189: ipyrc[, PropToMWX := round(TIncomeMonth/2274, 6)]
+1190:   by = .(Txrf, taxyear)]                            &lt;-- statement already closed
+
+#### 3. on= missing c() — CITIRP5BranchLevel.rmd L1379-1380:
+1379:   on = "busprov_geo", "busdistmuni_geo", "buslocmuni_geo",
+1380:      "busmainplc_geo", "taxrefno"),                  &lt;-- needs on = c(...)
+
+#### 4. missing commas in name vector — IRP5Impacts_P.rmd L263-268:
+ 263: meanjbdat <- lapply(meanjbdat, function(x)
+ 264:   x[, .("MeanJobsMP.lb"
+ 265:         "MeanJobsMP.ub"                              &lt;-- no commas; and .( should be c(
+ 266:         "MeanrJobsMP.lb"
+ 267:         "MeanrJobsMP.ub")
+ 268:       :=
+</pre>
+</details>
+```
+
+### A3 (Latent): duplicate chunk label `{r hhi}` ×3 per file
+
+Status
+:   Open (latent)
+
+Files
+:   1. CITIRP5BranchLevel.rmd
+        * "hhi" at chunks (10), (15), (35)
+    1. ReadCITIRP5Data.rmd
+        * "hhi" at chunks (13), (30), (50)
+
+Concern
+:   * knitr aborts on duplicate labels if these files are ever knitted
+
+```{=html}
+<details><summary>show the duplicate chunk fences</summary>
+<pre>
+#### CITIRP5BranchLevel.rmd:
+ 250: ```{r hhi}     &lt;-- chunk (10)
+ 891: ```{r hhi}     &lt;-- chunk (15)
+2480: ```{r hhi}     &lt;-- chunk (35)
+
+#### ReadCITIRP5Data.rmd:
+ 546: ```{r hhi}     &lt;-- chunk (13)
+1263: ```{r hhi}     &lt;-- chunk (30)
+2852: ```{r hhi}     &lt;-- chunk (50)
+</pre>
+</details>
+```
+
+# B. Logic findings
+
+### B2 (Major, live): job-overlap shift not chronological for multi-establishment workers
+
+Status
+:   Fixed 2026-07-07
+
+Files
+:   1. IRP5HHI.rmd
+        * "fraction affected for all years" (4) — L215-218
+
+Concern
+:   * `shift()` follows physical row order; the key sorts by *place first*, date second
+    * a person-firm group spanning >1 `busmainplc_geo` gets a `DateStart2` that is not the chronologically next job
+    * `DJobDurationMonth` / `TDurationMonth` / `DoubleJobRatio` are then wrong for exactly the multi-establishment workers the block targets
+
+Proposed fix
+:   `setkey(ipyrc, Txrf, UID, DateStart)` immediately before the two `shift()` lines (taxyear is constant inside the year loop); re-set the original key after if later code relies on it
+
+Cost
+:   one extra sort per year loop (seconds); values change only for multi-place person-firm-years
+
+Applied
+:   2026-07-07 — key replaced, original commented with `#### CLAUDE tpo:`; server re-run required for values to change
+
+```{=html}
+<details><summary>show chunk excerpt — "fraction affected for all years" (4), L215-218</summary>
+<pre>
+ 215:   setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+ 216:   #### DateStart2, DateEnd2: Dates for 2nd job in the same firm
+ 217:   ipyrc[, DateStart2 := shift(DateStart, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
+ 218:   ipyrc[,   DateEnd2 := shift(DateEnd, n = 1L, type = "lead"), by = .(Txrf, taxyear, UID)]
+</pre>
+</details>
+```
+
+### B3 (Major, live): masked-display line errors at runtime (`with = F` scope)
+
+Status
+:   Fixed 2026-07-07
+
+Files
+:   1. IRP5HHI.rmd
+        * "define irp5M by location granularity" (16) — L999-1004
+
+Concern
+:   * with `with = F`, `j` is evaluated in the calling scope: `Txrf` is not an object there → "object 'Txrf' not found"
+    * even if it resolved, the letter strings would be treated as (nonexistent) column names
+
+Proposed fix
+:   select real columns first, then add masked display columns: `x <- unique(irp5[cond, c("Txrf", "UID", geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F]); x[, Firm := letters[as.integer(factor(Txrf))]][, ind := letters[as.integer(factor(UID))]][, c("Txrf", "UID") := NULL]; x`
+
+Applied
+:   2026-07-07 — rewritten as `irp5msk` two-step msk pattern, original commented
+
+```{=html}
+<details><summary>show chunk excerpt — "define irp5M by location granularity" (16), L999-1004</summary>
+<pre>
+ 999: unique(irp5[Txrf %in% Txrf[grepl("^M", LocGranularFirm) | grepl("^M", CommonLocality)][1]
+1000:   & taxyear == 2009,
+1001:   c(Firm = letters[as.integer(as.factor(Txrf))],
+1002:   ind = letters[as.integer(as.factor(UID))],
+1003:   geovars, grepout("Num|Rows|Gran|Commo", colnames(irp5))), with = F]
+1004: )
+</pre>
+</details>
+```
+
+### B4 (Minor, live): FA density plotted with `limits = c(1, 100)` on a [0,1] variable
+
+Status
+:   Fixed 2026-07-07
+
+Files
+:   1. IRP5HHI.rmd
+        * "plot FA in agri 2012-2020" (14) — L810
+
+Concern
+:   * `FA = NumSubMW/Jobs` ∈ [0,1]; the limits drop everything except FA == 1
+    * `FAOfAg2010-2022.jpg` shows a sliver, not the distribution
+    * sibling plots — "plot FAs by size" (10) L684 and "plot FAs by jobs employment" (11) L715 — correctly use (0,1)
+
+Proposed fix
+:   `scale_x_continuous(limits = c(0, 1))`
+
+Applied
+:   2026-07-07 — limits corrected, original commented
+
+```{=html}
+<details><summary>show chunk excerpt — "plot FA in agri 2012-2020" (14), L803-810</summary>
+<pre>
+ 803: ```{r plot FA in agri 2012-2020}
+ 805: g2 <- ggplot(data = irp5ForPlot[busmainplc_geo != "", ],
+ 806:     aes(x = FA, group = taxyear, colour = taxyear, fill = taxyear)) +
+ 807:   geom_density(alpha = .3) +
+ 810:   scale_x_continuous(limits = c(1, 100)) +
+</pre>
+</details>
+```
+
+### B6 (Minor, live): plot outlier drop keeps establishments with extreme rows
+
+Status
+:   Fixed 2026-07-07
+
+Files
+:   1. IRP5Impacts.rmd
+        * "examining estimation data" (7) — L337-338
+
+Concern
+:   * an establishment qualifies if **any** of its rows is moderate — its extreme rows are still plotted
+    * the winsorize block, "select winsorized estimation sample" (11) L696-700, uses the correct exclusion idiom
+
+Proposed fix
+:   `lfdata[!(EstID %in% EstID[abs(rJobsMP) >= 200 | dJobsMP <= -1000]), ]`
+
+Applied
+:   2026-07-07 — exclusion idiom in place, original commented
+
+```{=html}
+<details><summary>show chunk excerpt — "examining estimation data" (7), L336-338</summary>
+<pre>
+ 336: #### plot rJobsMP after dropping outliers
+ 337: lfdata.dropped <- lfdata[
+ 338:   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
+</pre>
+</details>
+```
+
+### B7 (com): swapped comments "low HHI*Size" / "high HHI*Size"
+
+Status
+:   Fixed 2026-07-07
+
+Files
+:   1. IRP5Impacts.rmd
+        * "estimation with winsorized data" (14) — L1119 and L1132
+
+Concern
+:   * `CEa` = Above-median HHI = high concentration; `CEb` = Below = low
+    * the two section comments are swapped; the estimation list labels (L1160-1167) are correct
+
+Proposed fix
+:   swap the two comment lines
+
+Applied
+:   2026-07-07 — comments swapped with CEa/CEb clarifiers, `#### CLAUDE tpo:` tagged
+
+```{=html}
+<details><summary>show chunk excerpt — "estimation with winsorized data" (14), L1118-1133</summary>
+<pre>
+1118:     #### Subsample: Size*HHI
+1119:     #### low HHI*Size                                &lt;-- CEa is Above median = HIGH
+1120:     esLfwCEaYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + ...
+ ...
+1132:     #### high HHI*Size                               &lt;-- CEb is Below median = LOW
+1133:     esLfwCEbYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + ...
+</pre>
+</details>
+```
+
+### B8: Session 17 Issue 1 — fixed in source
+
+Status
+:   Fixed in source; bookkeeping open (mark Issue 1 resolved in CLAUDE_StandingIssues.md)
+
+Files
+:   1. IRP5HHI.rmd
+        * "hhi" (18) — L1121-1123
+
+What
+:   * the inverted `exists()` guard reported open in Session 17 is corrected in current source
+
+```{=html}
+<details><summary>show chunk excerpt — "hhi" (18), L1121-1123</summary>
+<pre>
+1121: if (exists("irp5L")) rm(irp5L)  #### CLAUDE tpo: condition was inverted
+1122: if (exists("irp5D")) rm(irp5D)
+1123: if (exists("irp5P")) rm(irp5P)
+</pre>
+</details>
+```
+
+### B1 (record only — user-confirmed intentional, 2026-07-07): `dropthese` filter narrower than its comment
+
+Status
+:   Closed — intentional and fine per user; kept for the record, demoted from Major
+
+Files
+:   1. IRP5Condense.rmd
+        * "dropping rows" (18) — L973
+
+What
+:   1. the filter combines `taxrefno %in% names(tb)[tb > 10]` with `uid %in% dupuid[taxrefno %in% names(tb)[tb == 10], uid][1:5]`
+    1. scan read this as a leftover of the display line (L962) contradicting the comment at L956 ("drop firms above 10")
+    1. user confirms the narrower selection is deliberate — no change
+
+```{=html}
+<details><summary>show chunk excerpt — "dropping rows" (18), L956-999</summary>
+<pre>
+ 956: #### Drop firms with repetetive entries if they are above 10
+ 957: ii <- 10
+ ...
+ 973: dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+ 974:   .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
+ 975:     periodemployedfrom, periodemployedto, kerr_income)][
+ 976:   order(UInd, Corp), ]
+ ...
+ 999: irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+</pre>
+</details>
+```
+
+### B5 (record only — user-confirmed intentional, 2026-07-07): `ExistedBefore2013` — firm level in Lf, establishment level in LSMa
+
+Status
+:   Closed — both levels are deliberate per user: firm level in the Lf block (L223-), establishment level in the LSMa block (L144-); demoted from Suspicious, kept for the record
+
+Files
+:   1. IRP5MergeData.rmd
+        * "merge faa plus LSMa1 gives Lf" (7) — L236-237, firm level (`by = taxrefno`)
+        * "create LSMa HHIAgriRowsMainPlaceLevel from LSa HHIAgriRows" (4) — L144-145, establishment level
+    1. IRP5HHI.rmd
+        * "agri Jobs by firm age" (13, eval=F) — L784, firm level
+
+What
+:   1. scan flagged the same variable name keyed at two levels as a possible inconsistency feeding `AgeSample` and the LfCE subsamples
+    1. user confirms both are intended — no change
+
+```{=html}
+<details><summary>show both definitions — IRP5MergeData.rmd L233-238 vs L144-145</summary>
+<pre>
+#### firm level (intentional) — "merge faa plus LSMa1 gives Lf" (7):
+ 233: Lf[, ExistedBefore2013 := 0L]
+ 234: Lf[taxyear < 2013, ExistedBefore2013 := 1L]
+ 235: #### ExistedBefore2013 == 1L if there is 1L in this variable
+ 236: Lf[, ExistedBefore2013 := ExistedBefore2013[ExistedBefore2013 == 1L][1],
+ 237:   by = taxrefno]
+ 238: Lf[is.na(ExistedBefore2013), ExistedBefore2013 := 0L]
+
+#### establishment level (intentional) — "create LSMa ..." (4):
+ 144: LSMa[, ExistedBefore2013 := ExistedBefore2013[!is.na(ExistedBefore2013)][1],
+ 145:   by = .(busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+</pre>
+</details>
+```
+
+# C. Minor / dead / fragile
+
+### C1 (dea): double deduplication
+
+Status
+:   Open
+
+Files
+:   1. IRP5Condense.rmd
+        * "smallirp5" (12) — L445-447
+
+Concern
+:   * `unique()` already deduplicates; `smallirp5[!duplicated(smallirp5), ]` is a no-op
+
+```{=html}
+<details><summary>show chunk excerpt — "smallirp5" (12), L445-447</summary>
+<pre>
+ 445: smallirp5 <- unique(irp5i[grepl("A", NatureOfPer),
+ 446:   c(geovars, "taxrefno", "irp5it3aid"), with = F])
+ 447: smallirp5 <- smallirp5[!duplicated(smallirp5), ]
+</pre>
+</details>
+```
+
+### C2 (dea): dead initialisation
+
+Status
+:   Open
+
+Files
+:   1. IRP5Condense.rmd
+        * "merge irp5_WithRepetetiveUIDs GeoLF" (15) — L535-536
+
+Concern
+:   * `FirmUInd := 0L` immediately overwritten by the next line
+
+```{=html}
+<details><summary>show chunk excerpt — L535-536</summary>
+<pre>
+ 535: irp5gi[, FirmUInd := 0L]
+ 536: irp5gi[, FirmUInd := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
+</pre>
+</details>
+```
+
+### C3 (dea): no-op chunk
+
+Status
+:   Open
+
+Files
+:   1. IRP5Condense.rmd
+        * "copy Bus_adr_Geo_Munic" (16, eval=F) — L615-620
+
+Concern
+:   * qread → qsave of the same file changes nothing on disk (unlike D2, nothing downstream uses the re-read object)
+
+```{=html}
+<details><summary>show chunk — "copy Bus_adr_Geo_Munic" (16), L615-620</summary>
+<pre>
+ 615: ```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
+ 616: irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+ 617:   nthreads = DTThreads, use_alt_rep = TRUE)
+ 618: qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+ 619:   nthreads = DTThreads, use_alt_rep = TRUE)
+ 620: ```
+</pre>
+</details>
+```
+
+### C4 (frg): establishment IDs pasted without separator
+
+Status
+:   Open
+
+Files
+:   1. IRP5Condense.rmd
+        * "merge irp5_WithRepetetiveUIDs GeoLF" (15) — L525-528
+
+Concern
+:   * `paste0(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)`: "AB"+"C" and "A"+"BC" collide
+    * add `sep = "|"` **only** with a full re-run — EstabID values feed joins downstream
+
+```{=html}
+<details><summary>show chunk excerpt — L525-528</summary>
+<pre>
+ 525: irp5gi[, EstabIDTx := as.integer(factor(paste0(
+ 526:     busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)))]
+ 527: irp5gi[, EstabID   := as.integer(factor(paste0(
+ 528:     busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)))]
+</pre>
+</details>
+```
+
+### C5 (com): inconsistent natureofperson regex
+
+Status
+:   Open
+
+Files
+:   1. IRP5Condense.rmd
+        * "correcting information of IRP panel" (8) — L316 vs L350
+
+Concern
+:   * same concept matched with `"^A$"` (L316) and `"A"` (L350); if values are exactly "A" both work, otherwise they diverge silently
+
+```{=html}
+<details><summary>show chunk excerpt — L316-317, L349-350</summary>
+<pre>
+ 316: irp5pnl[UID %in% UID[grepl("^A$", natureofperson)],
+ 317:   NatureOfPer := "A"]
+ ...
+ 349: irp5pnl[, NatureOfPer := "ZZ"]
+ 350: irp5pnl[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
+</pre>
+</details>
+```
+
+### C6 (com): `geom_pointrange(width = .01)`
+
+Status
+:   Open
+
+Files
+:   1. IRP5Impacts.rmd
+        * "examining estimation data" (7) — L392-394
+        * "examining winsorized estimation data" (12) — repeats of the same call
+
+Concern
+:   * `width` is not a geom_pointrange parameter; it is swallowed by `...` with only a run-time warning
+    * live example of the scanner's `...` blind spot (see "Scanner residue")
+
+```{=html}
+<details><summary>show chunk excerpt — L392-394</summary>
+<pre>
+ 392:   geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
+ 393:     position = position_dodge(width = .3),
+ 394:     stat = "identity", width = .01) +
+</pre>
+</details>
+```
+
+### C7 (housekeeping): archival files
+
+Status
+:   Open
+
+Files
+:   1. IRP5HHI_.rmd — pre-fix snapshot of IRP5HHI.rmd (Session 17 fixes absent)
+    1. IRP5Condense_WithTaxrefno.rmd — old variant
+    1. MergePostalCodeData.qmd — contains SARS tax-residency notes, not postal-code merging (title/content mismatch)
+    1. CITIRP5BranchLevel.rmd, ReadCITIRP5Data.rmd, IRP5Impacts_P.rmd, IRP5ImpactsTest.rmd — global `eval=F`, no callers
+
+Proposed fix
+:   add a one-line "ARCHIVAL — do not run" banner at the top of each, or move to an `attic/` subfolder
+
+# D. Refactor proposals
+
+### D1 (non-drastic, spl): fold the 20 near-identical `feols()` calls into one explicit loop
+
+Status
+:   Open — apply when next editing the file
+
+Files
+:   1. IRP5Impacts.rmd
+        * "estimation with winsorized data" (14) — L1079-1144, ×20
+        * "estimation with various Job0 and start year" (9) — L518-543, same pattern ×8
+
+Current
+:   20 copies of the same formula/vcov differing only in `data =`
+
+Proposed
+:   named list of subsets + a plain `for` loop (no function wrapping; errors stay explicit):
+
+```{r}
+subsets <- list(
+    "All sample"                               = LfYr
+  , "Complete panel"                           = LfCYr
+  , "Existed firms, all sample"                = LfCEYr
+  , "Existed firms, high concentrated markets" = LfCEaYr
+  , "Existed firms, low concentrated markets"  = LfCEbYr
+  , "Existed firms, low FA"   = LfCEYr[grepl("low", FAclass), ]
+  , "Existed firms, mid FA"   = LfCEYr[grepl("mid", FAclass), ]
+  , "Existed firms, high FA"  = LfCEYr[grepl("hi",  FAclass), ]
+  #### ... size and size-x-HHI subsets in the same style
+)
+eslistYrw <- vector("list", length(subsets))
+names(eslistYrw) <- names(subsets)
+for (k in seq_along(subsets))
+  eslistYrw[[k]] <- feols(
+    rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012) |
+      taxyear + taxrefno + busmainplc_geo,
+    vcov = ~ taxyear + busmainplc_geo,
+    data = subsets[[k]])
+```
+
+Gain
+:   ~120 lines → ~30; one place to edit the spec; removes the copy-paste channel that produced B7. No speed change
+
+### D2 (record only — intentional): qsave→qread ALTREP round trips
+
+Status
+:   Closed — deliberate memory optimisation; do not "simplify" away
+
+Files
+:   1. IRP5HHI.rmd
+        * "faa and Fadata are first lines of FAD in each year" (7) — L504-506
+        * "LSa is LS of agri only" (20) — L1274-1276
+        * analogues elsewhere in the file
+
+What
+:   * saving then immediately re-reading with `use_alt_rep = TRUE` converts in-memory string columns to ALTREP and cuts RAM on the 100M-row tables
+
+Proposed
+:   add a `#### CLAUDE com:` marker at each so future scans skip them
+
+```{=html}
+<details><summary>show chunk excerpt — "faa and Fadata..." (7), L504-506</summary>
+<pre>
+ 504: qsave(Fadata, paste0(pathdata, "FAFirstRow.qs"), nthreads = DTThreads)
+ 505: Fadata <- qread(paste0(pathdata, "FAFirstRow.qs"),
+ 506:   nthreads = DTThreads, use_alt_rep = TRUE)
+</pre>
+</details>
+```
+
+# Scanner residue
+
+What "not name-checkable (`...` in formals)" means:
+
+* the scanner validates each named argument in a call against `formals(pkg::fn)` of the installed package
+* if a function's formals contain `...`, R accepts **any** argument name without error — an unknown name is silently absorbed into `...`
+* a name check therefore proves nothing for such functions; the scanner skips them and only counts them
+* in this project that is ~700 calls across ~56 functions: `feols`, `ggplot`, `aes`, `theme`, `data.table()`, `paste`, `etable`, `tt`, `style_tt`, `merge`, `dcast`, ...
+* C6 (`geom_pointrange(width=)`) is a real mistake living exactly in this blind spot — ggplot warns at run time, nothing errors
+* for these functions the rule falls back to the help page: confirm in `?fn` that the argument is actually consumed
+
+Other residue:
+
+* unresolved symbols: `.` (data.table alias, expected), `county_rain` (hurricaneexposure not installed — COVIDDealths.rmd only)
+* packages not installed on this machine: hurricaneexposuredata, hurricaneexposure
+
+# Fix record
+
+1. Applied 2026-07-07: A1 (13 qsave calls, IRP5Condense.rmd), B2, B3, B4 (IRP5HHI.rmd), B6, B7 (IRP5Impacts.rmd) — B2's value changes materialise at the next server re-run
+1. Closed as intentional 2026-07-07: B1 (dropthese filter), B5 (ExistedBefore2013 levels), D2 (ALTREP round trips)
+1. Remaining open: A2, A3 (latent, archival files), C1–C7 on touch, D1 when next editing IRP5Impacts.rmd

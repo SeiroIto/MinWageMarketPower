@@ -1,0 +1,879 @@
+---
+title: "Construct IRP5 panel"
+date: "`{r} format(Sys.time(), "%Y %b %d %R")`"
+output: 
+  litedown::html_format:
+    meta:
+      css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
+      js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
+#### output: html_document
+#### path <- "W:/epguest/seiro_ito/"; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5Condense.rmd"))
+---
+
+#  Read IRP5_20yr_cleaned.dta (ver 5 beta) and save by year
+
+```{r, child='setup.Rmd', message = F, warning = F}
+#### setup.rmd sets eval, echo, time to T
+```
+```{r read functions from child file, child='destatfactor.Rmd', message = F, warning = F}
+```
+
+```{r setup, eval = F, echo = F}
+library(qs); library(data.table); library(ggplot2)
+library(rmarkdown); library(fixest)
+library(knitr); library(tufte)
+library(litedown)
+litedown::reactor(
+  echo = TRUE,
+  eval = TRUE, 
+  time = TRUE
+)
+options(htmltools.dir.version = FALSE, width = 100)
+#### invalidate cache when the tufte version changes
+knitr::opts_chunk$set(
+  tidy = FALSE, cache.extra = packageVersion('tufte'), 
+  margin_references = TRUE,
+  #### remove leading hashes in html output
+  comment = "", 
+  echo = T, cache = F, eval = F,
+  class.source = "SeiroBenign", class.output = "SeiroLightGreen"
+  )
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+table0 <- function(x) table(x, useNA = "ifany")
+GeoLevel <- c("Prv", "Dis", "Loc", "Mai")
+geovars <- c("busprov_geo", "busdistmuni_geo", 
+  "buslocmuni_geo", "busmainplc_geo")
+```
+
+Read irp5 data by year
+
+* read from stata dta
+* dropped if
+    * natureofperson != "A"
+    * taxrefno == ""
+#### Note: many empty taxrefno in irp5 (2012) before dropping
+#### table(ipyr[, taxrefno == ""])
+####   FALSE    TRUE 
+#### 8586068 1407896 
+
+
+```{r read irp5v5beta best geo and create irp5yr files, eval = F}
+library(qs)
+library(data.table)
+library(readstata13)
+for (yr in 8:22) {
+#### for (yr in 8) {
+  if (yr < 10) yr <- paste0("0", yr)
+  ## Below code is run only once: Start ##
+  ## irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, "_cleaned.dta"))
+  ## ipyr <- data.table(irpyr)
+  ## rm(irpyr)
+  ## qsave(ipyr, paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  ## irpyr <- read.dta13(paste0(pathdataIRP, "IRP5_20", yr, 
+  ##   "_cleaned_best_geodata.dta"))
+  ## ipb <- data.table(irpyr)
+  ## qsave(ipb, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## # merge best geocode to irpYR.qs
+  ## ipyr <- qread(paste0(pathdata, "irp", yr, ".qs"), nthreads = 13)
+  ## ipb <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## geonames <- grepout("^bus.*geo$", colnames(ipyr))
+  ## setnames(ipyr, geonames, paste0("OLD", geonames))
+  ## ipbyr <- ipyr[ipb, , on = grepout("irp.*aid", colnames(ipb))]
+  ## nrow(ipbyr[OLDbusmainplc_geo == "" & busmainplc_geo != "", ])
+  ## qsave(ipbyr, paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## Below code is run only once: End ##
+  ipyr <- qread(paste0(pathdata, "irpb", yr, ".qs"), nthreads = 13)
+  ## Keep only nature of person is "an individual"
+  ### ipyr <- ipyr[grepl("A", natureofperson), ]
+  ## Drop obs with missing taxrefno
+  ipyr <- ipyr[taxrefno != "", ]
+  ## Note that there are header lines with taxrefno = "NULL", but they can be dropped later
+  ## Num: Number of employees in a firm
+  ipyr[, Num := as.integer(.N), by = .(taxrefno, 
+    busprov_geo, busdistmuni_geo, buslocmuni_geo, busmainplc_geo)]
+  ipyr[, Num := 0L]
+  ipyr[, Nationality := "sa"]
+  ipyr[passportno != "", Nationality := "non-sa"]
+  ipyr[, Nationality := factor(Nationality, levels = c("sa", "non-sa"))]
+  irp5yr <- ipyr[, .(busprov_geo, busdistmuni_geo, buslocmuni_geo, 
+    busmainplc_geo, irp5it3aid, taxrefno, UID, idno,
+    Nationality, natureofperson,
+    payereferenceno, gender, dateofbirth, taxyear, 
+    periodemployedfrom, periodemployedto,
+    totalperiodsworked, totalperiodsinyearofassessment,
+    #### a3601_income: basic salary
+    Num, kerr_income, ptrs_income, a3601_income)]
+  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)
+}
+```
+
+
+
+# Read industry code
+
+
+```{r read industry code data}
+library(readstata13)
+ind <- read.dta13(paste0(pathdata, "IndustryCodeFromCITv5.dta"))
+ind <- data.table(ind)
+setkey(ind, taxrefno)
+indNoNA <- ind[!(is.na(imp_mic_sic7_1d) & is.na(imp_mic_sic7_2d) & 
+  is.na(imp_mic_sic7_3d) & is.na(imp_mic_sic7_5d)), ]
+for (ii in c(1:3, 5))
+  indNoNA[, (paste0("change", ii, "d")) := 
+    as.integer(uniqueN(get(paste0("imp_mic_sic7_", ii, "d")))), 
+    by = taxrefno]
+table(indNoNA[, change3d])
+qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = 13)
+qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+```
+
+# Create irp5 panel
+
+Appending all annual files
+
+```{r create long format of irp5}
+library(qs)
+library(data.table)
+irp5pnl <- NULL
+for (yr in 8:22) {
+  if (yr < 10) yr <- paste0("0", yr)
+  if (yr == 12)  
+    irp5pnl <- rbindlist(list(irp5pnl, 
+      qread(paste0(pathdata, "ipyrsClean.qs"), nthreads = 13)), 
+      use.names = T, fill = T) else 
+    irp5pnl <- rbindlist(list(irp5pnl, 
+      qread(paste0(pathdata, "irp5", yr, ".qs"), nthreads = 13)), 
+      use.names = T, fill = T)
+}
+irp5pnl[, Num := as.integer(.N), by = .(busprov_geo,
+    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, 
+    taxrefno, taxyear)]
+#### 1. Use payereferenceno to count the total
+####    >>> This is a wrong way to go: payereferenceno has many misreporting <<<
+#### 2. Compute the shares of each firms
+####   a. In doing so, create a hypothetical "gov entity" to aggregate the entries with NAs in taxrefno
+####   b. Compute the shares of each firms including "gov entity" thence HHI
+irp5pnl[, Txrf := taxrefno]
+#### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
+irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+irp5pnl[, Entity := "private"]
+irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+irp5pnl[, Entity := factor(Entity, levels = c("private", "gov"))]
+geovars <- grepout("^bus.*geo$", colnames(irp5pnl))
+#### Below takes about 2 hours!!!: Start  ###
+irp5pnl[, DateStart := as.IDate(periodemployedfrom)]
+irp5pnl[, DateEnd   := as.IDate(periodemployedto)]
+irp5pnl[, DateBirth := as.IDate(dateofbirth)]
+#### Below takes about 2 hours!!!: End  ###
+```
+
+```{r checking 2009 2010 2014, eval = F}
+irp09 <- qread(paste0(pathdata, "irp509.qs"), nthreads = 13)
+irp09[, c("Num", "num") := list(.N, 1:.N), 
+  by = c(geovars, "taxrefno", "taxyear")]
+irp09[UID %in% UID[grepl("^A$", natureofperson)], 
+  NatureOfPer := "A"]
+irp09[num == 1L & grepl("A", NatureOfPer), 
+  .(JobTotal = sum(Num, na.rm = T))]
+####    JobTotal
+####       <int>
+####     1381105
+irp10 <- qread(paste0(pathdata, "irp510.qs"), nthreads = 13)
+irp10[, c("Num", "num") := list(.N, 1:.N), 
+  by = c(geovars, "taxrefno", "taxyear")]
+irp10[UID %in% UID[grepl("^A$", natureofperson)], 
+  NatureOfPer := "A"]
+irp10[num == 1L & grepl("A", NatureOfPer), 
+  .(JobTotal = sum(Num, na.rm = T))]
+####    JobTotal
+####       <int>
+####    12303557
+irp14 <- qread(paste0(pathdata, "irp514.qs"), nthreads = 13)
+irp14[, c("Num", "num") := list(.N, 1:.N), 
+  by = c(geovars, "taxrefno", "taxyear")]
+irp14[UID %in% UID[grepl("^A$", natureofperson)], 
+  NatureOfPer := "A"]
+irp14[num == 1L & grepl("A", NatureOfPer), 
+  .(JobTotal = sum(Num, na.rm = T))]
+####    JobTotal
+####       <int>
+####    12303557
+#### irp5a <- qread(paste0(pathdata, "irp5a.qs"), nthreads = 13)
+#### irp5a[, c("Num", "num") := list(.N, 1:.N), 
+####   by = c(geovars, "taxrefno", "taxyear")]
+#### irp5a[UID %in% UID[grepl("^A$", natureofperson)], NatureOfPer := "A"]
+#### irp5a[num == 1L & grepl("A", NatureOfPer), 
+####   .(JobTotal = sum(Num, na.rm = T)), by = taxyear]
+#### #### Looks fine in irp5a!
+#### ####    taxyear JobTotal
+#### ####       <int>    <int>
+#### ####  1:    2008   193888
+#### ####  2:    2009   233919
+#### ####  3:    2010   251261
+#### ####  4:    2011   326655
+#### ####  5:    2012   379034
+#### ####  6:    2013   420265
+#### ####  7:    2014   407802
+#### ####  8:    2015   461713
+#### ####  9:    2016   494848
+#### #### 10:    2017   513754
+#### #### 11:    2018   531506
+#### #### 12:    2019   559162
+#### #### 13:    2020   569491
+#### #### 14:    2021   652310
+#### #### 15:    2022   566829
+#### irp5a[, .(total = sum(busmainplc_geo != "")), by = taxyear]
+#### #### Looks horrible once conditioning on location info in irp5a!
+#### ####     taxyear  total
+#### ####       <int>  <int>
+#### ####  1:    2008   4338
+#### ####  2:    2009   4357
+#### ####  3:    2010 164006
+#### ####  4:    2011   6085
+#### ####  5:    2012 230056
+#### ####  6:    2013 396541
+#### ####  7:    2014 405210
+#### ####  8:    2015 457141
+#### ####  9:    2016 490655
+#### #### 10:    2017 512344
+#### #### 11:    2018 529679
+#### #### 12:    2019 556736
+#### #### 13:    2020 565447
+#### #### 14:    2021 646384
+#### #### 15:    2022 561929
+```
+
+```{r correcting information of IRP panel}
+irp5pnl[UID %in% UID[grepl("^A$", natureofperson)], 
+  NatureOfPer := "A"]
+irp5pnl[, num := 1:.N, by = c(geovars, "taxrefno", "taxyear")]
+irp5pnl[num == 1L & grepl("A", NatureOfPer), 
+  .(JobTotal = sum(Num, na.rm = T)), by = taxyear]
+#### Looks fine in irp5pnl!
+####     taxyear JobTotal
+####       <int>    <int>
+####  1:    2008 12323161
+####  2:    2009 12083707
+####  3:    2010 12135165
+####  4:    2011 13034038
+####  5:    2012 13496238
+####  6:    2013 13930394
+####  7:    2014 14188697
+####  8:    2015 15586123
+####  9:    2016 15240490
+#### 10:    2017 15267221
+#### 11:    2018 15566584
+#### 12:    2019 15635489
+#### 13:    2020 15654027
+#### 14:    2021 13989801
+#### 15:    2022 13930391
+####  addmargins(table(irp5pnl[is.na(uid) | is.na(UID), .(uid=is.na(uid), UID=is.na(UID))]))
+####        UID
+#### uid         FALSE      TRUE       Sum
+####   FALSE         0   4409392   4409392
+####   TRUE  199028655         0 199028655
+####   Sum   199028655   4409392 203438047
+#### #### So sub
+irp5pnl[ is.na(uid) & !is.na(UID), uid := UID]
+irp5pnl[!is.na(uid) &  is.na(UID), UID := uid]
+#### Copy natureofperson across years for same uid
+irp5pnl[, NatureOfPer := "ZZ"]
+irp5pnl[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
+qsave(irp5pnl, 
+  paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
+  nthreads = 13)
+```
+
+```{r merge industry code}
+#| attr.source = '.r .line-numbers',
+#### Merge industry code, taking irp5 as base
+irp5 <- qread(paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
+  nthreads = 13)
+ind <- qread(paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = 13)
+setkey(irp5, taxrefno); setkey(ind, taxrefno, taxyear)
+ind[, n := 1:.N, by = taxrefno]
+indFirstYear <- ind[n == 1, ]
+indFirstYear[, n := NULL]
+setkey(indFirstYear, taxrefno)
+setnames(indFirstYear, "taxyear", "FirstYearOnSIC7")
+irp5i <- indFirstYear[irp5, on = "taxrefno"]
+setcolorder(irp5i, c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
+  "busmainplc_geo", "taxrefno", "Txrf", "uid", "UID", "gender",
+  grepout("Date", colnames(irp5i))))  
+qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+```
+
+```{r copy ipr5pnl irp5i to saveddata, eval = F}
+FilesToCopy <- c(
+  "irp5_BeforeDroppingRepetitiveUIDs.qs", 
+  "irp5_WithRepetetiveUIDs.qs"
+)
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+    )
+```
+
+
+# Copy location information from other source: IRP5_Geo
+
+Geo location file has following variables for each jobs:
+
+* `taxyear`
+* `irp5it3aid`: Job id (with location-taxyear-taxrefno)
+* `IRP5IT3aPersonalDetailID`: personal id (ID number for SA nationals or passport number for foreign nationals)
+* `payereferenceno`: useless
+* `Bus_adr_Geo_province`, `Str_adr_Geo_province`, `Bus_adr_Geo_Munic`, `Str_adr_Geo_Munic`
+   * Most granular: Local municipality
+* `HaveInfo`: ==1L if Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)
+
+We can uniquely (one-to-one match) merge the geo location file with IRP5 data on `irp5it3aid`
+
+* Just to be safe, we merge on c("taxyear", "irp5it3aid")
+
+```{r Open the geolocation file and produce geoloc file, eval = F}
+library(readstata13)
+geodat <- read.dta13(paste0(path, "IRP5_Geo.dta"))
+geodat <- data.table(geodat)
+setkey(geodat, IRP5IT3aID)
+setnames(geodat, 
+  c("IRP5IT3aID", "TaxYear", "PAYERefno"),
+  c("irp5it3aid", "taxyear", "payereferenceno")
+)
+geodat[, taxyear := as.integer(taxyear)]
+geoloc <- geodat[taxyear==2015, ]
+qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
+geodat[, HaveInfo := 0L]
+geodat[(Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)), 
+  HaveInfo := 1L]
+table(geodat[, .(HaveInfo, taxyear)], useNA = "ifany")
+qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = 13)
+```
+
+```{r smallirp5}
+irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+#### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
+smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
+  c(geovars, "taxrefno", "irp5it3aid"), with = F])
+smallirp5 <- smallirp5[!duplicated(smallirp5), ]
+qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
+```
+
+```{r GeoLF}
+geoloc <- qread(paste0(pathdata, "GeoLocFile.qs"), nthreads = 13)
+smallirp5 <- qread(paste0(pathdata, "smallIRP5.qs"), nthreads = 13)
+#### setkey(geoloc, payereferenceno)
+#### setkey(smallirp5, payereferenceno)
+#### GeoLF <- smallirp5[geoloc, on = "payereferenceno"]
+setkey(geoloc, irp5it3aid)
+setkey(smallirp5, irp5it3aid)
+GeoLF <- smallirp5[geoloc, on = "irp5it3aid"]
+qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+rm(geoloc)
+```
+
+```{r copy GeoXX and derived files to saveddata, eval = F}
+FilesToCopy <- c(
+  "GeoLocationFile.qs", 
+  "GeoLocFile.qs", 
+  "smallIRP5.qs", 
+  "GeoLF.qs"
+)
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+    )
+```
+
+
+```{r merge irp5_WithRepetetiveUIDs GeoLF}
+#| attr.source = '.r .line-numbers',
+#### irp5_WithRepetetiveUIDs.qs is created in "merge industry code"
+irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), 
+  nthreads = 13)
+GeoLF <- qread(paste0(pathdata, "GeoLF.qs"), nthreads = 13)
+GeoLF[, dup := 1:.N, by = irp5it3aid]
+nrow(GeoLF[dup > 1, ])
+GeoLF.nodup <- GeoLF[dup == 1L, ]
+GeoLF.nodup[, dup := NULL]
+#### irp5gi <- GeoLF.nodup[irp5i, on = c("irp5it3aid", "payereferenceno", "taxrefno")]
+irp5gi <- GeoLF.nodup[irp5i, on = c(geovars, "irp5it3aid", "taxrefno")]
+colnames(GeoLF.nodup)
+rbind(GeoLF=dim(GeoLF.nodup), irp5i=dim(irp5i), irp5ig=dim(irp5ig))
+colnames(irp5gi)
+table(irp5gi[, taxyear], useNA = "ifany")
+table(irp5gi[, i.taxyear], useNA = "ifany")
+table(GeoLF.nodup[, taxyear], useNA = "ifany")
+table(irp5i[, taxyear], useNA = "ifany")
+irp5gi[, taxyear := NULL]
+if (any(grepl("i.taxyear", colnames(irp5gi)))) 
+  setnames(irp5gi, "i.taxyear", "taxyear")
+qsave(irp5gi, paste0(pathdata, "irp5_MergedGeoLF.qs"), 
+  nthreads = 13)
+```
+
+Copy from GeoLF if 
+
+* `UID` and `taxrefno` are the keys
+
+```{r copy 2015 location info}
+#| attr.source = '.r .line-numbers',
+irp5gi <- qread(paste0(pathdata, "irp5_MergedGeoLF.qs"), 
+  nthreads = 13)
+irp5gi[, uidtaxref := 0L]
+irp5gi[, uidtaxref := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
+irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
+irp5gi[buslocmuni_geo == "" | is.na(buslocmuni_geo),
+  NoLocMuni := 1L]
+irp5gi[Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic), 
+  CanFill := 1L]
+irp5gi[NoLocMuni == 1L & CanFill == 1L, ShouldFill := 1L]
+#### How much is loc muni information populated?
+table(irp5gi[, .(NoLocMuni == 0L, taxyear)], useNA = "ifany")
+NAsInLocMuniBefore <- 
+  irp5gi[, .(BeforeFill = sum(NoLocMuni)), by = taxyear]
+print(NAsInLocMuniBefore)
+#### to be safe, create a variable for "fill in"
+irp5gi[, FillInLocMuni := buslocmuni_geo]
+
+#### For each uidtaxref that ShouldFill == 1L, 
+#### fill in loc muni info from the 1st CanFill row
+irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
+  FillInLocMuni := Bus_adr_Geo_Munic[CanFill == 1L][1], 
+  by = uidtaxref] 
+summary(irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L], 
+  .(taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+    naFillInLocMuni=is.na(FillInLocMuni), nabuslocmuni_geo=is.na(buslocmuni_geo))])
+irp5gi[taxyear <= 2015 & uidtaxref %in% uidtaxref[ShouldFill == 1L][1:10], 
+  .(taxrefno, uid, taxyear, NoLocMuni, CanFill, Bus_adr_Geo_Munic, 
+    FillInLocMuni, buslocmuni_geo)]
+#### How much is loc muni information populated after this?
+#### Number of NAs in loc muni info
+NAsInLocMuni <- irp5gi[, .(
+  BeforeFill = sum(NoLocMuni), 
+  AfterFill  = sum(FillInLocMuni == "" | is.na(FillInLocMuni))), 
+  by = taxyear]
+print(NAsInLocMuni)
+#### table(irp5gi[, .(
+####   LocMuniNotNA = buslocmuni_geo != "" | !is.na(buslocmuni_geo), 
+####   taxyear)], 
+####   useNA = "ifany")
+#### How useful is GeoLocFile in fillling information?
+#### table(irp5gi[, .(ShouldFill, taxyear)], useNA = "ifany")
+LocMuniCanBeFilled <- irp5gi[, .(
+  CanBeFilled  = sum(
+    (FillInLocMuni  != "" & !is.na(FillInLocMuni)) &
+    (buslocmuni_geo == "" | is.na(buslocmuni_geo)) &
+     FillInLocMuni != buslocmuni_geo
+    )), 
+  by = taxyear]
+print(LocMuniCanBeFilled)
+setnames(irp5gi, 
+    c("buslocmuni_geo", "FillInLocMuni")
+  , c("old_buslocmuni_geo", "buslocmuni_geo")) 
+qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13)
+```
+
+
+```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
+irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13)
+qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13)
+```
+
+Copy location info
+
+* use taxrefno-uid match
+* this assumes no transfer between establishments in a firm in 2012-2013
+* in reality, there are transfers &rarr; measurement errors in location
+* but the proportion of transfers must be small 
+* benefits of location info outweigh the costs
+
+If there are workers working for multiple establishments ... no problem 
+
+* taxrefno-uid uniquely identifies matches (even if there is a transfer, it does not show up as an error, we will never know)
+* base of join = 2012 (fix rows of 2012), and find matches from 2013
+* see example shown in codes, 8 entries in 2012, 2013
+
+
+```{r correcting information of IRP panel}
+#| attr.source = '.r .line-numbers',
+#### case: taxyear = 2015, DateStart = Dec 01, 2013, DateEnd = Jan 10, 2014
+#### taxyear 2015: Mar 2014 - Feb 2015
+#### This is a revision report of taxyear 2014, so drop this person's report of 2013, 
+#### use this row for 2014
+#### paste0 operation is not slow
+#### library(data.table)
+#### n <- 1e5
+#### dt <- data.table(
+####   x1 = sample(1000:2000, n, replace= T),
+####   x2 = sample(1000:2000, n, replace= T)
+#### )
+#### dt[, date1 := as.Date(x1, origin = "1990/01/01")]
+#### dt[, date2 := as.Date(x2, origin = "1990/01/01")]
+#### dt[, taxyear := year(date1)]
+#### system.time(dt[, posix1 := as.POSIXct(paste0(taxyear, "/03/01"))])
+####    user  system elapsed 
+####    1.24    0.01    1.25 
+#### system.time(dt[, idate1 := as.IDate(paste0(taxyear, "/03/01"))])
+####    user  system elapsed 
+####    0.42    0.00    0.44 
+#### system.time(paste0(as.character(dt[, taxyear]), "/03/01"))
+####    user  system elapsed 
+####    0.02    0.00    0.02 
+irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
+  nthreads = 13)
+#### irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = 13)
+irp5gi[, TYStart := as.IDate(paste0(taxyear-1, "/03/01"))]
+irp5gi[, TYEnd   := as.IDate(paste0(taxyear, "/03/01"))]
+irp5gi[, TrueTaxYear := taxyear]
+#### Entries of earlier jobs
+irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5) , 
+  TrueTaxYear := year(DateStart)]
+apply(table(irp5gi[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
+####    2003    2004    2005    2006    2007    2008    2009    2010    2011    2012 
+####     376    1370    5448   16307   56706   65947 1219105 1205674 1541903 1483088 
+####    2013    2014    2015    2016    2017    2018    2019    2020    2021 
+#### 1482391 1356213 1427595 1561429 1599350 1437092 1496579 1436222 1173744 
+#### Total is  18566539
+####  TrueTaxYear taxyear
+####         2010    2010
+####         2011    2011 * drop this
+####         2011    2012 * taxyear := TrueTaxYear
+####         2012    2012
+####         2013    2013
+#### TrueTaxYear[TrueTaxYear != taxyear] == 2011 is year that needs to be dropped
+#### taxyear == TrueTaxYear[TrueTaxYear != taxyear] is flagged as DropThisForRev
+####  TrueTaxYear taxyear
+####         2010    2010
+####         2011    2011 ** drop this 1
+####         2011    2012 *  taxyear := TrueTaxYear
+####         2012    2012 ** drop this 2
+####         2012    2013 *  taxyear := TrueTaxYear
+#### TrueTaxYear[TrueTaxYear != taxyear] == 2011, 2012 
+####   taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear 
+#### is flagged as DropThisForRev
+irp5gi[, DropThisForRev := 0L]
+irp5gi[taxyear %in% TrueTaxYear[TrueTaxYear != taxyear] & TrueTaxYear != taxyear, 
+  DropThisForRev := 1L, 
+  by = c(geovars, "taxrefno", "UID")]
+round((sum(irp5gi[, DropThisForRev])/nrow(irp5gi))*100, 4)
+####  9.0204
+#### Rename 
+####  taxyear ==> Old.taxyear
+####  TrueTaxYear ==> taxyear, becomes
+####  taxyear Old.taxyear
+####     2010        2010
+####     2011        2012 *  
+####     2012        2013 *  
+#### Revision rows dropped
+irp5gir <- irp5gi[DropThisForRev == 0L, ]
+c(nrow(irp5gi), nrow(irp5gir))
+setnames(irp5gir, c("TrueTaxYear", "taxyear"), c("taxyear", "Old.taxyear"))
+irp5gir[, DropThisForRev := NULL]
+
+#### Copy location information from 2015 ==> 2008-2014
+#### Use taxrefno-uid match ==> saved 10.9M rows
+#### Keep original variables
+irp5gir[, orig.bprov := busprov_geo]
+irp5gir[, orig.bdist := busdistmuni_geo]
+irp5gir[, orig.bloc  := buslocmuni_geo]
+irp5gir[, orig.bmain := busmainplc_geo]
+#### If we do not condition on first row "[1]", we wind up 
+#### having multiple cases ==> error
+#### If there are multiple matches, we have no idea which to pick, so pick first
+irp5gir[, bprov15 := busprov_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bdist15 := busdistmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bloc15  := buslocmuni_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[, bmain15 := busmainplc_geo[taxyear == 2015][1], by = .(taxrefno, uid)]
+irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, bloc15, buslocmuni_geo)]
+irp5gir[orig.bloc  == "" & bloc15  != "", .(taxrefno, uid, taxyear, 
+  bloc15, buslocmuni_geo, bmain15, busmainplc_geo)]
+irp5gir[, c("LocInfoCopiedFrom", "ProvCopied", "DisCopied", "LocCopied", "MaiCopied") := 0L]
+#### Copy from bXXXX15 
+irp5gir[
+  taxyear <= 2014 &
+  (busprov_geo == "" | is.na(busprov_geo) | busprov_geo == "EXCEPTION") & 
+  (bprov15 != "" & !is.na(bprov15) & bprov15 != "EXCEPTION"), 
+   c("busprov_geo", "ProvCopied", "LocInfoCopiedFrom") := .(bprov15, 1L, 2015L)
+]
+irp5gir[
+  taxyear <= 2014 &
+  (busdistmuni_geo == "" | is.na(busdistmuni_geo) | busdistmuni_geo == "EXCEPTION") & 
+  (bdist15 != "" & !is.na(bdist15) & bdist15 != "EXCEPTION"),
+  c("busdistmuni_geo", "DisCopied", "LocInfoCopiedFrom") := .(bdist15, 1L, 2015L)
+]
+irp5gir[
+  taxyear <= 2014 &
+  (buslocmuni_geo == "" | is.na(buslocmuni_geo) | buslocmuni_geo == "EXCEPTION") &
+  (bloc15 != "" & !is.na(bloc15) & bloc15 != "EXCEPTION"),
+  c("buslocmuni_geo",  "LocCopied", "LocInfoCopiedFrom") := .(bloc15,  1L, 2015L)
+]
+irp5gir[
+  taxyear <= 2014 &
+  (busmainplc_geo == "" | is.na(busmainplc_geo) | busmainplc_geo == "EXCEPTION") &
+  (bmain15 != "" & !is.na(bmain15) & bmain15 != "EXCEPTION"),
+  c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain15, 1L, 2015L)
+]
+qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+```
+```{r dropping rows}
+#| attr.source = '.r .line-numbers',
+#### Note: Firms with anomalous repetetive uids (AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ) are dropped
+#### code "dropthese"
+#### Read data
+#### nthreds = 16 at NT-SDF, = 8 with my laptop (less 1, keep 1 for other computations)
+ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = 13)
+ipyr[, uid := gsub(" +$", "", UID)]
+rm(ipyrs)
+#### uid anomalous entries: AAAAAAAAAA, CCCCCCCCC, ZZZZZZZZ
+#### these are 0.035% of total number of rows
+#### one large employer (with 4632 jobs) contributes 
+#### DO NOT use these uids when copying location from future data
+dupuid <- ipyr[
+    duplicated(uid) | duplicated(uid, fromLast=T), 
+    .(taxrefno, uid=uid)
+  ]
+dupuid[, n := .N, by = .(taxrefno, uid)]
+dupuid <- unique(dupuid[order(n, decreasing = T), ])
+dupuid[n > 10, ]
+print(unique(dupuid[, uid])[1:30], quote = F)
+#### repetitive: [A-Z]*8
+repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]
+tbr <- table(repetetive)
+tbr <- tbr[order(tbr, decreasing=T)]
+repetetive <- unique(repetetive)
+#### ipyrs[ii.prov | ii.dist | ii.loc | ii.main, 
+####   .(taxrefno, uid, busprov_geo, bprov.13, 
+####   busmainplc_geo, bmain.13)][uid %in% repetetive, ][
+####   order(uid), ]
+#### firms with repetetive uids and their counts
+tb <- table(ipyr[uid %in% repetetive, taxrefno])
+tb <- tb[order(tb, decreasing=T)]
+tb[1:20]
+#### repetetive entries are concentrated in 3 firms
+dupuid[1:20, ]
+dupuid[taxrefno %in% names(tb)[1:3], ][1:20, ]
+#### firms with 800 same uids: using same uid for all workers
+ipyr[uid %in% dupuid[1, uid],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)]
+#### same repetetive entries (AAAAA...) are found across firms
+ipyr[uid %in% names(tbr)[1:20],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ]
+#### Drop firms with repetetive entries if they are above 10
+ii <- 10
+ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ]
+(dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],  
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+  order(uid, taxrefno), ])
+table(dropthese[, .(uid, taxrefno)])
+table(dropthese[, uid])
+####      CCCCCCCC CCCCCCCCCCCCC 
+####           191          2341 
+qsave(dropthese, 
+  paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = 13)
+
+#### Keep only nature of person is "an individual"
+#### we did this: irp5[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
+#### irp5ir <- qread(paste0(pathdata, "irp5_RevReports.qs"), nthreads = 13)
+addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson), 
+  NatureOf = grepl("A", NatureOfPer))]))
+####         NatureOf
+#### natureof      TRUE       Sum
+####    FALSE  42731611  42731611  * 42M saved!!!
+####    TRUE  132692587 132692587
+####    Sum   175424198 175424198
+irp5gir <- irp5gir[grepl("A", NatureOfPer), ]
+#### repetetive UID
+irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+c(nrow(irp5gir), nrow(irp5Clean))
+#### [1] 175424198 175176433
+#### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
+#### grepl("^Crop|^Fore", imp_mic_sic7_2d), ]
+qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+```
+
+Get observation pattern for individuals, establishments, firms: IObPattern, EObPattern, FObPattern
+
+Also create 
+
+* `EstabIDTx` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(Txrf)
+* `EstabID` (busdistmuni_geo)(buslocmuni_geo)(busmainplc_geo)(taxrefno)
+* `FirmIDTx` (Txrf)
+* `FirmID` (taxrefno)
+* `IndID` (EstabIDTx)(uid)
+
+```{r create ObPattern}
+#| attr.source = '.r .line-numbers',
+irp5Clean <- qread(paste0(pathdata, "irp5Clean.qs"), nthreads = 13)
+grepout <- function(str, x)
+  # returns element of match (not numbers)
+  x[grep(str, x, perl = T)]
+idyr <- irp5Clean[, .(taxyear, Txrf, busprov_geo, busdistmuni_geo, 
+  buslocmuni_geo, busmainplc_geo, taxrefno, UID, uid)]
+if (all(idyr[, uid == UID])) idyr[, UID := NULL]
+idyr[, EstabIDTx := factor(as.numeric(factor(paste0(
+    busdistmuni_geo
+  , buslocmuni_geo
+  , busmainplc_geo
+  , Txrf))))
+]
+idyr[, EstabID := factor(as.numeric(factor(paste0(
+    busdistmuni_geo
+  , buslocmuni_geo
+  , busmainplc_geo
+  , taxrefno))))
+]
+idyr[, FirmIDTx := factor(as.numeric(Txrf))]
+idyr[, FirmID := factor(as.numeric(taxrefno))]
+idyr[, IndID := paste(EstabIDTx, uid, sep = "-")]
+#### Individual observation pattern in a given establishment
+idyr[, Ob := 1L]
+idyrW <- reshape(Idyr, direction = "wide", 
+  idvar = c(
+    "busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo", 
+    "FirmIDTx", "FirmID", 
+    "EstabIDTx", "EstabID", 
+    "IndID"),
+  timevar = "taxyear", v.names= c("Ob"))
+for (jj in grep("^Ob", colnames(idyrW)))
+  for (ii in which(is.na(idyrW[, jj]))) 
+    set(idyrW, i = ii, j = jj, value = 0L)
+cols <- grepout("^Ob", colnames(idyrW))
+#### idyrW[, (cols) := lapply(.SD, function(x) {x[is.na(x)] <- 0L; x}), 
+####   .SDcols = cols]
+idyrW[, IObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = cols]
+idyrW[, IObPattern := factor(IObPattern)]
+#### Establishment observation pattern
+#### Method: Find any individual with 1L in taxyear-establishment
+####         and copy within an establishment
+#### EstabObYYYY: Establishment observed in YYYY 
+#### FirmObYYYY: Establishment observed in YYYY 
+idyrW[, list(paste0("Estab", cols), paste0("Firm", cols)) := 0L]
+estabid <- unique(idyrW[, EstabID])
+firmid  <- unique(idyrW[, FirmID])
+for (jj in grepout("^Ob", colnames(idyrW)))
+  #### Estab"jj" with jj = ObYYYY
+  jjj <- grep(paste0("Estab", jj), colnames(idyrW))
+  for (ii in 1:length(estabid)) 
+    #### i: ii-th estbid (establishment ID)
+    #### j: Estab"jj" ((2008:2022)[jj])
+    #### if a worker of an establishment is observed, 
+    #### ObYYYY is nonNA
+    set(idyrW, 
+          i = which(
+                idyrW[, EstabID] == estabid[ii] & 
+                is.na(idyrW[, jj]) 
+              ), 
+          j = jjj, 
+      value = 1L)
+#### Set Estab"jj" to 1L if there is at least one 1L in establishment-taxyear
+for (yy in 2008:2022)
+  jjname <- paste0("EstabOb", yy)
+  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+    by = .(EstabID)]
+estabcols <- grepout("EstabOb", colnames(idyrW))
+idyrW[, EObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = estabcols]
+idyrW[, EObPattern := factor(EObPattern)]
+
+#### Firm observation pattern
+#### Find any individual with 1L in a given firm
+for (jj in grepout("^Ob", colnames(idyrW)))
+  jjj <- grep(paste0("Firm", jj), colnames(idyrW))
+  for (ii in 1:length(firmbid)) 
+    set(idyrW, 
+          i = which(
+                idyrW[, FirmID] == firmid[ii] & 
+                is.na(idyrW[, jj]) 
+              ), 
+          j = jjj, 
+      value = 1L)
+for (yy in 2008:2022)
+  jjname <- paste0("FirmOb", yy)
+  idyrW[taxyear == yy, (jjname) := get(jjname)[!is.na(get(jjname))][1], 
+    by = .(FirmID)]
+firmcols <- grepout("FirmOb", colnames(idyrW))
+idyrW[, FObPattern := paste(.SD, sep = "", collapse = ""), 
+  .SDcols = firmcols]
+idyrW[, FObPattern := factor(FObPattern)]
+#### ObPattern: FirmIDTx, FirmID, EstabIDTx, EstabID, IndID, 
+####            FObPattern, EObPattern, IObPattern
+ObPattern <- idyrW[, c(
+    "busprov_geo", "busdistmuni_geo", 
+    "buslocmuni_geo", "busmainplc_geo", 
+    "FirmIDTx", "FirmID", 
+    "EstabIDTx", "EstabID", 
+    "IndID", 
+    "FObPattern", "EObPattern", "IObPattern"), with = F]
+qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+#### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = 13)
+irp5Clean[, EstabIDTx := factor(as.numeric(factor(paste0(
+    busdistmuni_geo
+  , buslocmuni_geo
+  , busmainplc_geo
+  , Txrf))))
+]
+irp5Clean[, IndID := paste(EstabIDTx, uid, sep = "-")]
+setkey(irp5Clean, IndID); setkey(ObPattern, IndID)
+irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "IndID")]
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = 13)
+#### Agriculture panel
+irp5a <- irp5[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
+qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = 13)
+litedown::timing_data() 
+```
+
+
+```{r MeanStdN of employment}
+#| attr.source = '.r .line-numbers',
+#### code: MeanStdN of employment
+#### For some reasons, it gives "cannot allocate a vector of size 36Gb..." error
+library(data.table)
+library(qs)
+irp5 <- qread(paste0(pathdata, "irp5.qs"), nthreads = 13)
+irp5[, c("num", "Num") := list(as.integer(1:.N), as.integer(.N)), 
+  by = EstabIDTx]
+MeanStdN <- irp5[num == 1L, .(
+  mean = round(mean(num, na.rm = T), 3),
+  std = round(var(num, na.rm = T)^(.5), 3),
+  N = .N
+  ), by = taxyear]
+print(MeanStdN)
+fwrite(MeanStdN, paste0(pathdata, "MeanStdNOfEmployment.tsv"), sep = "\t")
+```
+
+```{r copy ipr5i irp5gi irp5gir irp5Clean to saveddata, eval = F}
+#| attr.source = '.r .line-numbers',
+FilesToCopy <- c(
+  "irp5_MergedGeoLF.qs", 
+  "irp5_CopiedLocMuniFromGeoLoc.qs", 
+  "irp5_RevReports.qs", 
+  "ObPattern.qs",
+  "irp5Clean.qs", 
+  "irp5.qs",
+  "irp5a.qs",
+  "MeanStdNOfEmployment.tsv"
+)
+for (ff in FilesToCopy)
+  file.copy(
+           from = paste0(pathdata,      ff)
+    ,        to = paste0(pathsaveddata, ff)
+    , overwrite = T
+    )
+```
+

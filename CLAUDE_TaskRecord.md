@@ -418,3 +418,53 @@ TrueTaxYear / fiscal-year convention resolved via web check:
 
 **Next:** resolve DateStart-vs-DateEnd anchor in L664; then IRP5HHI.rmd L790
 xlim fix.
+
+**Session 17 Cedar Lark | 2026-07-02 16:21-21:40 JST**
+
+Full review + fix pass across all 4 files (Condense/HHI/Merge/Impacts, items
+A1-A9, B1-B2, C1-C2, D1-D2 — see CLAUDE_CHANGES.md and CLAUDE_StandingIssues.md
+for the complete list). All chunks parse-checked clean but not yet run.
+
+**Still open / carried forward:**
+* IRP5HHI.rmd L790 xlim `c(1,100)` fix — not yet applied
+* IRP5Condense.rmd L664 DateStart-vs-DateEnd anchor — not yet resolved
+* IRP5Impacts.rmd ~L657 prose ("more than 3000") vs code (`abs(dJobsMP) > 2000`)
+  — not reconciled, left for user
+* IRP5HHI.rmd L1063 inverted `exists()` guard — live again (user reverted
+  Session 15 fix when dropping FAD in-RAM accumulation)
+* IRP5HHI.rmd L289-326 FinYr20yr still dead (never wired into count filters)
+
+**Next:** full pipeline re-run required before quoting any results — the
+`DropThisForRev` per-person update join changes the panel, so the 9.0204%
+figure, `irp5_RevReports.qs`, and everything downstream need regeneration.
+Then: L790 xlim fix, L664 anchor decision, L657 prose reconciliation.
+
+**Session 17 Cedar Lark (log write-up + scan summary) | 2026-07-03**
+
+Promoted the full Session 13-17 sandbox backlog to canonical format across
+`CLAUDE_LOG.md`/`CLAUDE_CHANGES.md`/`CLAUDE_StandingIssues.md` (same treatment
+done for GUK in parallel). Wrote and rendered a scan-summary deliverable:
+
+* `.claude/.scratch/Session17_MinWageScanSummary.qmd` / `.html` — 18 findings
+  across all 4 files, each backed by a live-code-read chunk or a synthetic
+  repro (no production IRP5/CIT data available on this machine)
+* Status: 13 Fixed, 3 Open (`TrueTaxYear` anchor; HHI `exists()` guard reverted
+  live again; dead `FinYr20yr`), 2 Fixed-but-unverified pending pipeline re-run
+  (`DropThisForRev`, `DESS`/`DESSw`)
+
+**Next:** same as above (L790 xlim, L664 anchor, L657 prose) plus the pipeline
+re-run; no new work items introduced by the summary itself.
+
+**Session 19 Moss Plover | 2026-07-07**
+
+Completed this session:
+* signature-check rule + 4 process rules added to feedback_debug_rule.md (enumerate completely; check StandingIssues before flagging; latent-vs-live by eval status; verify states)
+* 18 qsave use_alt_rep calls fixed (IRP5Condense.rmd 16, IRP5MergeData.rmd 2) — qread-only arg, qs 0.27.3
+* IRP5HHI.rmd: chronological setkey before job-overlap shifts (L215), irp5msk masked display (L999), FA plot xlim c(0,1) (L810 — closes Session 4 "Bug 1" above)
+* IRP5Impacts.rmd: outlier exclusion idiom (L337), HHI comment swap (L1119/1132)
+* Session19_MinWageScanSummary + Session19_MinWageScanExplained (qmd+html) in .claude/.scratch; scanner scan_signatures.R reusable for future signature scans
+
+Pick up next:
+* server pipeline re-run — the setkey fix changes DJobDurationMonth/TDurationMonth values; verify FA outputs after
+* open items: latent syntax errors in 4 archival eval=F files (fix on touch or mark ARCHIVAL), C1-C7 minor/dead/fragile, D1 feols loop refactor when next editing IRP5Impacts.rmd
+* B1 (dropthese), B5 (ExistedBefore2013 levels), D2 (ALTREP round trips) confirmed intentional — do not re-flag

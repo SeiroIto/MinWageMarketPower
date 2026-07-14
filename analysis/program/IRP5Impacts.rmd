@@ -23,7 +23,10 @@ output:
   /* border: 1px solid yellow; */
   /* font-weight: bold; */
 }
-#### Default height of a block
+/* CLAUDE tpo: 2026-07-12 was a '####' line — not CSS; the parser folded it
+   into the selector and silently dropped this whole pre rule (same fix as
+   IRP5HHI.rmd S20-4) */
+/* Default height of a block */
 pre {
   max-height: 700px;
   overflow-y: auto;
@@ -126,19 +129,28 @@ print(Lf[num == 1L, ][,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear])
+#### CLAUDE fix: 2026-07-13 (Session 9 item "threshold uses base-year HHI
+####   constant"): median(HHI0[taxyear == 2012]) was the median of base-year
+####   HHI constants evaluated on 2012 cross-section rows (mostly 2013 HHI),
+####   not of actual 2012 market HHI. True 2012 threshold from the HHI panel.
+LSMa <- qread(paste0(pathsaveddata, "HHIAgriRowsMainPlaceLevel.qs"),
+  nthreads = DTThreads, use_alt_rep = TRUE)
+thr2012 <- median(LSMa[taxyear == 2012, HHI], na.rm = TRUE)
+rm(LSMa); gc()
 #### HHI grouping (first year)
 Lf[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
-  HHILevel0 := "Below"]
-Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
-  HHILevel0 := "Above"]
-Lf[, HHILevel0 := factor(HHILevel0)]
+#### CLAUDE dea: 2026-07-13 (Session 9 item): HHILevel0 was never used in a
+####   feols call, and inside the regression sample (ExistedBefore2013==1L)
+####   it equals HHILevel identically. Removed; HHI0 kept for descriptives.
+#### Lf[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T),
+####   HHILevel0 := "Below"]
+#### Lf[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),
+####   HHILevel0 := "Above"]
+#### Lf[, HHILevel0 := factor(HHILevel0)]
 #### HHI grouping (pre-2013)
 Lf[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
-Lf[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
-  HHILevel := "Below"]
-Lf[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
-  HHILevel := "Above"]
+Lf[Pre2013HHI <= thr2012, HHILevel := "Below"]
+Lf[Pre2013HHI >  thr2012, HHILevel := "Above"]
 Lf[, HHILevel := factor(HHILevel)]
 #### FAclass
 #### FAMP0 is first year FAMP of each establishment
@@ -334,8 +346,13 @@ DesTblBy <- c(
 write.tablev(DesTblBy, paste0(pathresults, "rJobsHHIFAclassByYear.tex"))
 qsave(DesDTBy, paste0(pathresults, "rJobsHHIFAclassByYear.qs"))
 #### plot rJobsMP after dropping outliers
+#### CLAUDE tpo: intersect() kept any establishment with at least one
+####   moderate row, so its extreme rows were still plotted; use the
+####   exclusion idiom of the winsorize block below
+#### lfdata.dropped <- lfdata[
+####   EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
 lfdata.dropped <- lfdata[
-  EstID %in% intersect(EstID[abs(rJobsMP) < 200], EstID[dJobsMP > -1000]), ]
+  !(EstID %in% EstID[abs(rJobsMP) >= 200 | dJobsMP <= -1000]), ]
 rbind(
   lfdata = dim(lfdata),
   dropped = dim(lfdata.dropped)
@@ -389,9 +406,11 @@ gMean <- ggplot(data=
     .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .3), 
-    stat = "identity", width = .01) +
+  #### CLAUDE com: 2026-07-13 width is not a geom_pointrange parameter
+  ####   (silently swallowed by ... with a runtime warning); removed.
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
+    position = position_dodge(width = .3),
+    stat = "identity") +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
   labs(title = "Mean job change rates by FA class") + 
@@ -465,9 +484,11 @@ mjb <- rbindlist(meanjbdat)
 gmjb <- ggplot(data=mjb, 
     aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
       fill = FAclass, colour = FAclass)) +
-  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .3), 
-    stat = "identity", width = .01) +
+  #### CLAUDE com: 2026-07-13 width is not a geom_pointrange parameter
+  ####   (silently swallowed by ... with a runtime warning); removed.
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
+    position = position_dodge(width = .3),
+    stat = "identity") +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
   labs(title = "Mean job change rates by FA class and by industry") + 
@@ -515,43 +536,31 @@ for (Jb in c(2, 10)) {
 
 
     library(fixest)
-    esLfYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfYr)
-    esLfCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCYr)
-    esLfCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr)
-    #### Subsample: High and low concentrated markets
-    esLfCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr)
-    esLfCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr)
-    #### Subsample: FAclass
-    esLfCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("low", FAclass), ])
-    esLfCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("mid", FAclass), ])
-    esLfCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("hi", FAclass), ])
-    library(ggfixest)
-    eslistYr <-  list(
-        "All sample"                               = esLfYr
-      , "Complete panel"                           = esLfCYr
-      , "Existed firms, all sample"                = esLfCEYr
-      , "Existed firms, high concentrated markets" = esLfCEaYr
-      , "Existed firms, low concentrated markets"  = esLfCEbYr
-      , "Existed firms, low FA"                    = esLfCEYrLow
-      , "Existed firms, mid FA"                    = esLfCEYrMid
-      , "Existed firms, high FA"                   = esLfCEYrHigh
+    #### CLAUDE spl: 2026-07-13 (Session 19 D1): 8 near-identical feols()
+    ####   calls folded into one loop over a named list of data subsets --
+    ####   same formula/vcov/data, list order unchanged (downstream ggiplot/
+    ####   etable index by position). Removes the copy-paste channel that
+    ####   produced the S19-6 label swaps. Originals in git history.
+    subsetsYr <- list(
+        "All sample"                               = LfYr
+      , "Complete panel"                           = LfCYr
+      , "Existed firms, all sample"                = LfCEYr
+      , "Existed firms, high concentrated markets" = LfCEaYr
+      , "Existed firms, low concentrated markets"  = LfCEbYr
+      , "Existed firms, low FA"                    = LfCEYr[grepl("low", FAclass), ]
+      , "Existed firms, mid FA"                    = LfCEYr[grepl("mid", FAclass), ]
+      , "Existed firms, high FA"                   = LfCEYr[grepl("hi", FAclass), ]
     )
+    eslistYr <- vector("list", length(subsetsYr))
+    names(eslistYr) <- names(subsetsYr)
+    for (k in seq_along(subsetsYr))
+      eslistYr[[k]] <- feols(
+        rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012) |
+          taxyear + taxrefno + busmainplc_geo,
+        vcov = ~ taxyear + busmainplc_geo,
+        data = subsetsYr[[k]])
+    rm(subsetsYr)
+    library(ggfixest)
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
       , "FAMP0"          = "Fraction affected in the taxyear 2012"
@@ -653,7 +662,7 @@ Some entries show wild swings in the number of jobs between contiguous years at 
 
 * For more than 600% (mean of raw rate of change) with a condition that baseline job size is more than 500
    * Number of observations does not change when baseline job size is reduced (so the scope is expanded) to more than 200
-* By more than 3000
+* By more than 2000 <!-- CLAUDE com: 2026-07-13 text said 3000; code uses abs(dJobsMP) > 2000 (S19 note) -->
 
 
 
@@ -691,7 +700,8 @@ Lf[, Pre2013Size := factor(Pre2013Size,
   levels = c("micro", "small", "medium", "large"))]
 #### Winsorization
 #### Establishments with abs(dJobsMP) > 2000 or 
-#### abs(rJobsMP) > 2 & JobsMP0 > 500 are dropped
+#### abs(rJobsMP) > 6 & JobsMP0 > 500 are dropped
+#### CLAUDE com: 2026-07-02 comment said "> 2"; code uses abs(rJobsMP) > 6 (= 600%).
 Lfw <- Lf[
  num == 1L & 
  !(EstID %in% EstID[
@@ -706,19 +716,26 @@ Lfw[,
          Micro = sum(JobsMP0>0 & JobsMP0<10, na.rm = T)
     , NotMicro = sum(JobsMP0>=10, na.rm = T)
   ), by = taxyear]
+#### CLAUDE fix: 2026-07-13 same true-2012 threshold as the unwinsorized
+####   chunk; thr2012 is computed there (this chunk always runs after it).
+if (!exists("thr2012")) {
+  LSMa <- qread(paste0(pathsaveddata, "HHIAgriRowsMainPlaceLevel.qs"),
+    nthreads = DTThreads, use_alt_rep = TRUE)
+  thr2012 <- median(LSMa[taxyear == 2012, HHI], na.rm = TRUE)
+  rm(LSMa); gc()
+}
 #### HHI grouping (first year)
 Lfw[, HHI0 := HHI[!is.na(HHI)][1], by = EstID]
-Lfw[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T), 
-  HHILevel0 := "Below"]
-Lfw[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),  
-  HHILevel0 := "Above"]
-Lfw[, HHILevel0 := factor(HHILevel0)]
+#### CLAUDE dea: 2026-07-13 HHILevel0 removed, as in the unwinsorized chunk.
+#### Lfw[HHI0 <= median(HHI0[taxyear == 2012], na.rm = T),
+####   HHILevel0 := "Below"]
+#### Lfw[HHI0 > median(HHI0[taxyear == 2012], na.rm = T),
+####   HHILevel0 := "Above"]
+#### Lfw[, HHILevel0 := factor(HHILevel0)]
 #### HHI grouping (pre-2013)
 Lfw[, Pre2013HHI := HHI[!is.na(HHI) & taxyear < 2013][1], by = EstID]
-Lfw[Pre2013HHI <= median(HHI0[taxyear == 2012], na.rm = T), 
-  HHILevel := "Below"]
-Lfw[Pre2013HHI > median(HHI0[taxyear == 2012], na.rm = T),  
-  HHILevel := "Above"]
+Lfw[Pre2013HHI <= thr2012, HHILevel := "Below"]
+Lfw[Pre2013HHI >  thr2012, HHILevel := "Above"]
 Lfw[, HHILevel := factor(HHILevel)]
 DESSw <- vector(length = 2, mode = "list")
 names(DESSw) <- c("02", "10")
@@ -789,7 +806,11 @@ for (jj in 1:length(Jbs)) {
     des1 <- data.table(rn=rownames(des1), des1)
     des2 <- data.table(rn=rownames(des2), des2)
     dess  <- rbind(des1, des2)
-    DESS[[yy]][[jj]] <- dess
+    #### CLAUDE tpo: 2026-07-02 dess landed in DESS, the UNwinsorized
+    ####   object, so DESSw.qs was saved as a list of NULLs and DESS was
+    ####   silently overwritten in memory. This chunk must fill DESSw.
+    #### DESS[[yy]][[jj]] <- dess
+    DESSw[[yy]][[jj]] <- dess
     #### LaTeX tables
     ltb1 <- latextab.simple(as.matrix(des1), 
       hcenter = c(8, rep(.8, 5), rep(.6, 2), .5, .3, .5), 
@@ -827,7 +848,13 @@ Destatw201002
 ```
 
 ```{r examining winsorized estimation data}
-lfwdata <- unique(LfwC[taxyear >= 2010, 
+#### CLAUDE com: 2026-07-13 LfwC in memory at this point is the LAST loop
+####   iteration (Jb = 10 cutoff), while the unwinsorized twin chunk
+####   {show estimation data} explicitly re-reads the Jb = 02 sample
+####   (LfC201002.qs). Mirror that here so the two descriptive/plot
+####   sections compare the same cutoff.
+LfwC <- qread(paste0(pathdata, "LfwC201002.qs"), use_alt_rep = TRUE)
+lfwdata <- unique(LfwC[taxyear >= 2010,
  .(busdistmuni_geo, buslocmuni_geo, 
    busmainplc_geo, taxrefno, EstID, taxyear, 
    Crop, Animal, Forest,
@@ -929,9 +956,11 @@ gMeanw <- ggplot(data=
     .(taxyear, FAclass, MeanrJobsMP, MeanrJobsMP.lb, MeanrJobsMP.ub)]), 
   aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
     fill = FAclass, colour = FAclass)) +
-  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .3), 
-    stat = "identity", width = .01) +
+  #### CLAUDE com: 2026-07-13 width is not a geom_pointrange parameter
+  ####   (silently swallowed by ... with a runtime warning); removed.
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
+    position = position_dodge(width = .3),
+    stat = "identity") +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
   labs(title = "Mean job change rates by FA class") + 
@@ -1005,9 +1034,11 @@ mjbw <- rbindlist(meanjbwdat)
 gmjbw <- ggplot(data=mjbw, 
     aes(x = taxyear, y = MeanrJobsMP, group = FAclass, shape = FAclass,
       fill = FAclass, colour = FAclass)) +
-  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub), 
-    position = position_dodge(width = .3), 
-    stat = "identity", width = .01) +
+  #### CLAUDE com: 2026-07-13 width is not a geom_pointrange parameter
+  ####   (silently swallowed by ... with a runtime warning); removed.
+  geom_pointrange(aes(ymin = MeanrJobsMP.lb, ymax = MeanrJobsMP.ub),
+    position = position_dodge(width = .3),
+    stat = "identity") +
   scale_y_continuous() + 
   scale_x_continuous(breaks = 2010:2022) + 
   labs(title = "Mean job change rates by FA class and by industry") + 
@@ -1062,105 +1093,58 @@ for (Jb in c(2, 10)) {
       use_alt_rep = TRUE)
     LfCEaYr  <- qread(paste0(pathdata, "LfwCEa",  Yr, Jb, ".qs"),
       use_alt_rep = TRUE)
-    LfCEmiYr <- qread(paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"),
-      use_alt_rep = TRUE)
-    LfCEsmYr <- qread(paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"),
-      use_alt_rep = TRUE)
-    LfCEmeYr <- qread(paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"),
-      use_alt_rep = TRUE)
-    LfCElaYr <- qread(paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"),
-      use_alt_rep = TRUE)
+    #### CLAUDE dea: 2026-07-13 these four were read but never used -- the
+    ####   size-subsample estimations below subset LfCEYr with grepl() on
+    ####   Pre2013Size (equivalent rows) instead of the saved LfwCE{mi,sm,
+    ####   me,la} files. Reads dropped.
+    #### LfCEmiYr <- qread(paste0(pathdata, "LfwCEmi", Yr, Jb, ".qs"),
+    ####   use_alt_rep = TRUE)
+    #### LfCEsmYr <- qread(paste0(pathdata, "LfwCEsm", Yr, Jb, ".qs"),
+    ####   use_alt_rep = TRUE)
+    #### LfCEmeYr <- qread(paste0(pathdata, "LfwCEme", Yr, Jb, ".qs"),
+    ####   use_alt_rep = TRUE)
+    #### LfCElaYr <- qread(paste0(pathdata, "LfwCEla", Yr, Jb, ".qs"),
+    ####   use_alt_rep = TRUE)
     library(fixest)
-    esLfwYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfYr)
-    esLfwCYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCYr)
-    esLfwCEYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr)
-    #### Subsample: High and low concentrated markets
-    esLfwCEaYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr)
-    esLfwCEbYr <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr)
-    #### Subsample: FAclass
-    esLfwCEYrLow <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("low", FAclass), ])
-    esLfwCEYrMid <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("mid", FAclass), ])
-    esLfwCEYrHigh <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("hi", FAclass), ])
-    #### Subsample: Size
-    esLfwCEYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("mi", Pre2013Size), ])
-    esLfwCEYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("sm", Pre2013Size), ])
-    esLfwCEYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("me", Pre2013Size), ])
-    esLfwCEYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEYr[grepl("la", Pre2013Size), ])
-    #### Subsample: Size*HHI
-    #### low HHI*Size
-    esLfwCEaYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("mi", Pre2013Size), ])
-    esLfwCEaYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("sm", Pre2013Size), ])
-    esLfwCEaYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("me", Pre2013Size), ])
-    esLfwCEaYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEaYr[grepl("la", Pre2013Size), ])
-    #### high HHI*Size
-    esLfwCEbYrmi <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr[grepl("mi", Pre2013Size), ])
-    esLfwCEbYrsm <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr[grepl("sm", Pre2013Size), ])
-    esLfwCEbYrme <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr[grepl("me", Pre2013Size), ])
-    esLfwCEbYrla <- feols(rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012)|taxyear + taxrefno + busmainplc_geo, 
-      vcov = ~ taxyear + busmainplc_geo,
-      data = LfCEbYr[grepl("la", Pre2013Size), ])
-    library(ggfixest)
-    #### List all estimation variations
-    eslistYrw <-  list(
-        "All sample"                               = esLfwYr       #  1
-      , "Complete panel"                           = esLfwCYr      #  2
-      , "Existed firms, all sample"                = esLfwCEYr     #  3
-      , "Existed firms, high concentrated markets" = esLfwCEaYr    #  4
-      , "Existed firms, low concentrated markets"  = esLfwCEbYr    #  5
-      , "Existed firms, low FA"                    = esLfwCEYrLow  #  6
-      , "Existed firms, mid FA"                    = esLfwCEYrMid  #  7
-      , "Existed firms, high FA"                   = esLfwCEYrHigh #  8
-      , "Existed firms, micro size"                = esLfwCEYrmi   #  9
-      , "Existed firms, small size"                = esLfwCEYrsm   # 10
-      , "Existed firms, medium size"               = esLfwCEYrme   # 11
-      , "Existed firms, large size"                = esLfwCEYrla   # 12
-      , "Existed firms, high HHI and micro size"   = esLfwCEaYrmi  # 13
-      , "Existed firms, high HHI and small size"   = esLfwCEaYrsm  # 14
-      , "Existed firms, high HHI and medium size"  = esLfwCEaYrme  # 15
-      , "Existed firms, high HHI and large size"   = esLfwCEaYrla  # 16
-      , "Existed firms, low HHI and micro size"    = esLfwCEbYrmi  # 17
-      , "Existed firms, low HHI and small size"    = esLfwCEbYrsm  # 18
-      , "Existed firms, low HHI and medium size"   = esLfwCEbYrme  # 19
-      , "Existed firms, low HHI and large size"    = esLfwCEbYrla  # 20
+    #### CLAUDE spl: 2026-07-13 (Session 19 D1): 20 near-identical feols()
+    ####   calls folded into one loop over a named list of data subsets --
+    ####   same formula/vcov/data, list order unchanged (EstSpecs below
+    ####   indexes by position: All 1:8, HHI 3:5, FAclass c(3,6:8),
+    ####   Size c(3,9:12), SizeHHI c(3,13:20)). CEa = above-median HHI
+    ####   (high concentration), CEb = below-median. Originals in git
+    ####   history.
+    subsetsYrw <- list(
+        "All sample"                               = LfYr                              #  1
+      , "Complete panel"                           = LfCYr                             #  2
+      , "Existed firms, all sample"                = LfCEYr                            #  3
+      , "Existed firms, high concentrated markets" = LfCEaYr                           #  4
+      , "Existed firms, low concentrated markets"  = LfCEbYr                           #  5
+      , "Existed firms, low FA"                    = LfCEYr[grepl("low", FAclass), ]   #  6
+      , "Existed firms, mid FA"                    = LfCEYr[grepl("mid", FAclass), ]   #  7
+      , "Existed firms, high FA"                   = LfCEYr[grepl("hi", FAclass), ]    #  8
+      , "Existed firms, micro size"                = LfCEYr[grepl("mi", Pre2013Size), ]  #  9
+      , "Existed firms, small size"                = LfCEYr[grepl("sm", Pre2013Size), ]  # 10
+      , "Existed firms, medium size"               = LfCEYr[grepl("me", Pre2013Size), ]  # 11
+      , "Existed firms, large size"                = LfCEYr[grepl("la", Pre2013Size), ]  # 12
+      , "Existed firms, high HHI and micro size"   = LfCEaYr[grepl("mi", Pre2013Size), ] # 13
+      , "Existed firms, high HHI and small size"   = LfCEaYr[grepl("sm", Pre2013Size), ] # 14
+      , "Existed firms, high HHI and medium size"  = LfCEaYr[grepl("me", Pre2013Size), ] # 15
+      , "Existed firms, high HHI and large size"   = LfCEaYr[grepl("la", Pre2013Size), ] # 16
+      , "Existed firms, low HHI and micro size"    = LfCEbYr[grepl("mi", Pre2013Size), ] # 17
+      , "Existed firms, low HHI and small size"    = LfCEbYr[grepl("sm", Pre2013Size), ] # 18
+      , "Existed firms, low HHI and medium size"   = LfCEbYr[grepl("me", Pre2013Size), ] # 19
+      , "Existed firms, low HHI and large size"    = LfCEbYr[grepl("la", Pre2013Size), ] # 20
     )
+    eslistYrw <- vector("list", length(subsetsYrw))
+    names(eslistYrw) <- names(subsetsYrw)
+    for (k in seq_along(subsetsYrw))
+      eslistYrw[[k]] <- feols(
+        rJobsMP ~ i(taxyear, Pre2013FAMP0, ref = 2012) |
+          taxyear + taxrefno + busmainplc_geo,
+        vcov = ~ taxyear + busmainplc_geo,
+        data = subsetsYrw[[k]])
+    rm(subsetsYrw)
+    library(ggfixest)
     dictvec <- c(
         "JobsMP"         = "Number of jobs at the establishment"
       , "FAMP0"          = "Fraction affected in the taxyear 2012"

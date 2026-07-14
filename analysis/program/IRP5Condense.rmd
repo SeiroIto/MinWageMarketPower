@@ -1,5 +1,5 @@
 ---
-title: "Construct IRP5 panel"
+title: "Construct IRP5 panel — speed refactor (IRP5Condense2)"
 date: "`{r} format(Sys.time(), "%Y %b %d %R")`"
 output: 
   litedown::html_format:
@@ -7,8 +7,16 @@ output:
       css: ["MyCSS.css", "@default", "@tabsets", "@copy-button"]
       js: ["@sidenotes", "@appendix", "@tabsets", "@copy-button"]
 #### output: html_document
-#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5Condense.rmd"))
+#### path <- "W:/epguest/seiro_ito/"; RunSep <- F; litedown::fuse(paste0(path, "outfiles/2026 01 23/IRP5Condense2.rmd"))
 ---
+
+<!-- IRP5Condense2.rmd: speed refactor of IRP5Condense.rmd (2026-07-13, Session
+21). Same pipeline, same chunk structure, same output files. Value-identical
+except the ARBITRARY integer ID labels (EstabIDTx, EstabID, FirmIDTx, FirmID,
+UIndID, FirmUInd, Corp, UInd): .GRP first-appearance numbers replace
+alphabetical factor codes -- the IDs are regenerated and joined only within a
+run, and NA-containing tuples no longer collide with literal "NA" strings.
+Every change is tagged "CLAUDE eff: 2026-07-13". -->
 
 #  Read IRP5_20yr_cleaned.dta (ver 5 beta) and save by year
 
@@ -147,8 +155,11 @@ for (yr in 8:22) {
     totalperiodsworked, totalperiodsinyearofassessment,
     #### a3601_income: basic salary
     Num, kerr_income, ptrs_income, a3601_income)]
-  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = DTThreads,
-    use_alt_rep = TRUE)
+  #### CLAUDE tpo: 2026-07-07 use_alt_rep is qread-only (qs 0.27.3);
+  ####   qsave() has no such arg -> unused argument error
+  #### qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = DTThreads,
+  ####   use_alt_rep = TRUE)
+  qsave(irp5yr, paste0(pathdata, "irp5", yr, ".qs"), nthreads = DTThreads)
 }
 ```
 
@@ -170,10 +181,13 @@ for (ii in c(1:3, 5))
     as.integer(uniqueN(get(paste0("imp_mic_sic7_", ii, "d")))), 
     by = taxrefno]
 table(indNoNA[, change3d])
-qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
-qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+#### qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(ind, paste0(pathdata, "IndustryCodeFromCIT.qs"), nthreads = DTThreads)
+qsave(indNoNA, paste0(pathdata, "IndustryCodeFromCIT_NoNAs.qs"), nthreads = DTThreads)
 ```
 
 # Create irp5 panel
@@ -208,9 +222,13 @@ irp5pnl[, Num := as.integer(.N), by = .(busprov_geo,
 ####   b. Compute the shares of each firms including "gov entity" thence HHI
 irp5pnl[, Txrf := taxrefno]
 #### Note: GovEntity has taxrefno == "" or NULL, so omit from unique operation below
-irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Txrf := "GovEntity"]
+#### CLAUDE eff: 2026-07-13 fixed=TRUE skips the regex engine, and the row
+####   flag is computed once for the two assignments. Same rows flagged.
+iiGov <- irp5pnl[, grepl("NULL", taxrefno, fixed = TRUE) | taxrefno == "" | is.na(taxrefno)]
+irp5pnl[iiGov, Txrf := "GovEntity"]
 irp5pnl[, Entity := "private"]
-irp5pnl[grepl("NULL", taxrefno) | taxrefno == "" | is.na(taxrefno), Entity := "gov"]
+irp5pnl[iiGov, Entity := "gov"]
+rm(iiGov)
 irp5pnl[, Entity := factor(Entity, levels = c("private", "gov"))]
 geovars <- grepout("^bus.*geo$", colnames(irp5pnl))
 #### Below takes about 2 hours (with as.IDate)!!!: Start  ###
@@ -218,7 +236,15 @@ library(fasttime)
 #### library(anytime)  #### for DOB, fasttime works only for year > 1970
 irp5pnl[, DateStart := fastPOSIXct(periodemployedfrom, NULL, 3L)]
 irp5pnl[, DateEnd   := fastPOSIXct(periodemployedto,   NULL, 3L)]
-irp5pnl[, DateBirth := as.IDate(dateofbirth)]
+#### CLAUDE eff: 2026-07-13 as.IDate parsed every one of ~200M elements
+####   (the "2 hours" noted above); distinct birthdates number only in the
+####   tens of thousands. Convert unique values once, map back by update
+####   join. Values identical.
+#### irp5pnl[, DateBirth := as.IDate(dateofbirth)]
+ubd <- unique(irp5pnl[, .(dateofbirth)])
+ubd[, DateBirth := as.IDate(dateofbirth)]
+irp5pnl[ubd, DateBirth := i.DateBirth, on = "dateofbirth"]
+rm(ubd)
 irp5pnl[!is.na(DateStart), 
   .(DateStart, periodemployedfrom, DateEnd, periodemployedto, 
   DateBirth, dateofbirth)][1:20, ]
@@ -307,8 +333,22 @@ irp14[num == 1L & grepl("A", NatureOfPer),
 
 ```{r correcting information of IRP panel}
 #| attr.source = '.r .line-numbers',
-irp5pnl[UID %in% UID[grepl("^A$", natureofperson)], 
-  NatureOfPer := "A"]
+#### CLAUDE com: 2026-07-13 (S19 item "316 vs 350 regex inconsistency"):
+####   unified to the LOOSE grepl("A", ...) that has always governed the
+####   pipeline filter (the "^A$" here fed only the JobTotal display below;
+####   NatureOfPer is rebuilt from scratch at the "ZZ" block). Behavior-
+####   preserving. The diagnostic print surfaces the actual value set on the
+####   next server run -- if values are exactly single letters, loose and
+####   exact are identical; if not, revisit BOTH sites together.
+print(table0(irp5pnl$natureofperson))
+#### irp5pnl[UID %in% UID[grepl("^A$", natureofperson)],
+####   NatureOfPer := "A"]
+#### CLAUDE eff: 2026-07-13 UID %in% UID[...] hashes a duplicate-laden
+####   ~150M-element vector; unique() the matching persons, assign by update
+####   join. fixed=TRUE skips the regex engine. Same rows flagged.
+uidA <- unique(irp5pnl[grepl("A", natureofperson, fixed = TRUE), .(UID)])
+irp5pnl[uidA, NatureOfPer := "A", on = "UID"]
+rm(uidA)
 irp5pnl[, num := 1:.N, by = c(geovars, "taxrefno", "taxyear")]
 irp5pnl[num == 1L & grepl("A", NatureOfPer), 
   .(JobTotal = sum(Num, na.rm = T)), by = taxyear]
@@ -341,11 +381,18 @@ irp5pnl[ is.na(uid) & !is.na(UID), uid := UID]
 irp5pnl[!is.na(uid) &  is.na(UID), UID := uid]
 #### Copy natureofperson across years for same uid
 irp5pnl[, NatureOfPer := "ZZ"]
-irp5pnl[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
-qsave(irp5pnl, 
-  paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"), 
-  nthreads = DTThreads,
-    use_alt_rep = TRUE)
+#### CLAUDE eff: 2026-07-13 same update-join + fixed=TRUE rewrite as above.
+uidA <- unique(irp5pnl[grepl("A", natureofperson, fixed = TRUE), .(uid)])
+irp5pnl[uidA, NatureOfPer := "A", on = "uid"]
+rm(uidA)
+#### CLAUDE tpo:
+#### qsave(irp5pnl,
+####   paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"),
+####   nthreads = DTThreads,
+####     use_alt_rep = TRUE)
+qsave(irp5pnl,
+  paste0(pathdata, "irp5_BeforeDroppingRepetitiveUIDs.qs"),
+  nthreads = DTThreads)
 ```
 
 ```{r merge industry code}
@@ -365,8 +412,10 @@ irp5i <- indFirstYear[irp5, on = "taxrefno"]
 setcolorder(irp5i, c("busprov_geo", "busdistmuni_geo", "buslocmuni_geo", 
   "busmainplc_geo", "taxrefno", "Txrf", "uid", "UID", "gender",
   grepout("Date", colnames(irp5i))))  
-qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(irp5i, paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"), nthreads = DTThreads)
 ```
 
 ```{r copy ipr5pnl irp5i to saveddata, eval = F}
@@ -409,14 +458,18 @@ setnames(geodat,
 )
 geodat[, taxyear := as.integer(taxyear)]
 geoloc <- geodat[taxyear==2015, ]
-qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(geoloc, paste0(pathdata, "GeoLocFile.qs"), nthreads = DTThreads)
 geodat[, HaveInfo := 0L]
 geodat[(Bus_adr_Geo_Munic != "" & !is.na(Bus_adr_Geo_Munic)), 
   HaveInfo := 1L]
 table(geodat[, .(HaveInfo, taxyear)], useNA = "ifany")
-qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(geodat, paste0(pathdata, "GeoLocationFile.qs"), nthreads = DTThreads)
 ```
 
 ```{r smallirp5}
@@ -432,11 +485,15 @@ if (RunSep || length(ls(pattern="^irp5i"))==0)
   irp5i <- qread(paste0(pathdata, "irp5_WithRepetetiveUIDs.qs"),
     nthreads = DTThreads, use_alt_rep = TRUE)
 #### smallirp5 <- irp5i[grepl("A", NatureOfPer), .(taxrefno, payereferenceno)]
-smallirp5 <- unique(irp5i[grepl("A", NatureOfPer), 
+smallirp5 <- unique(irp5i[grepl("A", NatureOfPer),
   c(geovars, "taxrefno", "irp5it3aid"), with = F])
-smallirp5 <- smallirp5[!duplicated(smallirp5), ]
-qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE dea: 2026-07-13 (S19 item): unique() above already deduplicates;
+####   this second pass was a no-op.
+#### smallirp5 <- smallirp5[!duplicated(smallirp5), ]
+#### CLAUDE tpo:
+#### qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(smallirp5, paste0(pathdata, "smallIRP5.qs"), nthreads = DTThreads)
 ```
 
 ```{r GeoLF}
@@ -455,8 +512,10 @@ if (RunSep || length(ls(pattern="smalli"))==0)
 setkey(geoloc, irp5it3aid)
 setkey(smallirp5, irp5it3aid)
 GeoLF <- smallirp5[geoloc, on = "irp5it3aid"]
-qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(GeoLF, paste0(pathdata, "GeoLF.qs"), nthreads = DTThreads)
 ```
 
 ```{r copy GeoXX and derived files to saveddata, eval = F}
@@ -512,18 +571,36 @@ if (any(grepl("i.taxyear", colnames(irp5gi))))
 ####  nthreads = DTThreads)
 #### r copy 2015 location info
 #### CLAUDE msk: define anonymous ID columns; Corp/UInd used in all html display; taxrefno/uid retained for joins/filters only.
-irp5gi[, EstabIDTx := as.integer(factor(paste0(
-    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)))]
-irp5gi[, EstabID   := as.integer(factor(paste0(
-    busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)))]
-irp5gi[, FirmIDTx  := as.integer(factor(Txrf))]
-irp5gi[, FirmID    := as.integer(factor(taxrefno))]
-irp5gi[, UIndID    := as.integer(factor(uid))]
+#### CLAUDE frg: 2026-07-13 (S19 item): separator added -- separator-less
+####   paste0 lets different (geo, id) tuples collide ("AB"+"C" == "A"+"BC").
+####   Integer factor labels change, but both IDs are regenerated and joined
+####   only WITHIN a pipeline run (ObPattern join below uses them from the
+####   same lineage), so this requires the usual full re-run from Condense,
+####   nothing more. Matches the EstID fix in IRP5MergeData.rmd.
+#### irp5gi[, EstabIDTx := as.integer(factor(paste0(
+####     busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)))]
+#### irp5gi[, EstabID   := as.integer(factor(paste0(
+####     busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)))]
+#### CLAUDE eff: 2026-07-13 .GRP radix grouping replaces paste+factor: no
+####   200M-row string paste, no factor sort over millions of levels. IDs
+####   stay unique per tuple and collision-free without any separator; only
+####   the arbitrary integer labels change (first-appearance order instead
+####   of alphabetical), and NA tuples no longer merge with literal "NA".
+irp5gi[, EstabIDTx := .GRP,
+  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, Txrf)]
+irp5gi[, EstabID   := .GRP,
+  by = .(busdistmuni_geo, buslocmuni_geo, busmainplc_geo, taxrefno)]
+irp5gi[, FirmIDTx  := .GRP, by = Txrf]
+irp5gi[, FirmID    := .GRP, by = taxrefno]
+irp5gi[, UIndID    := .GRP, by = uid]
 irp5gi[, EUIndID   := paste(EstabIDTx, UIndID, sep = "-")]
 irp5gi[, Corp      := FirmID]
 irp5gi[, UInd      := UIndID]
-irp5gi[, FirmUInd := 0L]
-irp5gi[, FirmUInd := as.integer(factor(paste(taxrefno, uid, sep = "-")))]
+#### CLAUDE dea: 2026-07-13 (S19 item): dead initialisation, overwritten on
+####   the next line.
+#### irp5gi[, FirmUInd := 0L]
+#### CLAUDE eff: 2026-07-13 .GRP, as above.
+irp5gi[, FirmUInd := .GRP, by = .(taxrefno, uid)]
 irp5gi[, c("NoLocMuni", "CanFill", "ShouldFill") := 0L]
 irp5gi[buslocmuni_geo == "" | is.na(buslocmuni_geo),
   NoLocMuni := 1L]
@@ -596,17 +673,26 @@ print(LocMuniCanBeFilled)
 setnames(irp5gi, 
     c("buslocmuni_geo", "FillInLocMuni")
   , c("old_buslocmuni_geo", "buslocmuni_geo")) 
-qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = DTThreads,
-    use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+####   nthreads = DTThreads,
+####     use_alt_rep = TRUE)
+qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+  nthreads = DTThreads)
 ```
 
 
 ```{r copy Bus_adr_Geo_Munic, eval = F, echo = F}
-irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = DTThreads, use_alt_rep = TRUE)
-qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"), 
-  nthreads = DTThreads, use_alt_rep = TRUE)
+#### CLAUDE dea: 2026-07-13 (S19 item): the whole chunk read and rewrote the
+####   same file unchanged -- unlike the deliberate ALTREP round trips in
+####   IRP5HHI.rmd, nothing uses the re-read object. Body commented out.
+#### irp5gi <- qread(paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+####   nthreads = DTThreads, use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+####   nthreads = DTThreads, use_alt_rep = TRUE)
+#### qsave(irp5gi, paste0(pathdata, "irp5_CopiedLocMuniFromGeoLoc.qs"),
+####   nthreads = DTThreads)
 ```
 
 Copy location info
@@ -671,9 +757,19 @@ library(fasttime)
 irp5gi[, TYStart := fastPOSIXct(paste0(taxyear-1,   "/03/01"))]
 irp5gi[, TYEnd   := fastPOSIXct(paste0(taxyear, "/03/01"))]
 irp5gi[, TrueTaxYear := taxyear]
-#### Correct: DateStart (periodemployedfrom) and DateEnd (periodemployedto)
+#### CLAUDE com: 2026-07-03
+####   Anchor = DateEnd (periodemployedto), not DateStart. periodemployedto
+####   can never exceed end-Feb of the return's own filing year (annual
+####   return, Mar Y-1 - Feb Y coverage) - it is bounded within the correct
+####   fiscal window by construction. periodemployedfrom (DateStart) is not:
+####   for long-tenured employees "Entries of earlier jobs" (below) allows
+####   DateStart several years before the filing year, so applying this
+####   formula to DateStart would misclassify the record into an unrelated
+####   past year. DateEnd is therefore the only anchor that recovers which
+####   annual return a record actually belongs to.
+#### Correct: DateEnd (periodemployedto)
 ####   Wrong: taxyear (for revision entries that are filed in later years)
-#### Examples: DateStart
+#### Examples: DateEnd
 ####             taxyear,  year() month()>=3
 ####   Jan 2014:  2014  ,   2014      0      ==> 2014+0 = 2014
 ####   Mar 2014:  2015  ,   2014      1      ==> 2014+1 = 2015
@@ -681,7 +777,8 @@ irp5gi[, TrueTaxYear := taxyear]
 ####   Feb 2015:  2015  ,   2015      0      ==> 2015+0 = 2015
 #### Entries of earlier jobs: DateStart < TYStart & DateEnd < TYEnd
 irp5gi[DateStart < TYStart & DateEnd < TYEnd & (taxyear - year(DateStart) <= 5),
-####   TrueTaxYear := year(DateStart)] ## wrong
+####   TrueTaxYear := year(DateStart)] ## wrong: DateStart can be years
+####   before the filing year for long-tenured employees (see note above)
   TrueTaxYear := year(DateEnd) + as.integer(month(DateEnd) >= 3)]
 apply(table(irp5gi[TrueTaxYear != taxyear, .(TrueTaxYear, taxyear)]), 1, sum)
 ####    2003    2004    2005    2006    2007    2008    2009    2010    2011    2012 
@@ -857,8 +954,10 @@ irp5gir[
   (bmain15 != "" & !is.na(bmain15) & bmain15 != "EXCEPTION"),
   c("busmainplc_geo",  "MaiCopied", "LocInfoCopiedFrom") := .(bmain15, 1L, 2015L)
 ]
-qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(irp5gir, paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads)
 rm(irp5gi)
 gc()
 ```
@@ -872,8 +971,9 @@ ipyr <- qread(paste0(pathdata, "irp512.qs"), nthreads = DTThreads,
   use_alt_rep = TRUE)
 ipyr[, uid := gsub(" +$", "", UID)]
 #### CLAUDE msk: define Corp/UInd on ipyr (separate dataset; no Txrf-based IDs needed here).
-ipyr[, FirmID := as.integer(factor(taxrefno))]
-ipyr[, UIndID := as.integer(factor(uid))]
+#### CLAUDE eff: 2026-07-13 .GRP, as in the GeoLF chunk.
+ipyr[, FirmID := .GRP, by = taxrefno]
+ipyr[, UIndID := .GRP, by = uid]
 ipyr[, Corp   := FirmID]
 ipyr[, UInd   := UIndID]
 #### rm(ipyrs)
@@ -959,29 +1059,36 @@ table(dropthese[, .(UInd, Corp)])
 table(dropthese[, UInd])
 ####      CCCCCCCC CCCCCCCCCCCCC 
 ####           191          2341 
-qsave(dropthese, 
-  paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads,
-    use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(dropthese,
+####   paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads,
+####     use_alt_rep = TRUE)
+qsave(dropthese,
+  paste0(pathdata, "DroppedTheseRepetetiveIDs.qs"), nthreads = DTThreads)
 
 #### Keep only nature of person is "an individual"
 #### we did this: irp5[uid %in% uid[grepl("A", natureofperson)], NatureOfPer := "A"]
 #### irp5ir <- qread(paste0(pathdata, "irp5_RevReports.qs"), nthreads = DTThreads)
-addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson), 
-  NatureOf = grepl("A", NatureOfPer))]))
+addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson, fixed = TRUE),
+  NatureOf = grepl("A", NatureOfPer, fixed = TRUE))]))
 ####         NatureOf
 #### natureof      TRUE       Sum
 ####    FALSE  42731611  42731611  * 42M saved!!!
 ####    TRUE  132692587 132692587
 ####    Sum   175424198 175424198
-irp5gir <- irp5gir[grepl("A", NatureOfPer), ]
+#### CLAUDE eff: 2026-07-13 NatureOfPer is only "A"/"ZZ" by construction;
+####   plain equality beats grepl over 175M rows.
+irp5gir <- irp5gir[NatureOfPer == "A", ]
 #### repetetive UID
 irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
 c(nrow(irp5gir), nrow(irp5Clean))
 #### [1] 175424198 175176433
 #### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
 #### grepl("^Crop|^Fore", imp_mic_sic7_2d), ]
-qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads)
 ```
 
 Get observation pattern for individuals, establishments, firms: IObPattern, EObPattern, FObPattern
@@ -1199,20 +1306,32 @@ ObPattern <- idyrW[, c(
     "EstabIDTx", "EstabID", 
     "EUIndID", 
     "FObPattern", "EObPattern", "IObPattern"), with = F]
-qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(ObPattern, paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads)
 #### ObPattern <- qread(paste0(pathdata, "ObPattern.qs"), nthreads = DTThreads)
 #### CLAUDE eff: 2026-07-02 the two setkey() sorts were never used: the
 ####   join below picks its own columns via on=. Sorting 175M rows twice
 ####   cost minutes for nothing.
 #### setkey(irp5Clean, EUIndID); setkey(ObPattern, EUIndID)
 irp5 <- ObPattern[irp5Clean, on = c(geovars, "EstabIDTx", "EUIndID")]
-qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE tpo:
+#### qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(irp5, paste0(pathdata, "irp5.qs"), nthreads = DTThreads)
 #### Agriculture panel
-irp5a <- irp5[grepl("^Anim|^Plant pro|crops|Logging|forest", imp_mic_sic7_3d), ]
-qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads,
-  use_alt_rep = TRUE)
+#### CLAUDE eff: 2026-07-13 regex over 175M rows -> match the handful of
+####   unique industry labels once, then filter with %in% (hash join; works
+####   for character and factor alike). Same rows.
+uind <- unique(irp5$imp_mic_sic7_3d)
+uind <- uind[grepl("^Anim|^Plant pro|crops|Logging|forest", uind)]
+irp5a <- irp5[imp_mic_sic7_3d %in% uind, ]
+rm(uind)
+#### CLAUDE tpo:
+#### qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads,
+####   use_alt_rep = TRUE)
+qsave(irp5a, paste0(pathdata, "irp5a.qs"), nthreads = DTThreads)
 litedown::timing_data() 
 ```
 
