@@ -382,6 +382,8 @@ irp5pnl[!is.na(uid) &  is.na(UID), UID := uid]
 #### Copy natureofperson across years for same uid
 irp5pnl[, NatureOfPer := "ZZ"]
 #### CLAUDE eff: 2026-07-13 same update-join + fixed=TRUE rewrite as above.
+#### natureofper has "A" and "A " so grepl is the way to go
+#### and use NatureOfPer after this
 uidA <- unique(irp5pnl[grepl("A", natureofperson, fixed = TRUE), .(uid)])
 irp5pnl[uidA, NatureOfPer := "A", on = "uid"]
 rm(uidA)
@@ -1038,18 +1040,15 @@ ii <- 10
 #### ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
 ####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
 ####   order(uid, taxrefno), ]
-ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
-  .(busprov_geo, busmainplc_geo, Corp, UInd,
-    periodemployedfrom, periodemployedto, kerr_income)][
-  order(UInd, Corp), ]
-#### CLAUDE msk: original wrapped the assignment in `(...)` to print as a side-effect;
-####   `dropthese` is needed raw at the qsave below, so split into raw assign + masked display.
-#### (dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
-####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
-####   order(uid, taxrefno), ])
-#### table(dropthese[, .(uid, taxrefno)])
-#### table(dropthese[, uid])
-dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+#### CLAUDE bug: 2026-08-05 guard2 used dupuid (ALL dup uids), so it
+####   over-dropped legit workers with 2+ job records at heavy-use firms
+####   Fix: guard2 = repetetive (dup placeholder uids only, L1001); 
+####        taxrefno-side literal tb>10 -> tb>ii.
+#### dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
+####     periodemployedfrom, periodemployedto, kerr_income)][
+####   order(UInd, Corp), ]
+dropthese <- ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% repetetive,
   .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
     periodemployedfrom, periodemployedto, kerr_income)][
   order(UInd, Corp), ]
@@ -1080,7 +1079,11 @@ addmargins(table(irp5gir[, .(natureof = grepl("A", natureofperson, fixed = TRUE)
 ####   plain equality beats grepl over 175M rows.
 irp5gir <- irp5gir[NatureOfPer == "A", ]
 #### repetetive UID
-irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+#### CLAUDE bug: 2026-08-05 taxrefno-only drop removed the WHOLE firm, incl its
+####   non-duplicate (legit) uids. Anti-join on (taxrefno, uid) drops only the
+####   duplicated placeholder rows, retaining legit workers of affected firms.
+#### irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+irp5Clean <- irp5gir[!unique(dropthese[, .(taxrefno, uid)]), on = .(taxrefno, uid)]
 c(nrow(irp5gir), nrow(irp5Clean))
 #### [1] 175424198 175176433
 #### if (any(iiEmpty <- grepl("", colnames(irp5Clean)))) 
@@ -1089,6 +1092,10 @@ c(nrow(irp5gir), nrow(irp5Clean))
 #### qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads,
 ####   use_alt_rep = TRUE)
 qsave(irp5Clean, paste0(pathdata, "irp5Clean.qs"), nthreads = DTThreads)
+#### CLAUDE bug: 2026-08-05 verify the drop fix (aggregates only, no PII); reuses
+####   in-memory ipyr/dupuid/repetetive/tb/irp5gir so no 175M-row re-read.
+####   Script sits in this program folder.
+source("verify_dropthese.R")
 ```
 
 Get observation pattern for individuals, establishments, firms: IObPattern, EObPattern, FObPattern

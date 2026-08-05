@@ -809,10 +809,10 @@ Problem
 :   dropthese = ipyr[taxrefno %in% names(tb)[tb > 10] & uid %in% dupuid[taxrefno %in% names(tb)[tb == ii], uid][1:5], ...] mixes firms with MORE than 10 repetitive uids with the first 5 uids drawn from firms with EXACTLY 10 (ii == 10). Comments say "drop firms with repetitive entries if they are above 10"; the uid conjunct looks like frozen exploratory code. The final drop keys on dropthese$taxrefno only, and the documented outcome (2-3 firms, 247,765 rows) may be insensitive to the uid clause — but that cannot be confirmed without data.
 
 Status
-:   Open — needs a server check (compare dropthese$taxrefno with and without the uid conjunct) before touching. NOT changed this session.
+:   Fix applied 2026-08-05, Session 23 (originals commented, tag bug). Refined diagnosis: the real defect is guard 2 referencing `dupuid` (ALL duplicated uids) instead of `repetetive` (placeholder strings only) — it over-drops legit workers with 2+ 2012 job records at heavy-use firms; `[1:5]` (dupuid sorted n desc) accidentally masked this by keeping ~top-5 placeholders. Also L1093 drop keyed on taxrefno only, removing whole firms incl legit uids. Applied: L1049 `dropthese <- ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% repetetive, ...]`; L1084 `irp5gir[!unique(dropthese[, .(taxrefno, uid)]), on = .(taxrefno, uid)]`. Declutter: inspection probe removed (user, S23). NOT runtime-verified — data not local; run `analysis/program/verify_dropthese.R` on server: confirms firm counts, guard-2 over-selection (Step 1b), old-vs-new drop pairs (Step 2), and drop delta combo-vs-firm (Step 3). Note the .rmd snapshots 175424198/175176433 are STALE (pre-fix, pre-S21 natureofperson change) — recompute. Keep OPEN until server-verified.
 
 Tag
-:   com
+:   bug (was com)
 
 ## IRP5MergeData.rmd
 

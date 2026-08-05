@@ -9545,3 +9545,788 @@ I verified from the figure PNG directly this time (`unnamed-chunk-7-1.png`) rath
 Not a bug, and worth knowing before you teach it. GNI subtracts the profits that leave Ireland, but not the **depreciation of the intellectual property that was relocated there**. Ireland's adjusted net national income is only 45% of its GDP and 66% of its GNI, against 70–87% for every comparator. On that net measure Ireland sits *below* Denmark, Switzerland and Singapore.
 
 So the left panel is telling the truth: on GNI, Ireland really is second. The distortion is smaller than in GDP but nowhere near gone. If you want the panel to show what residents actually command, `NY.ADJ.NNTY.PC.KD` is the honest series — at the cost of constant US\$ instead of PPP, and a two-year lag.
+
+> [2026-08-05 (Wed) 06:23:12 JST] update on min wage
+
+**Startup done.** Set `~/.claude/.active_project` → MinWageMarketPower. Read this session: TaskRecord (pick-up), LOG (headers + tail), StandingIssues (headers), CC (tail). Absent: project `MEMORY.md`, `CLAUDE_TaskRecord_MinWageMarketPower.md`. Not yet read: `CLAUDE.md`, `CLAUDE_CHANGES.md`.
+
+⚠️ xref rebuild **failed** (immediate Exit 1) — DB stays stale (Jul 7, older than LOG Jul 13). Can retry with a trace if you need where-defined/where-used queries.
+
+**Where MinWage actually stands** (latest = Session 21 Iron Curlew, 2026‑07‑13; TaskRecord's "Where to pick up" is stale, ends at Session 16 Jul 2):
+
+* **Session 21 — full-pipeline fix pass** over setup + Condense + HHI + MergeData + Impacts. All carried-over open items applied; 64 chunks parse, 0 failures. Value changes materialise **only on the next server run**.
+* **Session 21 — speed refactors**: created `IRP5Condense2.rmd` (1,399 L) and `IRP5HHI2.rmd` (1,447 L), originals untouched. Value-identical except `.GRP` ID relabeling. 41 chunks parse, 0 failures — but **UNTESTED against server data**.
+
+**Open items** *(all unverified — not re-read from current rmd source)*:
+1. `IRP5Condense.rmd` L991‑1006 — `dropthese` couples tb>10 firms with uids from tb==10 firms; frozen exploratory code, needs server intent check.
+2. `IRP5Impacts.rmd` — winsorized descriptives re-read `LfwC201002.qs` (last-iteration Jb=10), asymmetric with the unwinsorized twin.
+3. Condense2/HHI2 — first server run must compare qc prints / row counts to the originals' logged values.
+4. Pending **server pipeline run from Condense** (ID relabeling) — expect shifts in HHILevel subsamples, GapInTY, winsorized descriptives.
+
+Recommendation + options:
+1. Retry the xref rebuild (with trace) so symbol queries work, then pick a task.
+2. Dig into open item #1 (`dropthese` L991‑1006) — read current source and assess.
+3. Verify the Condense2/HHI2 refactors line-by-line against originals before the server run.
+4. Something else you have in mind for min wage.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 06:35:18 JST] I renamed
+
+IRP5Condense.rmd  ==> IRP5Condense_.rmd
+IRP5Condense2.rmd ==> IRP5Condense.rmd
+IRP5HHI.rmd       ==> IRP5HHI_.rmd
+IRP5HHI2.rmd      ==> IRP5HHI.rmd
+
+do 1-3, but will exit in 10 mins
+
+d
+
+Summary of this turn:
+
+* **Rename verified** by byte size — new `IRP5Condense.rmd`/`IRP5HHI.rmd` are the refactors, `_` files the originals, both pairs distinct (no stale copy).
+* **Task 1 (xref):** root cause was the sandbox marking `/mnt/c` read-only, not the exit-5 path bug. Relaunched sandbox-disabled in background (pid 1438) — I'll report the result when it lands.
+* **Task 2 (dropthese):** real, pre-existing coupling (drops via 5 uids sourced from a disjoint `tb==10` firm set); refactor preserved it verbatim → needs your server-side intent check.
+* **Task 3 (refactor):** all 86 Condense + 51 HHI changes reviewed, value-preserving; only intended change is `.GRP` first-appearance IDs. Not yet run on server.
+* **LOG:** Session 22 Slate Heron appended.
+
+Left for the server run: confirm `dropthese` intent + diff refactor row counts vs originals' logged values. The xref build result will come through shortly.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 06:39:33 JST] what does this mean
+needs your server-side intent check.
+
+It means two things, plainly:
+
+* **"Server-side"** — the real IRP5 data (175M rows) lives on the secure NT-SDF server, not on this laptop. I only have the *code* here, so I can't run `dropthese` to see which firms it actually drops.
+* **"Intent check"** — the code doesn't match its own comment. Comment says *"drop firms with >10 repetitive uids"*, but the filter only drops rows whose `uid` is among **5 specific uids pulled from a different firm group** (`tb==10`). Whether that drops the firms you *meant* to drop can only be confirmed by running it on the actual data and eyeballing the 247,765 dropped rows.
+
+So: **you (or a run on the server) need to check that the code's behavior is what you intended** — I can't verify it from the code alone.
+
+Not exiting yet — you interrupted before I confirmed. Say the word and I'll do the sign-off (LOG's already written; xref build pid 1438 still running).
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+--- session end 06:40 JST ---
+
+> [2026-08-05 (Wed) 06:40:58 JST] sign off
+c
+
+Signed off. Everything's written.
+
+**Sign-off complete:**
+* `CLAUDE_LOG.md` — Session 22 Slate Heron appended.
+* `CLAUDE_TaskRecord.md` — Where-to-pick-up updated (rename, refactor-verified, server run + dropthese intent + xref).
+* `CLAUDE_CC.md` — session-end marker `06:40 JST`.
+* No code edited → CHANGES/StandingIssues untouched (dropthese item already open from S21).
+
+**Task 1 now actually done:** xref.sqlite rebuilt once sandbox was off — **36,134,912 bytes, mtime 06:35 today, 148,209 rows / 53 files** (was stale 33,054,720 B / Jul 7). Symbol queries work again next session.
+
+Left for the server run: diff refactor row counts vs originals, and confirm `dropthese` intent.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 06:41:23 JST] d
+exit
+
+Signed off and clean. xref rebuilt, logs written. See you next session.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: e
+```
+
+> [2026-08-05 (Wed) 07:41:08 JST] min wage
+
+Startup complete. Memory files read: CLAUDE.md, CLAUDE_TaskRecord (Where-to-pick-up), CC tail. CLAUDE_LOG/CHANGES/StandingIssues present (not fully read — available on request).
+
+**Log mtimes**
+```
+CLAUDE_LOG.md          2026-08-05 06:34
+CLAUDE_TaskRecord.md   2026-08-05 06:40
+CLAUDE_CHANGES.md      2026-07-13 00:20
+CLAUDE_StandingIssues  2026-07-13 00:20
+```
+xref.sqlite 06:35 (newer than LOG) — no rebuild.
+
+**Where we left off** — last session **22 Slate Heron** (2026-08-05):
+* Server run pending: run full pipeline from **IRP5Condense** (new canonical = refactor); on first run diff row counts / QC prints vs originals to confirm value-identity.
+* Confirm `dropthese` intent (Condense L1052–1083) — drops 247,765 rows (0.14%); verify it drops the firms you meant. (Open from S21.)
+* xref was rebuilt last session: 36.1 MB, 148,209 rows / 53 files.
+
+What would you like to work on? (full CLAUDE_LOG / CHANGES / StandingIssues on request)
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 07:48:39 JST] c
+
+codes for dropthese are cluttered
+
+#### Drop firms with repetetive entries if they are above 10
+ii <- 10
+#### CLAUDE msk:
+#### ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+####   order(uid, taxrefno), ]
+ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+  .(busprov_geo, busmainplc_geo, Corp, UInd,
+    periodemployedfrom, periodemployedto, kerr_income)][
+  order(UInd, Corp), ]
+#### CLAUDE msk: original wrapped the assignment in `(...)` to print as a side-effect;
+####   `dropthese` is needed raw at the qsave below, so split into raw assign + masked display.
+#### (dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5],
+####   .(busprov_geo, busmainplc_geo, taxrefno, uid, periodemployedfrom, periodemployedto, kerr_income)][
+####   order(uid, taxrefno), ])
+#### table(dropthese[, .(uid, taxrefno)])
+#### table(dropthese[, uid])
+
+
+what is going on? reply succinctly using a bullet list
+
+What would you like to clarify? I can adjust the question.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: e
+```
+
+> [2026-08-05 (Wed) 08:05:09 JST] 1 but want to verify
+intent should be tb[tb>ii] or tb[tb>=ii]; ii=10
+respond before run
+
+Operator confirmed: `tb > ii`. What would you like to clarify on the uid clause?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: e
+```
+
+> [2026-08-05 (Wed) 08:31:36 JST] show how dropthese are formed from ipyr
+
+Static trace (data not local — objects described from code, not runtime). Pipeline `ipyr → dropthese`:
+
+**Stage 0 — source** (L970–978)
+```
+ipyr <- qread("irp512.qs")            # 2012 IRP5 rows (one row per job)
+ipyr[, uid := gsub(" +$", "", UID)]   # trimmed worker ID
+ipyr[, Corp := .GRP, by = taxrefno]   # anon firm id  (display only)
+ipyr[, UInd := .GRP, by = uid]        # anon worker id (display only)
+```
+
+**Stage 1 — `dupuid`: distinct (taxrefno,uid) combos whose uid is reused** (L986–991)
+```
+dupuid <- ipyr[duplicated(uid) | duplicated(uid, fromLast=T),   # uid appears >1x anywhere in ipyr
+               .(taxrefno, uid, Corp, UInd)]
+dupuid[, n := .N, by = .(taxrefno, uid)]                        # n = rows sharing that exact (taxrefno,uid)
+dupuid <- unique(dupuid[order(n, decreasing=T), ])             # 1 row per (taxrefno,uid), n desc
+```
+→ every (firm, worker-id) pair where the worker-id is a duplicate, with its count `n`.
+
+**Stage 2 — `repetetive`: which uids are placeholder strings** (L998–1001)
+```
+repetetive <- dupuid[grepl("(.)\\1{7,}", uid), uid]   # uid has a char run >=8  (AAAA…, CCCC…, ZZZZ…)
+repetetive <- unique(repetetive)
+```
+→ the set of anomalous placeholder ID strings (filtered *from* dupuid).
+
+**Stage 3 — `tb`: per-firm count of placeholder rows** (L1007–1008)
+```
+tb <- table(ipyr[uid %in% repetetive, taxrefno])   # among rows with a placeholder uid, count per firm
+tb <- tb[order(tb, decreasing=T)]
+```
+→ `tb["<taxrefno>"]` = how many placeholder-uid rows that firm has. `names(tb)[tb > ii]` = the heavy-reuse firms.
+
+**Stage 4 — `dropthese`** (L1052, proposed `tb>ii`)
+```
+ii <- 10
+dropthese <- ipyr[
+    taxrefno %in% names(tb)[tb > ii]                              # firm has >10 placeholder rows
+  & uid      %in% dupuid[taxrefno %in% names(tb)[tb > ii], uid],  # AND this row's uid is a duplicated placeholder
+  .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
+    periodemployedfrom, periodemployedto, kerr_income)][
+  order(UInd, Corp), ]
+```
+
+**Chain summary**
+```
+ipyr ─trim→ uid
+         ├─(dup uid)──────────→ dupuid ─(char run >=8)→ repetetive ─(count/firm)→ tb
+         └─ rows kept where: taxrefno ∈ {tb>ii firms}  AND  uid ∈ {dupuid uids of those firms}  = dropthese
+```
+Two guards, both needed: **taxrefno** picks the heavy-reuse firms; **uid** keeps only the duplicated placeholder rows within them (a firm's non-duplicate uids fall through). The `[1:5]` currently on the uid side truncates that second guard to 5 strings — the bug.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 08:46:03 JST] d
+
+so, dupuid is unique taxrefno-uid pairs whose uid is used more than once per year
+n indicates the number of duplications
+
+from there, repetitive picks uid with AAAAAAA, BBBBBBB, etc.
+
+tb selects taxrefno with repetitive uid
+
+dropthese = uid with heavy use (more than 10 times) of repetitive uid
+selection is doubly guarded: 
+  1. taxrefno with heavy use of repetitive uid
+  & 
+  2. uid under taxrefno of heavy use of repetitive uid, in dupuid data
+
+not sure if 2 can pickup uid of repetitive uids in addition to 1, examine
+
+Plan updated: guard 2 → `repetetive`, `[1:5]` interaction documented, verification step 1b added to quantify the over-selection.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 09:08:27 JST] d
+/pla
+
+Done. Summary:
+
+**Code — `/mnt/c/data/MinWageMarketPower/analysis/program/IRP5Condense.rmd`** (originals commented, per rule)
+* L1063 (bug1): guard 2 → `uid %in% repetetive` (was `dupuid[…][1:5]`); operator `tb > ii`.
+* L1093 (bug1): `(taxrefno, uid)` anti-join (was taxrefno-only whole-firm drop).
+* L1041–1046 (nip): inspection probe commented out.
+
+**Logs**: CLAUDE_LOG, CLAUDE_CHANGES (Session 23 Ochre Marten), CLAUDE_StandingIssues (kept OPEN — fix applied, server-verify pending), CLAUDE_TaskRecord (pick-up updated).
+
+**Not done — needs the server** (data not local): runtime verification of the drop delta vs current 247,765 and count of legit uids now saved. Verify script per plan steps 1b/2/3 → `.claude/.scratch/verify_dropthese.R`.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 09:20:18 JST] d
+I edited remaining clutters
+check and log to files
+
+write verify script as proposed
+
+Done.
+
+**Checked your edits:** clutter removed correctly (inspection-probe block gone, `bug1` comment trimmed); logic intact — `dropthese` L1049 (`tb > ii & uid %in% repetetive`), anti-join L1084.
+
+**Verify script written** (read-only, server): `/mnt/c/data/MinWageMarketPower/.claude/.scratch/verify_dropthese.R`
+* Step 1 firm counts by operator · 1b guard-2 over-selection (dupuid vs repetetive + legit rows risked) · 2 old-vs-new drop pairs · 3 drop delta combo-vs-firm · 4 uid NA/trim integrity.
+* Uses server `pathdata=W:/epguest/seiro_ito/data/`; recomputes fresh (flags the stale `.rmd` snapshots).
+* Run on server: `Rscript.exe 'C:/data/MinWageMarketPower/.claude/.scratch/verify_dropthese.R'`
+
+**Logged:** CLAUDE_LOG (2nd S23 entry), CLAUDE_CHANGES (line refs L1049/L1084, `nip` marked removed), CLAUDE_StandingIssues + CLAUDE_TaskRecord (refs updated, verify pointer added, kept OPEN pending server run).
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 09:27:37 JST] d
+insert source(verify script) so it will run and show results, make sure it shows key cat() messages on rendered html without showing actual values of data, hope this does not take too long to run
+
+write to all logs, will exit in 10 mins
+
+Done. Status:
+
+**Code — IRP5Condense.rmd** (`dropping rows` chunk)
+* `source("../../.claude/.scratch/verify_dropthese.R")` added at chunk end → runs on render, prints aggregate-only cat() (no PII).
+* Tags corrected `bug1` → `bug` (3 char).
+
+**verify_dropthese.R** — rewritten: reuses in-memory objects (no 175M re-read), delta via counts. Fast when sourced mid-pipeline.
+
+**Logs** (all written): CLAUDE_LOG, CLAUDE_CHANGES, CLAUDE_StandingIssues (OPEN, pending server render), CLAUDE_TaskRecord. `bug1`→`bug` fixed in all.
+
+**xref rebuild** launched in background (id b2y0yxgvf) — will notify on completion.
+
+One caveat for your render: the verify's Step 3/4 (drop delta) runs two count-scans over the 175M-row `irp5gir` — seconds, not minutes, but it does touch the full table.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 09:29:24 JST] <task-notification>
+<task-id>b2y0yxgvf</task-id>
+<tool-use-id>toolu_01C47ukxofPF42p2aq2YELbP</tool-use-id>
+<output-file>/tmp/claude-1000/-home-sdude/2388ea65-663c-40dc-9eb1-1d9e557a8834/tasks/b2y0yxgvf.output</output-file>
+<status>completed</status>
+<summary>Background command "Rebuild xref.sqlite in background" completed (exit code 0)</summary>
+</task-notification>
+
+All done.
+
+* `verify_dropthese.R` → `analysis/program/` (scratch copy removed); `.rmd` now `source("verify_dropthese.R")`.
+* Path refs updated in CHANGES/StandingIssues/TaskRecord; the CHANGES source() line corrected to the bare name (the blanket replace had left a wrong `../../` prefix — fixed).
+* LOG note appended.
+* xref rebuilt clean: 148,268 rows / 53 files, 09:27, exit 0.
+
+Ready for your render. On the server, the `dropping rows` chunk will self-verify and print the aggregate cat() block. Logs are all current for your exit.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 09:31:08 JST] d
+are you recording all rating history so you can train yourself against cc?
+
+No — two clarifications, because "recording" and "training" are different things:
+
+* **Recording:** Yes, but not in a separate file. Per `feedback_proposal.md`, **CC is the ledger**. The Stop hook appends each response verbatim (including my `Self-prediction:` line) to `CLAUDE_CC.md`, and your rating is the leading letter of your next prompt, which CC timestamps (`> [YYYY-MM-DD … JST]`). So every `(timestamp, prediction, actual)` triple is recoverable from CC. I keep no second log.
+* **Training:** No. My weights don't change between turns or sessions — there is no self-training. It's **prompt-level recalibration**: the rule says every 100 new ratings, recompute the mean gap (prediction − actual) and rewrite the verbosity definition, keeping the 3 latest versions (`v1`/`v2`/`v3`).
+
+Honest status: still at **v1 (seed, 0 ratings counted)**. This session's ratings (d, c, d, d, d, d, d) are sitting in CC but I have **not** been tallying a running count or triggering a recompute — the 100-rating cadence hasn't been actively tracked. So the mechanism is recording correctly, but the calibration step is dormant until 100 accrue and someone (me, on a session where CC is parsed) runs the recompute.
+
+If you want it to actually self-adjust, the missing piece is a counter/parser over CC — currently nothing counts the ratings automatically.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 09:37:30 JST] b
+
+where it matters:
+cases with divergent ratings, eg: yours=e, user's=c
+cases with matching ratings: (d, d) or (c, c), etc.
+
+from seishin's cc file, pick 10 divergent and 5 matching (d, d), (c, c) cases
+do not include diff +/- parts but only your text responses
+store in a file at global claude root folder
+
+exit in 4 mins
+
+Done. File at global claude root: `/mnt/c/seiro/languages/claude/.claude/verbosity_calibration_seishin.md` (59 KB) — 10 divergent + 5 matching (4×(d,d), 1×(c,c)), prose only, fences/footers stripped. LOG appended; CC auto-captures via hook.
+
+Note: extraction is heuristic — a couple of samples carry stray terminal chrome (`● …`, continuation lines of multiline prompts). Good enough for calibration reading; can tighten the parser next session if you want cleaner cuts.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 14:55:47 JST] update on min wage
+
+Startup done. Here's the min-wage status.
+
+## MinWageMarketPower — where we left off
+
+**Files loaded:** CLAUDE.md, CLAUDE_LOG.md, CLAUDE_StandingIssues.md, CLAUDE_TaskRecord.md (CLAUDE_CHANGES.md present, not read yet). No `CLAUDE_TaskRecord_<Project>.md` variant — the plain `CLAUDE_TaskRecord.md` is the one.
+
+**Log mtimes** (all 2026-08-05):
+- CLAUDE_LOG.md — 09:37
+- CLAUDE_CHANGES.md — 09:29
+- CLAUDE_StandingIssues.md — 09:28
+- CLAUDE_TaskRecord.md — 09:28
+
+**xref DB:** older than LOG → **rebuild launched in background** (pid 869).
+
+**Pick up here** (from TaskRecord, current lines):
+- The `dropthese` fix was **applied in Session 23** — `IRP5Condense.rmd` L1049 + L1084, tag `bug`:
+  - guard 2 now `uid %in% repetetive` (was `dupuid[...][1:5]`)
+  - drop now a `(taxrefno, uid)` anti-join (was taxrefno-only, which dropped whole firms)
+- **Pending: server verify.** Run `analysis/program/verify_dropthese.R` (steps 1/1b/2/3/4): firm counts, guard-2 over-selection, old-vs-new drop pairs, drop delta combo-vs-firm, `irp5gir$uid` trim/NA check.
+- Full pipeline from Condense is the new canonical (refactor); on first server run, diff row counts / QC prints against originals to confirm value-identity.
+- The `.rmd` snapshots (175424198 / 175176433) are **stale** — recompute, don't trust.
+
+**Note:** the last CC turn was a *seishin* verbosity-calibration task (cross-project), not min-wage — so nothing new happened on this project since S23.
+
+Want me to: **1.** show the pending `verify_dropthese.R` and walk its checks, **2.** open the S23 `dropthese` diff in `IRP5Condense.rmd`, or **3.** something else?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 15:02:03 JST] 1 d
+
+Read it. Here's what each check proves, keyed to the S23 fix.
+
+## `verify_dropthese.R` — walkthrough (93 lines, read-only, aggregates only)
+
+**The bug it verifies** (`IRP5Condense.rmd`, chunk "dropping rows"):
+- guard 2 used `dupuid` (ALL duplicated uids) instead of `repetetive` (only placeholder strings like `999999…`)
+- L1084 drop keyed on `taxrefno` only → dropped the **whole firm**, not just the bad rows
+- Fix: `uid %in% repetetive` + a `(taxrefno, uid)` anti-join
+
+**Setup (L16-38):** reuses in-memory `ipyr/dupuid/repetetive/tb/ii` if sourced inside Condense; else rebuilds from `irp512.qs`. `repetetive` = uids with a char repeated 8+ times (`(.)\\1{7,}`). `ii <- 10` is the firm-size threshold.
+
+**The 5 checks:**
+
+| Step | Lines | Verifies | PASS looks like |
+|------|-------|----------|-----------------|
+| 1 — firm counts | 41-44 | how many firms have `>`, `==`, `>=` `ii` placeholder rows | `>=ii` = `>ii` + `==ii` (arithmetic sanity) |
+| 1b — guard-2 over-selection | 46-56 | **the core fix**: at heavy firms, count dup uids that are *legit* (not placeholder) and the rows the old `dupuid` guard would have wrongly dropped | `legit_rows` > 0 = rows the old guard over-dropped, now saved |
+| 2 — old vs new drop set | 58-65 | new drop (`repetetive`) vs the verbatim old artifact (`dupuid[...][1:5]`), as unique `(taxrefno,uid)` pairs | new pairs target bad uids; old firms count ⟵ whole-firm scope |
+| 4 — join integrity | 77-85 | `irp5gir` (post `NatureOfPer=='A'`) has no NA uids, no trailing-space uids | `sum(is.na)=0`, trailing-space `FALSE` |
+| 3 — drop delta | 86-89 | combo anti-join vs old firm-level drop, by count | `firm_drop − combo_drop` = **legit rows SAVED** by the fix (should be > 0) |
+
+**The headline number is L89:** `legit rows SAVED by combo vs firm-level`. That's the whole point of the fix — how many good rows the old whole-firm drop was destroying.
+
+**Can't run locally.** It needs the server qs files (`pathdata = W:/epguest/…`: `irp512.qs`, `irp5_RevReports.qs`). Steps 3/4 self-skip if `irp5_RevReports.qs` is absent (L90-91). So this is a **server run**, or source it inside the Condense "dropping rows" chunk to reuse memory.
+
+One caution I'd flag: L60 `old_uidset` uses `tb == ii` but L61 `drop_old` filters `tb > 10` — the old artifact mixes `==ii` uids against `>ii` firms. That's intentional (it reproduces the *verbatim* buggy artifact for comparison), but worth confirming `ii` is still `10` at run time so `> 10` and `> ii` agree.
+
+Next: **1.** show the actual S23 diff at Condense L1049/L1084 to confirm the script matches the fix, **2.** draft the exact server run command, or **3.** stop here?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 15:13:29 JST] 1 c
+
+Confirmed — the fix is live and matches the verify script. Both changes are present, with old code commented out (not deleted), per your rules.
+
+## S23 `dropthese` fix — as it stands in `IRP5Condense.rmd`
+
+Note: TaskRecord says L1049/L1084, but the live lines are now **L1051** and **L1086** — the commented-out old code shifted them down. Content matches.
+
+**Fix 1 — guard 2 (L1051, was ~L1047 old):**
+```diff
+ #### CLAUDE bug: 2026-08-05 guard2 used dupuid (ALL dup uids), over-dropped legit workers
+-#### dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[...][1:5], ...]
++dropthese <- ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% repetetive,
++  .(busprov_geo, busmainplc_geo, taxrefno, uid, Corp, UInd,
++    periodemployedfrom, periodemployedto, kerr_income)][order(UInd, Corp), ]
+```
+→ `dupuid` (all dup uids) → `repetetive` (placeholder only); literal `tb>10` → `tb>ii`. Matches verify **Step 1b/2** (both key on `repetetive`).
+
+**Fix 2 — anti-join (L1086, was L1085 old):**
+```diff
+ #### CLAUDE bug: 2026-08-05 taxrefno-only drop removed the WHOLE firm, incl legit uids
+-#### irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
++irp5Clean <- irp5gir[!unique(dropthese[, .(taxrefno, uid)]), on = .(taxrefno, uid)]
+```
+→ taxrefno-only whole-firm drop → `(taxrefno, uid)` anti-join. Matches verify **Step 3/4** (`combo_drop` = anti-join, `firm_drop` = old scope).
+
+**Cross-check with verify script:**
+- L1080 `irp5gir <- irp5gir[NatureOfPer == "A", ]` ✓ = verify L73/L80 filter
+- L1088 snapshot `175424198 → 175176433` — **this is the STALE pair** TaskRecord warns about; verify recomputes it fresh
+- L1059-1060 `CCCCCCCC` counts (191 / 2341) also stale placeholders
+
+So the code and the verifier are consistent. The only thing outstanding is the **server run** to populate the fresh numbers.
+
+Next: **1.** draft the server run command for `verify_dropthese.R`, **2.** stop here, **3.** something else?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 15:17:47 JST] 1 d
+
+Here's the server run. The script already defaults `pathdata` to `W:/epguest/seiro_ito/data/` (L20), so standalone needs no args.
+
+## Server run — `verify_dropthese.R`
+
+**Mode (a) — standalone** (loads the qs itself; simplest):
+```bash
+Rscript analysis/program/verify_dropthese.R
+```
+- Reads `irp512.qs` (~175M rows) + `irp5_RevReports.qs` from `pathdata`.
+- Cost: the big read is the 175M-row `irp512.qs` — minutes + high RAM. Only do this if you're *not* already running Condense.
+
+**Mode (b) — sourced inside Condense** (no re-read; preferred):
+Add after the `irp5Clean` line (L1086) in the "dropping rows" chunk:
+```r
+source("analysis/program/verify_dropthese.R")
+```
+- Reuses in-memory `ipyr/dupuid/repetetive/tb/ii/irp5gir` → **no 175M-row re-read**, near-free.
+- This is the intended path since you're re-running the full pipeline from Condense anyway.
+
+**What to capture** (the fresh numbers that replace the stale snapshots):
+- Step 1b L56 — `legit_rows` (rows the old guard over-dropped)
+- Step 3 L89 — `legit rows SAVED by combo vs firm-level` ← the headline
+- Step 4 L82-83 — `n_gir`, NA-uid count (integrity)
+
+**Guardrails before running:**
+- If mode (b): source it *after* L1086 so `irp5gir` is still un-cleaned when Step 3/4 compare — actually it uses `irp5gir` (pre-clean) which exists at that point ✓.
+- Confirm `ii == 10` at run time (L60/L61 mix `==ii` and `>10`, as flagged last turn).
+
+Want me to **1.** write the one-line `source(...)` insert into the chunk (with your approval on the exact line), **2.** stop here?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 15:19:37 JST] 1 c
+
+what is this
+ Confirm ii == 10 at run time (L60/L61 mix ==ii and >10, as flagged last turn)
+
+It's a note about **Step 2 only** (the old-vs-new drop comparison), not the fix itself. Let me show the two lines:
+
+```
+L60  old_uidset <- dupuid[taxrefno %in% names(tb)[tb == ii], uid][1:5]
+L61  drop_old   <- unique(ipyr[taxrefno %in% names(tb)[tb > 10] & uid %in% old_uidset, ...])
+```
+
+- L60 selects firms with **exactly `ii`** placeholder rows (`tb == ii`).
+- L61 selects firms with **more than 10** (`tb > 10`, hardcoded literal).
+
+These are two different thresholds glued together. Step 2 is meant to *reproduce the original buggy artifact verbatim* for comparison — and the original buggy code (commented at L1047) genuinely did mix `tb>10` and `tb==ii`, so the script is faithful. The `[1:5]` and this mix are why the comment calls it a "verbatim artifact" (L60).
+
+**Why I said "confirm ii == 10":** `ii` is set at L38 as a fallback (`if (!exists("ii")) ii <- 10`), but in mode (b) it's inherited from Condense's memory. If Condense ever set `ii` to something other than 10, then `tb == ii` (L60) and `tb > 10` (L61) would describe **inconsistent firm sets**, making the Step 2 "old" count meaningless to read against the "new" count.
+
+**Stakes: low.** This touches only the Step 2 diagnostic. It does **not** affect:
+- the live fix in Condense (L1051 uses `tb > ii` consistently), nor
+- the headline Step 3 number (`legit rows SAVED`).
+
+So it's a "read Step 2 with a grain of salt unless ii is 10" caveat, not a defect. In practice `ii` is almost certainly 10 both places — worth one glance at the output, nothing more.
+
+Want me to **1.** grep Condense for where `ii` is actually assigned (settle it now), **2.** move on?
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 15:22:13 JST] b
+make use of ii <- 10 consistent throughout the doc so we will not worry anymore
+
+Investigated. The only **live** inconsistency is one line in `verify_dropthese.R`. Everything else is already on `ii` or is commented-out bug-history.
+
+## Findings
+
+| Location | Line | Status |
+|----------|------|--------|
+| `IRP5Condense.rmd` L1038 | `ii <- 10` | source of truth ✓ |
+| `IRP5Condense.rmd` L1051 (live) | `tb > ii` | already consistent ✓ |
+| `IRP5Condense.rmd` L1046-1047 | `tb>10` | **commented-out** old code / bug note — dead |
+| `verify_dropthese.R` L38 | `if (!exists("ii")) ii <- 10` | fallback ✓ |
+| `verify_dropthese.R` L61 | `tb > 10` | **the one live literal** ✗ |
+
+So a single edit fixes it. Proposed change:
+
+**`/mnt/c/data/MinWageMarketPower/analysis/program/verify_dropthese.R`**, Step 2 block:
+```diff
+ old_uidset <- dupuid[taxrefno %in% names(tb)[tb == ii], uid][1:5]   # verbatim artifact
+-drop_old   <- unique(ipyr[taxrefno %in% names(tb)[tb > 10] & uid %in% old_uidset,
++drop_old   <- unique(ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% old_uidset,
+                           .(taxrefno, uid)])
+```
+In prose: L61, the `drop_old` filter — `tb > 10` → `tb > ii`.
+
+**Deliberately NOT touching** Condense L1046-1047: those are commented-out lines that *document the old buggy code* (`tb>10`). Rewriting them would falsify the bug-history record. They're dead, so they can't cause the `ii` mismatch.
+
+Proceed with the one-line edit to `verify_dropthese.R`? (y/n)
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```
+
+> [2026-08-05 (Wed) 15:24:45 JST] y c
+
+Done. All three consistent now.
+
+- **`verify_dropthese.R` L61**: `tb > 10` → `tb > ii`. Both L60/L61 keyed on `ii`.
+- **CHANGES.md**: appended under S23 sandbox (tag `frg` — silent breakage if `ii` ever changed).
+- **LOG.md**: appended the turn under Session 23 Ochre Marten.
+- Left Condense L1046-1047 `tb>10` as-is (commented bug-history, dead).
+
+Single threshold source: `IRP5Condense.rmd` L1038 `ii <- 10`. Nothing else references a bare `10`.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 15:26:34 JST] d
+log to files
+
+Logged. Written this turn:
+
+- **CLAUDE_LOG.md** — Session 23 item (the `ii` consistency fix). ✓
+- **CLAUDE_CHANGES.md** — `verify_dropthese.R` L61 bullet, tag `frg`. ✓
+- **CLAUDE_TaskRecord.md** — pick-up note: verifier now fully `ii`-keyed, Step 2 interpretable. ✓
+- **CLAUDE_StandingIssues.md** — nothing (the `frg` was fixed same-turn, no open issue).
+- **CLAUDE_CC.md** — Stop hook auto-appends.
+
+Not run: xref rebuild — the L61 edit adds an `ii` reference but no new symbols worth a full re-index; the startup rebuild (pid 869) already refreshed it today.
+
+**One flag, not acted on:** both `CLAUDE_LOG.md` (`# Sandbox` L441) and `CLAUDE_CHANGES.md` (`# Sandbox` L372) still hold an **unpromoted backlog** — LOG Sessions 13-23, CHANGES Session 23 — sitting under `# Sandbox` instead of being promoted to canonical `## Session N …` blocks with the §7 definition-list format. That's a large reformat the last few sessions deferred. I didn't touch it since it's substantial and easy to garble.
+
+Promote the Sandbox backlog to canonical now? **1.** Yes, promote LOG + CHANGES sandbox → canonical, **2.** No, leave as-is (this turn is already logged).
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: d
+```
+
+> [2026-08-05 (Wed) 15:29:21 JST] explain
+
+§7 definition-list format. That's a large
+  reformat the last few sessions deferred. I didn't touch it since it's substantial and easy to garble.
+
+Here's what "§7 def-list format" is, concretely — two real examples from your own CHANGES file.
+
+## The two formats
+
+**Sandbox (what the S23 backlog is now)** — one-line pipe bullet:
+```
+* `IRP5Condense.rmd` L1084 | `irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]` → `irp5gir[!unique(dropthese[,.(taxrefno,uid)]), on=.(taxrefno,uid)]` | taxrefno-only drop removed the whole firm… Tag bug.
+```
+One line, four fields separated by `|`: file:line, before → after, why, tag.
+
+**§7 canonical (what sign-off promotes it into)** — a header line + a markdown *definition list*. This is your `S19-2` entry, verbatim (CHANGES L161-170):
+```
+S19-2 — IRP5HHI.rmd:215 | tpo | Discovered: Session 19 logic pass | Verified: static, key order vs shift grouping
+Issue
+:   setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart) sorts place-first, so shift(...) returned a non-chronological next job…
+Why
+:   …
+Before
+:   setkey(ipyrc, busmainplc_geo, taxrefno, UID, DateStart)
+After
+:   setkey(ipyrc, Txrf, UID, DateStart) — original commented; values change at next server run.
+```
+
+A "definition list" = a term (`Issue`, `Why`, `Before`, `After`) on its own line, then `:   ` + the text on the next. Pandoc renders it as an indented term/description pair.
+
+## What promotion means
+
+Each Sandbox bullet must be **expanded** into that multi-line block:
+- a header: `ID — File:Line | Tag | Discovered: … | Verified: …`
+- four def-list fields: Issue / Why / Before / After, each with a worked example (real row ids/counts, per your "show, not describe" rule).
+
+## Why it's large and garble-prone
+
+- **Volume:** LOG Sandbox = Sessions 13-23 (~270 lines, 11 sessions); CHANGES Sandbox = 6 S23 bullets. Each bullet → a 6-8 line block.
+- **Not mechanical:** the one-liner doesn't carry `Discovered`/`Verified` or a worked Example — I'd have to *reconstruct* them from LOG prose, which risks inventing detail (violates your "never write from memory" / verify-first rules).
+- **Ordering + de-dup:** promoted blocks must slot in by session/line order without disturbing the existing canonical entries above `# Sandbox`, and the sandbox body must be emptied — an edit that's easy to misalign across two files.
+- **Mixed existing styles:** your canonical body already mixes simple bullets (Session 1/3) and full §7 (S19) — I'd have to pick the §7 target and apply it uniformly, another judgment call.
+
+That's why I logged this turn's work but stopped short of the bulk promotion — it's a reconstruction job, not a copy-paste, and the failure mode is silently fabricating a `Verified:` line.
+
+Promote now, or leave the backlog? **1.** Promote (I'll do LOG+CHANGES, flagging any field I can't source instead of inventing it), **2.** Leave as-is.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: b
+```
+
+> [2026-08-05 (Wed) 15:34:44 JST] 1 c
+
+Both promotions are clean:
+
+**CLAUDE_LOG.md** — Sessions 13-23 now canonical; the `# Sandbox` marker moved to EOF (L716) and is empty. Entries kept their readable numbered format (already canonical-shaped — no reformat needed, so no fabrication risk).
+
+**CLAUDE_CHANGES.md** — the 6 Session 23 bullets expanded to §7 blocks `S23-1…S23-6` (L372-457), sandbox emptied (L458). What I did with the fields:
+- **Line numbers corrected** to current live values: L1051, L1086, L1098 (bullets cited pre-edit L1049/L1084/L1093).
+- **`Discovered`** — sourced from the LOG prose / prompts, not invented.
+- **`Verified`** — honestly marked `static only — NOT runtime-verified` for S23-1/2 (data not local), since I cannot claim a server verify that hasn't run. No field fabricated.
+- **`Before`/`After`** — taken verbatim from the bullets' `→` sides.
+
+Everything logged this turn:
+- LOG ✓ (Session 23 item + backlog promoted)
+- CHANGES ✓ (S23 §7 + backlog emptied)
+- TaskRecord ✓ (verifier now `ii`-keyed)
+- StandingIssues — nothing open to add
+- CC — hook auto-appends
+
+No session-end marker written (you didn't signal exit). Say "exit" if you want it closed out.
+
+```
+Too wordy?
+ a. Very     d. Not so
+ b. Wordy    e. Too concise, unclear
+ c. Somewhat
+Self-prediction: c
+```

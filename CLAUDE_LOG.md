@@ -438,10 +438,6 @@ Note
      3. Update-join back: `irp5gir[dt_final, (outv) := i.v, on = .(taxrefno, uid)]`
    * Rule saved to `feedback_datatable_scale.md`
 
-# Sandbox
-
-<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->
-
 ## Session 13 Slate Gull (cont.) | 2026-05-07 19:16 JST
 
 1. *check EstabOb.YYYY uniqueness for a given EstabID in IRP5Condense.rmd*
@@ -657,3 +653,66 @@ Note
     * HHI2: setindex(taxyear) on irp5/irp5M for the 15 per-year subsets (setkey would reorder and change first-row picks -- warned in-file); TDurationMonth plain GForce max(); location-exists flags computed once vectorized then GForce any() by group (was millions of per-group regex calls); Entity != "gov"; agri filter on unique labels
     * verification: 41 chunks parse, 0 failures (parse_check_s21b.R); hunk-by-hunk diff review (86/51 lines). UNTESTED against server data -- on first run compare qc prints/row counts to the originals' logged values
     * tooling: python edits had converted IRP5Impacts.rmd + the CLAUDE logs to LF and left others mixed; all six rmds + three logs renormalized to full CRLF
+
+## Session 22 Slate Heron | 2026-08-05
+
+1. *update on min wage*
+
+   Startup + status. Set active project MinWageMarketPower. Latest real state = Session 21 (Jul 13): full-pipeline fix pass + Condense2/HHI2 speed refactors, both untested on server. TaskRecord "Where to pick up" stale (ends Session 16).
+    * flagged xref.sqlite stale (Jul 7 < LOG Jul 13); background rebuild launched but failed.
+
+1. *renamed Condense2->Condense, HHI2->HHI (originals -> _ suffix); do 1-3, exit 10 min*
+
+   Rename verified by byte size (user asked): Condense.rmd 61,238B/1399L "speed refactor" vs _ 58,919B/1357L original; HHI.rmd 67,294B/1447L "speed refactor" vs _ 65,431B/1414L original; both cmp DISTINCT (no stale copy). Did tasks 1-3.
+    * (1) xref rebuild FAILED — sqlite unchanged 33,054,720 B, mtime Jul 7 21:25; Rscript.exe silent exit, no build log. Not fixed. (LOG write itself first blocked by sandbox read-only on /mnt/c; redone with sandbox disabled.)
+    * (2) dropthese (Condense L1052-1083): real coupling, pre-dates refactor. Filter ANDs tb>10 firms with uid in first-5 uids from disjoint tb==10 firms; comment intends "drop firms with >10 repetitive uids". Only bites because AAAA/CCCC/ZZZZ uids recur across firms; fragile if tb==10 first-5 miss a code. Drop 175,424,198 -> 175,176,433 = 247,765 rows (0.14%). Refactor preserved verbatim (.GRP masking only). Needs server intent check.
+    * (3) refactor verified line-by-line: Condense 86 + HHI 51 changed lines, all CLAUDE eff value-preserving (fixed=TRUE grepl; as.IDate/UID %in% -> unique+update join; paste+factor -> .GRP; grepl -> == equality; industry regex on unique labels + %in%; setindex not setkey; per-group grepl -> row-level pOK/dOK/lOK/mOK + any()). One intended change: .GRP first-appearance IDs + NA no longer collides with "NA" (arbitrary labels only). NOT executed on server — first run must diff row counts vs originals' logged values.
+    * user mid-turn caught stale xref via byte size; then clarified byte-size check was for the renamed files.
+
+## Session 23 Ochre Marten | 2026-08-05
+
+1. *min wage — dropthese codes are cluttered; show how dropthese is formed; examine if guard 2 picks up non-repetitive uids; fix + declutter*
+
+   Fixed the `dropthese` over-selection bug in `IRP5Condense.rmd` chunk `dropping rows`.
+    * root cause: guard 2 used `dupuid` (ALL duplicated uids), not `repetetive` (placeholder strings only) — swept in legit workers with 2+ 2012 job records at heavy-use firms. `[1:5]` (dupuid sorted n desc) accidentally masked it by keeping ~top-5 placeholders; removing `[1:5]` alone would have worsened over-drop.
+    * fix L1063: `dropthese <- ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% repetetive, ...]` (was `tb>10 & uid %in% dupuid[... tb==ii ...][1:5]`).
+    * fix L1093: drop now `(taxrefno, uid)` anti-join `irp5gir[!unique(dropthese[,.(taxrefno,uid)]), on=.(taxrefno,uid)]` (was taxrefno-only, removed whole firms incl legit uids).
+    * declutter (Light): commented out the inspection-only display probe (tag nip).
+    * intent confirmed with user: combo-level drop, `tb > ii` (ii=10), retain uid guard.
+    * NOT runtime-verified — data not local. Server run must confirm drop delta (current 247,765) and quantify legit uids saved. Plan file: `~/.claude/plans/c-codes-for-dropthese-glistening-frog.md`.
+    * StandingIssues "NEW 991-1006" updated: fix applied, kept OPEN pending server verification.
+
+1. *I edited remaining clutters; check and log; write verify script as proposed*
+
+   Checked user's edits + wrote the server verify script.
+    * user finalized declutter: removed the commented inspection-probe block entirely (cleaner than commenting); trimmed the bug comment. Logic intact — dropthese now L1049 (`tb > ii & uid %in% repetetive`), anti-join L1084.
+    * flagged stale snapshots: L1057-1058 (CCCCCCCC counts) and L1086 (`175424198 175176433`) predate the fix and the S21 natureofperson change — verify must recompute, not trust them.
+    * wrote `.claude/.scratch/verify_dropthese.R` (read-only, server): Step 1 firm counts by operator; 1b guard-2 over-selection (dupuid vs repetetive at heavy firms + legit rows risked); 2 old-vs-new drop pairs; 3 drop delta combo-vs-firm-level; 4 join integrity (uid NA/trim). Server paths pathdata=W:/epguest/seiro_ito/data/, DTThreads=detectCores()-1.
+    * CHANGES/StandingIssues/TaskRecord line refs updated (L1063->L1049, L1093->L1084); nip bullet marked removed.
+
+1. *insert source(verify script) to run on render, show key cat() (aggregates, no PII); write all logs; exit 10 min*
+
+   Wired verification into the render.
+    * rewrote `.claude/.scratch/verify_dropthese.R`: `exists()` guards reuse in-memory ipyr/dupuid/repetetive/tb/irp5gir (no 175M-row re-read); drop delta by counts (`irp5gir[drop_new, on=.(taxrefno,uid), nomatch=0L, .N]`), not materialized tables. Output = counts/scalars only (no taxrefno/uid/rows) — safe for HTML.
+    * inserted `source("../../.claude/.scratch/verify_dropthese.R")` at end of `dropping rows` chunk (echo=T, comment="" -> cat block renders). cwd = analysis/program/; `.scratch` git-tracked so it ships to server.
+    * verified render prereqs: no knitr root.dir override in setup.rmd; .gitignore ignores only `analysis/program/scratch*`.
+    * cost when sourced mid-pipeline: near-free — 2012 table ops + two count-scans over the already-loaded 175M irp5gir.
+
+1. *verify script will sit in program folder — drop ../../ from source()*
+
+   Moved `verify_dropthese.R` to `analysis/program/` (was `.claude/.scratch/`); source() now `source("verify_dropthese.R")` (bare, same dir as .rmd). Updated path refs in CHANGES/StandingIssues/TaskRecord. Also: xref rebuilt OK (148,268 rows / 53 files, 09:27).
+
+1. *from seishin cc pick 10 divergent + 5 matching (d,d)/(c,c) rating cases, prose only, store at global claude root*
+
+   Parsed `/mnt/c/seiro/docs/external/seishin/CLAUDE_CC.md` (python, scratchpad script). 17 rated pairs of 51 responses (rest weren't a-e ratings): divergent 11, (d,d) 4, (c,c) 1. Wrote 10 divergent + 5 matching (4 dd + 1 cc), diff/code fences + wordiness footer stripped → `/mnt/c/seiro/languages/claude/.claude/verbosity_calibration_seishin.md`.
+
+1. *make ii <- 10 consistent throughout — walked verify checks, S23 diff, then fixed the one live literal*
+
+   Made `ii` the single threshold source across the drop-fix verifier (2026-08-05 15:23 JST).
+    * walked `verify_dropthese.R` (5 checks) + confirmed live S23 fix in `IRP5Condense.rmd` L1051/L1086 matches the verifier.
+    * only live inconsistency: `verify_dropthese.R` L61 used hardcoded `tb > 10` while L60 used `tb == ii` → edited L61 to `tb > ii`. Now both keyed on `ii` (`IRP5Condense.rmd` L1038 `ii <- 10`).
+    * left Condense L1046-1047 `tb>10` untouched — commented-out bug-history, not live.
+
+# Sandbox
+
+<!-- Raw per-turn notes. Promoted to the canonical session block at orderly sign-off. Append-only. -->

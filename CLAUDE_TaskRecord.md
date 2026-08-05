@@ -468,3 +468,20 @@ Pick up next:
 * server pipeline re-run — the setkey fix changes DJobDurationMonth/TDurationMonth values; verify FA outputs after
 * open items: latent syntax errors in 4 archival eval=F files (fix on touch or mark ARCHIVAL), C1-C7 minor/dead/fragile, D1 feols loop refactor when next editing IRP5Impacts.rmd
 * B1 (dropthese), B5 (ExistedBefore2013 levels), D2 (ALTREP round trips) confirmed intentional — do not re-flag
+
+**Session 22 Slate Heron | 2026-08-05**
+
+Files renamed by user (verified distinct, no stale copy):
+* IRP5Condense.rmd = former Condense2 (refactor); IRP5Condense_.rmd = original
+* IRP5HHI.rmd = former HHI2 (refactor); IRP5HHI_.rmd = original
+
+Done:
+* Refactor verified line-by-line (Condense 86 + HHI 51 changed lines, all `CLAUDE eff` value-preserving). Only intended change: `.GRP` first-appearance IDs; NA no longer collides with "NA".
+* dropthese (Condense L1052-1083): pre-existing coupling confirmed, refactor preserved verbatim. Open StandingIssue.
+* xref rebuild was blocked by sandbox read-only on /mnt/c; must run with sandbox disabled.
+
+### Where to pick up
+* Server run: full pipeline from Condense (new canonical = refactor). On first run, diff row counts / qc prints vs originals' logged values to confirm value-identity.
+* `dropthese` fix APPLIED S23 (Condense L1049 + L1084, tag bug): guard 2 now `uid %in% repetetive` (was `dupuid[...][1:5]`); drop now `(taxrefno, uid)` anti-join (was taxrefno-only whole-firm). Inspection probe removed (declutter). PENDING SERVER VERIFY: run `analysis/program/verify_dropthese.R` (steps 1/1b/2/3/4) — firm counts, guard-2 over-selection, old-vs-new drop pairs, drop delta combo-vs-firm, `irp5gir$uid` trim/NA check. .rmd snapshots (175424198/175176433) are STALE — recompute.
+* `verify_dropthese.R` now fully `ii`-keyed (S23, 15:23 JST): L61 `tb > 10` → `tb > ii`, matching L60 `tb == ii`. Step 2 comparison is interpretable regardless of `ii`'s value. Source of truth = `IRP5Condense.rmd` L1038 `ii <- 10`.
+* xref.sqlite: rebuild with sandbox disabled if symbol queries needed.

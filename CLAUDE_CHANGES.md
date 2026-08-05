@@ -369,4 +369,92 @@ Issue
 After
 :   Condense2: DateBirth unique-lookup join; NatureOfPer update joins; fixed=TRUE literals; .GRP IDs (labels change - arbitrary, within-run only); equality filter; %in%-on-unique agri filter. HHI2: setindex (NOT setkey - row order feeds first-row picks); GForce max(); vectorized exists flags + GForce any(); Entity equality; %in%-on-unique agri filter. First server run: compare qc prints/row counts against the originals' logged values before trusting outputs.
 
+## Session 23 Ochre Marten | 2026-08-05 09:06–15:23 JST
+
+S23-1 — IRP5Condense.rmd:1051 | bug | Discovered: user review of `dropping rows` chunk (S23) | Verified: static only — NOT runtime-verified (IRP5 data not local); pending analysis/program/verify_dropthese.R on server
+
+Issue
+:   guard 2 filtered `uid %in% dupuid` (ALL duplicated uids), not `repetetive` (placeholder strings only), so legit workers with 2+ 2012 job records at heavy-use firms were swept into the drop set.
+
+Why
+:   `[1:5]` (dupuid sorted n desc) accidentally kept ~top-5 placeholders, masking the over-selection; removing `[1:5]` alone would have worsened it. Over-drop corrupts the 2012 base-year job counts feeding the panel.
+
+Before
+:   dropthese <- ipyr[taxrefno %in% names(tb)[tb>10] & uid %in% dupuid[taxrefno %in% names(tb)[tb==ii], uid][1:5], ...]
+
+After
+:   dropthese <- ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% repetetive, ...] — original commented, CLAUDE bug 2026-08-05.
+
+S23-2 — IRP5Condense.rmd:1086 | bug | Discovered: S23 review | Verified: static only — NOT runtime-verified; pending server verify
+
+Issue
+:   the drop keyed on `taxrefno` only, removing the WHOLE firm including its non-duplicate (legit) uids.
+
+Why
+:   affected firms lost every worker, not just the placeholder rows. `irp5gir` carries `uid` (L884, L920), so a (taxrefno, uid) anti-join is well-defined and drops only the duplicated placeholder rows.
+
+Before
+:   irp5Clean <- irp5gir[!(taxrefno %in% dropthese[, taxrefno]), ]
+
+After
+:   irp5Clean <- irp5gir[!unique(dropthese[, .(taxrefno, uid)]), on = .(taxrefno, uid)] — original commented, CLAUDE bug 2026-08-05.
+
+S23-3 — IRP5Condense.rmd:1040-1044 (comment only; live probe removed) | nip | Discovered: S23 declutter | Verified: static — not in pipeline
+
+Issue
+:   a live inspection-display probe (firms with exactly ii repetitive uids) printed to the notebook but fed nothing downstream.
+
+Why
+:   clutter in the rendered output; no consumer.
+
+Before
+:   ipyr[taxrefno %in% names(tb)[tb==ii] & uid %in% dupuid[...][1:5], .(...)][order(uid, taxrefno), ]
+
+After
+:   commented out (S23), then removed entirely by user; the `tb==ii` text now survives only as bug-history comments at L1040/L1047.
+
+S23-4 — IRP5Condense.rmd:1098 | bug | Discovered: S23 (wire verification into render) | Verified: static; executes on next render / server run
+
+Issue
+:   the drop fix had no in-pipeline verification, and the snapshots in the chunk (175424198 / 175176433) predate the fix and the S21 natureofperson change.
+
+Why
+:   an aggregates-only (no-PII) recompute is needed to confirm the new drop set matches intent and to replace the stale snapshots.
+
+Before
+:   *(absent)*
+
+After
+:   source("verify_dropthese.R") at end of the `dropping rows` chunk; aggregates-only cat() output.
+
+S23-5 — analysis/program/verify_dropthese.R | spl | Discovered: S23 | Verified: static (parse-clean); runtime pending server
+
+Issue
+:   first draft re-read the 175M-row irp512.qs and materialized large intermediate drop tables.
+
+Why
+:   wasteful when sourced mid-pipeline, where ipyr/dupuid/repetetive/tb/irp5gir already live in memory.
+
+Before
+:   full re-read + materialized drop tables.
+
+After
+:   exists() guards reuse in-memory objects; drop delta by counts (irp5gir[drop_new, on = .(taxrefno, uid), nomatch = 0L, .N]). Still runs standalone on server.
+
+S23-6 — analysis/program/verify_dropthese.R:61 | frg | Discovered: S23 (make ii consistent) | Verified: static
+
+Issue
+:   Step 2 `drop_old` mixed a hardcoded `tb > 10` (L61) with L60's `tb == ii`; if ii ≠ 10 the two selectors describe inconsistent firm sets, making the old-vs-new comparison uninterpretable.
+
+Why
+:   silent breakage on any change to ii; diagnostic-only — does not affect the live fix (L1051) or the Step 3 headline count.
+
+Before
+:   drop_old <- unique(ipyr[taxrefno %in% names(tb)[tb > 10] & uid %in% old_uidset, ...])
+
+After
+:   drop_old <- unique(ipyr[taxrefno %in% names(tb)[tb > ii] & uid %in% old_uidset, ...]) — now both keyed on ii (source of truth IRP5Condense.rmd L1038 `ii <- 10`).
+
 # Sandbox
+
+<!-- Sign-off promotes entries here to the canonical session block above; append-only. -->
